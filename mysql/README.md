@@ -1,0 +1,138 @@
+# データベース関係
+
+## 持たせるデータ
+
+### v1_0
+
+- api_keys
+  - (common)
+    - api_keys_id
+    - created_at
+    - owner
+    - description
+  - api_key
+  - expires_at
+- work_groups
+  - (common)
+    - work_groups_id
+    - created_at
+    - owner
+    - updated_at
+    - description
+  - name
+- works
+  - (common)
+    - works_id
+    - work_groups_id
+    - description
+    - created_at
+    - owner
+    - updated_at
+  - name
+  - affect_date
+  - affix_content_type
+  - affix_file_name
+  - remarks
+  - has_e_train_timetable
+  - e_train_timetable_content_type
+  - e_train_timetable_file_name
+- trains
+  - (common)
+    - trains_id
+    - works_id
+    - description
+    - created_at
+    - owner
+    - updated_at
+  - train_number
+  - max_speed
+  - speed_type
+  - nominal_tractive_capacity
+  - car_count
+  - destination
+  - begin_remarks
+  - after_remarks
+  - remarks
+  - before_departure
+  - after_arrive
+  - train_info
+  - direction
+  - day_count
+  - is_ride_on_moving
+- stations
+  - (common)
+    - stations_id
+    - work_groups_id
+    - description
+    - created_at
+    - owner
+    - updated_at
+  - name
+  - location_km
+  - location_lon_deg
+  - location_lat_deg
+  - on_station_detect_radius_m
+  - record_type
+- station_tracks
+  - (common)
+    - station_tracks_id
+    - stations_id
+    - description
+    - created_at
+    - owner
+    - updated_at
+  - name
+  - run_in_limit
+  - run_out_limit
+- timetable_rows
+  - (common)
+    - timetable_rows_id
+    - trains_id
+    - stations_id
+    - station_tracks_id
+    - colors_id_marker
+    - description
+    - created_at
+    - owner
+    - updated_at
+  - drive_time_mm
+  - drive_time_ss
+  - is_operation_only_stop
+  - is_pass
+  - has_bracket
+  - is_last_stop
+  - arrive_hh
+  - arrive_mm
+  - arrive_ss
+  - departure_hh
+  - departure_mm
+  - departure_ss
+  - run_in_limit
+  - run_out_limit
+  - remarks
+  - arrive_str
+  - departure_str
+  - marker_text
+  - work_type
+- colors
+  - (common)
+    - colors_id
+    - work_groups_id
+    - description
+    - created_at
+    - owner
+    - updated_at
+  - name
+  - rgb
+  - red_real
+  - green_real
+  - blue_real
+- access_log
+  - (common)
+    - access_log_id
+    - api_keys_id
+    - created_at
+  - endpoint
+  - payload
+
+trainsの `before_departure_on_station_track_col` 等は、deprecatedとするため含めない。
