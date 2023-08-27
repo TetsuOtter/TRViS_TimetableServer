@@ -1,0 +1,25 @@
+version: "3.8"
+services:
+  mysql:
+    image: mysql:8.0-debian
+    container_name: webmon-db
+    hostname: webmon-db
+    volumes:
+      - type: bind
+        read_only: true
+        source: ./mysql/init_sql
+        target: /docker-entrypoint-initdb.d
+      - type: bind
+        read_only: true
+        source: ./mysql/conf.d
+        target: /etc/mysql/conf.d
+      - type: volume
+        source: webmon-db
+        target: /var/lib/mysql
+    env_file:
+      - mysql/.env
+    ports:
+      - "3306:3306"
+volumes:
+  webmon-db:
+
