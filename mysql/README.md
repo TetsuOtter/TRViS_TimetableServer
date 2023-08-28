@@ -127,12 +127,5 @@
   - red_real
   - green_real
   - blue_real
-- access_log
-  - (common)
-    - access_log_id
-    - api_keys_id
-    - created_at
-  - endpoint
-  - payload
 
 trainsの `before_departure_on_station_track_col` 等は、deprecatedとするため含めない。
