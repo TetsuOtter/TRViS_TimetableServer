@@ -69,8 +69,7 @@
     - updated_at
   - name
   - location_km
-  - location_lon_deg
-  - location_lat_deg
+  - location_lonlat
   - on_station_detect_radius_m
   - record_type
 - station_tracks
