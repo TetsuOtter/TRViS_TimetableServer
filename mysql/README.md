@@ -122,7 +122,9 @@
     - owner
     - updated_at
   - name
-  - rgb
+  - red_8bit
+  - green_8bit
+  - blue_8bit
   - red_real
   - green_real
   - blue_real
