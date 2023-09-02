@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   mysql:
-    image: mysql:8.0-debian
+    image: mysql:8.0-oracle
     container_name: webmon-db
     hostname: webmon-db
     volumes:
