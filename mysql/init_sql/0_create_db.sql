@@ -493,6 +493,10 @@ CREATE TABLE
     SMALLINT
   ,
 
+  PRIMARY KEY (
+    station_tracks_id
+  ),
+
   FOREIGN KEY (
     stations_id
   ) REFERENCES
