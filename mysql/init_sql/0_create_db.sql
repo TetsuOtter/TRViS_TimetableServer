@@ -620,7 +620,7 @@ CREATE TABLE
   ,
 
   remarks
-    VARCHAR(65535)
+    TEXT(65535)
   ,
 
   arrive_str
