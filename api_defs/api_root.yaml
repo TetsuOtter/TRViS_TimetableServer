@@ -1,0 +1,14 @@
+openapi: 3.0.3
+info:
+  title: TRViS用 時刻表管理用API
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: ローカル開発環境
+  - url: https://trvis.t0r.dev
+    description: 本番環境
+paths:
+  /api/v1/api_info:
+    $ref: "./paths/api_info/index.yaml#/path"
+  /api/v1/auths:
+    $ref: "./paths/auth/index.yaml#/path"

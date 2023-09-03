@@ -1,0 +1,11 @@
+path:
+  get:
+    summary: APIの情報を取得する
+    description: APIのバージョン等、APIの情報を取得する
+    responses:
+      '200':
+        description: APIの情報
+        content:
+          application/json:
+            schema:
+              $ref: '../../response_objs/api_info/ApiInfo.yaml#/schema'

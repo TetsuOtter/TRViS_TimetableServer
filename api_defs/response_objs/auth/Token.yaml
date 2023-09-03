@@ -1,0 +1,12 @@
+schema:
+  type: object
+  properties:
+    client_id:
+      type: string
+      description: クライアントの識別子
+    token:
+      type: string
+      description: 発行された認証トークン
+    expires:
+      type: string
+      description: トークンの有効期限
