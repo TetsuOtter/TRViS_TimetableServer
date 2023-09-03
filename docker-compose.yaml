@@ -13,6 +13,9 @@ services:
         read_only: true
         source: ./mysql/conf.d
         target: /etc/mysql/conf.d
+      - type: bind
+        source: ./mysql/logs
+        target: /var/log/mysql
       - type: volume
         source: webmon-db
         target: /var/lib/mysql
