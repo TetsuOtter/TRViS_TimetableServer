@@ -2,6 +2,8 @@ path:
   post:
     summary: 認証トークンを発行
     description: APIへのアクセスで使用するJWTを発行する
+    tags:
+      - auth
     requestBody:
       content:
         application/json:

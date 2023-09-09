@@ -7,6 +7,11 @@ servers:
     description: ローカル開発環境
   - url: https://trvis.t0r.dev
     description: 本番環境
+tags:
+  - name: api_info
+    description: APIの情報を取得する
+  - name: auth
+    description: 認証/認可関連のAPI (トークン発行など)
 paths:
   /api/v1/api_info:
     $ref: "./paths/api_info/index.yaml#/path"

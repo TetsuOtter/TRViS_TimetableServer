@@ -2,6 +2,8 @@ path:
   get:
     summary: APIの情報を取得する
     description: APIのバージョン等、APIの情報を取得する
+    tags:
+      - api_info
     responses:
       '200':
         description: APIの情報
