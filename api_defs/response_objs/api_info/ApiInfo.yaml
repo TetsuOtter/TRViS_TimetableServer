@@ -1,11 +1,12 @@
-schema:
-  type: object
-  properties:
-    server_name:
-      type: string
-      description: サーバの名前
-    version:
-      type: string
-      description: APIのバージョン
+json:
+  schema:
+    type: object
+    properties:
+      server_name:
+        type: string
+        description: サーバの名前
+      version:
+        type: string
+        description: APIのバージョン
   examples:
     - $ref: "../../response_examples/api_info/ApiInfo.yaml#/example_1"
