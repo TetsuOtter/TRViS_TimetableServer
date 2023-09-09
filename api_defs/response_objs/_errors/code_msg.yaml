@@ -1,5 +1,7 @@
 schema:
   type: object
+  title: error_code_message
+  description: エラーコードとエラーメッセージ
   properties:
     code:
       type: number
