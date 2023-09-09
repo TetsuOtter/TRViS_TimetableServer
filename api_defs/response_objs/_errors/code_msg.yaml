@@ -11,6 +11,17 @@ json:
         type: string
         description: エラーメッセージ
 json_responses:
+  204_NoContentInThisPage:
+    description: ページングの結果、取得件数が0件であった
+    content:
+      application/json:
+        schema:
+          $ref: '#/json/schema'
+        examples:
+          example:
+            value:
+              code: 204
+              message: "No Content in this page"
   BadRequest:
     description: リクエストが不正
     content:
@@ -22,6 +33,17 @@ json_responses:
             value:
               code: 400
               message: "Bad Request"
+  401_Unauthorized:
+    description: 認証トークンがセットされていない
+    content:
+      application/json:
+        schema:
+          $ref: '#/json/schema'
+        examples:
+          example:
+            value:
+              code: 401
+              message: "Token is not set"
   ExpiredAPIKey:
     description: APIキーが期限切れ
     content:
@@ -33,3 +55,14 @@ json_responses:
             value:
               code: 403
               message: "Expired API Key"
+  404_ContentNotFound:
+    description: コンテンツが存在しない
+    content:
+      application/json:
+        schema:
+          $ref: '#/json/schema'
+        examples:
+          example:
+            value:
+              code: 404
+              message: "Content Not Found"

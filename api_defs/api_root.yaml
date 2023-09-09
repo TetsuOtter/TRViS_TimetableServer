@@ -12,8 +12,20 @@ tags:
     description: APIの情報を取得する
   - name: auth
     description: 認証/認可関連のAPI (トークン発行など)
+  - name: work_group
+    description: Work Groupの操作を行う
 paths:
   /api/v1/api_info:
     $ref: "./paths/api_info/index.yaml#/path"
   /api/v1/auths:
     $ref: "./paths/auth/index.yaml#/path"
+  /api/v1/work_groups:
+    $ref: "./paths/work_groups/index.yaml#/path"
+  /api/v1/work_groups/{id}:
+    $ref: "./paths/work_groups/id.yaml#/path"
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
