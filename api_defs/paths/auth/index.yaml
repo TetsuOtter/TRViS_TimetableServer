@@ -14,9 +14,15 @@ path:
           application/json:
             schema:
               $ref: '../../response_objs/_errors/code_msg.yaml#/json/schema'
+            examples:
+              example_BadRequest:
+                $ref: '../../response_objs/_errors/code_msg.yaml#/json/examples/example_BadRequest'
       '403':
         description: APIキーが不正 (期限切れ)
         content:
           application/json:
             schema:
               $ref: '../../response_objs/_errors/code_msg.yaml#/json/schema'
+            examples:
+              example_ExpiredAPIKey:
+                $ref: '../../response_objs/_errors/code_msg.yaml#/json/examples/example_ExpiredAPIKey'

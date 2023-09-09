@@ -10,3 +10,14 @@ json:
       message:
         type: string
         description: エラーメッセージ
+  examples:
+    example_BadRequest:
+      summary: リクエストが不正
+      value:
+        code: 400
+        message: "Bad Request"
+    example_ExpiredAPIKey:
+      summary: APIキーが期限切れ
+      value:
+        code: 403
+        message: "Expired API Key"
