@@ -1,11 +1,12 @@
-schema:
-  type: object
-  title: error_code_message
-  description: エラーコードとエラーメッセージ
-  properties:
-    code:
-      type: number
-      description: エラーコード
-    message:
-      type: string
-      description: エラーメッセージ
+json:
+  schema:
+    type: object
+    title: error_code_message
+    description: エラーコードとエラーメッセージ
+    properties:
+      code:
+        type: number
+        description: エラーコード
+      message:
+        type: string
+        description: エラーメッセージ

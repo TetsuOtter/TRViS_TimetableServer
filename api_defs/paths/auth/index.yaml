@@ -13,10 +13,10 @@ path:
         content:
           application/json:
             schema:
-              $ref: '../../response_objs/_errors/code_msg.yaml#/schema'
+              $ref: '../../response_objs/_errors/code_msg.yaml#/json/schema'
       '403':
         description: APIキーが不正 (期限切れ)
         content:
           application/json:
             schema:
-              $ref: '../../response_objs/_errors/code_msg.yaml#/schema'
+              $ref: '../../response_objs/_errors/code_msg.yaml#/json/schema'
