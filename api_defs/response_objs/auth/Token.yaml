@@ -1,12 +1,15 @@
-schema:
-  type: object
-  properties:
-    client_id:
-      type: string
-      description: クライアントの識別子
-    token:
-      type: string
-      description: 発行された認証トークン
-    expires:
-      type: string
-      description: トークンの有効期限
+json:
+  schema:
+    type: object
+    properties:
+      client_id:
+        type: string
+        description: クライアントの識別子
+      token:
+        type: string
+        description: 発行された認証トークン
+      expires:
+        type: string
+        description: トークンの有効期限
+  examples:
+    - $ref: "../../response_examples/auth/Token.yaml#/example_1"

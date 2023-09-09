@@ -7,8 +7,7 @@ path:
         description: 認証トークン発行成功
         content:
           application/json:
-            schema:
-              $ref: '../../response_objs/auth/Token.yaml#/schema'
+            $ref: '../../response_objs/auth/Token.yaml#/json'
       '400':
         description: リクエストが不正
         content:
