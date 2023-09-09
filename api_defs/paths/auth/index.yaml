@@ -2,6 +2,10 @@ path:
   post:
     summary: 認証トークンを発行
     description: APIへのアクセスで使用するJWTを発行する
+    requestBody:
+      content:
+        application/json:
+          $ref: '../../request_objs/auth/TokenRequest.yaml#/json'
     responses:
       '200':
         description: 認証トークン発行成功
