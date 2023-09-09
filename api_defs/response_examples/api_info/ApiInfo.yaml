@@ -1,5 +1,0 @@
-example_1:
-  summary: v1.0.0でのAPI情報例
-  value:
-    server_name: "server by TetsuOtter hosted on lolipop (https://lolipop.jp/)"
-    version: "1.0.0"

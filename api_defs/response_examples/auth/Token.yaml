@@ -1,6 +1,0 @@
-example_1:
-  summary: Token返却例
-  value:
-    client_id: "abcdefg1234567890..."
-    token: "abcdefg1234567890..."
-    expires: "2100-01-01T00:00:00Z"
