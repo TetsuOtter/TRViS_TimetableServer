@@ -36,3 +36,27 @@ path:
         $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
       '401':
         $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/401_TokenError'
+
+  post:
+    summary: 作成する
+    description: Workのまとまり (WorkGroup) を新しく作成する
+    tags:
+      - work_group
+    security:
+      - bearerAuth: []
+    requestBody:
+      description: 作成するWorkGroupの情報
+      required: true
+      content:
+        application/json:
+          $ref: '../../request_objs/work_groups/WorkGroup.yaml#/object'
+    responses:
+      '201':
+        description: 作成成功
+        content:
+          application/json:
+            $ref: '../../response_objs/work_groups/WorkGroup.yaml#/object'
+      '400':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
+      '401':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/401_TokenError'

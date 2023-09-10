@@ -72,6 +72,17 @@ json_responses:
             value:
               code: 403
               message: "Expired API Key"
+  403_NotAllowedCommand:
+    description: 許可されていない操作を行おうとした
+    content:
+      application/json:
+        schema:
+          $ref: '#/json/schema'
+        examples:
+          example:
+            value:
+              code: 1403
+              message: "Not Allowed Command"
   404_ContentNotFound:
     description: コンテンツが存在しない
     content:
