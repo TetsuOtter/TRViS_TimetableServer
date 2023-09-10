@@ -94,3 +94,29 @@ json_responses:
             value:
               code: 404
               message: "Content Not Found"
+  404_WorkGroupNotFound:
+    description: 指定のWorkGroupが存在しない (Work以下のエンドポイントでのみ使用する)
+    content:
+      application/json:
+        schema:
+          $ref: '#/json/schema'
+        examples:
+          WorkGroupNotFound:
+            value:
+              code: 1404
+              message: "Specified WorkGroup is not found"
+  404_ContentNotFound_WorkGroupNotFound:
+    description: コンテンツが存在しない
+    content:
+      application/json:
+        schema:
+          $ref: '#/json/schema'
+        examples:
+          ContentNotFound:
+            value:
+              code: 404
+              message: "Content Not Found"
+          WorkGroupNotFound:
+            value:
+              code: 1404
+              message: "Specified WorkGroup is not found"

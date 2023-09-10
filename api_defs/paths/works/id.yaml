@@ -1,0 +1,101 @@
+path:
+  get:
+    summary: 1件取得する
+    description: Work (仕業) の情報を1件取得する
+    tags:
+      - work
+    security:
+      - bearerAuth: []
+    parameters:
+      - in: path
+        name: work_group_id
+        required: true
+        schema:
+          type: string
+        description: WorkGroupのID
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        description: WorkのID
+    responses:
+      '200':
+        description: 取得成功
+        content:
+          application/json:
+            $ref: '../../response_objs/works/Work.yaml#/object'
+      '400':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
+      '401':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/401_TokenError'
+      '404':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/404_ContentNotFound_WorkGroupNotFound'
+
+  put:
+    summary: 更新する
+    description: 既存のWorkの情報を更新する
+    tags:
+      - work
+    security:
+      - bearerAuth: []
+    parameters:
+      - in: path
+        name: work_group_id
+        required: true
+        schema:
+          type: string
+        description: WorkGroupのID
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        description: WorkGroupのID
+    requestBody:
+      description: 更新後のWorkの情報
+      required: true
+      content:
+        application/json:
+          $ref: '../../request_objs/works/Work.yaml#/object'
+    responses:
+      '200':
+        description: 更新成功
+        content:
+          application/json:
+            $ref: '../../response_objs/works/Work.yaml#/object'
+      '400':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
+      '401':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/401_TokenError'
+      '404':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/404_ContentNotFound_WorkGroupNotFound'
+
+  delete:
+    summary: 削除する
+    description: |
+      既存のWorkを削除する
+
+      なお、この操作はこのWorkのOwner、またはこのWorkが属するWorkGroupのOwnerのみが実行可能である。
+    tags:
+      - work
+    security:
+      - bearerAuth: []
+    parameters:
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        description: WorkGroupのID
+    responses:
+      '200':
+        description: 削除成功
+      '400':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
+      '401':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/401_TokenError'
+      '403':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/403_NotAllowedCommand'
+      '404':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/404_ContentNotFound_WorkGroupNotFound'

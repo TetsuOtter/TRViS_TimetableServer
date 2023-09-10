@@ -1,0 +1,71 @@
+object:
+  schema:
+    type: object
+    properties:
+      description:
+        type: string
+        description: Workの説明
+        required: true
+        example: Workの説明が入ります
+      name:
+        type: string
+        description: Workの名前
+        required: true
+        example: 第NNN仕業
+      affect_date:
+        type: string
+        format: date
+        description: 発効日
+        required: false
+      affix_content_type: 
+        type: string
+        enum:
+          - text
+          - URI
+          - PNG
+          - PDF
+          - JPG
+        description: affix_content のファイル形式
+        example: text
+        required: false
+      affix_content:
+        type: string
+        format:
+          oneOf:
+            - format: plain-text
+            - format: uri
+            - format: binary
+        description: 「行路添付」に表示させる内容
+        example: 行路添付の内容が入ります
+        required: false
+      remarks:
+        type: string
+        description: 「注意事項」に表示させる内容
+        required: false
+        example: 注意事項が入ります
+      has_e_train_timetable:
+        type: boolean
+        description: 「E電時刻表」を表示させるかどうか
+        required: false
+        example: true
+      e_train_timetable_content_type: 
+        type: string
+        enum:
+          - text
+          - URI
+          - PNG
+          - PDF
+          - JPG
+        description: e_train_timetable_content のファイル形式
+        example: text
+        required: false
+      e_train_timetable_content:
+        type: string
+        format:
+          oneOf:
+            - format: plain-text
+            - format: uri
+            - format: binary
+        description: 「E電時刻表」に表示させる内容
+        example: E電時刻表の内容が入ります
+        required: false
