@@ -83,11 +83,17 @@ path:
       - bearerAuth: []
     parameters:
       - in: path
-        name: id
+        name: work_group_id
         required: true
         schema:
           type: string
         description: WorkGroupのID
+      - in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        description: WorkのID
     responses:
       '200':
         description: 削除成功
