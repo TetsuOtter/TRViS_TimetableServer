@@ -19,6 +19,8 @@ tags:
     description: Work Groupの操作を行う
   - name: work
     description: Work (仕業) の操作を行う
+  - name: train
+    description: Train (列車) の操作を行う
 
 paths:
   /api/v1/api_info:
@@ -39,6 +41,14 @@ paths:
   # 将来的には対応させたい
   # /api/v1/works/{id}:
   #   $ref: "./paths/works/id.yaml#/path"
+
+  /api/v1/work_groups/{work_group_id}/works/{work_id}/trains:
+    $ref: "./paths/trains/index.yaml#/path"
+  /api/v1/work_groups/{work_group_id}/works/{work_id}/trains/{train_id}:
+    $ref: "./paths/trains/id.yaml#/path"
+  # 将来的には対応させたい
+  # /api/v1/trains/{id}:
+  #   $ref: "./paths/trains/id.yaml#/path"
 
 components:
   securitySchemes:

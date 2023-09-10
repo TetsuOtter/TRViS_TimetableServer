@@ -1,0 +1,108 @@
+object:
+  schema:
+    type: object
+    properties:
+      train_id:
+        type: string
+        format: uuid
+        readOnly: true
+        description: TrainのID (UUID)
+      created_at:
+        type: string
+        format: date-time
+        readOnly: true
+        description: 作成日時
+      description:
+        type: string
+        description: Train (列車) の説明
+        required: true
+        example: Train (列車) の説明が入ります
+      train_number:
+        type: string
+        description: 列車番号
+        required: true
+        example: 試9999M
+      max_speed:
+        type: string
+        description: 最高速度 (km/h)
+        required: false
+        example: |
+          130
+          シク〜 60
+      speed_type:
+        type: string
+        description: 速度種別
+        required: false
+        example: |
+          停電A9
+          シク〜 特定
+      nominal_tractive_capacity:
+        type: string
+        description: けん引定数
+        required: false
+        example: |
+          999系
+          9M1T
+      car_count:
+        type: integer
+        description: 編成両数 (0以下で非表示)
+        required: false
+        example: 10
+      destination:
+        type: string
+        description: 行先
+        required: false
+        example: 東  京
+      begin_remarks:
+        type: string
+        description: 乗車前の注意事項 (「乗継」など)
+        required: false
+        example: '(乗継)'
+      after_remarks:
+        type: string
+        description: 降車後の注意事項 (「乗継」など)
+        required: false
+        example: '(乗継)'
+      remarks:
+        type: string
+        description: 注意事項
+        required: false
+        example: |
+          XXXX ~ YYYY 徐行 30km/h
+          AAAA ~ BBBB 車掌省略
+      before_departure:
+        type: string
+        description: 発前
+        required: false
+        example: '転線 5分          転線'
+      after_arrive:
+        type: string
+        description: 着後
+        required: false
+        example: '転線 5分          転線'
+      train_info:
+        type: string
+        description: 列車に関する情報
+        required: false
+        example: '<div style="color: red">車掌省略</div>'
+      direction:
+        type: intener
+        description: '進行方向 (0~1: 下り, -1: 上り)'
+        required: true
+        example: 1
+      day_count:
+        type: intener
+        description: 仕業の初日からの経過日数 (0で初日/日勤、1で明け)
+        required: true
+        minimum: 0
+        example: 1
+      is_ride_on_moving:
+        type: boolean
+        description: 添乗での移動かどうか
+        required: false
+        example: false
+array:
+  schema:
+    type: array
+    items:
+      $ref: '#/object/schema'
