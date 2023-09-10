@@ -17,6 +17,8 @@ tags:
     description: 認証/認可関連のAPI (トークン発行など)
   - name: work_group
     description: Work Groupの操作を行う
+  - name: station
+    description: Stationの操作を行う
   - name: work
     description: Work (仕業) の操作を行う
   - name: train
@@ -33,6 +35,11 @@ paths:
     $ref: "./paths/work_groups/index.yaml#/path"
   /api/v1/work_groups/{work_group_id}:
     $ref: "./paths/work_groups/id.yaml#/path"
+
+  /api/v1/work_groups/{work_group_id}/stations:
+    $ref: "./paths/stations/index.yaml#/path"
+  /api/v1/work_groups/{work_group_id}/stations/{station_id}:
+    $ref: "./paths/stations/id.yaml#/path"
 
   /api/v1/work_groups/{work_group_id}/works:
     $ref: "./paths/works/index.yaml#/path"
