@@ -35,6 +35,4 @@ path:
       '400':
         $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
       '401':
-        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/401_Unauthorized'
-      '403':
-        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/ExpiredAPIKey'
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/401_TokenError'

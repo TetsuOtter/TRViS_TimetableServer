@@ -44,6 +44,23 @@ json_responses:
             value:
               code: 401
               message: "Token is not set"
+  401_TokenError:
+    description: 認証トークンのエラー
+    content:
+      application/json:
+        schema:
+          $ref: '#/json/schema'
+        examples:
+          TokenIsNotSet:
+            description: 認証トークンがセットされていない場合
+            value:
+              code: 401
+              message: "Token is not set"
+          TokenIsExpired:
+            description: 認証トークンが期限切れな場合
+            value:
+              code: 1401
+              message: "Token is expired"
   ExpiredAPIKey:
     description: APIキーが期限切れ
     content:
