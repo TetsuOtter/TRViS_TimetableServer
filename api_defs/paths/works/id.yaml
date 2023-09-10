@@ -55,7 +55,7 @@ path:
         schema:
           type: string
           format: uuid
-        description: WorkGroupのID
+        description: WorkのID
     requestBody:
       description: 更新後のWorkの情報
       required: true
