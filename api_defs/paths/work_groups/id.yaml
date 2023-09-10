@@ -8,7 +8,7 @@ path:
       - bearerAuth: []
     parameters:
       - in: path
-        name: id
+        name: work_group_id
         required: true
         schema:
           type: string
@@ -35,7 +35,7 @@ path:
       - bearerAuth: []
     parameters:
       - in: path
-        name: id
+        name: work_group_id
         required: true
         schema:
           type: string
@@ -71,7 +71,7 @@ path:
       - bearerAuth: []
     parameters:
       - in: path
-        name: id
+        name: work_group_id
         required: true
         schema:
           type: string

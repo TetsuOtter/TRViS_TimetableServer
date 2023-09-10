@@ -29,12 +29,12 @@ paths:
 
   /api/v1/work_groups:
     $ref: "./paths/work_groups/index.yaml#/path"
-  /api/v1/work_groups/{id}:
+  /api/v1/work_groups/{work_group_id}:
     $ref: "./paths/work_groups/id.yaml#/path"
 
   /api/v1/work_groups/{work_group_id}/works:
     $ref: "./paths/works/index.yaml#/path"
-  /api/v1/work_groups/{work_group_id}/works/{id}:
+  /api/v1/work_groups/{work_group_id}/works/{work_id}:
     $ref: "./paths/works/id.yaml#/path"
   # 将来的には対応させたい
   # /api/v1/works/{id}:

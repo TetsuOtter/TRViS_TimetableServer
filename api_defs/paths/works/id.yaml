@@ -14,7 +14,7 @@ path:
           type: string
         description: WorkGroupのID
       - in: path
-        name: id
+        name: work_id
         required: true
         schema:
           type: string
@@ -47,7 +47,7 @@ path:
           type: string
         description: WorkGroupのID
       - in: path
-        name: id
+        name: work_id
         required: true
         schema:
           type: string
@@ -89,7 +89,7 @@ path:
           type: string
         description: WorkGroupのID
       - in: path
-        name: id
+        name: work_id
         required: true
         schema:
           type: string
