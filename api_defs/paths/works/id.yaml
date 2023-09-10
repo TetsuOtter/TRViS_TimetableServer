@@ -12,12 +12,14 @@ path:
         required: true
         schema:
           type: string
+          format: uuid
         description: WorkGroupのID
       - in: path
         name: work_id
         required: true
         schema:
           type: string
+          format: uuid
         description: WorkのID
     responses:
       '200':
@@ -45,12 +47,14 @@ path:
         required: true
         schema:
           type: string
+          format: uuid
         description: WorkGroupのID
       - in: path
         name: work_id
         required: true
         schema:
           type: string
+          format: uuid
         description: WorkGroupのID
     requestBody:
       description: 更新後のWorkの情報
@@ -87,12 +91,14 @@ path:
         required: true
         schema:
           type: string
+          format: uuid
         description: WorkGroupのID
       - in: path
         name: work_id
         required: true
         schema:
           type: string
+          format: uuid
         description: WorkのID
     responses:
       '200':

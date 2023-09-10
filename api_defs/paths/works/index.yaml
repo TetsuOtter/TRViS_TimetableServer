@@ -12,6 +12,7 @@ path:
         required: true
         schema:
           type: string
+          format: uuid
         description: WorkGroupのID
       - in: query
         name: p
@@ -58,6 +59,7 @@ path:
         required: true
         schema:
           type: string
+          format: uuid
         description: WorkGroupのID
     requestBody:
       description: 作成するWorkの情報
