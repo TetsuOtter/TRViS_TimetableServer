@@ -1,6 +1,9 @@
 object:
   schema:
     type: object
+    required:
+      - description
+      - name
     properties:
       work_groups_id:
         type: string
