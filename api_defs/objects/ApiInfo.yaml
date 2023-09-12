@@ -1,6 +1,7 @@
 json:
   schema:
     type: object
+    title: ApiInfo
     properties:
       server_name:
         type: string
