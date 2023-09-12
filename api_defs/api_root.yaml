@@ -70,3 +70,14 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+  schemas:
+    Station:
+      $ref: "./objects/Station.yaml#/object/schema"
+    StationTrack:
+      $ref: "./objects/StationTrack.yaml#/object/schema"
+    Train:
+      $ref: "./objects/Train.yaml#/object/schema"
+    Work:
+      $ref: "./objects/Work.yaml#/object/schema"
+    WorkGroup:
+      $ref: "./objects/WorkGroup.yaml#/object/schema"
