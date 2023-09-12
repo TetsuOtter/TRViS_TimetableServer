@@ -45,11 +45,10 @@ object:
         example: text
       affix_content:
         type: string
-        format:
-          oneOf:
-            - format: plain-text
-            - format: uri
-            - format: binary
+        oneOf:
+          - format: plain-text
+          - format: uri
+          - format: binary
         description: 「行路添付」に表示させる内容
         example: 行路添付の内容が入ります
       remarks:
@@ -72,11 +71,10 @@ object:
         example: text
       e_train_timetable_content:
         type: string
-        format:
-          oneOf:
-            - format: plain-text
-            - format: uri
-            - format: binary
+        oneOf:
+          - format: plain-text
+          - format: uri
+          - format: binary
         description: 「E電時刻表」に表示させる内容
         example: E電時刻表の内容が入ります
 
