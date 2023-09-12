@@ -1,6 +1,7 @@
 object:
   schema:
     type: object
+    title: Work
     required:
       - description
       - name
@@ -82,5 +83,6 @@ object:
 array:
   schema:
     type: array
+    title: WorkArray
     items:
       $ref: '#/object/schema'

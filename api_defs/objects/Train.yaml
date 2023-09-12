@@ -1,6 +1,7 @@
 object:
   schema:
     type: object
+    title: Train
     required:
       - description
       - train_number
@@ -93,5 +94,6 @@ object:
 array:
   schema:
     type: array
+    title: TrainArray
     items:
       $ref: '#/object/schema'

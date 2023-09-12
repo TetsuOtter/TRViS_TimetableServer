@@ -1,6 +1,7 @@
 object:
   schema:
     type: object
+    title: StationTrack
     required:
       - name
       - description
@@ -37,5 +38,6 @@ object:
 array:
   schema:
     type: array
+    title: StationTrackArray
     items:
       $ref: '#/object/schema'
