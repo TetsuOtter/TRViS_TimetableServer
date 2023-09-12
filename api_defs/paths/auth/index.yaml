@@ -7,14 +7,20 @@ path:
     requestBody:
       content:
         application/json:
-          $ref: '../../request_objs/auth/TokenRequest.yaml#/json'
+          schema:
+            $ref: '#/components/schemas/TokenRequest'
     responses:
       '200':
         description: 認証トークン発行成功
         content:
           application/json:
-            $ref: '../../response_objs/auth/Token.yaml#/json'
+            schema:
+              $ref: '#/components/schemas/TokenResponse'
       '400':
         $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
       '403':
         $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/ExpiredAPIKey'
+
+components:
+  schemas:
+    $ref: '../../api_root.yaml#/components/schemas'

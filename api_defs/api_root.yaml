@@ -73,6 +73,10 @@ components:
   schemas:
     ApiInfo:
       $ref: "./objects/ApiInfo.yaml#/ApiInfo"
+    TokenRequest:
+      $ref: "./objects/TokenRequest.yaml#/TokenRequest"
+    TokenResponse:
+      $ref: "./objects/TokenResponse.yaml#/TokenResponse"
 
     Station:
       $ref: "./objects/Station.yaml#/Station"
