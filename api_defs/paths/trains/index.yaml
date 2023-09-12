@@ -43,7 +43,7 @@ path:
         description: 取得成功
         content:
           application/json:
-            $ref: '../../response_objs/trains/Train.yaml#/array'
+            $ref: '../../objects/Train.yaml#/array'
       '204':
         $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/204_NoContentInThisPage'
       '400':
@@ -80,13 +80,13 @@ path:
       required: true
       content:
         application/json:
-          $ref: '../../request_objs/trains/Train.yaml#/object'
+          $ref: '../../objects/Train.yaml#/object'
     responses:
       '201':
         description: 作成成功
         content:
           application/json:
-            $ref: '../../response_objs/trains/Train.yaml#/object'
+            $ref: '../../objects/Train.yaml#/object'
       '400':
         $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
       '401':
