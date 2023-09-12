@@ -26,7 +26,8 @@ path:
         description: 取得成功
         content:
           application/json:
-            $ref: '../../objects/Station.yaml#/object'
+            schema:
+              $ref: '#/components/schemas/Station'
       '400':
         $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
       '401':
@@ -61,13 +62,15 @@ path:
       required: true
       content:
         application/json:
-          $ref: '../../objects/Station.yaml#/object'
+          schema:
+            $ref: '#/components/schemas/Station'
     responses:
       '200':
         description: 更新成功
         content:
           application/json:
-            $ref: '../../objects/Station.yaml#/object'
+            schema:
+              $ref: '#/components/schemas/Station'
       '400':
         $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
       '401':
@@ -111,3 +114,7 @@ path:
         $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/403_NotAllowedCommand'
       '404':
         $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/404_ContentNotFound_WorkGroupNotFound'
+
+components:
+  schemas:
+    $ref: '../../api_root.yaml#/components/schemas'

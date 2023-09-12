@@ -29,7 +29,8 @@ path:
         description: 取得成功
         content:
           application/json:
-            $ref: '../../objects/WorkGroup.yaml#/array'
+            schema:
+              $ref: '#/components/schemas/WorkGroupArray'
       '204':
         $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/204_NoContentInThisPage'
       '400':
@@ -49,14 +50,20 @@ path:
       required: true
       content:
         application/json:
-          $ref: '../../objects/WorkGroup.yaml#/object'
+            schema:
+              $ref: '#/components/schemas/WorkGroup'
     responses:
       '201':
         description: 作成成功
         content:
           application/json:
-            $ref: '../../objects/WorkGroup.yaml#/object'
+            schema:
+              $ref: '#/components/schemas/WorkGroup'
       '400':
         $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
       '401':
         $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/401_TokenError'
+
+components:
+  schemas:
+    $ref: '../../api_root.yaml#/components/schemas'

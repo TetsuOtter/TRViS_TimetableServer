@@ -9,4 +9,8 @@ path:
         description: APIの情報
         content:
           application/json:
-            $ref: '../objects/ApiInfo.yaml#/json'
+            schema:
+              $ref: '#/components/schemas/ApiInfo'
+components:
+  schemas:
+    $ref: '../api_root.yaml#/components/schemas'

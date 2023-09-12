@@ -1,86 +1,84 @@
-object:
-  schema:
-    type: object
-    title: Work
-    required:
-      - description
-      - name
-    properties:
-      works_id:
-        type: string
-        format: uuid
-        readOnly: true
-        description: WorkのID (UUID)
-      work_groups_id:
-        type: string
-        format: uuid
-        readOnly: true
-        description: WorkGroupのID (UUID)
-      created_at:
-        type: string
-        format: date-time
-        readOnly: true
-        description: 作成日時
-      description:
-        type: string
-        description: Workの説明
-        example: Workの説明が入ります
-      name:
-        type: string
-        description: Workの名前
-        example: 第NNN仕業
-      affect_date:
-        type: string
-        format: date
-        description: 発効日
-      affix_content_type: 
-        type: string
-        enum:
-          - text
-          - URI
-          - PNG
-          - PDF
-          - JPG
-        description: affix_content のファイル形式
-        example: text
-      affix_content:
-        type: string
-        oneOf:
-          - format: plain-text
-          - format: uri
-          - format: binary
-        description: 「行路添付」に表示させる内容
-        example: 行路添付の内容が入ります
-      remarks:
-        type: string
-        description: 「注意事項」に表示させる内容
-        example: 注意事項が入ります
-      has_e_train_timetable:
-        type: boolean
-        description: 「E電時刻表」を表示させるかどうか
-        example: true
-      e_train_timetable_content_type: 
-        type: string
-        enum:
-          - text
-          - URI
-          - PNG
-          - PDF
-          - JPG
-        description: e_train_timetable_content のファイル形式
-        example: text
-      e_train_timetable_content:
-        type: string
-        oneOf:
-          - format: plain-text
-          - format: uri
-          - format: binary
-        description: 「E電時刻表」に表示させる内容
-        example: E電時刻表の内容が入ります
+Work:
+  type: object
+  title: Work
+  required:
+    - description
+    - name
+  properties:
+    works_id:
+      type: string
+      format: uuid
+      readOnly: true
+      description: WorkのID (UUID)
+    work_groups_id:
+      type: string
+      format: uuid
+      readOnly: true
+      description: WorkGroupのID (UUID)
+    created_at:
+      type: string
+      format: date-time
+      readOnly: true
+      description: 作成日時
+    description:
+      type: string
+      description: Workの説明
+      example: Workの説明が入ります
+    name:
+      type: string
+      description: Workの名前
+      example: 第NNN仕業
+    affect_date:
+      type: string
+      format: date
+      description: 発効日
+    affix_content_type: 
+      type: string
+      enum:
+        - text
+        - URI
+        - PNG
+        - PDF
+        - JPG
+      description: affix_content のファイル形式
+      example: text
+    affix_content:
+      type: string
+      oneOf:
+        - format: plain-text
+        - format: uri
+        - format: binary
+      description: 「行路添付」に表示させる内容
+      example: 行路添付の内容が入ります
+    remarks:
+      type: string
+      description: 「注意事項」に表示させる内容
+      example: 注意事項が入ります
+    has_e_train_timetable:
+      type: boolean
+      description: 「E電時刻表」を表示させるかどうか
+      example: true
+    e_train_timetable_content_type: 
+      type: string
+      enum:
+        - text
+        - URI
+        - PNG
+        - PDF
+        - JPG
+      description: e_train_timetable_content のファイル形式
+      example: text
+    e_train_timetable_content:
+      type: string
+      oneOf:
+        - format: plain-text
+        - format: uri
+        - format: binary
+      description: 「E電時刻表」に表示させる内容
+      example: E電時刻表の内容が入ります
 
-array:
-  schema:
-    type: array
-    title: WorkArray
-    items:
-      $ref: '#/object/schema'
+WorkArray:
+  type: array
+  title: WorkArray
+  items:
+    $ref: '#/Work'
