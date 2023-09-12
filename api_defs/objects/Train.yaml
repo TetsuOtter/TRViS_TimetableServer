@@ -79,11 +79,11 @@ object:
         description: 列車に関する情報
         example: '<div style="color: red">車掌省略</div>'
       direction:
-        type: intener
+        type: integer
         description: '進行方向 (0~1: 下り, -1: 上り)'
         example: 1
       day_count:
-        type: intener
+        type: integer
         description: 仕業の初日からの経過日数 (0で初日/日勤、1で明け)
         minimum: 0
         example: 1
