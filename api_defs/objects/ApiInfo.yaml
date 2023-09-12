@@ -4,9 +4,11 @@ json:
     properties:
       server_name:
         type: string
+        readOnly: true
         description: サーバの名前
       version:
         type: string
+        readOnly: true
         description: APIのバージョン
   examples:
     example_1:

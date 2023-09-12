@@ -9,4 +9,4 @@ path:
         description: APIの情報
         content:
           application/json:
-            $ref: '../../response_objs/api_info/ApiInfo.yaml#/json'
+            $ref: '../objects/ApiInfo.yaml#/json'

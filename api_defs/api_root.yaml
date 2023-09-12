@@ -27,8 +27,8 @@ tags:
     description: Train (列車) の操作を行う
 
 paths:
-  /api/v1/api_info:
-    $ref: "./paths/api_info/index.yaml#/path"
+  /api/v1:
+    $ref: "./paths/index.yaml#/path"
 
   /api/v1/auths:
     $ref: "./paths/auth/index.yaml#/path"
