@@ -25,6 +25,8 @@ tags:
     description: Work (仕業) の操作を行う
   - name: train
     description: Train (列車) の操作を行う
+  - name: timetable_row
+    description: TimetableRow (運転時刻表の1行) の操作を行う
 
 paths:
   /api/v1:
@@ -64,6 +66,14 @@ paths:
   # /api/v1/trains/{id}:
   #   $ref: "./paths/trains/id.yaml#/path"
 
+  /api/v1/work_groups/{work_group_id}/works/{work_id}/trains/{train_id}/timetable_rows:
+    $ref: "./paths/timetable_rows/index.yaml#/path"
+  /api/v1/work_groups/{work_group_id}/works/{work_id}/trains/{train_id}/timetable_rows/{timetable_row_id}:
+    $ref: "./paths/timetable_rows/id.yaml#/path"
+  # 将来的には対応させたい
+  # /api/v1/trains/{train_id}/timetable_rows:
+  #   $ref: "./paths/timetable_rows/index.yaml#/path"
+
 components:
   securitySchemes:
     bearerAuth:
@@ -87,6 +97,11 @@ components:
       $ref: "./objects/StationTrack.yaml#/StationTrack"
     StationTrackArray:
       $ref: "./objects/StationTrack.yaml#/StationTrackArray"
+
+    TimetableRow:
+      $ref: "./objects/TimetableRow.yaml#/TimetableRow"
+    TimetableRowArray:
+      $ref: "./objects/TimetableRow.yaml#/TimetableRowArray"
 
     Train:
       $ref: "./objects/Train.yaml#/Train"
