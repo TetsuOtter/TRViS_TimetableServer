@@ -1,0 +1,53 @@
+WorkGroupId:
+  in: path
+  name: work_group_id
+  required: true
+  schema:
+    type: string
+    format: uuid
+  description: WorkGroupのID
+
+WorkId:
+  in: path
+  name: work_id
+  required: true
+  schema:
+    type: string
+    format: uuid
+  description: WorkのID
+
+TrainId:
+  in: path
+  name: train_id
+  required: true
+  schema:
+    type: string
+    format: uuid
+  description: TrainのID
+
+TimetableRowId:
+  in: path
+  name: timetable_row_id
+  required: true
+  schema:
+    type: string
+    format: uuid
+  description: Timetable RowのID
+
+StationId:
+  in: path
+  name: station_id
+  required: true
+  schema:
+    type: string
+    format: uuid
+  description: StationのID
+
+StationTrackId:
+  in: path
+  name: station_track_id
+  required: true
+  schema:
+    type: string
+    format: uuid
+  description: Station TrackのID

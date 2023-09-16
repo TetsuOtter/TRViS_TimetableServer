@@ -80,6 +80,7 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+
   schemas:
     ApiInfo:
       $ref: "./objects/ApiInfo.yaml#/ApiInfo"
@@ -117,3 +118,22 @@ components:
       $ref: "./objects/WorkGroup.yaml#/WorkGroup"
     WorkGroupArray:
       $ref: "./objects/WorkGroup.yaml#/WorkGroupArray"
+
+  parameters:
+    WorkGroupId:
+      $ref: "./parameters/id.yaml#/WorkGroupId"
+    WorkId:
+      $ref: "./parameters/id.yaml#/WorkId"
+    TrainId:
+      $ref: "./parameters/id.yaml#/TrainId"
+    TimetableRowId:
+      $ref: "./parameters/id.yaml#/TimetableRowId"
+    StationId:
+      $ref: "./parameters/id.yaml#/StationId"
+    StationTrackId:
+      $ref: "./parameters/id.yaml#/StationTrackId"
+    
+    PageNumber:
+      $ref: "./parameters/paging.yaml#/PageNumber"
+    PageSize:
+      $ref: "./parameters/paging.yaml#/PageSize"
