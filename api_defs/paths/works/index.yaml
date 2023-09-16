@@ -84,5 +84,4 @@ path:
         $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/404_WorkGroupNotFound'
 
 components:
-  schemas:
-    $ref: '../../api_root.yaml#/components/schemas'
+  $ref: '../../api_root.yaml#/components'

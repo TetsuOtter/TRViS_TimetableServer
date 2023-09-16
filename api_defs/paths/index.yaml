@@ -12,5 +12,4 @@ path:
             schema:
               $ref: '#/components/schemas/ApiInfo'
 components:
-  schemas:
-    $ref: '../api_root.yaml#/components/schemas'
+  $ref: '../api_root.yaml#/components'
