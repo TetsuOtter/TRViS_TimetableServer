@@ -7,27 +7,9 @@ path:
     security:
       - bearerAuth: []
     parameters:
-      - in: path
-        name: work_group_id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: WorkGroupのID
-      - in: path
-        name: work_id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: WorkのID
-      - in: path
-        name: train_id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: TrainのID
+      - $ref: '#/components/parameters/WorkGroupId'
+      - $ref: '#/components/parameters/WorkId'
+      - $ref: '#/components/parameters/TrainId'
     responses:
       '200':
         description: 取得成功
@@ -50,27 +32,9 @@ path:
     security:
       - bearerAuth: []
     parameters:
-      - in: path
-        name: work_group_id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: WorkGroupのID
-      - in: path
-        name: work_id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: WorkのID
-      - in: path
-        name: train_id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: TrainのID
+      - $ref: '#/components/parameters/WorkGroupId'
+      - $ref: '#/components/parameters/WorkId'
+      - $ref: '#/components/parameters/TrainId'
     requestBody:
       description: 更新後のWorkの情報
       required: true
@@ -103,27 +67,9 @@ path:
     security:
       - bearerAuth: []
     parameters:
-      - in: path
-        name: work_group_id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: WorkGroupのID
-      - in: path
-        name: work_id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: WorkのID
-      - in: path
-        name: train_id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: TrainのID
+      - $ref: '#/components/parameters/WorkGroupId'
+      - $ref: '#/components/parameters/WorkId'
+      - $ref: '#/components/parameters/TrainId'
     responses:
       '200':
         description: 削除成功

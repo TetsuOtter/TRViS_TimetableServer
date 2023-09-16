@@ -7,23 +7,8 @@ path:
     security:
       - bearerAuth: []
     parameters:
-      - in: query
-        name: p
-        required: false
-        schema:
-          type: integer
-          minimum: 1
-          default: 1
-        description: ページングを行う場合のページ番号
-      - in: query
-        name: limit
-        required: false
-        schema:
-          type: integer
-          minimum: 1
-          maximum: 100
-          default: 10
-        description: ページングを行う場合の1ページあたりの件数
+      - $ref: '#/components/parameters/PageNumber'
+      - $ref: '#/components/parameters/PageSize'
     responses:
       '200':
         description: 取得成功

@@ -7,34 +7,10 @@ path:
     security:
       - bearerAuth: []
     parameters:
-      - in: path
-        name: work_group_id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: WorkGroupのID
-      - in: path
-        name: work_id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: WorkのID
-      - in: path
-        name: train_id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: TrainのID
-      - in: path
-        name: timetable_row_id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: TimetableRowのID
+      - $ref: '#/components/parameters/WorkGroupId'
+      - $ref: '#/components/parameters/WorkId'
+      - $ref: '#/components/parameters/TrainId'
+      - $ref: '#/components/parameters/TimetableRowId'
     responses:
       '200':
         description: 取得成功
@@ -57,34 +33,10 @@ path:
     security:
       - bearerAuth: []
     parameters:
-      - in: path
-        name: work_group_id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: WorkGroupのID
-      - in: path
-        name: work_id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: WorkのID
-      - in: path
-        name: train_id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: TrainのID
-      - in: path
-        name: timetable_row_id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: TimetableRowのID
+      - $ref: '#/components/parameters/WorkGroupId'
+      - $ref: '#/components/parameters/WorkId'
+      - $ref: '#/components/parameters/TrainId'
+      - $ref: '#/components/parameters/TimetableRowId'
     requestBody:
       description: 更新後のTimetableRowの情報
       required: true
@@ -117,34 +69,10 @@ path:
     security:
       - bearerAuth: []
     parameters:
-      - in: path
-        name: work_group_id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: WorkGroupのID
-      - in: path
-        name: work_id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: WorkのID
-      - in: path
-        name: train_id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: TrainのID
-      - in: path
-        name: timetable_row_id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: TimetableRowのID
+      - $ref: '#/components/parameters/WorkGroupId'
+      - $ref: '#/components/parameters/WorkId'
+      - $ref: '#/components/parameters/TrainId'
+      - $ref: '#/components/parameters/TimetableRowId'
     responses:
       '200':
         description: 削除成功

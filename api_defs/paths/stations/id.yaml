@@ -7,20 +7,8 @@ path:
     security:
       - bearerAuth: []
     parameters:
-      - in: path
-        name: work_group_id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: WorkGroupのID
-      - in: path
-        name: station_id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: StationのID
+      - $ref: '#/components/parameters/WorkGroupId'
+      - $ref: '#/components/parameters/StationId'
     responses:
       '200':
         description: 取得成功
@@ -43,20 +31,8 @@ path:
     security:
       - bearerAuth: []
     parameters:
-      - in: path
-        name: work_group_id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: WorkGroupのID
-      - in: path
-        name: station_id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: StationのID
+      - $ref: '#/components/parameters/WorkGroupId'
+      - $ref: '#/components/parameters/StationId'
     requestBody:
       description: 更新後のStationの情報
       required: true
@@ -89,20 +65,8 @@ path:
     security:
       - bearerAuth: []
     parameters:
-      - in: path
-        name: work_group_id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: WorkGroupのID
-      - in: path
-        name: station_id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: StationのID
+      - $ref: '#/components/parameters/WorkGroupId'
+      - $ref: '#/components/parameters/StationId'
     responses:
       '200':
         description: 削除成功

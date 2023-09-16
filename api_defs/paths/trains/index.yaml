@@ -7,37 +7,10 @@ path:
     security:
       - bearerAuth: []
     parameters:
-      - in: path
-        name: work_group_id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: WorkGroupのID
-      - in: path
-        name: work_id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: WorkのID
-      - in: query
-        name: p
-        required: false
-        schema:
-          type: integer
-          minimum: 1
-          default: 1
-        description: ページングを行う場合のページ番号
-      - in: query
-        name: limit
-        required: false
-        schema:
-          type: integer
-          minimum: 1
-          maximum: 100
-          default: 10
-        description: ページングを行う場合の1ページあたりの件数
+      - $ref: '#/components/parameters/WorkGroupId'
+      - $ref: '#/components/parameters/WorkId'
+      - $ref: '#/components/parameters/PageNumber'
+      - $ref: '#/components/parameters/PageSize'
     responses:
       '200':
         description: 取得成功
@@ -62,20 +35,8 @@ path:
     security:
       - bearerAuth: []
     parameters:
-      - in: path
-        name: work_group_id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: WorkGroupのID
-      - in: path
-        name: work_id
-        required: true
-        schema:
-          type: string
-          format: uuid
-        description: WorkのID
+      - $ref: '#/components/parameters/WorkGroupId'
+      - $ref: '#/components/parameters/WorkId'
     requestBody:
       description: 作成するTrainの情報
       required: true
