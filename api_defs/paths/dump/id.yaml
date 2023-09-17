@@ -1,0 +1,26 @@
+path:
+  get:
+    summary: まとめて出力する
+    description: WorkGroupに属するデータをまとめて出力する
+    tags:
+      - dump
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '#/components/parameters/WorkGroupId'
+    responses:
+      '200':
+        description: 取得成功
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TRViS_json'
+      '400':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
+      '401':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/401_TokenError'
+      '404':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/404_ContentNotFound'
+
+components:
+  $ref: '../../api_root.yaml#/components'

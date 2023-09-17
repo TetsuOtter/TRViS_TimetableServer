@@ -29,6 +29,8 @@ tags:
     description: TimetableRow (運転時刻表の1行) の操作を行う
   - name: color
     description: 色情報の操作を行う
+  - name: dump
+    description: 複数のデータをまとめて出力する
 
 paths:
   /:
@@ -81,6 +83,9 @@ paths:
   /colors/{color_id}:
     $ref: "./paths/colors/id.yaml#/path"
 
+  /dump/{work_group_id}:
+    $ref: "./paths/dump/id.yaml#/path"
+
 components:
   securitySchemes:
     bearerAuth:
@@ -130,6 +135,9 @@ components:
       $ref: "./objects/Color.yaml#/Color"
     ColorArray:
       $ref: "./objects/Color.yaml#/ColorArray"
+
+    TRViS_json:
+      $ref: "./objects/TRViS.yaml#/TRViS_json_root"
 
   parameters:
     WorkGroupId:
