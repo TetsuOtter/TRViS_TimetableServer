@@ -5,9 +5,9 @@ info:
   version: 1.0.0
 
 servers:
-  - url: http://localhost:8080
+  - url: http://localhost:8080/api/v1
     description: ローカル開発環境
-  - url: https://trvis.t0r.dev
+  - url: https://trvis.t0r.dev/api/v1
     description: 本番環境
 
 tags:
@@ -29,49 +29,49 @@ tags:
     description: TimetableRow (運転時刻表の1行) の操作を行う
 
 paths:
-  /api/v1:
+  /:
     $ref: "./paths/index.yaml#/path"
 
-  /api/v1/auths:
+  /auths:
     $ref: "./paths/auth/index.yaml#/path"
 
-  /api/v1/work_groups:
+  /work_groups:
     $ref: "./paths/work_groups/index.yaml#/path"
-  /api/v1/work_groups/{work_group_id}:
+  /work_groups/{work_group_id}:
     $ref: "./paths/work_groups/id.yaml#/path"
 
-  /api/v1/work_groups/{work_group_id}/stations:
+  /work_groups/{work_group_id}/stations:
     $ref: "./paths/stations/index.yaml#/path"
-  /api/v1/work_groups/{work_group_id}/stations/{station_id}:
+  /work_groups/{work_group_id}/stations/{station_id}:
     $ref: "./paths/stations/id.yaml#/path"
 
-  /api/v1/work_groups/{work_group_id}/stations/{station_id}/tracks:
+  /work_groups/{work_group_id}/stations/{station_id}/tracks:
     $ref: "./paths/station_tracks/index.yaml#/path"
-  /api/v1/work_groups/{work_group_id}/stations/{station_id}/tracks/{station_track_id}:
+  /work_groups/{work_group_id}/stations/{station_id}/tracks/{station_track_id}:
     $ref: "./paths/station_tracks/id.yaml#/path"
 
-  /api/v1/work_groups/{work_group_id}/works:
+  /work_groups/{work_group_id}/works:
     $ref: "./paths/works/index.yaml#/path"
-  /api/v1/work_groups/{work_group_id}/works/{work_id}:
+  /work_groups/{work_group_id}/works/{work_id}:
     $ref: "./paths/works/id.yaml#/path"
   # 将来的には対応させたい
-  # /api/v1/works/{id}:
+  # /works/{id}:
   #   $ref: "./paths/works/id.yaml#/path"
 
-  /api/v1/work_groups/{work_group_id}/works/{work_id}/trains:
+  /work_groups/{work_group_id}/works/{work_id}/trains:
     $ref: "./paths/trains/index.yaml#/path"
-  /api/v1/work_groups/{work_group_id}/works/{work_id}/trains/{train_id}:
+  /work_groups/{work_group_id}/works/{work_id}/trains/{train_id}:
     $ref: "./paths/trains/id.yaml#/path"
   # 将来的には対応させたい
-  # /api/v1/trains/{id}:
+  # /trains/{id}:
   #   $ref: "./paths/trains/id.yaml#/path"
 
-  /api/v1/work_groups/{work_group_id}/works/{work_id}/trains/{train_id}/timetable_rows:
+  /work_groups/{work_group_id}/works/{work_id}/trains/{train_id}/timetable_rows:
     $ref: "./paths/timetable_rows/index.yaml#/path"
-  /api/v1/work_groups/{work_group_id}/works/{work_id}/trains/{train_id}/timetable_rows/{timetable_row_id}:
+  /work_groups/{work_group_id}/works/{work_id}/trains/{train_id}/timetable_rows/{timetable_row_id}:
     $ref: "./paths/timetable_rows/id.yaml#/path"
   # 将来的には対応させたい
-  # /api/v1/trains/{train_id}/timetable_rows:
+  # /trains/{train_id}/timetable_rows:
   #   $ref: "./paths/timetable_rows/index.yaml#/path"
 
 components:
