@@ -27,6 +27,8 @@ tags:
     description: Train (列車) の操作を行う
   - name: timetable_row
     description: TimetableRow (運転時刻表の1行) の操作を行う
+  - name: color
+    description: 色情報の操作を行う
 
 paths:
   /:
@@ -74,6 +76,11 @@ paths:
   # /trains/{train_id}/timetable_rows:
   #   $ref: "./paths/timetable_rows/index.yaml#/path"
 
+  /colors:
+    $ref: "./paths/colors/index.yaml#/path"
+  /colors/{color_id}:
+    $ref: "./paths/colors/id.yaml#/path"
+
 components:
   securitySchemes:
     bearerAuth:
@@ -119,6 +126,11 @@ components:
     WorkGroupArray:
       $ref: "./objects/WorkGroup.yaml#/WorkGroupArray"
 
+    Color:
+      $ref: "./objects/Color.yaml#/Color"
+    ColorArray:
+      $ref: "./objects/Color.yaml#/ColorArray"
+
   parameters:
     WorkGroupId:
       $ref: "./parameters/id.yaml#/WorkGroupId"
@@ -132,6 +144,8 @@ components:
       $ref: "./parameters/id.yaml#/StationId"
     StationTrackId:
       $ref: "./parameters/id.yaml#/StationTrackId"
+    ColorId:
+      $ref: "./parameters/id.yaml#/ColorId"
     
     PageNumber:
       $ref: "./parameters/paging.yaml#/PageNumber"

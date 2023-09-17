@@ -51,3 +51,12 @@ StationTrackId:
     type: string
     format: uuid
   description: Station TrackのID
+
+ColorId:
+  in: path
+  name: color_id
+  required: true
+  schema:
+    type: string
+    format: uuid
+  description: ColorのID
