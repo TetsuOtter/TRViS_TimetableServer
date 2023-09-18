@@ -1,0 +1,53 @@
+path:
+  get:
+    summary: 複数件取得する
+    description: Workのまとまり (WorkGroup) の情報を複数件取得する
+    tags:
+      - work_group
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '#/components/parameters/PageNumber'
+      - $ref: '#/components/parameters/PageSize'
+    responses:
+      '200':
+        description: 取得成功
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkGroupArray'
+      '204':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/204_NoContentInThisPage'
+      '400':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
+      '401':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/401_TokenError'
+
+  post:
+    summary: 作成する
+    description: Workのまとまり (WorkGroup) を新しく作成する
+    tags:
+      - work_group
+    security:
+      - bearerAuth: []
+    requestBody:
+      description: 作成するWorkGroupの情報
+      required: true
+      content:
+        application/json:
+            schema:
+              $ref: '#/components/schemas/WorkGroup'
+    responses:
+      '201':
+        description: 作成成功
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkGroup'
+      '400':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
+      '401':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/401_TokenError'
+
+components:
+  $ref: '../../api_root.yaml#/components'

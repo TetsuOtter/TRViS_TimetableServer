@@ -1,0 +1,301 @@
+TRViS_json_root:
+  type: array
+  title: TRViS root object
+  items:
+    $ref: '#/TRViS_json_WorkGroup'
+
+TRViS_json_WorkGroup:
+  type: object
+  title: TRViS_WorkGroup
+  required:
+    - Name
+    - Works
+  properties:
+    Name:
+      type: string
+      description: WorkGroupの名前
+      example: AAA運輸区
+    DBVersion:
+      type: integer
+      description: このDB構造のバージョン情報
+      example: 1
+    Works:
+      type: array
+      description: このWorkGroupに属するWorkの配列
+      items:
+        $ref: '#/TRViS_json_Work'
+
+TRViS_json_Work:
+  type: object
+  title: TRViS_Work
+  required:
+    - Name
+    - Trains
+  properties:
+    Name:
+      type: string
+      description: Workの名前
+      example: 123行路
+    AffectDate:
+      type: string
+      format: date
+      nullable: true
+      description: この仕業の施行日
+      example: '2020-01-01'
+    AffixContentType:
+      type: integer
+      nullable: true
+      description: AffixContentのContent-Type
+      example: 0
+    AffixContent:
+      type: string
+      nullable: true
+      description: 行路添付に表示する内容
+      example: ''
+    Remarks:
+      type: string
+      nullable: true
+      description: 仕業の注意事項に表示する内容
+      example: '2023年1月1日 12時34分56秒作成'
+    HasETrainTimetable:
+      type: boolean
+      description: この行路にE電時刻表が存在するかどうか
+      example: true
+    ETrainTimetableContentType:
+      type: integer
+      nullable: true
+      description: E電時刻表のContent-Type
+      example: 0
+    ETrainTimetableContent:
+      type: string
+      nullable: true
+      description: E電時刻表に表示する内容
+      example: ''
+
+    Trains:
+      type: array
+      description: このWorkに属するTrainの配列
+      items:
+        $ref: '#/TRViS_json_Train'
+
+TRViS_json_Train:
+  type: object
+  title: TRViS_Train
+  required:
+    - TrainNumber
+    - Direction
+    - TimetableRows
+  properties:
+    TrainNumber:
+      type: string
+      description: 列車番号
+      example: 試1234M
+    MaxSpeed:
+      type: string
+      nullable: true
+      description: 最高速度
+      example: '110'
+    SpeedType:
+      type: string
+      nullable: true
+      description: 速度種別
+      example: 通電A20
+    NominalTractiveCapacity:
+      type: string
+      nullable: true
+      description: けん引定数
+      example: 'XXX系 1M9T'
+    CarCount:
+      type: integer
+      nullable: true
+      minimum: 0
+      description: 車両数
+      example: 10
+    Destination:
+      type: string
+      nullable: true
+      description: 行先
+      example: '東  京'
+    BegionRemarks:
+      type: string
+      nullable: true
+      description: 乗車前の注意事項 (「乗継」など)
+      example: '(乗継)'
+    AfterRemarks:
+      type: string
+      nullable: true
+      description: 降車後の注意事項 (「乗継」など)
+      example: '(乗継)'
+    Remarks:
+      type: string
+      nullable: true
+      description: 注意事項
+      example: |
+        XXXX ~ YYYY 徐行 30km/h
+        AAAA ~ BBBB 車掌省略
+    BeforeDeparture:
+      type: string
+      nullable: true
+      description: 発前
+      example: '転線 5分          転線'
+    TrainInfo:
+      type: string
+      nullable: true
+      description: 列車に関する情報
+      example: '<div style="color: red">車掌省略</div>'
+    Direction:
+      type: integer
+      description: '進行方向 (0~1: 下り, -1: 上り)'
+      example: 1
+    AfterArrive:
+      type: string
+      nullable: true
+      description: 発前
+      example: '転線 5分          転線'
+    DayCount:
+      type: integer
+      description: 仕業の初日からの経過日数 (0で初日/日勤、1で明け)
+      minimum: 0
+      example: 1
+    IsRideOnMoving:
+      type: boolean
+      description: 添乗での移動かどうか
+      example: false
+
+    TimetableRows:
+      type: array
+      description: このTrainに属するTimetableRowの配列
+      items:
+        $ref: '#/TRViS_json_TimetableRow'
+
+TRViS_json_TimetableRow:
+  type: object
+  title: TRViS_TimetableRow
+  required:
+    - StationName
+    - Location_m
+  properties:
+    StationName:
+      type: string
+      minLength: 1
+      maxLength: 4
+      description: 駅名 (4文字まで)
+      example: '東京'
+    Location_m:
+      type: number
+      format: double
+      description: 駅の位置 (m)
+      example: 0
+    Longitude_deg:
+      type: number
+      format: double
+      nullable: true
+      maximum: 180
+      minimum: -180
+      description: 駅の経度 (度)
+      example: 139.766944
+    Latitude_deg:
+      type: number
+      format: double
+      nullable: true
+      maximum: 90
+      minimum: -90
+      description: 駅の緯度 (度)
+      example: 35.680833
+    OnStationDetectRadius_m:
+      type: number
+      format: double
+      nullable: true
+      description: その駅にいるかどうかを判定する円の半径 (m)
+      example: 123.45
+    FullName:
+      type: string
+      nullable: true
+      description: 駅のフルネーム
+      example: '東京駅'
+    RecordType:
+      type: integer
+      description: 駅の種類
+      example: 0
+
+    TrackName:
+      type: string
+      nullable: true
+      description: 駅の番線名
+      example: '上1'
+
+    DriveTime_MM:
+      type: integer
+      minimum: 0
+      maximum: 99
+      description: 駅間運転時間 (分)
+      example: 3
+    DriveTime_SS:
+      type: integer
+      minimum: 0
+      maximum: 59
+      description: 駅間運転時間 (秒)
+      example: 15
+
+    IsOperationOnlyStop:
+      type: boolean
+      description: 運転停車かどうか
+      example: false
+    IsPass:
+      type: boolean
+      description: 通過駅かどうか
+      example: false
+    HasBracket:
+      type: boolean
+      description: 到着時刻に括弧を付けるかどうか
+      example: false
+    IsLastStop:
+      type: boolean
+      description: 終着駅かどうか
+      example: false
+
+    Arrive:
+      type: string
+      pattern: '^(.*|[0-9]{0,2}:[0-9]{0,2}:[0-9]{0,2})$'
+      description: 到着時刻
+      example: '12:34:56'
+
+    Departure:
+      type: string
+      pattern: '^(.*|[0-9]{0,2}:[0-9]{0,2}:[0-9]{0,2})$'
+      description: 出発時刻
+      example: '::56'
+
+    RunInLimit:
+      type: integer
+      minimum: 0
+      maximum: 1000
+      exclusiveMaximum: true
+      description: 進入制限 (km/h)
+      example: 15
+    RunOutLimit:
+      type: integer
+      minimum: 0
+      maximum: 1000
+      exclusiveMaximum: true
+      description: 進出制限 (km/h)
+      example: 15
+
+    Remarks:
+      type: string
+      description: 注意事項
+      example: 通過設定
+
+    MarkerColor:
+      type: string
+      pattern: '^[0-9a-fA-F]{6}$'
+      description: マーカーの色
+      example: 'ff0000'
+    marker_text:
+      type: string
+      description: マーカー部分に表示する文字列
+      example: '合図'
+
+    WorkType:
+      type: integer
+      description: 作業種別 (実装準備中)

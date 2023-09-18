@@ -1,0 +1,62 @@
+path:
+  get:
+    summary: 複数件取得する
+    description: 指定のWorkGroupに属するStation (駅) の情報を複数件取得する
+    tags:
+      - station_track
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '#/components/parameters/WorkGroupId'
+      - $ref: '#/components/parameters/StationId'
+      - $ref: '#/components/parameters/PageNumber'
+      - $ref: '#/components/parameters/PageSize'
+    responses:
+      '200':
+        description: 取得成功
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StationTrackArray'
+      '204':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/204_NoContentInThisPage'
+      '400':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
+      '401':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/401_TokenError'
+      '404':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/404_WorkGroupNotFound'
+
+  post:
+    summary: 作成する
+    description: 指定のWorkGroupに属する Station (駅) を新しく作成する
+    tags:
+      - station_track
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '#/components/parameters/WorkGroupId'
+      - $ref: '#/components/parameters/StationId'
+    requestBody:
+      description: 作成するStationの情報
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/StationTrack'
+    responses:
+      '201':
+        description: 作成成功
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StationTrack'
+      '400':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
+      '401':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/401_TokenError'
+      '404':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/404_WorkGroupNotFound'
+
+components:
+  $ref: '../../api_root.yaml#/components'

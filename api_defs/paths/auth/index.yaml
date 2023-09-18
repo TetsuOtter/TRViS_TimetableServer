@@ -1,0 +1,25 @@
+path:
+  post:
+    summary: 認証トークンを発行
+    description: APIへのアクセスで使用するJWTを発行する
+    tags:
+      - auth
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TokenRequest'
+    responses:
+      '200':
+        description: 認証トークン発行成功
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenResponse'
+      '400':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
+      '403':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/ExpiredAPIKey'
+
+components:
+  $ref: '../../api_root.yaml#/components'

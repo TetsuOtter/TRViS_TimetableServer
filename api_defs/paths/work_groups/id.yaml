@@ -1,0 +1,80 @@
+path:
+  get:
+    summary: 1件取得する
+    description: Workのまとまり (WorkGroup) の情報を1件取得する
+    tags:
+      - work_group
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '#/components/parameters/WorkGroupId'
+    responses:
+      '200':
+        description: 取得成功
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkGroup'
+      '400':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
+      '401':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/401_TokenError'
+      '404':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/404_ContentNotFound'
+
+  put:
+    summary: 更新する
+    description: 既存の「Workのまとまり (WorkGroup)」を更新する
+    tags:
+      - work_group
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '#/components/parameters/WorkGroupId'
+    requestBody:
+      description: 作成するWorkGroupの情報
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/WorkGroup'
+    responses:
+      '200':
+        description: 更新成功
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkGroup'
+      '400':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
+      '401':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/401_TokenError'
+      '404':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/404_ContentNotFound'
+
+  delete:
+    summary: 削除する
+    description: |
+      既存の「Workのまとまり (WorkGroup)」を削除する
+
+      なお、この操作はOwnerのみが実行可能である。
+    tags:
+      - work_group
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '#/components/parameters/WorkGroupId'
+    responses:
+      '200':
+        description: 削除成功
+      '400':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
+      '401':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/401_TokenError'
+      '403':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/403_NotAllowedCommand'
+      '404':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/404_ContentNotFound'
+
+components:
+  $ref: '../../api_root.yaml#/components'

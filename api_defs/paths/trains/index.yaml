@@ -1,0 +1,62 @@
+path:
+  get:
+    summary: 複数件取得する
+    description: 指定のWorkに属するTrain (列車) の情報を複数件取得する
+    tags:
+      - train
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '#/components/parameters/WorkGroupId'
+      - $ref: '#/components/parameters/WorkId'
+      - $ref: '#/components/parameters/PageNumber'
+      - $ref: '#/components/parameters/PageSize'
+    responses:
+      '200':
+        description: 取得成功
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrainArray'
+      '204':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/204_NoContentInThisPage'
+      '400':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
+      '401':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/401_TokenError'
+      '404':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/404_WorkGroupNotFound'
+
+  post:
+    summary: 作成する
+    description: 指定のWorkに属する Train (列車) を新しく作成する
+    tags:
+      - train
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '#/components/parameters/WorkGroupId'
+      - $ref: '#/components/parameters/WorkId'
+    requestBody:
+      description: 作成するTrainの情報
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Train'
+    responses:
+      '201':
+        description: 作成成功
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Train'
+      '400':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
+      '401':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/401_TokenError'
+      '404':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/404_WorkGroupNotFound'
+
+components:
+  $ref: '../../api_root.yaml#/components'

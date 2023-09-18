@@ -1,0 +1,41 @@
+StationTrack:
+  type: object
+  title: StationTrack
+  required:
+    - name
+    - description
+  properties:
+    station_tracks_id:
+      type: string
+      format: uuid
+      readOnly: true
+      description: Station TrackのID (UUID)
+    created_at:
+      type: string
+      format: date-time
+      readOnly: true
+      description: 作成日時
+    description:
+      type: string
+      description: Station Trackの説明
+      example: Station Trackの説明が入ります
+    name:
+      type: string
+      description: その番線の名前
+      example: 上2
+    run_in_limit:
+      type: integer
+      minimum: 0
+      description: 進入制限のデフォルト値 (km/h)
+      example: 15
+    run_out_limit:
+      type: integer
+      minimum: 0
+      description: 進出制限のデフォルト値 (km/h)
+      example: 15
+
+StationTrackArray:
+  type: array
+  title: StationTrackArray
+  items:
+    $ref: '#/StationTrack'

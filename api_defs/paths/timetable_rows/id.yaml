@@ -1,0 +1,89 @@
+path:
+  get:
+    summary: 1件取得する
+    description: TimetableRowを1件取得する
+    tags:
+      - timetable_row
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '#/components/parameters/WorkGroupId'
+      - $ref: '#/components/parameters/WorkId'
+      - $ref: '#/components/parameters/TrainId'
+      - $ref: '#/components/parameters/TimetableRowId'
+    responses:
+      '200':
+        description: 取得成功
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimetableRow'
+      '400':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
+      '401':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/401_TokenError'
+      '404':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/404_ContentNotFound_WorkGroupNotFound'
+
+  put:
+    summary: 更新する
+    description: 既存のTimetableRowの情報を更新する
+    tags:
+      - timetable_row
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '#/components/parameters/WorkGroupId'
+      - $ref: '#/components/parameters/WorkId'
+      - $ref: '#/components/parameters/TrainId'
+      - $ref: '#/components/parameters/TimetableRowId'
+    requestBody:
+      description: 更新後のTimetableRowの情報
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TimetableRow'
+    responses:
+      '200':
+        description: 更新成功
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimetableRow'
+      '400':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
+      '401':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/401_TokenError'
+      '404':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/404_ContentNotFound_WorkGroupNotFound'
+
+  delete:
+    summary: 削除する
+    description: |
+      既存のTimetableRowを削除する
+
+      この操作は (認証済みの) 誰もが実行可能です。
+    tags:
+      - timetable_row
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '#/components/parameters/WorkGroupId'
+      - $ref: '#/components/parameters/WorkId'
+      - $ref: '#/components/parameters/TrainId'
+      - $ref: '#/components/parameters/TimetableRowId'
+    responses:
+      '200':
+        description: 削除成功
+      '400':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
+      '401':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/401_TokenError'
+      '403':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/403_NotAllowedCommand'
+      '404':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/404_ContentNotFound_WorkGroupNotFound'
+
+components:
+  $ref: '../../api_root.yaml#/components'

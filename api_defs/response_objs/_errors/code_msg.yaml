@@ -1,0 +1,122 @@
+json:
+  schema:
+    type: object
+    title: error_code_message
+    description: エラーコードとエラーメッセージ
+    properties:
+      code:
+        type: number
+        description: エラーコード
+      message:
+        type: string
+        description: エラーメッセージ
+json_responses:
+  204_NoContentInThisPage:
+    description: ページングの結果、取得件数が0件であった
+    content:
+      application/json:
+        schema:
+          $ref: '#/json/schema'
+        examples:
+          example:
+            value:
+              code: 204
+              message: "No Content in this page"
+  BadRequest:
+    description: リクエストが不正
+    content:
+      application/json:
+        schema:
+          $ref: '#/json/schema'
+        examples:
+          example:
+            value:
+              code: 400
+              message: "Bad Request"
+  401_Unauthorized:
+    description: 認証トークンがセットされていない
+    content:
+      application/json:
+        schema:
+          $ref: '#/json/schema'
+        examples:
+          example:
+            value:
+              code: 401
+              message: "Token is not set"
+  401_TokenError:
+    description: 認証トークンのエラー
+    content:
+      application/json:
+        schema:
+          $ref: '#/json/schema'
+        examples:
+          TokenIsNotSet:
+            description: 認証トークンがセットされていない場合
+            value:
+              code: 401
+              message: "Token is not set"
+          TokenIsExpired:
+            description: 認証トークンが期限切れな場合
+            value:
+              code: 1401
+              message: "Token is expired"
+  ExpiredAPIKey:
+    description: APIキーが期限切れ
+    content:
+      application/json:
+        schema:
+          $ref: '#/json/schema'
+        examples:
+          example:
+            value:
+              code: 403
+              message: "Expired API Key"
+  403_NotAllowedCommand:
+    description: 許可されていない操作を行おうとした
+    content:
+      application/json:
+        schema:
+          $ref: '#/json/schema'
+        examples:
+          example:
+            value:
+              code: 1403
+              message: "Not Allowed Command"
+  404_ContentNotFound:
+    description: コンテンツが存在しない
+    content:
+      application/json:
+        schema:
+          $ref: '#/json/schema'
+        examples:
+          example:
+            value:
+              code: 404
+              message: "Content Not Found"
+  404_WorkGroupNotFound:
+    description: 指定のWorkGroupが存在しない (Work以下のエンドポイントでのみ使用する)
+    content:
+      application/json:
+        schema:
+          $ref: '#/json/schema'
+        examples:
+          WorkGroupNotFound:
+            value:
+              code: 1404
+              message: "Specified WorkGroup is not found"
+  404_ContentNotFound_WorkGroupNotFound:
+    description: コンテンツが存在しない
+    content:
+      application/json:
+        schema:
+          $ref: '#/json/schema'
+        examples:
+          ContentNotFound:
+            value:
+              code: 404
+              message: "Content Not Found"
+          WorkGroupNotFound:
+            value:
+              code: 1404
+              message: "Specified WorkGroup is not found"

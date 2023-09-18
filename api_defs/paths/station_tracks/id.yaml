@@ -1,0 +1,86 @@
+path:
+  get:
+    summary: 1件取得する
+    description: Station (駅) の情報を1件取得する
+    tags:
+      - station_track
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '#/components/parameters/WorkGroupId'
+      - $ref: '#/components/parameters/StationId'
+      - $ref: '#/components/parameters/StationTrackId'
+    responses:
+      '200':
+        description: 取得成功
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StationTrack'
+      '400':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
+      '401':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/401_TokenError'
+      '404':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/404_ContentNotFound_WorkGroupNotFound'
+
+  put:
+    summary: 更新する
+    description: 既存のStationの情報を更新する
+    tags:
+      - station_track
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '#/components/parameters/WorkGroupId'
+      - $ref: '#/components/parameters/StationId'
+      - $ref: '#/components/parameters/StationTrackId'
+    requestBody:
+      description: 更新後のStationの情報
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/StationTrack'
+    responses:
+      '200':
+        description: 更新成功
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StationTrack'
+      '400':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
+      '401':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/401_TokenError'
+      '404':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/404_ContentNotFound_WorkGroupNotFound'
+
+  delete:
+    summary: 削除する
+    description: |
+      既存のStationを削除する
+
+      なお、この操作はこのStationのOwner、またはこのStationが属するWorkGroupのOwnerのみが実行可能である。
+    tags:
+      - station_track
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '#/components/parameters/WorkGroupId'
+      - $ref: '#/components/parameters/StationId'
+      - $ref: '#/components/parameters/StationTrackId'
+    responses:
+      '200':
+        description: 削除成功
+      '400':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
+      '401':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/401_TokenError'
+      '403':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/403_NotAllowedCommand'
+      '404':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/404_ContentNotFound_WorkGroupNotFound'
+
+components:
+  $ref: '../../api_root.yaml#/components'

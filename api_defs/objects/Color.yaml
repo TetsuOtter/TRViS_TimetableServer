@@ -1,0 +1,109 @@
+Color:
+  type: object
+  title: Color
+  required:
+    - description
+    - name
+    - color_8bit
+  properties:
+    colors_id:
+      type: string
+      format: uuid
+      readOnly: true
+      description: ColorのID (UUID)
+    work_groups_id:
+      type: string
+      format: uuid
+      readOnly: true
+      description: この色が属するWorkGroupのID (UUID)
+    created_at:
+      type: string
+      format: date-time
+      readOnly: true
+      description: 作成日時
+    description:
+      type: string
+      description: WorkGroupの説明
+      example: WorkGroupの説明が入ります
+    updated_at:
+      type: string
+      format: date-time
+      readOnly: true
+      description: 更新日時
+
+    name:
+      type: string
+      description: Colorの名前 (詳細な説明はdescriptionに書く)
+      example: 赤
+
+    color_8bit:
+      $ref: '#/Color8bit'
+      description: 色の8bit表現
+
+    color_real:
+      $ref: '#/ColorReal'
+      description: 色の小数表現
+
+
+Color8bit:
+  type: object
+  title: Color8bit
+  required:
+    - red_8bit
+    - green_8bit
+    - blue_8bit
+  properties:
+    red:
+      type: integer
+      minimum: 0
+      maximum: 255
+      description: 色の赤色成分 (8bit)
+      example: 127
+    green:
+      type: integer
+      minimum: 0
+      maximum: 255
+      description: 色の緑色成分 (8bit)
+      example: 127
+    blue:
+      type: integer
+      minimum: 0
+      maximum: 255
+      description: 色の青色成分 (8bit)
+      example: 127
+
+ColorReal:
+  type: object
+  title: ColorReal
+  required:
+    - red_real
+    - green_real
+    - blue_real
+  properties:
+    red:
+      type: number
+      format: double
+      minimum: 0.0
+      maximum: 1.0
+      description: 色の赤色成分 (小数)
+      example: 0.5
+    green:
+      type: number
+      format: double
+      minimum: 0.0
+      maximum: 1.0
+      description: 色の緑色成分 (小数)
+      example: 0.5
+    blue:
+      type: number
+      format: double
+      minimum: 0.0
+      maximum: 1.0
+      description: 色の青色成分 (小数)
+      example: 0.5
+
+ColorArray:
+  type: array
+  title: ColorArray
+  items:
+    $ref: '#/Color'

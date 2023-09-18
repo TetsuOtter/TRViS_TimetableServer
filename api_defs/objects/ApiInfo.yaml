@@ -1,0 +1,18 @@
+ApiInfo:
+  type: object
+  title: ApiInfo
+  properties:
+    server_name:
+      type: string
+      readOnly: true
+      description: サーバの名前
+    version:
+      type: string
+      readOnly: true
+      description: APIのバージョン
+examples:
+  example_1:
+    summary: v1.0.0でのAPI情報例
+    value:
+      server_name: "server by TetsuOtter hosted on lolipop (https://lolipop.jp/)"
+      version: "1.0.0"

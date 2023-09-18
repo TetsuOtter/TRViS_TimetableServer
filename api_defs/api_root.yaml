@@ -1,0 +1,161 @@
+openapi: 3.0.3
+
+info:
+  title: TRViS用 時刻表管理用API
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: ローカル開発環境
+  - url: https://trvis.t0r.dev/api/v1
+    description: 本番環境
+
+tags:
+  - name: api_info
+    description: APIの情報を取得する
+  - name: auth
+    description: 認証/認可関連のAPI (トークン発行など)
+  - name: work_group
+    description: Work Groupの操作を行う
+  - name: station
+    description: Stationの操作を行う
+  - name: station_track
+    description: Station Track (各駅の番線) の操作を行う
+  - name: work
+    description: Work (仕業) の操作を行う
+  - name: train
+    description: Train (列車) の操作を行う
+  - name: timetable_row
+    description: TimetableRow (運転時刻表の1行) の操作を行う
+  - name: color
+    description: 色情報の操作を行う
+  - name: dump
+    description: 複数のデータをまとめて出力する
+
+paths:
+  /:
+    $ref: "./paths/index.yaml#/path"
+
+  /auths:
+    $ref: "./paths/auth/index.yaml#/path"
+
+  /work_groups:
+    $ref: "./paths/work_groups/index.yaml#/path"
+  /work_groups/{work_group_id}:
+    $ref: "./paths/work_groups/id.yaml#/path"
+
+  /work_groups/{work_group_id}/stations:
+    $ref: "./paths/stations/index.yaml#/path"
+  /work_groups/{work_group_id}/stations/{station_id}:
+    $ref: "./paths/stations/id.yaml#/path"
+
+  /work_groups/{work_group_id}/stations/{station_id}/tracks:
+    $ref: "./paths/station_tracks/index.yaml#/path"
+  /work_groups/{work_group_id}/stations/{station_id}/tracks/{station_track_id}:
+    $ref: "./paths/station_tracks/id.yaml#/path"
+
+  /work_groups/{work_group_id}/works:
+    $ref: "./paths/works/index.yaml#/path"
+  /work_groups/{work_group_id}/works/{work_id}:
+    $ref: "./paths/works/id.yaml#/path"
+  # 将来的には対応させたい
+  # /works/{id}:
+  #   $ref: "./paths/works/id.yaml#/path"
+
+  /work_groups/{work_group_id}/works/{work_id}/trains:
+    $ref: "./paths/trains/index.yaml#/path"
+  /work_groups/{work_group_id}/works/{work_id}/trains/{train_id}:
+    $ref: "./paths/trains/id.yaml#/path"
+  # 将来的には対応させたい
+  # /trains/{id}:
+  #   $ref: "./paths/trains/id.yaml#/path"
+
+  /work_groups/{work_group_id}/works/{work_id}/trains/{train_id}/timetable_rows:
+    $ref: "./paths/timetable_rows/index.yaml#/path"
+  /work_groups/{work_group_id}/works/{work_id}/trains/{train_id}/timetable_rows/{timetable_row_id}:
+    $ref: "./paths/timetable_rows/id.yaml#/path"
+  # 将来的には対応させたい
+  # /trains/{train_id}/timetable_rows:
+  #   $ref: "./paths/timetable_rows/index.yaml#/path"
+
+  /colors:
+    $ref: "./paths/colors/index.yaml#/path"
+  /colors/{color_id}:
+    $ref: "./paths/colors/id.yaml#/path"
+
+  /dump/{work_group_id}:
+    $ref: "./paths/dump/id.yaml#/path"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ApiInfo:
+      $ref: "./objects/ApiInfo.yaml#/ApiInfo"
+    TokenRequest:
+      $ref: "./objects/TokenRequest.yaml#/TokenRequest"
+    TokenResponse:
+      $ref: "./objects/TokenResponse.yaml#/TokenResponse"
+
+    Station:
+      $ref: "./objects/Station.yaml#/Station"
+    StationArray:
+      $ref: "./objects/Station.yaml#/StationArray"
+
+    StationTrack:
+      $ref: "./objects/StationTrack.yaml#/StationTrack"
+    StationTrackArray:
+      $ref: "./objects/StationTrack.yaml#/StationTrackArray"
+
+    TimetableRow:
+      $ref: "./objects/TimetableRow.yaml#/TimetableRow"
+    TimetableRowArray:
+      $ref: "./objects/TimetableRow.yaml#/TimetableRowArray"
+
+    Train:
+      $ref: "./objects/Train.yaml#/Train"
+    TrainArray:
+      $ref: "./objects/Train.yaml#/TrainArray"
+
+    Work:
+      $ref: "./objects/Work.yaml#/Work"
+    WorkArray:
+      $ref: "./objects/Work.yaml#/WorkArray"
+
+    WorkGroup:
+      $ref: "./objects/WorkGroup.yaml#/WorkGroup"
+    WorkGroupArray:
+      $ref: "./objects/WorkGroup.yaml#/WorkGroupArray"
+
+    Color:
+      $ref: "./objects/Color.yaml#/Color"
+    ColorArray:
+      $ref: "./objects/Color.yaml#/ColorArray"
+
+    TRViS_json:
+      $ref: "./objects/TRViS.yaml#/TRViS_json_root"
+
+  parameters:
+    WorkGroupId:
+      $ref: "./parameters/id.yaml#/WorkGroupId"
+    WorkId:
+      $ref: "./parameters/id.yaml#/WorkId"
+    TrainId:
+      $ref: "./parameters/id.yaml#/TrainId"
+    TimetableRowId:
+      $ref: "./parameters/id.yaml#/TimetableRowId"
+    StationId:
+      $ref: "./parameters/id.yaml#/StationId"
+    StationTrackId:
+      $ref: "./parameters/id.yaml#/StationTrackId"
+    ColorId:
+      $ref: "./parameters/id.yaml#/ColorId"
+    
+    PageNumber:
+      $ref: "./parameters/paging.yaml#/PageNumber"
+    PageSize:
+      $ref: "./parameters/paging.yaml#/PageSize"
