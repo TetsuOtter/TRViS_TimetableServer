@@ -38,19 +38,19 @@ disallowAdditionalPropertiesIfNotPresent: true
 enumUnknownDefaultCase: false
 
 # Description: package for generated models
-modelPackage: dev-t0r-trvis-backend\model
+modelPackage: trvis_backend\model
 
 # Description: package for generated api classes
-apiPackage: dev-t0r-trvis-backend\api
+apiPackage: trvis_backend\api
 
 # Description: naming convention of variable name, e.g. camelCase.
 variableNamingConvention: camelCase
 
 # Description: The main namespace to use for all classes. e.g. Yay\Pets
-# invokerPackage: 
+invokerPackage: dev_t0r
 
 # Description: The main package name for classes. e.g. GeneratedPetstore
-packageName: dev-t0r-trvis-backend\main
+packageName: trvis_backend\main
 
 # Description: The directory to serve as source root.
 # srcBasePath: 
@@ -71,5 +71,5 @@ developerOrganization: Tetsu Otter
 developerOrganizationUrl: https://t0r.dev
 
 # Description: The name to use in the composer package name field. e.g. `vendor/project` (must be lowercase and consist of words separated by `-`, `.` or `_`).
-composerPackageName: dev-t0r-trvis-backend
+composerPackageName: trvis_backend
 
