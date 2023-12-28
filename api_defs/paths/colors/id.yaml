@@ -1,6 +1,7 @@
 path:
   get:
     summary: 1件取得する
+    operationId: getColor
     description: Color (色) の情報を1件取得する
     tags:
       - color
@@ -25,6 +26,7 @@ path:
 
   put:
     summary: 更新する
+    operationId: updateColor
     description: 既存のColorの情報を更新する
     tags:
       - color
@@ -56,6 +58,7 @@ path:
 
   delete:
     summary: 削除する
+    operationId: deleteColor
     description: |
       既存のColorを削除する
 

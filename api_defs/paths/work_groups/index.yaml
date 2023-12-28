@@ -1,6 +1,7 @@
 path:
   get:
     summary: 複数件取得する
+    operationId: getWorkGroupList
     description: Workのまとまり (WorkGroup) の情報を複数件取得する
     tags:
       - work_group
@@ -25,6 +26,7 @@ path:
 
   post:
     summary: 作成する
+    operationId: createWorkGroup
     description: Workのまとまり (WorkGroup) を新しく作成する
     tags:
       - work_group

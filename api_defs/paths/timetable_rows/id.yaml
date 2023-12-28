@@ -1,6 +1,7 @@
 path:
   get:
     summary: 1件取得する
+    operationId: getTimetableRow
     description: TimetableRowを1件取得する
     tags:
       - timetable_row
@@ -27,6 +28,7 @@ path:
 
   put:
     summary: 更新する
+    operationId: updateTimetableRow
     description: 既存のTimetableRowの情報を更新する
     tags:
       - timetable_row
@@ -60,6 +62,7 @@ path:
 
   delete:
     summary: 削除する
+    operationId: deleteTimetableRow
     description: |
       既存のTimetableRowを削除する
 

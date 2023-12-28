@@ -1,6 +1,7 @@
 path:
   get:
     summary: 1件取得する
+    operationId: getTrain
     description: Train (列車) の情報を1件取得する
     tags:
       - train
@@ -26,6 +27,7 @@ path:
 
   put:
     summary: 更新する
+    operationId: updateTrain
     description: 既存のTrainの情報を更新する
     tags:
       - train
@@ -58,6 +60,7 @@ path:
 
   delete:
     summary: 削除する
+    operationId: deleteTrain
     description: |
       既存のTrainを削除する
 

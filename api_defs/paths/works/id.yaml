@@ -1,6 +1,7 @@
 path:
   get:
     summary: 1件取得する
+    operationId: getWork
     description: Work (仕業) の情報を1件取得する
     tags:
       - work
@@ -25,6 +26,7 @@ path:
 
   put:
     summary: 更新する
+    operationId: updateWork
     description: 既存のWorkの情報を更新する
     tags:
       - work
@@ -56,6 +58,7 @@ path:
 
   delete:
     summary: 削除する
+    operationId: deleteWork
     description: |
       既存のWorkを削除する
 

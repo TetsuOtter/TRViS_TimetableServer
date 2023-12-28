@@ -1,6 +1,7 @@
 path:
   get:
     summary: 複数件取得する
+    operationId: getWorkList
     description: 指定のWorkGroupに属するWork (仕業) の情報を複数件取得する
     tags:
       - work
@@ -28,6 +29,7 @@ path:
 
   post:
     summary: 作成する
+    operationId: createWork
     description: 指定のWorkGroupに属する Work (仕業) を新しく作成する
     tags:
       - work

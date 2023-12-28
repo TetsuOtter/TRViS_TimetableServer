@@ -1,6 +1,7 @@
 path:
   get:
     summary: 複数件取得する
+    operationId: getTrainList
     description: 指定のWorkに属するTrain (列車) の情報を複数件取得する
     tags:
       - train
@@ -29,6 +30,7 @@ path:
 
   post:
     summary: 作成する
+    operationId: createTrain
     description: 指定のWorkに属する Train (列車) を新しく作成する
     tags:
       - train

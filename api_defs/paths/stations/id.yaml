@@ -1,6 +1,7 @@
 path:
   get:
     summary: 1件取得する
+    operationId: getStation
     description: Station (駅) の情報を1件取得する
     tags:
       - station
@@ -25,6 +26,7 @@ path:
 
   put:
     summary: 更新する
+    operationId: updateStation
     description: 既存のStationの情報を更新する
     tags:
       - station
@@ -56,6 +58,7 @@ path:
 
   delete:
     summary: 削除する
+    operationId: deleteStation
     description: |
       既存のStationを削除する
 

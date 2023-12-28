@@ -1,6 +1,7 @@
 path:
   get:
     summary: 複数件取得する
+    operationId: getTimetableRowList
     description: 指定のTrainに属するTimetableRowの情報を複数件取得する
     tags:
       - timetable_row
@@ -30,6 +31,7 @@ path:
 
   post:
     summary: 作成する
+    operationId: createTimetableRow
     description: 指定のTrainに属する TimetableRow を新しく作成する
     tags:
       - timetable_row

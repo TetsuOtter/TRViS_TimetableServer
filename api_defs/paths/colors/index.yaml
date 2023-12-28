@@ -1,6 +1,7 @@
 path:
   get:
     summary: 複数件取得する
+    operationId: getColorList
     description: 指定のWorkGroupに属するColor (色) の情報を複数件取得する
     tags:
       - color
@@ -28,6 +29,7 @@ path:
 
   post:
     summary: 作成する
+    operationId: createColor
     description: 指定のWorkGroupに属する Color (色) を新しく作成する
     tags:
       - color

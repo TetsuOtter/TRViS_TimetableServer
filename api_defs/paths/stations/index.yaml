@@ -1,6 +1,7 @@
 path:
   get:
     summary: 複数件取得する
+    operationId: getStationList
     description: 指定のWorkGroupに属するStation (駅) の情報を複数件取得する
     tags:
       - station
@@ -28,6 +29,7 @@ path:
 
   post:
     summary: 作成する
+    operationId: createStation
     description: 指定のWorkGroupに属する Station (駅) を新しく作成する
     tags:
       - station

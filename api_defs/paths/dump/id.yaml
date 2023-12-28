@@ -1,6 +1,7 @@
 path:
   get:
     summary: まとめて出力する
+    operationId: dumpTimetable
     description: WorkGroupに属するデータをまとめて出力する
     tags:
       - dump
