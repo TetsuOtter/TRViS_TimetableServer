@@ -73,15 +73,3 @@ developerOrganizationUrl: https://t0r.dev
 # Description: The name to use in the composer package name field. e.g. `vendor/project` (must be lowercase and consist of words separated by `-`, `.` or `_`).
 composerPackageName: dev-t0r-trvis-backend
 
-# Description: Slim 4 provides its own PSR-7 implementation so that it works out of the box. However, you are free to replace Slim’s default PSR-7 objects with a third-party implementation. Ref: https://www.slimframework.com/docs/v4/concepts/value-objects.html
-# Available Values:
-#    slim-psr7
-#         Slim PSR-7 Message implementation
-#    nyholm-psr7
-#         Nyholm PSR-7 Message implementation
-#    guzzle-psr7
-#         Guzzle PSR-7 Message implementation
-#    zend-diactoros
-#         Zend Diactoros PSR-7 Message implementation
-psr7Implementation: slim-psr7
-
