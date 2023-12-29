@@ -1,7 +1,9 @@
 version: "3.8"
 services:
   php:
-    image: php:8.2-apache
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
     container_name: webmon-php
     hostname: webmon-php
     ports:
@@ -9,10 +11,10 @@ services:
     volumes:
       - type: bind
         read_only: true
-        source: ./backend/lib
+        source: ./backend
         target: /var/www/html
       - type: bind
-        source: ./backend/logs
+        source: ./backend-logs
         target: /var/log/apache2
   mysql:
     image: mysql:8.0-oracle
