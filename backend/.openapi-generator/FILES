@@ -1,4 +1,3 @@
-.gitignore
 README.md
 config/.htaccess
 config/dev/default.inc.php
@@ -41,5 +40,4 @@ logs/.htaccess
 phpcs.xml.dist
 phpunit.xml.dist
 public/.htaccess
-public/index.php
 tests/BaseModelTest.php

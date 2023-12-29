@@ -20,7 +20,8 @@
  * https://github.com/openapitools/openapi-generator
  */
 
-require_once __DIR__ . '/../vendor/autoload.php';
+$DOCUMENT_ROOT_DIR = __DIR__ . '/..';
+require_once $DOCUMENT_ROOT_DIR . '/vendor/autoload.php';
 
 use DI\Bridge\Slim\Bridge;
 use DI\ContainerBuilder;
@@ -49,10 +50,10 @@ switch (strtolower($_SERVER['APP_ENV'] ?? 'prod')) {
 }
 
 // Main configuration
-$builder->addDefinitions(__DIR__ . "/../config/{$env}/default.inc.php");
+$builder->addDefinitions($DOCUMENT_ROOT_DIR . "/config/{$env}/default.inc.php");
 
 // Config file for the environment if exists
-$userConfig = __DIR__ . "/../config/{$env}/config.inc.php";
+$userConfig = $DOCUMENT_ROOT_DIR . "/config/{$env}/config.inc.php";
 if (file_exists($userConfig)) {
     $builder->addDefinitions($userConfig);
 }

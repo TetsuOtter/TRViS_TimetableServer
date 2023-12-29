@@ -1,3 +1,4 @@
 .github/
 composer.json
 /.gitignore
+public/index.php
