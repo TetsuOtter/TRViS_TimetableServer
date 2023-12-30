@@ -2,7 +2,7 @@
 
 return [
     // PDO
-    'pdo.dsn' => 'mysql:host=webmon-db;charset=utf8mb4',
+    'pdo.dsn' => 'mysql:host=webmon-db;dbname=test;charset=utf8mb4',
     'pdo.username' => 'test',
     'pdo.password' => 'test',
     'pdo.options' => [
