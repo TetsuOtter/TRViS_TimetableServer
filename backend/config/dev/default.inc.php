@@ -101,4 +101,7 @@ return [
     'logger.path' => \realpath(__DIR__ . '/../../logs') . '/app.log',
     'logger.level' => 100, // equals DEBUG level
     'logger.options' => [],
-];
+
+		'app.name' => 'trvis-backend-dev',
+		'app.version' => '1.0.0-dev',
+	];

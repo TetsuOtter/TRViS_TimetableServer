@@ -68,4 +68,8 @@ return [
     'logger.path' => \realpath(__DIR__ . '/../../logs') . '/app.log',
     'logger.level' => 300, // equals WARNING level
     'logger.options' => [],
+
+		// App Settings
+		'app.name' => 'trvis-backend',
+		'app.version' => '1.0.0',
 ];
