@@ -43,7 +43,7 @@ return [
         false, // isForceAddMethods
         false, // isForceAddHeaders
         true, // isUseCredentials
-        false, // areAllOriginsAllowed
+        true, // areAllOriginsAllowed
         [], // allowedOrigins
         false, // areAllMethodsAllowed
         [], // allowedLcMethods
