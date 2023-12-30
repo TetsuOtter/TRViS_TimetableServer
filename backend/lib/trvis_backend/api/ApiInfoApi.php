@@ -4,6 +4,7 @@ namespace dev_t0r\trvis_backend\api;
 
 use dev_t0r\trvis_backend\api\AbstractApiInfoApi;
 use dev_t0r\trvis_backend\model\ApiInfo;
+use dev_t0r\trvis_backend\Utils;
 use DI\Container;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -31,7 +32,6 @@ class ApiInfoApi extends AbstractApiInfoApi
 			'version' => $this->appVersion,
 		]);
 
-		$response->getBody()->write(json_encode($apiInfo->jsonSerialize()));
-		return $response;
+		return Utils::withJson($response, $apiInfo);
 	}
 }
