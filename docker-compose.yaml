@@ -7,7 +7,7 @@ services:
     container_name: webmon-php
     hostname: webmon-php
     ports:
-      - "80:80"
+      - "8080:80"
     volumes:
       - type: bind
         read_only: true
