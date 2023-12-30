@@ -4,49 +4,37 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "85986f617fb039b84adf086be7d247e0",
+    "content-hash": "a8d65395232fad77a34bb5b7667dbbe7",
     "packages": [
         {
             "name": "dyorg/slim-token-authentication",
-            "version": "dev-slim4",
+            "version": "0.3.3",
             "source": {
                 "type": "git",
-                "url": "https://github.com/ybelenko/slim-token-authentication",
-                "reference": "87c64d370922c492188d2a782b23609341199259"
+                "url": "https://github.com/dyorg/slim-token-authentication.git",
+                "reference": "08847d3ce38e47c422d46389886d0bd8bf4a9cb2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ybelenko/slim-token-authentication/zipball/87c64d370922c492188d2a782b23609341199259",
-                "reference": "87c64d370922c492188d2a782b23609341199259",
+                "url": "https://api.github.com/repos/dyorg/slim-token-authentication/zipball/08847d3ce38e47c422d46389886d0bd8bf4a9cb2",
+                "reference": "08847d3ce38e47c422d46389886d0bd8bf4a9cb2",
                 "shasum": ""
             },
             "require": {
-                "php": ">=7.1"
+                "php": ">=5.4.0"
             },
             "require-dev": {
-                "equip/dispatch": "^2.0",
-                "phpunit/phpunit": "^6.5",
-                "slim/psr7": "^0.4.0",
-                "slim/slim": "^4.0",
-                "squizlabs/php_codesniffer": "~2.3"
+                "phpunit/phpunit": "~4.6",
+                "squizlabs/php_codesniffer": "~2.3",
+                "zendframework/zend-diactoros": "^1.3"
             },
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "Dyorg\\": "src"
+                    "Slim\\Middleware\\": "src"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Dyorg\\": "tests",
-                    "Dyorg\\TokenAuthentication\\Example\\": "example"
-                }
-            },
-            "scripts": {
-                "test": [
-                    "phpunit"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -58,17 +46,21 @@
                     "role": "Developer"
                 }
             ],
-            "description": "Slim 4.0+ Token Authentication Middleware",
+            "description": "Slim 3.0+ Token Authentication Middleware",
             "homepage": "https://github.com/dyorg/slim-token-authentication",
             "keywords": [
+                "Authentication",
                 "auth",
-                "authentication",
                 "authorization",
                 "middleware",
                 "slim",
                 "token"
             ],
-            "time": "2019-08-11T03:59:16+00:00"
+            "support": {
+                "issues": "https://github.com/dyorg/slim-token-authentication/issues",
+                "source": "https://github.com/dyorg/slim-token-authentication/tree/master"
+            },
+            "time": "2016-12-23T21:14:24+00:00"
         },
         {
             "name": "fig/http-message-util",
@@ -4593,9 +4585,7 @@
     ],
     "aliases": [],
     "minimum-stability": "RC",
-    "stability-flags": {
-        "dyorg/slim-token-authentication": 20
-    },
+    "stability-flags": [],
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {

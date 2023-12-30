@@ -15,7 +15,7 @@
   ],
   "require": {
     "php": "^8.0",
-    "dyorg/slim-token-authentication": "dev-slim4",
+    "dyorg/slim-token-authentication": "^0.3",
     "monolog/monolog": "^3.0",
     "neomerx/cors-psr7": "^3.0",
     "php-di/slim-bridge": "^3.2",
