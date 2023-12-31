@@ -159,3 +159,5 @@ components:
       $ref: "./parameters/paging.yaml#/PageNumber"
     PageSize:
       $ref: "./parameters/paging.yaml#/PageSize"
+    PageTopId:
+      $ref: "./parameters/paging.yaml#/PageTopId"

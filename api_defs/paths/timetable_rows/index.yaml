@@ -13,6 +13,7 @@ path:
       - $ref: '#/components/parameters/TrainId'
       - $ref: '#/components/parameters/PageNumber'
       - $ref: '#/components/parameters/PageSize'
+      - $ref: '#/components/parameters/PageTopId'
     responses:
       '200':
         description: 取得成功

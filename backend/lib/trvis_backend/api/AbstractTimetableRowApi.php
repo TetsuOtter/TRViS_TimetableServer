@@ -145,6 +145,7 @@ abstract class AbstractTimetableRowApi
         $queryParams = $request->getQueryParams();
         $p = (key_exists('p', $queryParams)) ? $queryParams['p'] : null;
         $limit = (key_exists('limit', $queryParams)) ? $queryParams['limit'] : null;
+        $top = (key_exists('top', $queryParams)) ? $queryParams['top'] : null;
         $message = "How about implementing getTimetableRowList as a GET method in dev_t0r\trvis_backend\api\TimetableRowApi class?";
         throw new HttpNotImplementedException($request, $message);
     }

@@ -129,6 +129,7 @@ abstract class AbstractWorkApi
         $queryParams = $request->getQueryParams();
         $p = (key_exists('p', $queryParams)) ? $queryParams['p'] : null;
         $limit = (key_exists('limit', $queryParams)) ? $queryParams['limit'] : null;
+        $top = (key_exists('top', $queryParams)) ? $queryParams['top'] : null;
         $message = "How about implementing getWorkList as a GET method in dev_t0r\trvis_backend\api\WorkApi class?";
         throw new HttpNotImplementedException($request, $message);
     }

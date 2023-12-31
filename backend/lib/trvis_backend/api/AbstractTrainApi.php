@@ -137,6 +137,7 @@ abstract class AbstractTrainApi
         $queryParams = $request->getQueryParams();
         $p = (key_exists('p', $queryParams)) ? $queryParams['p'] : null;
         $limit = (key_exists('limit', $queryParams)) ? $queryParams['limit'] : null;
+        $top = (key_exists('top', $queryParams)) ? $queryParams['top'] : null;
         $message = "How about implementing getTrainList as a GET method in dev_t0r\trvis_backend\api\TrainApi class?";
         throw new HttpNotImplementedException($request, $message);
     }
