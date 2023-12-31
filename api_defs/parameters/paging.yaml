@@ -16,7 +16,7 @@ PageSize:
   description: ページングを行う場合の1ページあたりの件数
   schema:
     type: integer
-    minimum: 1
+    minimum: 5
     maximum: 100
     default: 10
     example: 20
