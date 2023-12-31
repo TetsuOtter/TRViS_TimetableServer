@@ -12,7 +12,6 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Lazy\LazyUuidFromString;
 use Ramsey\Uuid\Uuid;
-use Ramsey\Uuid\UuidInterface;
 use Slim\Exception\HttpNotImplementedException;
 
 /**
@@ -26,6 +25,7 @@ class WorkGroupApi extends AbstractWorkGroupApi
 {
 	private readonly PDO $db;
 	private readonly LoggerInterface $logger;
+	private readonly \dev_t0r\trvis_backend\repo\WorkGroups $workGroupsRepo;
 
 	public function __construct(
 		PDO $db,
@@ -33,108 +33,11 @@ class WorkGroupApi extends AbstractWorkGroupApi
 	) {
 		$this->db = $db;
 		$this->logger = $logger;
+		$this->workGroupsRepo = new \dev_t0r\trvis_backend\repo\WorkGroups($db, $logger);
 	}
 
 	const MAX_LEN_DESCRIPTION = 255;
 	const MAX_LEN_NAME = 255;
-
-	const SQL_CREATE_WORK_GROUP = <<<SQL
-INSERT INTO work_groups (
-	work_groups_id,
-	owner,
-	description,
-	name
-) VALUES (
-	:work_groups_id,
-	:owner,
-	:description,
-	:name
-);
-SQL;
-const SQL_SELECT_WORK_GROUP_ONE = <<<SQL
-SELECT
-	work_groups_id,
-	created_at,
-	description,
-	name
-FROM
-	work_groups
-WHERE
-	work_groups_id = :work_groups_id
-;
-SQL;
-
-	private function _selectWorkGroupOne(
-		UuidInterface $workGroupId
-	): RetValueOrError {
-		$this->logger->debug("selectOne workGroupId: {workGroupId}", ['workGroupId' => $workGroupId]);
-		$query = $this->db->prepare($this::SQL_SELECT_WORK_GROUP_ONE);
-		$query->bindValue(':work_groups_id', $workGroupId->getBytes(), PDO::PARAM_STR);
-
-		$isSuccess = $query->execute();
-		if (!$isSuccess) {
-			$errCode = $query->errorCode();
-			$this->logger->error(
-				"Failed to execute SQL ({errorCode} -> {errorInfo})",
-				[
-					"errorCode" => $errCode,
-					"errorInfo" => implode('\n\t', $query->errorInfo()),
-				],
-			);
-			return RetValueOrError::withError(500, "Failed to execute SQL - " . $errCode);
-		}
-
-		$this->logger->debug("select success - rowCount: {rowCount}", ['rowCount' => $query->rowCount()]);
-
-		$data = $query->fetch(PDO::FETCH_ASSOC);
-		if (!$data) {
-			$this->logger->info(
-				"WorkGroup not found ({workGroupId})",
-				[
-					'workGroupId' => $workGroupId,
-				]
-			);
-			return RetValueOrError::withError(404, "WorkGroup not found");
-		}
-
-		$workGroup = new WorkGroup();
-		$workGroup->setData([
-			'work_groups_id' => Uuid::fromBytes($data['work_groups_id']),
-			'created_at' => $data['created_at'],
-			'description' => $data['description'],
-			'name' => $data['name']
-		]);
-		$this->logger->debug("select result - workGroup: {workGroup}", ['workGroup' => $workGroup]);
-		return RetValueOrError::withValue($workGroup);
-	}
-
-	private function _insertWorkGroup(
-		UuidInterface $workGroupId,
-		string $owner,
-		string $description,
-		string $name
-	): RetValueOrError {
-		$query = $this->db->prepare($this::SQL_CREATE_WORK_GROUP);
-
-		$query->bindValue(':work_groups_id', $workGroupId->getBytes(), PDO::PARAM_STR);
-		$query->bindValue(':owner', $owner, PDO::PARAM_STR);
-		$query->bindValue(':description', $description, PDO::PARAM_STR);
-		$query->bindValue(':name', $name, PDO::PARAM_STR);
-
-		$isSuccess = $query->execute();
-		if (!$isSuccess) {
-			$errCode = $query->errorCode();
-			$this->logger->error(
-				"Failed to execute SQL ({errorCode} -> {errorInfo})",
-				[
-					"errorCode" => $errCode,
-					"errorInfo" => implode('\n\t', $query->errorInfo()),
-				],
-			);
-			return RetValueOrError::withError(500, "Failed to execute SQL - " . $errCode);
-		}
-		return RetValueOrError::withValue(null);
-	}
 
 	public function createWorkGroup(
 		ServerRequestInterface $request,
@@ -170,7 +73,7 @@ SQL;
 
 		$uuid = Uuid::uuid7();
 
-		$insertResult = $this->_insertWorkGroup(
+		$insertResult = $this->workGroupsRepo->insertWorkGroup(
 			$uuid,
 			'',
 			$req_value_description,
@@ -180,7 +83,7 @@ SQL;
 			return $insertResult->getResponseWithJson($response);
 		}
 
-		return $this->_selectWorkGroupOne($uuid)->getResponseWithJson($response, 201);
+		return $this->workGroupsRepo->selectWorkGroupOne($uuid)->getResponseWithJson($response, 201);
 	}
 
 	public function deleteWorkGroup(
@@ -205,7 +108,7 @@ SQL;
 
 		$uuid = Uuid::fromString($workGroupId);
 		$this->logger->debug("workGroupId parsed: {workGroupId}", ['workGroupId' => $uuid]);
-		return $this->_selectWorkGroupOne($uuid)->getResponseWithJson($response);
+		return $this->workGroupsRepo->selectWorkGroupOne($uuid)->getResponseWithJson($response);
 	}
 
 	public function getWorkGroupList(
