@@ -40,15 +40,15 @@ return [
         null, // serverOriginPort
         true, // isPreFlightCanBeCached
         86400, // preFlightCacheMaxAge
-        false, // isForceAddMethods
-        false, // isForceAddHeaders
+        true, // isForceAddMethods
+        true, // isForceAddHeaders
         true, // isUseCredentials
         true, // areAllOriginsAllowed
         [], // allowedOrigins
-        false, // areAllMethodsAllowed
+        true, // areAllMethodsAllowed
         [], // allowedLcMethods
         '', // allowedMethodsList
-        false, // areAllHeadersAllowed
+        true, // areAllHeadersAllowed
         [], // allowedLcHeaders
         '', // allowedHeadersList
         '', // exposedHeadersList
