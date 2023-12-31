@@ -22,7 +22,7 @@ final class RetValueOrError
 		$this->value = $value;
 		$this->statusCode = $statusCode ?? 200;
 		$this->errorCode = $errorCode ?? $this->statusCode;
-		$this->errorMsg = $errorMsg;
+		$this->errorMsg = $errorMsg ?? '';
 	}
 
 	public static function withValue(
@@ -51,8 +51,10 @@ final class RetValueOrError
 	{
 		if ($this->isError) {
 			return Utils::withError($response, $this->statusCode, $this->errorMsg, $this->errorCode);
-		} else {
+		} else if (!is_null($this->value)) {
 			return Utils::withJson($response, $this->value, $statusCode ?? $this->statusCode);
+		} else {
+			return $response->withStatus($this->statusCode);
 		}
 	}
 }
