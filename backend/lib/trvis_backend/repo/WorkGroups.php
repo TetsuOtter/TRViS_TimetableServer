@@ -94,7 +94,7 @@ INSERT INTO work_groups (
 	:name
 );
 SQL;
-	private function insertWorkGroup(
+	public function insertWorkGroup(
 		UuidInterface $workGroupId,
 		string $owner,
 		string $description,
