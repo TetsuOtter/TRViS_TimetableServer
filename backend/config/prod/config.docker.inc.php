@@ -11,7 +11,7 @@ return [
 
     // logger
     'logger.name' => 'App',
-    'logger.path' => '/var/log/apache2/slim-app.log',
+    'logger.path' => '/var/log/apache2/slim-app',
     'logger.level' => 300, // equals WARNING level
     'logger.options' => [],
 ];

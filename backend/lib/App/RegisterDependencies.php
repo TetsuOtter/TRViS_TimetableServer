@@ -90,7 +90,23 @@ final class RegisterDependencies
                 $handlers = [];
                 // stream logger as default handler across all environments
                 // somebody might not need it during development
-                $handlers[] = new \Monolog\Handler\StreamHandler($path, $level);
+                $handlers[] = new \Monolog\Handler\RotatingFileHandler(
+									filename: $path,
+									level: $level,
+									filenameFormat: '{filename}.{date}.log',
+								);
+
+								$logger->setTimezone(new \DateTimeZone('UTC'));
+
+								$formatter = new \Monolog\Formatter\LineFormatter(
+									"[%datetime%] %channel%.%level_name%: %message% %extra%\n"
+								);
+								$handlers[0]->setFormatter($formatter);
+
+								$logger->pushProcessor(new \Monolog\Processor\PsrLogMessageProcessor);
+								$logger->pushProcessor(new \Monolog\Processor\WebProcessor);
+								$logger->pushProcessor(new \Monolog\Processor\MemoryUsageProcessor);
+								$logger->pushProcessor(new \Monolog\Processor\IntrospectionProcessor);
 
                 if ($mode === 'development') {
                     // add dev handlers if necessary

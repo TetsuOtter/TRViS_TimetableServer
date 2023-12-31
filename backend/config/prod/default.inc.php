@@ -65,7 +65,7 @@ return [
 
     // logger
     'logger.name' => 'App',
-    'logger.path' => \realpath(__DIR__ . '/../../logs') . '/app.log',
+    'logger.path' => \realpath(__DIR__ . '/../../logs') . '/app',
     'logger.level' => 300, // equals WARNING level
     'logger.options' => [],
 
