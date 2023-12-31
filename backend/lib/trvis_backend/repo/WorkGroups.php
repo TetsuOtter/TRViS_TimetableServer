@@ -134,4 +134,135 @@ SQL;
 
 		return RetValueOrError::withError(Constants::HTTP_INTERNAL_SERVER_ERROR, "Failed to execute SQL - " . $errCode);
 	}
+
+	const SQL_UPDATE_WORK_GROUP = <<<SQL
+UPDATE work_groups SET
+	description = :description,
+	name = :name
+WHERE
+	work_groups_id = :work_groups_id
+;
+SQL;
+	const SQL_UPDATE_WORK_GROUP_NAME = <<<SQL
+UPDATE work_groups SET
+	name = :name
+WHERE
+	work_groups_id = :work_groups_id
+;
+SQL;
+	const SQL_UPDATE_WORK_GROUP_DESCRIPTION = <<<SQL
+UPDATE work_groups SET
+	description = :description
+WHERE
+	work_groups_id = :work_groups_id
+;
+SQL;
+	public function updateWorkGroup(
+		UuidInterface $workGroupId,
+		?string $description,
+		?string $name
+	): RetValueOrError {
+		$sql = '';
+		$query = $this->db->prepare($this::SQL_UPDATE_WORK_GROUP);
+		$hasName = !is_null($name);
+		$hasDescription = !is_null($description);
+		$this->logger->info(
+			"updateWorkGroup({workGroupId}, '{description}', '{name}') -> hasName: {hasName}, hasDescription: {hasDescription}",
+			[
+				'workGroupId' => $workGroupId,
+				'description' => $description,
+				'name' => $name,
+				'hasName' => $hasName,
+				'hasDescription' => $hasDescription,
+			],
+		);
+		if ($hasName && $hasDescription) {
+			$sql = $this::SQL_UPDATE_WORK_GROUP;
+		} else if ($hasName) {
+			$sql = $this::SQL_UPDATE_WORK_GROUP_NAME;
+		} else if ($hasDescription) {
+			$sql = $this::SQL_UPDATE_WORK_GROUP_DESCRIPTION;
+		} else {
+			return $this->selectWorkGroupOne($workGroupId);
+		}
+
+		$query = $this->db->prepare($sql);
+		$query->bindValue(':work_groups_id', $workGroupId->getBytes(), PDO::PARAM_STR);
+		if ($hasDescription) {
+			$query->bindValue(':description', $description, PDO::PARAM_STR);
+		}
+		if ($hasName) {
+			$query->bindValue(':name', $name, PDO::PARAM_STR);
+		}
+
+		try {
+			$isSuccess = $query->execute();
+			if ($isSuccess) {
+				return $this->selectWorkGroupOne($workGroupId);
+			}
+
+			$errCode = $query->errorCode();
+			$errorInfo = implode('\n\t', $query->errorInfo());
+		} catch (\PDOException $ex) {
+			$errCode = strval($ex->getCode());
+			$errorInfo = $ex->getMessage();
+		}
+
+		$this->logger->error(
+			"Failed to execute SQL ({errorCode} -> {errorInfo})",
+			[
+				"errorCode" => $errCode,
+				"errorInfo" => $errorInfo,
+			],
+		);
+		if ($errCode === '23000') {
+			return RetValueOrError::withError(Constants::HTTP_CONFLICT, "WorkGroup already exists");
+		}
+
+		return RetValueOrError::withError(Constants::HTTP_INTERNAL_SERVER_ERROR, "Failed to execute SQL - " . $errCode);
+	}
+
+	const SQL_DELETE_WORK_GROUP = <<<SQL
+DELETE FROM work_groups
+WHERE
+	work_groups_id = :work_groups_id
+;
+SQL;
+	public function deleteWorkGroup(
+		UuidInterface $workGroupId
+	): RetValueOrError {
+		$query = $this->db->prepare($this::SQL_DELETE_WORK_GROUP);
+		$query->bindValue(':work_groups_id', $workGroupId->getBytes(), PDO::PARAM_STR);
+
+		$isSuccess = $query->execute();
+		if (!$isSuccess) {
+			$errCode = $query->errorCode();
+			$this->logger->error(
+				"Failed to execute SQL ({errorCode} -> {errorInfo})",
+				[
+					"errorCode" => $errCode,
+					"errorInfo" => implode('\n\t', $query->errorInfo()),
+				],
+			);
+			return RetValueOrError::withError(500, "Failed to execute SQL - " . $errCode);
+		}
+
+		$rowCount = $query->rowCount();
+		if ($rowCount === 0) {
+			$this->logger->info(
+				"WorkGroup not found ({workGroupId})",
+				[
+					'workGroupId' => $workGroupId,
+				]
+			);
+			return RetValueOrError::withError(404, "WorkGroup not found");
+		}
+		$this->logger->info(
+			"WorkGroup deleted ({workGroupId})",
+			[
+				'workGroupId' => $workGroupId,
+			]
+		);
+		return RetValueOrError::withValue(null);
+	}
 }

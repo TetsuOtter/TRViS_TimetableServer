@@ -91,8 +91,12 @@ class WorkGroupApi extends AbstractWorkGroupApi
 		ResponseInterface $response,
 		string $workGroupId
 	): ResponseInterface {
-		$message = "How about implementing deleteWorkGroup as a DELETE method in dev_t0r\trvis_backend\api\WorkGroupApi class?";
-		throw new HttpNotImplementedException($request, $message);
+		if (!preg_match(LazyUuidFromString::VALID_REGEX, $workGroupId))
+		{
+			$this->logger->warning("Invalid UUID format ({workGroupId})", ['workGroupId' => $workGroupId]);
+			return Utils::withUuidError($response);
+		}
+		return $this->workGroupsRepo->deleteWorkGroup(Uuid::fromString($workGroupId))->getResponseWithJson($response);
 	}
 
 	public function getWorkGroup(
@@ -128,7 +132,48 @@ class WorkGroupApi extends AbstractWorkGroupApi
 		string $workGroupId
 	): ResponseInterface {
 		$body = $request->getParsedBody();
-		$message = "How about implementing updateWorkGroup as a PUT method in dev_t0r\trvis_backend\api\WorkGroupApi class?";
-		throw new HttpNotImplementedException($request, $message);
+		$requestData = new WorkGroup();
+		$requestData->setData($body);
+		$d = $requestData->getData();
+
+		$req_value_description = $d->{'description'};
+		$req_value_name = $d->{'name'};
+
+		// validate params
+		if (!preg_match(LazyUuidFromString::VALID_REGEX, $workGroupId))
+		{
+			$this->logger->warning("Invalid UUID format ({workGroupId})", ['workGroupId' => $workGroupId]);
+			return Utils::withUuidError($response);
+		}
+		if (!is_null($req_value_description))
+		{
+			if ($this::MAX_LEN_DESCRIPTION < strlen($req_value_description)) {
+				$message = sprintf(
+					"Invalid length for parameter description, must be smaller than or equal to %d.",
+					$this::MAX_LEN_DESCRIPTION
+				);
+				return Utils::withError($response, $message, 400);
+			}
+		}
+		if (!is_null($req_value_name))
+		{
+			if (empty($req_value_name)) {
+				$message = "Missing the required parameter 'name' when calling createWorkGroup";
+				return Utils::withError($response, $message, 400);
+			}
+			if ($this::MAX_LEN_NAME < strlen($req_value_name)) {
+				$message = sprintf(
+					"Invalid length for parameter name, must be smaller than or equal to %d.",
+					$this::MAX_LEN_NAME
+				);
+				return Utils::withError($response, $message, 400);
+			}
+		}
+
+		return $this->workGroupsRepo->updateWorkGroup(
+			Uuid::fromString($workGroupId),
+			$req_value_description,
+			$req_value_name
+		)->getResponseWithJson($response);
 	}
 }
