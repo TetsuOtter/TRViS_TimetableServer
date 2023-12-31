@@ -67,6 +67,7 @@ SQL;
 	private function _selectWorkGroupOne(
 		UuidInterface $workGroupId
 	): RetValueOrError {
+		$this->logger->debug("selectOne workGroupId: {workGroupId}", ['workGroupId' => $workGroupId]);
 		$query = $this->db->prepare($this::SQL_SELECT_WORK_GROUP_ONE);
 		$query->bindValue(':work_groups_id', $workGroupId->getBytes(), PDO::PARAM_STR);
 
@@ -74,18 +75,25 @@ SQL;
 		if (!$isSuccess) {
 			$errCode = $query->errorCode();
 			$this->logger->error(
-				sprintf(
-					"Failed to execute SQL (%s -> %s)",
-					$errCode,
-					implode('\n\t', $query->errorInfo())
-				)
+				"Failed to execute SQL ({errorCode} -> {errorInfo})",
+				[
+					"errorCode" => $errCode,
+					"errorInfo" => implode('\n\t', $query->errorInfo()),
+				],
 			);
 			return RetValueOrError::withError(500, "Failed to execute SQL - " . $errCode);
 		}
 
+		$this->logger->debug("select success - rowCount: {rowCount}", ['rowCount' => $query->rowCount()]);
+
 		$data = $query->fetch(PDO::FETCH_ASSOC);
 		if (!$data) {
-			$message = sprintf("WorkGroup not found: %s", $workGroupId);
+			$this->logger->info(
+				"WorkGroup not found ({workGroupId})",
+				[
+					'workGroupId' => $workGroupId,
+				]
+			);
 			return RetValueOrError::withError(404, "WorkGroup not found");
 		}
 
@@ -96,6 +104,7 @@ SQL;
 			'description' => $data['description'],
 			'name' => $data['name']
 		]);
+		$this->logger->debug("select result - workGroup: {workGroup}", ['workGroup' => $workGroup]);
 		return RetValueOrError::withValue($workGroup);
 	}
 
@@ -116,11 +125,11 @@ SQL;
 		if (!$isSuccess) {
 			$errCode = $query->errorCode();
 			$this->logger->error(
-				sprintf(
-					"Failed to execute SQL (%s -> %s)",
-					$errCode,
-					implode('\n\t', $query->errorInfo())
-				)
+				"Failed to execute SQL ({errorCode} -> {errorInfo})",
+				[
+					"errorCode" => $errCode,
+					"errorInfo" => implode('\n\t', $query->errorInfo()),
+				],
 			);
 			return RetValueOrError::withError(500, "Failed to execute SQL - " . $errCode);
 		}
@@ -195,6 +204,7 @@ SQL;
 		}
 
 		$uuid = Uuid::fromString($workGroupId);
+		$this->logger->debug("workGroupId parsed: {workGroupId}", ['workGroupId' => $uuid]);
 		return $this->_selectWorkGroupOne($uuid)->getResponseWithJson($response);
 	}
 
