@@ -20,8 +20,6 @@ path:
           application/json:
             schema:
               $ref: '#/components/schemas/TrainArray'
-      '204':
-        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/204_NoContentInThisPage'
       '400':
         $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
       '401':

@@ -478,26 +478,6 @@ class RegisterRoutes
   }
 }',
                 ],
-                '204' => [
-                    'jsonSchema' => '{
-  "description" : "ページングの結果、取得件数が0件であった",
-  "content" : {
-    "application/json" : {
-      "schema" : {
-        "$ref" : "#/components/schemas/schema"
-      },
-      "examples" : {
-        "example" : {
-          "value" : {
-            "code" : 204,
-            "message" : "No Content in this page"
-          }
-        }
-      }
-    }
-  }
-}',
-                ],
                 '400' => [
                     'jsonSchema' => '{
   "description" : "リクエストが不正",
@@ -1135,26 +1115,6 @@ class RegisterRoutes
   }
 }',
                 ],
-                '204' => [
-                    'jsonSchema' => '{
-  "description" : "ページングの結果、取得件数が0件であった",
-  "content" : {
-    "application/json" : {
-      "schema" : {
-        "$ref" : "#/components/schemas/schema"
-      },
-      "examples" : {
-        "example" : {
-          "value" : {
-            "code" : 204,
-            "message" : "No Content in this page"
-          }
-        }
-      }
-    }
-  }
-}',
-                ],
                 '400' => [
                     'jsonSchema' => '{
   "description" : "リクエストが不正",
@@ -1686,26 +1646,6 @@ class RegisterRoutes
     "application/json" : {
       "schema" : {
         "$ref" : "#/components/schemas/StationTrackArray"
-      }
-    }
-  }
-}',
-                ],
-                '204' => [
-                    'jsonSchema' => '{
-  "description" : "ページングの結果、取得件数が0件であった",
-  "content" : {
-    "application/json" : {
-      "schema" : {
-        "$ref" : "#/components/schemas/schema"
-      },
-      "examples" : {
-        "example" : {
-          "value" : {
-            "code" : 204,
-            "message" : "No Content in this page"
-          }
-        }
       }
     }
   }
@@ -2247,26 +2187,6 @@ class RegisterRoutes
   }
 }',
                 ],
-                '204' => [
-                    'jsonSchema' => '{
-  "description" : "ページングの結果、取得件数が0件であった",
-  "content" : {
-    "application/json" : {
-      "schema" : {
-        "$ref" : "#/components/schemas/schema"
-      },
-      "examples" : {
-        "example" : {
-          "value" : {
-            "code" : 204,
-            "message" : "No Content in this page"
-          }
-        }
-      }
-    }
-  }
-}',
-                ],
                 '400' => [
                     'jsonSchema' => '{
   "description" : "リクエストが不正",
@@ -2798,26 +2718,6 @@ class RegisterRoutes
     "application/json" : {
       "schema" : {
         "$ref" : "#/components/schemas/TrainArray"
-      }
-    }
-  }
-}',
-                ],
-                '204' => [
-                    'jsonSchema' => '{
-  "description" : "ページングの結果、取得件数が0件であった",
-  "content" : {
-    "application/json" : {
-      "schema" : {
-        "$ref" : "#/components/schemas/schema"
-      },
-      "examples" : {
-        "example" : {
-          "value" : {
-            "code" : 204,
-            "message" : "No Content in this page"
-          }
-        }
       }
     }
   }
@@ -3359,26 +3259,6 @@ class RegisterRoutes
   }
 }',
                 ],
-                '204' => [
-                    'jsonSchema' => '{
-  "description" : "ページングの結果、取得件数が0件であった",
-  "content" : {
-    "application/json" : {
-      "schema" : {
-        "$ref" : "#/components/schemas/schema"
-      },
-      "examples" : {
-        "example" : {
-          "value" : {
-            "code" : 204,
-            "message" : "No Content in this page"
-          }
-        }
-      }
-    }
-  }
-}',
-                ],
                 '400' => [
                     'jsonSchema' => '{
   "description" : "リクエストが不正",
@@ -3663,26 +3543,6 @@ class RegisterRoutes
     "application/json" : {
       "schema" : {
         "$ref" : "#/components/schemas/WorkGroupArray"
-      }
-    }
-  }
-}',
-                ],
-                '204' => [
-                    'jsonSchema' => '{
-  "description" : "ページングの結果、取得件数が0件であった",
-  "content" : {
-    "application/json" : {
-      "schema" : {
-        "$ref" : "#/components/schemas/schema"
-      },
-      "examples" : {
-        "example" : {
-          "value" : {
-            "code" : 204,
-            "message" : "No Content in this page"
-          }
-        }
       }
     }
   }
