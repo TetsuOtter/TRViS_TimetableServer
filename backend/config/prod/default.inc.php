@@ -46,11 +46,11 @@ return [
         true, // areAllOriginsAllowed
         [], // allowedOrigins
         true, // areAllMethodsAllowed
-        [], // allowedLcMethods
-        '', // allowedMethodsList
+        ['put','options','post','delete','head','get'], // allowedLcMethods
+        'PUT,OPTIONS,POST,DELETE,HEAD,GET', // allowedMethodsList
         true, // areAllHeadersAllowed
-        [], // allowedLcHeaders
-        '', // allowedHeadersList
+        ['content-type'], // allowedLcHeaders
+        'Content-Type', // allowedHeadersList
         '', // exposedHeadersList
         true, // isCheckHost
     ],
