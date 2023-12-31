@@ -4,6 +4,7 @@ namespace dev_t0r\trvis_backend\api;
 
 use dev_t0r\trvis_backend\api\AbstractWorkGroupApi;
 use dev_t0r\trvis_backend\model\WorkGroup;
+use dev_t0r\trvis_backend\RetValueOrError;
 use dev_t0r\trvis_backend\Utils;
 use PDO;
 use Psr\Http\Message\ServerRequestInterface;
@@ -65,7 +66,7 @@ SQL;
 
 	private function _selectWorkGroupOne(
 		UuidInterface $workGroupId
-	): WorkGroup {
+	): RetValueOrError {
 		$query = $this->db->prepare($this::SQL_SELECT_WORK_GROUP_ONE);
 		$query->bindValue(':work_groups_id', $workGroupId->getBytes(), PDO::PARAM_STR);
 
@@ -79,13 +80,13 @@ SQL;
 					implode('\n\t', $query->errorInfo())
 				)
 			);
-			throw new \RuntimeException("Failed to execute SQL - " . $errCode, 500);
+			return RetValueOrError::withError(500, "Failed to execute SQL - " . $errCode);
 		}
 
 		$data = $query->fetch(PDO::FETCH_ASSOC);
 		if (!$data) {
 			$message = sprintf("WorkGroup not found: %s", $workGroupId);
-			throw new \InvalidArgumentException($message, 404);
+			return RetValueOrError::withError(404, "WorkGroup not found");
 		}
 
 		$workGroup = new WorkGroup();
@@ -95,7 +96,7 @@ SQL;
 			'description' => $data['description'],
 			'name' => $data['name']
 		]);
-		return $workGroup;
+		return RetValueOrError::withValue($workGroup);
 	}
 
 	private function _insertWorkGroup(
@@ -103,7 +104,7 @@ SQL;
 		string $owner,
 		string $description,
 		string $name
-	): void {
+	): RetValueOrError {
 		$query = $this->db->prepare($this::SQL_CREATE_WORK_GROUP);
 
 		$query->bindValue(':work_groups_id', $workGroupId->getBytes(), PDO::PARAM_STR);
@@ -121,8 +122,9 @@ SQL;
 					implode('\n\t', $query->errorInfo())
 				)
 			);
-			throw new \RuntimeException("Failed to execute SQL - " . $errCode, 500);
+			return RetValueOrError::withError(500, "Failed to execute SQL - " . $errCode);
 		}
+		return RetValueOrError::withValue(null);
 	}
 
 	public function createWorkGroup(
@@ -143,30 +145,33 @@ SQL;
 				"Invalid length for parameter description, must be smaller than or equal to %d.",
 				$this::MAX_LEN_DESCRIPTION
 			);
-			throw new \InvalidArgumentException($message, 400);
+			return Utils::withError($response, $message, 400);
 		}
 		if (empty($req_value_name)) {
 			$message = "Missing the required parameter 'name' when calling createWorkGroup";
-			throw new \InvalidArgumentException($message, 400);
+			return Utils::withError($response, $message, 400);
 		}
 		if ($this::MAX_LEN_NAME < strlen($req_value_name)) {
 			$message = sprintf(
 				"Invalid length for parameter name, must be smaller than or equal to %d.",
 				$this::MAX_LEN_NAME
 			);
-			throw new \InvalidArgumentException($message, 400);
+			return Utils::withError($response, $message, 400);
 		}
 
 		$uuid = Uuid::uuid7();
 
-		$this->_insertWorkGroup(
+		$insertResult = $this->_insertWorkGroup(
 			$uuid,
 			'',
 			$req_value_description,
 			$req_value_name
 		);
+		if ($insertResult->isError) {
+			return $insertResult->getResponseWithJson($response);
+		}
 
-		return Utils::withJson($response, $this->_selectWorkGroupOne($uuid), 201);
+		return $this->_selectWorkGroupOne($uuid)->getResponseWithJson($response, 201);
 	}
 
 	public function deleteWorkGroup(
@@ -190,7 +195,7 @@ SQL;
 		}
 
 		$uuid = Uuid::fromString($workGroupId);
-		return Utils::withJson($response, $this->_selectWorkGroupOne($uuid));
+		return $this->_selectWorkGroupOne($uuid)->getResponseWithJson($response);
 	}
 
 	public function getWorkGroupList(
