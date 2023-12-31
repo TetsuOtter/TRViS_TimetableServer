@@ -1,6 +1,6 @@
 WorkGroupId:
   in: path
-  name: work_group_id
+  name: workGroupId
   required: true
   schema:
     type: string
@@ -9,7 +9,7 @@ WorkGroupId:
 
 WorkId:
   in: path
-  name: work_id
+  name: workId
   required: true
   schema:
     type: string
@@ -18,7 +18,7 @@ WorkId:
 
 TrainId:
   in: path
-  name: train_id
+  name: trainId
   required: true
   schema:
     type: string
@@ -27,7 +27,7 @@ TrainId:
 
 TimetableRowId:
   in: path
-  name: timetable_row_id
+  name: timetableRowId
   required: true
   schema:
     type: string
@@ -36,7 +36,7 @@ TimetableRowId:
 
 StationId:
   in: path
-  name: station_id
+  name: stationId
   required: true
   schema:
     type: string
@@ -45,7 +45,7 @@ StationId:
 
 StationTrackId:
   in: path
-  name: station_track_id
+  name: stationTrackId
   required: true
   schema:
     type: string
@@ -54,7 +54,7 @@ StationTrackId:
 
 ColorId:
   in: path
-  name: color_id
+  name: colorId
   required: true
   schema:
     type: string
