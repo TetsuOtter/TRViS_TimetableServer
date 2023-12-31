@@ -165,7 +165,7 @@ SQL;
 			$req_value_name
 		);
 
-		return Utils::withJson($response->withStatus(201), $this->_selectWorkGroupOne($uuid));
+		return Utils::withJson($response, $this->_selectWorkGroupOne($uuid), 201);
 	}
 
 	public function deleteWorkGroup(
