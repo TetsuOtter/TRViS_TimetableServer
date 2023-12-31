@@ -2,6 +2,7 @@
 
 namespace dev_t0r\trvis_backend\repo;
 
+use dev_t0r\trvis_backend\Constants;
 use dev_t0r\trvis_backend\model\WorkGroup;
 use dev_t0r\trvis_backend\RetValueOrError;
 use PDO;
@@ -107,18 +108,30 @@ SQL;
 		$query->bindValue(':description', $description, PDO::PARAM_STR);
 		$query->bindValue(':name', $name, PDO::PARAM_STR);
 
-		$isSuccess = $query->execute();
-		if (!$isSuccess) {
+		try {
+			$isSuccess = $query->execute();
+			if ($isSuccess) {
+				return RetValueOrError::withValue(null);
+			}
+
 			$errCode = $query->errorCode();
-			$this->logger->error(
-				"Failed to execute SQL ({errorCode} -> {errorInfo})",
-				[
-					"errorCode" => $errCode,
-					"errorInfo" => implode('\n\t', $query->errorInfo()),
-				],
-			);
-			return RetValueOrError::withError(500, "Failed to execute SQL - " . $errCode);
+			$errorInfo = implode('\n\t', $query->errorInfo());
+		} catch (\PDOException $ex) {
+			$errCode = strval($ex->getCode());
+			$errorInfo = $ex->getMessage();
 		}
-		return RetValueOrError::withValue(null);
+
+		$this->logger->error(
+			"Failed to execute SQL ({errorCode} -> {errorInfo})",
+			[
+				"errorCode" => $errCode,
+				"errorInfo" => $errorInfo,
+			],
+		);
+		if ($errCode === '23000') {
+			return RetValueOrError::withError(Constants::HTTP_CONFLICT, "WorkGroup already exists");
+		}
+
+		return RetValueOrError::withError(Constants::HTTP_INTERNAL_SERVER_ERROR, "Failed to execute SQL - " . $errCode);
 	}
 }
