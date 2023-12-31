@@ -4,7 +4,7 @@ namespace dev_t0r\trvis_backend\api;
 
 use dev_t0r\trvis_backend\api\AbstractWorkGroupApi;
 use dev_t0r\trvis_backend\model\WorkGroup;
-use dev_t0r\trvis_backend\RetValueOrError;
+use dev_t0r\trvis_backend\repo\WorkGroups;
 use dev_t0r\trvis_backend\Utils;
 use PDO;
 use Psr\Http\Message\ServerRequestInterface;
@@ -12,7 +12,6 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Lazy\LazyUuidFromString;
 use Ramsey\Uuid\Uuid;
-use Slim\Exception\HttpNotImplementedException;
 
 /**
  * AbstractWorkGroupApi Class Doc Comment
@@ -25,7 +24,7 @@ class WorkGroupApi extends AbstractWorkGroupApi
 {
 	private readonly PDO $db;
 	private readonly LoggerInterface $logger;
-	private readonly \dev_t0r\trvis_backend\repo\WorkGroups $workGroupsRepo;
+	private readonly WorkGroups $workGroupsRepo;
 
 	public function __construct(
 		PDO $db,
@@ -33,7 +32,7 @@ class WorkGroupApi extends AbstractWorkGroupApi
 	) {
 		$this->db = $db;
 		$this->logger = $logger;
-		$this->workGroupsRepo = new \dev_t0r\trvis_backend\repo\WorkGroups($db, $logger);
+		$this->workGroupsRepo = new WorkGroups($db, $logger);
 	}
 
 	const MAX_LEN_DESCRIPTION = 255;
@@ -122,8 +121,52 @@ class WorkGroupApi extends AbstractWorkGroupApi
 		$queryParams = $request->getQueryParams();
 		$p = (key_exists('p', $queryParams)) ? $queryParams['p'] : null;
 		$limit = (key_exists('limit', $queryParams)) ? $queryParams['limit'] : null;
-		$message = "How about implementing getWorkGroupList as a GET method in dev_t0r\trvis_backend\api\WorkGroupApi class?";
-		throw new HttpNotImplementedException($request, $message);
+		$top = (key_exists('top', $queryParams)) ? $queryParams['top'] : null;
+
+		$hasP = !is_null($p);
+		if ($hasP)
+		{
+			if (!is_numeric($p))
+			{
+				$this->logger->warning("Invalid number format (p:{p})", ['p' => $p]);
+				return Utils::withError($response, 400, "Invalid number format for parameter `p`");
+			}
+
+			$p = intval($p);
+			if ($p < WorkGroups::PAGE_MIN_VALUE)
+			{
+				$this->logger->warning("Value out of range (p:{p})", ['p' => $p]);
+				return Utils::withError($response, 400, "Value out of range (parameter `p`)");
+			}
+		}
+
+		$hasLimit = !is_null($limit);
+		if ($hasLimit)
+		{
+			if (!is_numeric($limit))
+			{
+				$this->logger->warning("Invalid number format (limit:{limit})", ['limit' => $limit]);
+				return Utils::withError($response, 400, "Invalid number format for parameter `limit`");
+			}
+
+			$limit = intval($limit);
+			if ($limit < WorkGroups::PER_PAGE_MIN_VALUE || WorkGroups::PER_PAGE_MAX_VALUE < $limit)
+			{
+				$this->logger->warning("Value out of range (limit:{limit})", ['limit' => $limit]);
+				return Utils::withError($response, 400, "Value out of range (parameter `limit`)");
+			}
+		}
+
+		$hasTop = !is_null($top);
+		if ($hasTop && !preg_match(LazyUuidFromString::VALID_REGEX, $top))
+		{
+			$this->logger->warning("Invalid UUID format ({workGroupId})", ['workGroupId' => $top]);
+			return Utils::withUuidError($response);
+		}
+
+		$uuid = $hasTop ? Uuid::fromString($top) : null;
+
+		return $this->workGroupsRepo->selectWorkGroupPage($p, $limit, $uuid)->getResponseWithJson($response);
 	}
 
 	public function updateWorkGroup(
