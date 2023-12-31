@@ -9,6 +9,7 @@ use PDO;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
+use Ramsey\Uuid\Lazy\LazyUuidFromString;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 use Slim\Exception\HttpNotImplementedException;
@@ -182,8 +183,14 @@ SQL;
 		ResponseInterface $response,
 		string $workGroupId
 	): ResponseInterface {
-		$message = "How about implementing getWorkGroup as a GET method in dev_t0r\trvis_backend\api\WorkGroupApi class?";
-		throw new HttpNotImplementedException($request, $message);
+		if (!preg_match(LazyUuidFromString::VALID_REGEX, $workGroupId))
+		{
+			$this->logger->warning("Invalid UUID format ({workGroupId})", ['workGroupId' => $workGroupId]);
+			return Utils::withUuidError($response);
+		}
+
+		$uuid = Uuid::fromString($workGroupId);
+		return Utils::withJson($response, $this->_selectWorkGroupOne($uuid));
 	}
 
 	public function getWorkGroupList(
