@@ -57,18 +57,18 @@ class WorkGroupApi extends AbstractWorkGroupApi
 				"Invalid length for parameter description, must be smaller than or equal to %d.",
 				$this::MAX_LEN_DESCRIPTION
 			);
-			return Utils::withError($response, $message, 400);
+			return Utils::withError($response, 400, $message);
 		}
 		if (empty($req_value_name)) {
 			$message = "Missing the required parameter 'name' when calling createWorkGroup";
-			return Utils::withError($response, $message, 400);
+			return Utils::withError($response, 400, $message);
 		}
 		if ($this::MAX_LEN_NAME < strlen($req_value_name)) {
 			$message = sprintf(
 				"Invalid length for parameter name, must be smaller than or equal to %d.",
 				$this::MAX_LEN_NAME
 			);
-			return Utils::withError($response, $message, 400);
+			return Utils::withError($response, 400, $message);
 		}
 
 		$uuid = Uuid::uuid7();
@@ -152,21 +152,21 @@ class WorkGroupApi extends AbstractWorkGroupApi
 					"Invalid length for parameter description, must be smaller than or equal to %d.",
 					$this::MAX_LEN_DESCRIPTION
 				);
-				return Utils::withError($response, $message, 400);
+				return Utils::withError($response, 400, $message);
 			}
 		}
 		if (!is_null($req_value_name))
 		{
 			if (empty($req_value_name)) {
 				$message = "Missing the required parameter 'name' when calling createWorkGroup";
-				return Utils::withError($response, $message, 400);
+				return Utils::withError($response, 400, $message);
 			}
 			if ($this::MAX_LEN_NAME < strlen($req_value_name)) {
 				$message = sprintf(
 					"Invalid length for parameter name, must be smaller than or equal to %d.",
 					$this::MAX_LEN_NAME
 				);
-				return Utils::withError($response, $message, 400);
+				return Utils::withError($response, 400, $message);
 			}
 		}
 
