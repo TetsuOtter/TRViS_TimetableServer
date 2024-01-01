@@ -16,6 +16,15 @@ services:
       - type: bind
         source: ./backend-logs
         target: /var/log/apache2
+  firebase:
+    build:
+      context: ./firebase
+      dockerfile: Dockerfile
+    container_name: webmon-firebase
+    hostname: webmon-firebase
+    ports:
+      - "9099:9099"
+      - "4000:4000"
   mysql:
     image: mysql:8.0-oracle
     container_name: webmon-db
