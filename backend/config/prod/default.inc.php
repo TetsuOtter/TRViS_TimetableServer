@@ -18,58 +18,58 @@ ini_set('display_errors', '0');
  * @see https://php-di.org/doc/php-definitions.html#values
  */
 return [
-    'mode' => 'production',
+	'mode' => 'production',
 
-    // Returns a detailed HTML page with error details and
-    // a stack trace. Should be disabled in production.
-    'slim.displayErrorDetails' => false,
+	// Returns a detailed HTML page with error details and
+	// a stack trace. Should be disabled in production.
+	'slim.displayErrorDetails' => false,
 
-    // Whether to display errors on the internal PHP log or not.
-    'slim.logErrors' => true,
+	// Whether to display errors on the internal PHP log or not.
+	'slim.logErrors' => true,
 
-    // If true, display full errors with message and stack trace on the PHP log.
-    // If false, display only "Slim Application Error" on the PHP log.
-    // Doesn't do anything when 'logErrors' is false.
-    'slim.logErrorDetails' => true,
+	// If true, display full errors with message and stack trace on the PHP log.
+	// If false, display only "Slim Application Error" on the PHP log.
+	// Doesn't do anything when 'logErrors' is false.
+	'slim.logErrorDetails' => true,
 
-    // CORS settings
-    // https://github.com/neomerx/cors-psr7/blob/master/src/Strategies/Settings.php
-    'cors.settings' => [
-        isset($_SERVER['HTTPS']) ? 'https' : 'http', // serverOriginScheme
-        $_SERVER['SERVER_NAME'], // serverOriginHost
-        null, // serverOriginPort
-        true, // isPreFlightCanBeCached
-        86400, // preFlightCacheMaxAge
-        true, // isForceAddMethods
-        true, // isForceAddHeaders
-        true, // isUseCredentials
-        true, // areAllOriginsAllowed
-        [], // allowedOrigins
-        true, // areAllMethodsAllowed
-        ['put','options','post','delete','head','get'], // allowedLcMethods
-        'PUT,OPTIONS,POST,DELETE,HEAD,GET', // allowedMethodsList
-        true, // areAllHeadersAllowed
-        ['content-type'], // allowedLcHeaders
-        'Content-Type', // allowedHeadersList
-        '', // exposedHeadersList
-        true, // isCheckHost
-    ],
+	// CORS settings
+	// https://github.com/neomerx/cors-psr7/blob/master/src/Strategies/Settings.php
+	'cors.settings' => [
+		isset($_SERVER['HTTPS']) ? 'https' : 'http', // serverOriginScheme
+		$_SERVER['SERVER_NAME'], // serverOriginHost
+		null, // serverOriginPort
+		true, // isPreFlightCanBeCached
+		86400, // preFlightCacheMaxAge
+		true, // isForceAddMethods
+		true, // isForceAddHeaders
+		true, // isUseCredentials
+		true, // areAllOriginsAllowed
+		[], // allowedOrigins
+		true, // areAllMethodsAllowed
+		['put','options','post','delete','head','get'], // allowedLcMethods
+		'PUT,OPTIONS,POST,DELETE,HEAD,GET', // allowedMethodsList
+		true, // areAllHeadersAllowed
+		['content-type'], // allowedLcHeaders
+		'Content-Type', // allowedHeadersList
+		'', // exposedHeadersList
+		true, // isCheckHost
+	],
 
-    // PDO
-    'pdo.dsn' => 'mysql:host=localhost;charset=utf8mb4',
-    'pdo.username' => 'root',
-    'pdo.password' => 'root',
-    'pdo.options' => [
-        \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
-    ],
+	// PDO
+	'pdo.dsn' => 'mysql:host=localhost;charset=utf8mb4',
+	'pdo.username' => 'root',
+	'pdo.password' => 'root',
+	'pdo.options' => [
+		\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+	],
 
-    // logger
-    'logger.name' => 'App',
-    'logger.path' => \realpath(__DIR__ . '/../../logs') . '/app',
-    'logger.level' => 300, // equals WARNING level
-    'logger.options' => [],
+	// logger
+	'logger.name' => 'App',
+	'logger.path' => \realpath(__DIR__ . '/../../logs') . '/app',
+	'logger.level' => 300, // equals WARNING level
+	'logger.options' => [],
 
-		// App Settings
-		'app.name' => 'trvis-backend',
-		'app.version' => '1.0.0',
+	// App Settings
+	'app.name' => 'trvis-backend',
+	'app.version' => '1.0.0',
 ];

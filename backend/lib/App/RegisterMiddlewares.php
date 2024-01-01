@@ -45,20 +45,20 @@ namespace dev_t0r\App;
  */
 final class RegisterMiddlewares
 {
-    /**
-     * Adds middlewares to Slim app instance.
-     *
-     * @param \Slim\App $app App instance.
-     */
-    public function __invoke(\Slim\App $app): void
-    {
-        // Parse json, form data and xml
-        $app->addBodyParsingMiddleware();
+	/**
+	 * Adds middlewares to Slim app instance.
+	 *
+	 * @param \Slim\App $app App instance.
+	 */
+	public function __invoke(\Slim\App $app): void
+	{
+		// Parse json, form data and xml
+		$app->addBodyParsingMiddleware();
 
-        // Add Routing Middleware
-        $app->addRoutingMiddleware();
+		// Add Routing Middleware
+		$app->addRoutingMiddleware();
 
-        // Add Error Middleware
-        $app->add(\Slim\Middleware\ErrorMiddleware::class);
-    }
+		// Add Error Middleware
+		$app->add(\Slim\Middleware\ErrorMiddleware::class);
+	}
 }
