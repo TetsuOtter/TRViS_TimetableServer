@@ -16,4 +16,8 @@ COPY \
 
 EXPOSE 9099 4000
 
-CMD [ "npx", "firebase", "emulators:start" ]
+RUN mkdir ./data
+
+VOLUME [ "/root/.cache" ]
+
+CMD [ "npx", "firebase", "emulators:start", "--import=./data" ]

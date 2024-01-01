@@ -25,6 +25,10 @@ services:
     ports:
       - "9099:9099"
       - "4000:4000"
+    volumes:
+      - type: bind
+        source: ./firebase/data
+        target: /emulator/data
   mysql:
     image: mysql:8.0-oracle
     container_name: webmon-db
