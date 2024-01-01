@@ -60,5 +60,7 @@ final class RegisterMiddlewares
 
 		// Add Error Middleware
 		$app->add(\Slim\Middleware\ErrorMiddleware::class);
+
+		$app->add(\dev_t0r\trvis_backend\auth\MyAuthMiddleware::class);
 	}
 }

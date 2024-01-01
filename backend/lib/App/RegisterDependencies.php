@@ -125,6 +125,30 @@ final class RegisterDependencies
 				->parameter('path', \DI\get('logger.path'))
 				->parameter('level', \DI\get('logger.level'))
 				->parameter('options', \DI\get('logger.options')),
+
+			// Firebase
+			\Kreait\Firebase\Factory::class => \DI\factory(function (
+				string $projectId,
+				string $serviceAccountFile,
+				\Psr\Log\LoggerInterface $logger,
+				?string $apiTokenCacheDir,
+				?string $authPubKeyCacheDir
+			) {
+				$factory = (new \Kreait\Firebase\Factory())
+					->withAuthTokenCache(new \Symfony\Component\Cache\Adapter\FilesystemAdapter(directory: $apiTokenCacheDir))
+					->withVerifierCache(new \Symfony\Component\Cache\Adapter\FilesystemAdapter(directory: $authPubKeyCacheDir))
+					->withProjectId($projectId)
+					->withServiceAccount($serviceAccountFile)
+					->withHttpLogger($logger);
+				return $factory;
+			})
+				->parameter('projectId', \DI\get('firebase.project_id'))
+				->parameter('serviceAccountFile', \DI\get('firebase.sa_file'))
+				->parameter('logger', \DI\get(\Psr\Log\LoggerInterface::class))
+				->parameter('apiTokenCacheDir', \DI\get('firebase.api_token_cache_dir'))
+				->parameter('authPubKeyCacheDir', \DI\get('firebase.auth.pubkey_cache_dir'))
+			,
+			\Kreait\Firebase\Contract\Auth::class => \DI\factory([\Kreait\Firebase\Factory::class, 'createAuth']),
 		]);
 	}
 }

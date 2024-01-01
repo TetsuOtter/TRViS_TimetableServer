@@ -49,8 +49,8 @@ return [
 		['put','options','post','delete','head','get'], // allowedLcMethods
 		'PUT,OPTIONS,POST,DELETE,HEAD,GET', // allowedMethodsList
 		true, // areAllHeadersAllowed
-		['content-type'], // allowedLcHeaders
-		'Content-Type', // allowedHeadersList
+		['content-type', 'authorization'], // allowedLcHeaders
+		'Content-Type,Authorization', // allowedHeadersList
 		'', // exposedHeadersList
 		true, // isCheckHost
 	],
@@ -72,4 +72,10 @@ return [
 	// App Settings
 	'app.name' => 'trvis-backend',
 	'app.version' => '1.0.0',
+
+	'firebase.sa_file' => \realpath(__DIR__ . '/firebase-service-account.json'),
+	'firebase.project_id' => 'trvis-app',
+
+	'firebase.api_token_cache_dir' => \realpath(__DIR__ . '/../../cache') . '/firebase/ApiToken',
+	'firebase.auth.pubkey_cache_dir' => \realpath(__DIR__ . '/../../cache') . '/firebase/AuthPubKey',
 ];

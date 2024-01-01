@@ -28,7 +28,7 @@ class WorkGroupApi extends AbstractWorkGroupApi
 
 	public function __construct(
 		PDO $db,
-		LoggerInterface $logger
+		LoggerInterface $logger,
 	) {
 		$this->db = $db;
 		$this->logger = $logger;
