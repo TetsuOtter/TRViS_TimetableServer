@@ -1,7 +1,6 @@
 README.md
 lib/App/RegisterRoutes.php
 lib/App/ResponseEmitter.php
-lib/Auth/AbstractAuthenticator.php
 lib/BaseModel.php
 lib/trvis_backend/api/AbstractApiInfoApi.php
 lib/trvis_backend/api/AbstractAuthApi.php
