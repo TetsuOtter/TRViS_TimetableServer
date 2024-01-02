@@ -767,6 +767,686 @@ class RegisterRoutes
             ],
         ],
         [
+            'httpMethod' => 'GET',
+            'basePathWithoutHost' => '/api/v1',
+            'path' => '/invite_keys',
+            'apiPackage' => 'dev_t0r\trvis_backend\api',
+            'classname' => 'AbstractInviteKeyApi',
+            'userClassname' => 'InviteKeyApi',
+            'operationId' => 'getMyInviteKeyList',
+            'responses' => [
+                '200' => [
+                    'jsonSchema' => '{
+  "description" : "取得成功",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/InviteKeyArray"
+      }
+    }
+  }
+}',
+                ],
+                '400' => [
+                    'jsonSchema' => '{
+  "description" : "リクエストが不正",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/schema"
+      },
+      "examples" : {
+        "example" : {
+          "value" : {
+            "code" : 400,
+            "message" : "Bad Request"
+          }
+        }
+      }
+    }
+  }
+}',
+                ],
+                '401' => [
+                    'jsonSchema' => '{
+  "description" : "認証トークンのエラー",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/schema"
+      },
+      "examples" : {
+        "TokenIsNotSet" : {
+          "description" : "認証トークンがセットされていない場合",
+          "value" : {
+            "code" : 401,
+            "message" : "Token is not set"
+          }
+        },
+        "TokenIsExpired" : {
+          "description" : "認証トークンが期限切れな場合",
+          "value" : {
+            "code" : 1401,
+            "message" : "Token is expired"
+          }
+        }
+      }
+    }
+  }
+}',
+                ],
+            ],
+            'authMethods' => [
+                // http security schema named 'bearerAuth'
+                [
+                    'type' => 'http',
+                    'isBasic' => true,
+                    'isBearer' => true,
+                    'isApiKey' => false,
+                    'isOAuth' => false,
+                ],
+            ],
+        ],
+        [
+            'httpMethod' => 'POST',
+            'basePathWithoutHost' => '/api/v1',
+            'path' => '/work_groups/{workGroupId}/invite_keys',
+            'apiPackage' => 'dev_t0r\trvis_backend\api',
+            'classname' => 'AbstractInviteKeyApi',
+            'userClassname' => 'InviteKeyApi',
+            'operationId' => 'createInviteKey',
+            'responses' => [
+                '201' => [
+                    'jsonSchema' => '{
+  "description" : "作成成功",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/WorkGroup"
+      }
+    }
+  }
+}',
+                ],
+                '400' => [
+                    'jsonSchema' => '{
+  "description" : "リクエストが不正",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/schema"
+      },
+      "examples" : {
+        "example" : {
+          "value" : {
+            "code" : 400,
+            "message" : "Bad Request"
+          }
+        }
+      }
+    }
+  }
+}',
+                ],
+                '401' => [
+                    'jsonSchema' => '{
+  "description" : "認証トークンのエラー",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/schema"
+      },
+      "examples" : {
+        "TokenIsNotSet" : {
+          "description" : "認証トークンがセットされていない場合",
+          "value" : {
+            "code" : 401,
+            "message" : "Token is not set"
+          }
+        },
+        "TokenIsExpired" : {
+          "description" : "認証トークンが期限切れな場合",
+          "value" : {
+            "code" : 1401,
+            "message" : "Token is expired"
+          }
+        }
+      }
+    }
+  }
+}',
+                ],
+                '403' => [
+                    'jsonSchema' => '{
+  "description" : "許可されていない操作を行おうとした",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/schema"
+      },
+      "examples" : {
+        "example" : {
+          "value" : {
+            "code" : 1403,
+            "message" : "Not Allowed Command"
+          }
+        }
+      }
+    }
+  }
+}',
+                ],
+            ],
+            'authMethods' => [
+                // http security schema named 'bearerAuth'
+                [
+                    'type' => 'http',
+                    'isBasic' => true,
+                    'isBearer' => true,
+                    'isApiKey' => false,
+                    'isOAuth' => false,
+                ],
+            ],
+        ],
+        [
+            'httpMethod' => 'DELETE',
+            'basePathWithoutHost' => '/api/v1',
+            'path' => '/invite_keys/{inviteKeyId}',
+            'apiPackage' => 'dev_t0r\trvis_backend\api',
+            'classname' => 'AbstractInviteKeyApi',
+            'userClassname' => 'InviteKeyApi',
+            'operationId' => 'deleteInviteKey',
+            'responses' => [
+                '200' => [
+                    'jsonSchema' => '{
+  "description" : "無効化成功"
+}',
+                ],
+                '400' => [
+                    'jsonSchema' => '{
+  "description" : "リクエストが不正",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/schema"
+      },
+      "examples" : {
+        "example" : {
+          "value" : {
+            "code" : 400,
+            "message" : "Bad Request"
+          }
+        }
+      }
+    }
+  }
+}',
+                ],
+                '401' => [
+                    'jsonSchema' => '{
+  "description" : "認証トークンのエラー",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/schema"
+      },
+      "examples" : {
+        "TokenIsNotSet" : {
+          "description" : "認証トークンがセットされていない場合",
+          "value" : {
+            "code" : 401,
+            "message" : "Token is not set"
+          }
+        },
+        "TokenIsExpired" : {
+          "description" : "認証トークンが期限切れな場合",
+          "value" : {
+            "code" : 1401,
+            "message" : "Token is expired"
+          }
+        }
+      }
+    }
+  }
+}',
+                ],
+                '403' => [
+                    'jsonSchema' => '{
+  "description" : "許可されていない操作を行おうとした",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/schema"
+      },
+      "examples" : {
+        "example" : {
+          "value" : {
+            "code" : 1403,
+            "message" : "Not Allowed Command"
+          }
+        }
+      }
+    }
+  }
+}',
+                ],
+                '404' => [
+                    'jsonSchema' => '{
+  "description" : "コンテンツが存在しない",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/schema"
+      },
+      "examples" : {
+        "example" : {
+          "value" : {
+            "code" : 404,
+            "message" : "Content Not Found"
+          }
+        }
+      }
+    }
+  }
+}',
+                ],
+            ],
+            'authMethods' => [
+                // http security schema named 'bearerAuth'
+                [
+                    'type' => 'http',
+                    'isBasic' => true,
+                    'isBearer' => true,
+                    'isApiKey' => false,
+                    'isOAuth' => false,
+                ],
+            ],
+        ],
+        [
+            'httpMethod' => 'GET',
+            'basePathWithoutHost' => '/api/v1',
+            'path' => '/invite_keys/{inviteKeyId}',
+            'apiPackage' => 'dev_t0r\trvis_backend\api',
+            'classname' => 'AbstractInviteKeyApi',
+            'userClassname' => 'InviteKeyApi',
+            'operationId' => 'getInviteKey',
+            'responses' => [
+                '200' => [
+                    'jsonSchema' => '{
+  "description" : "取得成功",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/InviteKey"
+      }
+    }
+  }
+}',
+                ],
+                '400' => [
+                    'jsonSchema' => '{
+  "description" : "リクエストが不正",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/schema"
+      },
+      "examples" : {
+        "example" : {
+          "value" : {
+            "code" : 400,
+            "message" : "Bad Request"
+          }
+        }
+      }
+    }
+  }
+}',
+                ],
+                '401' => [
+                    'jsonSchema' => '{
+  "description" : "認証トークンのエラー",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/schema"
+      },
+      "examples" : {
+        "TokenIsNotSet" : {
+          "description" : "認証トークンがセットされていない場合",
+          "value" : {
+            "code" : 401,
+            "message" : "Token is not set"
+          }
+        },
+        "TokenIsExpired" : {
+          "description" : "認証トークンが期限切れな場合",
+          "value" : {
+            "code" : 1401,
+            "message" : "Token is expired"
+          }
+        }
+      }
+    }
+  }
+}',
+                ],
+                '404' => [
+                    'jsonSchema' => '{
+  "description" : "コンテンツが存在しない",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/schema"
+      },
+      "examples" : {
+        "example" : {
+          "value" : {
+            "code" : 404,
+            "message" : "Content Not Found"
+          }
+        }
+      }
+    }
+  }
+}',
+                ],
+            ],
+            'authMethods' => [
+                // http security schema named 'bearerAuth'
+                [
+                    'type' => 'http',
+                    'isBasic' => true,
+                    'isBearer' => true,
+                    'isApiKey' => false,
+                    'isOAuth' => false,
+                ],
+            ],
+        ],
+        [
+            'httpMethod' => 'GET',
+            'basePathWithoutHost' => '/api/v1',
+            'path' => '/work_groups/{workGroupId}/invite_keys',
+            'apiPackage' => 'dev_t0r\trvis_backend\api',
+            'classname' => 'AbstractInviteKeyApi',
+            'userClassname' => 'InviteKeyApi',
+            'operationId' => 'getInviteKeyList',
+            'responses' => [
+                '200' => [
+                    'jsonSchema' => '{
+  "description" : "取得成功",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/InviteKeyArray"
+      }
+    }
+  }
+}',
+                ],
+                '400' => [
+                    'jsonSchema' => '{
+  "description" : "リクエストが不正",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/schema"
+      },
+      "examples" : {
+        "example" : {
+          "value" : {
+            "code" : 400,
+            "message" : "Bad Request"
+          }
+        }
+      }
+    }
+  }
+}',
+                ],
+                '401' => [
+                    'jsonSchema' => '{
+  "description" : "認証トークンのエラー",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/schema"
+      },
+      "examples" : {
+        "TokenIsNotSet" : {
+          "description" : "認証トークンがセットされていない場合",
+          "value" : {
+            "code" : 401,
+            "message" : "Token is not set"
+          }
+        },
+        "TokenIsExpired" : {
+          "description" : "認証トークンが期限切れな場合",
+          "value" : {
+            "code" : 1401,
+            "message" : "Token is expired"
+          }
+        }
+      }
+    }
+  }
+}',
+                ],
+            ],
+            'authMethods' => [
+                // http security schema named 'bearerAuth'
+                [
+                    'type' => 'http',
+                    'isBasic' => true,
+                    'isBearer' => true,
+                    'isApiKey' => false,
+                    'isOAuth' => false,
+                ],
+            ],
+        ],
+        [
+            'httpMethod' => 'PUT',
+            'basePathWithoutHost' => '/api/v1',
+            'path' => '/invite_keys/{inviteKeyId}',
+            'apiPackage' => 'dev_t0r\trvis_backend\api',
+            'classname' => 'AbstractInviteKeyApi',
+            'userClassname' => 'InviteKeyApi',
+            'operationId' => 'updateInviteKey',
+            'responses' => [
+                '200' => [
+                    'jsonSchema' => '{
+  "description" : "更新成功",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/InviteKey"
+      }
+    }
+  }
+}',
+                ],
+                '400' => [
+                    'jsonSchema' => '{
+  "description" : "リクエストが不正",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/schema"
+      },
+      "examples" : {
+        "example" : {
+          "value" : {
+            "code" : 400,
+            "message" : "Bad Request"
+          }
+        }
+      }
+    }
+  }
+}',
+                ],
+                '401' => [
+                    'jsonSchema' => '{
+  "description" : "認証トークンのエラー",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/schema"
+      },
+      "examples" : {
+        "TokenIsNotSet" : {
+          "description" : "認証トークンがセットされていない場合",
+          "value" : {
+            "code" : 401,
+            "message" : "Token is not set"
+          }
+        },
+        "TokenIsExpired" : {
+          "description" : "認証トークンが期限切れな場合",
+          "value" : {
+            "code" : 1401,
+            "message" : "Token is expired"
+          }
+        }
+      }
+    }
+  }
+}',
+                ],
+                '404' => [
+                    'jsonSchema' => '{
+  "description" : "コンテンツが存在しない",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/schema"
+      },
+      "examples" : {
+        "example" : {
+          "value" : {
+            "code" : 404,
+            "message" : "Content Not Found"
+          }
+        }
+      }
+    }
+  }
+}',
+                ],
+            ],
+            'authMethods' => [
+                // http security schema named 'bearerAuth'
+                [
+                    'type' => 'http',
+                    'isBasic' => true,
+                    'isBearer' => true,
+                    'isApiKey' => false,
+                    'isOAuth' => false,
+                ],
+            ],
+        ],
+        [
+            'httpMethod' => 'POST',
+            'basePathWithoutHost' => '/api/v1',
+            'path' => '/invite_keys/{inviteKeyId}',
+            'apiPackage' => 'dev_t0r\trvis_backend\api',
+            'classname' => 'AbstractInviteKeyApi',
+            'userClassname' => 'InviteKeyApi',
+            'operationId' => 'useInviteKey',
+            'responses' => [
+                '200' => [
+                    'jsonSchema' => '{
+  "description" : "成功",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/WorkGroup"
+      }
+    }
+  }
+}',
+                ],
+                '400' => [
+                    'jsonSchema' => '{
+  "description" : "リクエストが不正",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/schema"
+      },
+      "examples" : {
+        "example" : {
+          "value" : {
+            "code" : 400,
+            "message" : "Bad Request"
+          }
+        }
+      }
+    }
+  }
+}',
+                ],
+                '401' => [
+                    'jsonSchema' => '{
+  "description" : "認証トークンのエラー",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/schema"
+      },
+      "examples" : {
+        "TokenIsNotSet" : {
+          "description" : "認証トークンがセットされていない場合",
+          "value" : {
+            "code" : 401,
+            "message" : "Token is not set"
+          }
+        },
+        "TokenIsExpired" : {
+          "description" : "認証トークンが期限切れな場合",
+          "value" : {
+            "code" : 1401,
+            "message" : "Token is expired"
+          }
+        }
+      }
+    }
+  }
+}',
+                ],
+                '404' => [
+                    'jsonSchema' => '{
+  "description" : "コンテンツが存在しない",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/schema"
+      },
+      "examples" : {
+        "example" : {
+          "value" : {
+            "code" : 404,
+            "message" : "Content Not Found"
+          }
+        }
+      }
+    }
+  }
+}',
+                ],
+            ],
+            'authMethods' => [
+                // http security schema named 'bearerAuth'
+                [
+                    'type' => 'http',
+                    'isBasic' => true,
+                    'isBearer' => true,
+                    'isApiKey' => false,
+                    'isOAuth' => false,
+                ],
+            ],
+        ],
+        [
             'httpMethod' => 'POST',
             'basePathWithoutHost' => '/api/v1',
             'path' => '/work_groups/{workGroupId}/stations',

@@ -160,6 +160,13 @@ Class | Method | HTTP request | Description
 *AbstractColorApi* | **getColorList** | **GET** /colors | 複数件取得する
 *AbstractColorApi* | **updateColor** | **PUT** /colors/{colorId} | 更新する
 *AbstractDumpApi* | **dumpTimetable** | **GET** /dump/{workGroupId} | まとめて出力する
+*AbstractInviteKeyApi* | **getMyInviteKeyList** | **GET** /invite_keys | 一覧を取得する
+*AbstractInviteKeyApi* | **createInviteKey** | **POST** /work_groups/{workGroupId}/invite_keys | 作成する
+*AbstractInviteKeyApi* | **deleteInviteKey** | **DELETE** /invite_keys/{inviteKeyId} | 無効化する
+*AbstractInviteKeyApi* | **getInviteKey** | **GET** /invite_keys/{inviteKeyId} | 1件取得する
+*AbstractInviteKeyApi* | **getInviteKeyList** | **GET** /work_groups/{workGroupId}/invite_keys | 一覧を取得する
+*AbstractInviteKeyApi* | **updateInviteKey** | **PUT** /invite_keys/{inviteKeyId} | 更新する
+*AbstractInviteKeyApi* | **useInviteKey** | **POST** /invite_keys/{inviteKeyId} | 使用する
 *AbstractStationApi* | **createStation** | **POST** /work_groups/{workGroupId}/stations | 作成する
 *AbstractStationApi* | **deleteStation** | **DELETE** /work_groups/{workGroupId}/stations/{stationId} | 削除する
 *AbstractStationApi* | **getStation** | **GET** /work_groups/{workGroupId}/stations/{stationId} | 1件取得する
@@ -198,6 +205,7 @@ Class | Method | HTTP request | Description
 * dev_t0r\trvis_backend\model\Color
 * dev_t0r\trvis_backend\model\Color8bit
 * dev_t0r\trvis_backend\model\ColorReal
+* dev_t0r\trvis_backend\model\InviteKey
 * dev_t0r\trvis_backend\model\Schema
 * dev_t0r\trvis_backend\model\Station
 * dev_t0r\trvis_backend\model\StationLocationLonlat

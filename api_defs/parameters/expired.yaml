@@ -1,0 +1,10 @@
+Expired:
+  in: query
+  name: expired
+  required: false
+  schema:
+    type: boolean
+    default: false
+  description: |
+    有効期限切れの (および、無効な) 招待キーを含めるかどうか  
+    (`?expired`だけ、または`?expired=`の場合は`true`と同じ。それ以外は`?expired=true`の場合のみ`true`となる)

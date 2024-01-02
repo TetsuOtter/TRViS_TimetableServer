@@ -1,0 +1,111 @@
+path:
+  get:
+    summary: 1件取得する
+    operationId: getInviteKey
+    description: 招待キーの情報を1件取得する
+    tags:
+      - invite_key
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '#/components/parameters/WorkGroupId'
+      - $ref: '#/components/parameters/InviteKeyId'
+    responses:
+      '200':
+        description: 取得成功
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InviteKey'
+      '400':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
+      '401':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/401_TokenError'
+      '404':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/404_ContentNotFound'
+
+  post:
+    summary: 使用する
+    operationId: useInviteKey
+    description: 招待キーを使用する
+    tags:
+      - invite_key
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '#/components/parameters/WorkGroupId'
+      - $ref: '#/components/parameters/InviteKeyId'
+    responses:
+      '200':
+        description: 成功
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkGroup'
+      '400':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
+      '401':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/401_TokenError'
+      '404':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/404_ContentNotFound'
+
+  put:
+    summary: 更新する
+    operationId: updateInviteKey
+    description: 既存の招待キーを更新する
+    tags:
+      - invite_key
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '#/components/parameters/WorkGroupId'
+      - $ref: '#/components/parameters/InviteKeyId'
+    requestBody:
+      description: 更新後のInviteKeyの情報
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InviteKey'
+    responses:
+      '200':
+        description: 更新成功
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InviteKey'
+      '400':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
+      '401':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/401_TokenError'
+      '404':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/404_ContentNotFound'
+
+  delete:
+    summary: 無効化する
+    operationId: deleteInviteKey
+    description: |
+      指定の招待キーを無効化する。
+
+      なお、この操作はキーが有効な間だけ行える。
+    tags:
+      - invite_key
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '#/components/parameters/WorkGroupId'
+      - $ref: '#/components/parameters/InviteKeyId'
+    responses:
+      '200':
+        description: 無効化成功
+      '400':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
+      '401':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/401_TokenError'
+      '403':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/403_NotAllowedCommand'
+      '404':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/404_ContentNotFound'
+
+components:
+  $ref: '../../api_root.yaml#/components'

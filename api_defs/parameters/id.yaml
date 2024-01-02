@@ -7,6 +7,15 @@ WorkGroupId:
     format: uuid
   description: WorkGroupのID
 
+InviteKeyId:
+  in: path
+  name: inviteKeyId
+  required: true
+  schema:
+    type: string
+    format: uuid
+  description: InviteKeyのID
+
 WorkId:
   in: path
   name: workId

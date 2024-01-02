@@ -6,6 +6,7 @@ lib/trvis_backend/api/AbstractApiInfoApi.php
 lib/trvis_backend/api/AbstractAuthApi.php
 lib/trvis_backend/api/AbstractColorApi.php
 lib/trvis_backend/api/AbstractDumpApi.php
+lib/trvis_backend/api/AbstractInviteKeyApi.php
 lib/trvis_backend/api/AbstractStationApi.php
 lib/trvis_backend/api/AbstractStationTrackApi.php
 lib/trvis_backend/api/AbstractTimetableRowApi.php
@@ -16,6 +17,7 @@ lib/trvis_backend/model/ApiInfo.php
 lib/trvis_backend/model/Color.php
 lib/trvis_backend/model/Color8bit.php
 lib/trvis_backend/model/ColorReal.php
+lib/trvis_backend/model/InviteKey.php
 lib/trvis_backend/model/Schema.php
 lib/trvis_backend/model/Station.php
 lib/trvis_backend/model/StationLocationLonlat.php

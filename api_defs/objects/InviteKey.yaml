@@ -1,0 +1,52 @@
+InviteKey:
+  type: object
+  title: InviteKey
+  required:
+    - description
+  properties:
+    invite_keys_id:
+      type: string
+      format: uuid
+      readOnly: true
+      description: Invite Key (UUID)
+    created_at:
+      type: string
+      format: date-time
+      readOnly: true
+      description: 作成日時
+    description:
+      type: string
+      description: 招待キーの説明
+      example: グループAの招待キー
+    valid_from:
+      type: string
+      format: date-time
+      description: キーの有効期限 (開始)
+    expires_at:
+      type: string
+      format: date-time
+      description: キーの有効期限 (終了)
+    use_limit:
+      type: integer
+      minimum: 1
+      description: キーの使用回数の上限
+      example: 15
+    disabled_at:
+      type: string
+      format: date-time
+      readOnly: true
+      description: キーが無効になった日時 (Expireした場合はexpires_atと同じ値)
+    privilege_type:
+      type: string
+      enum:
+        - read
+        - write
+        - admin
+      description: 招待キーで付与される権限
+      example: read
+
+InviteKeyArray:
+  type: array
+  title: InviteKeyArray
+  items:
+    $ref: '#/InviteKey'

@@ -1,0 +1,60 @@
+path:
+  get:
+    summary: 一覧を取得する
+    operationId: getInviteKeyList
+    description: 指定のWorkGroupに属する招待キーの一覧を取得する (admin権限が必要)
+    tags:
+      - invite_key
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '#/components/parameters/WorkGroupId'
+      - $ref: '#/components/parameters/PageNumber'
+      - $ref: '#/components/parameters/PageSize'
+      - $ref: '#/components/parameters/PageTopId'
+      - $ref: '#/components/parameters/Expired'
+    responses:
+      '200':
+        description: 取得成功
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InviteKeyArray'
+      '400':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
+      '401':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/401_TokenError'
+
+  post:
+    summary: 作成する
+    operationId: createInviteKey
+    description: 指定のWorkGroupに属する招待キーを新規に作成する (admin権限が必要)
+    tags:
+      - invite_key
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '#/components/parameters/WorkGroupId'
+    requestBody:
+      description: 作成するInviteKeyの情報
+      required: true
+      content:
+        application/json:
+            schema:
+              $ref: '#/components/schemas/InviteKey'
+    responses:
+      '201':
+        description: 作成成功
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkGroup'
+      '400':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
+      '401':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/401_TokenError'
+      '403':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/403_NotAllowedCommand'
+
+components:
+  $ref: '../../api_root.yaml#/components'

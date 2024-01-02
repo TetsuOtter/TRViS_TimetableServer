@@ -15,6 +15,8 @@ tags:
     description: APIの情報を取得する
   - name: auth
     description: 認証/認可関連のAPI (トークン発行など)
+  - name: invite_key
+    description: 招待キー関係の操作を行う
   - name: work_group
     description: Work Groupの操作を行う
   - name: station
@@ -43,6 +45,13 @@ paths:
     $ref: "./paths/work_groups/index.yaml#/path"
   /work_groups/{workGroupId}:
     $ref: "./paths/work_groups/id.yaml#/path"
+
+  /work_groups/{workGroupId}/invite_keys:
+    $ref: "./paths/invite_keys/wg_index.yaml#/path"
+  /invite_keys:
+    $ref: "./paths/invite_keys/index.yaml#/path"
+  /invite_keys/{inviteKeyId}:
+    $ref: "./paths/invite_keys/id.yaml#/path"
 
   /work_groups/{workGroupId}/stations:
     $ref: "./paths/stations/index.yaml#/path"
@@ -101,6 +110,11 @@ components:
     TokenResponse:
       $ref: "./objects/TokenResponse.yaml#/TokenResponse"
 
+    InviteKey:
+      $ref: "./objects/InviteKey.yaml#/InviteKey"
+    InviteKeyArray:
+      $ref: "./objects/InviteKey.yaml#/InviteKeyArray"
+
     Station:
       $ref: "./objects/Station.yaml#/Station"
     StationArray:
@@ -142,6 +156,8 @@ components:
   parameters:
     WorkGroupId:
       $ref: "./parameters/id.yaml#/WorkGroupId"
+    InviteKeyId:
+      $ref: "./parameters/id.yaml#/InviteKeyId"
     WorkId:
       $ref: "./parameters/id.yaml#/WorkId"
     TrainId:
@@ -161,3 +177,6 @@ components:
       $ref: "./parameters/paging.yaml#/PageSize"
     PageTopId:
       $ref: "./parameters/paging.yaml#/PageTopId"
+
+    Expired:
+      $ref: "./parameters/expired.yaml#/Expired"
