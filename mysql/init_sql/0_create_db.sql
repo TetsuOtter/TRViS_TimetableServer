@@ -77,7 +77,6 @@ CREATE TABLE
 
   name
     VARCHAR(255)
-    UNIQUE
     NOT NULL
   ,
 
@@ -126,7 +125,6 @@ CREATE TABLE
 
   name
     VARCHAR(255)
-    UNIQUE
     NOT NULL
   ,
 
