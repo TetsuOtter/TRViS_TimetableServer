@@ -25,7 +25,6 @@ CREATE TABLE
 
   api_key
     VARCHAR(255)
-    UNIQUE
     NOT NULL
   ,
 
