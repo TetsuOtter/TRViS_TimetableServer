@@ -12,6 +12,29 @@
     - description
   - api_key
   - expires_at
+- work_groups_privileges
+  - uid
+  - work_groups_id
+  - invite_keys_id
+  - created_at
+  - updated_at
+  - privilege_type
+    - none = 0
+    - read = 1
+    - write = 2
+    - admin = 3
+- invite_keys
+  - invite_keys_id
+  - work_groups_id
+  - created_at
+  - owner
+  - updated_at
+  - description
+  - valid_from
+  - expires_at
+  - use_limit
+  - disabled_at
+
 - work_groups
   - (common)
     - work_groups_id

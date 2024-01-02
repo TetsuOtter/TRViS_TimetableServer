@@ -688,3 +688,132 @@ CREATE TABLE
     colors_id
   )
 );
+
+CREATE TABLE
+  invite_keys
+(
+  invite_keys_id
+    BINARY(16)
+    NOT NULL
+    COMMENT 'UUID v4'
+  ,
+
+  work_groups_id
+    BINARY(16)
+    NOT NULL
+    COMMENT 'UUID v4'
+  ,
+
+  created_at
+    DATETIME
+    NOT NULL
+    DEFAULT CURRENT_TIMESTAMP
+  ,
+
+  owner
+    VARCHAR(255)
+    CHARACTER SET ascii
+    COLLATE ascii_bin
+    NOT NULL
+  ,
+
+  updated_at
+    DATETIME
+    NOT NULL
+    DEFAULT CURRENT_TIMESTAMP
+    ON UPDATE CURRENT_TIMESTAMP
+  ,
+
+  description
+    VARCHAR(255)
+    NOT NULL
+  ,
+
+  valid_from
+    DATETIME
+    NOT NULL
+  ,
+
+  expires_at
+    DATETIME
+  ,
+
+  use_limit
+    INTEGER
+  ,
+
+  disabled_at
+    DATETIME
+  ,
+
+  PRIMARY KEY (
+    invite_keys_id
+  ),
+
+  FOREIGN KEY (
+    work_groups_id
+  ) REFERENCES
+  work_groups (
+    work_groups_id
+  )
+);
+
+CREATE TABLE
+  work_groups_privileges
+(
+  uid
+    VARCHAR(255)
+    CHARACTER SET ascii
+    COLLATE ascii_bin
+    NOT NULL
+  ,
+
+  work_groups_id
+    BINARY(16)
+    NOT NULL
+    COMMENT 'UUID v4'
+  ,
+
+  invite_keys_id
+    BINARY(16)
+    NOT NULL
+    COMMENT 'UUID v4'
+  ,
+
+  created_at
+    DATETIME
+    NOT NULL
+    DEFAULT CURRENT_TIMESTAMP
+  ,
+
+  updated_at
+    DATETIME
+    NOT NULL
+    DEFAULT CURRENT_TIMESTAMP
+    ON UPDATE CURRENT_TIMESTAMP
+  ,
+
+  privilege_type
+    TINYINT
+    NOT NULL
+  ,
+
+  PRIMARY KEY (
+    uid,
+    work_groups_id
+  ),
+
+  FOREIGN KEY (
+    work_groups_id
+  ) REFERENCES
+  work_groups (
+    work_groups_id
+  ),
+
+  FOREIGN KEY (
+    invite_keys_id
+  ) REFERENCES
+  invite_keys (
+    invite_keys_id
+  )
+);
