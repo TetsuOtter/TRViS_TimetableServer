@@ -34,6 +34,11 @@
   - expires_at
   - use_limit
   - disabled_at
+  - privilege_type
+    - none = 0
+    - read = 1
+    - write = 2
+    - admin = 3
 
 - work_groups
   - (common)

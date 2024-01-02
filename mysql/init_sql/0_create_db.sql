@@ -746,6 +746,11 @@ CREATE TABLE
     DATETIME
   ,
 
+  privilege_type
+    TINYINT
+    NOT NULL
+  ,
+
   PRIMARY KEY (
     invite_keys_id
   ),
