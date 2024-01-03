@@ -732,6 +732,7 @@ CREATE TABLE
   valid_from
     DATETIME
     NOT NULL
+    DEFAULT CURRENT_TIMESTAMP
   ,
 
   expires_at
