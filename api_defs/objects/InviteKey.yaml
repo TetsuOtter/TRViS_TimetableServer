@@ -9,6 +9,11 @@ InviteKey:
       format: uuid
       readOnly: true
       description: Invite Key (UUID)
+    work_groups_id:
+      type: string
+      format: uuid
+      readOnly: true
+      description: 対応するWorkGroupのID (UUID)
     created_at:
       type: string
       format: date-time

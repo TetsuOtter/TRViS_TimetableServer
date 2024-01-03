@@ -54,6 +54,12 @@ class InviteKey extends BaseModel
       "format" : "uuid",
       "readOnly" : true
     },
+    "work_groups_id" : {
+      "type" : "string",
+      "description" : "対応するWorkGroupのID (UUID)",
+      "format" : "uuid",
+      "readOnly" : true
+    },
     "created_at" : {
       "type" : "string",
       "description" : "作成日時",
