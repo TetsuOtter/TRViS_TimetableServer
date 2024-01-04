@@ -782,7 +782,6 @@ CREATE TABLE
 
   invite_keys_id
     BINARY(16)
-    NOT NULL
     COMMENT 'UUID v4'
   ,
 
