@@ -90,7 +90,7 @@ class WorkGroupApi extends AbstractWorkGroupApi
 		ResponseInterface $response,
 		string $workGroupId
 	): ResponseInterface {
-		if (!preg_match(LazyUuidFromString::VALID_REGEX, $workGroupId))
+		if (!Uuid::isValid($workGroupId))
 		{
 			$this->logger->warning("Invalid UUID format ({workGroupId})", ['workGroupId' => $workGroupId]);
 			return Utils::withUuidError($response);
@@ -103,7 +103,7 @@ class WorkGroupApi extends AbstractWorkGroupApi
 		ResponseInterface $response,
 		string $workGroupId
 	): ResponseInterface {
-		if (!preg_match(LazyUuidFromString::VALID_REGEX, $workGroupId))
+		if (!Uuid::isValid($workGroupId))
 		{
 			$this->logger->warning("Invalid UUID format ({workGroupId})", ['workGroupId' => $workGroupId]);
 			return Utils::withUuidError($response);
@@ -158,7 +158,7 @@ class WorkGroupApi extends AbstractWorkGroupApi
 		}
 
 		$hasTop = !is_null($top);
-		if ($hasTop && !preg_match(LazyUuidFromString::VALID_REGEX, $top))
+		if ($hasTop && !Uuid::isValid($top))
 		{
 			$this->logger->warning("Invalid UUID format ({workGroupId})", ['workGroupId' => $top]);
 			return Utils::withUuidError($response);
@@ -183,7 +183,7 @@ class WorkGroupApi extends AbstractWorkGroupApi
 		$req_value_name = $d->{'name'};
 
 		// validate params
-		if (!preg_match(LazyUuidFromString::VALID_REGEX, $workGroupId))
+		if (!Uuid::isValid($workGroupId))
 		{
 			$this->logger->warning("Invalid UUID format ({workGroupId})", ['workGroupId' => $workGroupId]);
 			return Utils::withUuidError($response);
