@@ -417,34 +417,6 @@ SQL;
 		);
 }
 
-	const SQL_USE_INVITE_KEY = <<<SQL
-INSERT INTO
-	work_groups_privileges
-(
-	uid,
-	work_groups_id,
-	invite_keys_id,
-	privilege_type
-) VALUES (
-	:user_id,
-	:work_groups_id,
-	:invite_keys_id,
-	:privilege_type
-)
-;
-SQL;
-	const SQL_UPGRADE_PRIVILEGES = <<<SQL
-UPDATE
-	work_groups_privileges
-SET
-	invite_keys_id = :invite_keys_id,
-	privilege_type = :privilege_type
-WHERE
-	uid = :user_id
-AND
-	work_groups_id = :work_groups_id
-;
-SQL;
 	public function useInviteKey(
 		UuidInterface $inviteKeyId,
 		UuidInterface $userId,
@@ -485,12 +457,12 @@ SQL;
 				return $inviteKeyData;
 			}
 
+			$WorkGroupsPrivilegesRepo = new WorkGroupsPrivileges($this->db, $this->logger);
 			$workGroupId = $inviteKeyData->value->work_groups_id;
 			$privilegeType = $inviteKeyData->value->privilege_type;
-			$currentPrivilegeType = $this->getPrivilegeValue(
+			$currentPrivilegeType = $WorkGroupsPrivilegesRepo->selectPrivilegeType(
+				workGroupsId: $workGroupId,
 				userId: $userId,
-				workGroupId: $workGroupId,
-				useTransaction: false,
 				selectForUpdate: true,
 			);
 			if ($currentPrivilegeType->isError && $currentPrivilegeType->statusCode !== Constants::HTTP_NOT_FOUND) {
@@ -532,62 +504,54 @@ SQL;
 			}
 
 			if ($currentPrivilegeType->isError) {
-				$sql = $this::SQL_USE_INVITE_KEY;
+				$execResult = $WorkGroupsPrivilegesRepo->insert(
+					workGroupsId: $workGroupId,
+					privilegeType: $privilegeType,
+					userId: $userId,
+					inviteKeysId: $inviteKeyId,
+				);
 			} else {
-				$sql = $this::SQL_UPDATE_PRIVILEGES;
+				$execResult = $WorkGroupsPrivilegesRepo->changeType(
+					workGroupsId: $workGroupId,
+					newPrivilegeType: $privilegeType,
+					userId: $userId,
+					inviteKeysId: $inviteKeyId,
+				);
 			}
-			$query = $this->db->prepare($sql);
-			$query->bindValue(':invite_keys_id', $inviteKeyId->getBytes(), PDO::PARAM_STR);
-			$query->bindValue(':user_id', $userId->getBytes(), PDO::PARAM_STR);
-			$query->bindValue(':work_groups_id', $workGroupId->getBytes(), PDO::PARAM_STR);
-			$query->bindValue(':privilege_type', $privilegeType->value, PDO::PARAM_INT);
 
-			$this->logger->debug(
-				"useInviteKey isNewRecord: {isNewRecord}, inviteKeyId: {inviteKeyId}, userId: {userId}, workGroupId: {workGroupId}, privilegeType: {privilegeType}",
-				[
-					'isNewRecord' => $currentPrivilegeType->isError,
-					'inviteKeyId' => $inviteKeyId,
-					'userId' => $userId,
-					'workGroupId' => $workGroupId,
-					'privilegeType' => $privilegeType,
-				]
-			);
-
-			$isSuccess = $query->execute();
-			if ($isSuccess) {
-				$this->logger->debug("useInviteKey Success");
-				if ($useTransaction) {
+			if ($useTransaction) {
+				if ($execResult->isError) {
+					$this->logger->warning('apply invite key failed');
+					$this->db->rollBack();
+				} else {
+					$this->logger->warning('apply invite key success');
 					$this->db->commit();
 				}
-				return RetValueOrError::withValue(null);
 			}
-
-			$errCode = $query->errorCode();
-			$errInfo = implode('\n\t', $query->errorInfo());
-			if (is_numeric($errCode)) {
-				$errCodeInt = intval($errCode);
-			} else {
-				$errCodeInt = 500;
-			}
+			return $execResult;
 		}
 		catch (\Throwable $th)
 		{
 			if ($useTransaction) {
 				$this->db->rollBack();
 			}
+
 			$errCode = $th->getCode();
 			$errInfo = $th->getMessage();
 			$errCodeInt = $errCode;
+			$this->logger->error(
+				"Failed to execute SQL ({errorCode} -> {errorInfo})",
+				[
+					"errorCode" => $errCode,
+					"errorInfo" => $errInfo,
+				]
+			);
+			return RetValueOrError::withError(
+				Constants::HTTP_INTERNAL_SERVER_ERROR,
+				"Failed to execute SQL - " . $errCode,
+				$errCodeInt
+			);
 		}
-
-		$this->logger->error(
-			"Failed to execute SQL ({errorCode} -> {errorInfo})",
-			[
-				"errorCode" => $errCode,
-				"errorInfo" => $errInfo,
-			]
-		);
-		return RetValueOrError::withError(Constants::HTTP_INTERNAL_SERVER_ERROR, "Failed to execute SQL - " . $errCode, $errCodeInt);
 	}
 
 	public function disableInviteKey(
