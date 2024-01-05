@@ -18,7 +18,7 @@ final class WorkGroupsPrivileges
 
 	public function insert(
 		UuidInterface $workGroupsId,
-		InviteKeyPrivilegeType $privilegeType = InviteKeyPrivilegeType::NONE,
+		InviteKeyPrivilegeType $privilegeType = InviteKeyPrivilegeType::none,
 		string $userId = '',
 		?UuidInterface $inviteKeysId = null,
 	): RetValueOrError {
@@ -79,7 +79,7 @@ final class WorkGroupsPrivileges
 
 	public function changeType(
 		UuidInterface $workGroupsId,
-		InviteKeyPrivilegeType $newPrivilegeType = InviteKeyPrivilegeType::NONE,
+		InviteKeyPrivilegeType $newPrivilegeType = InviteKeyPrivilegeType::none,
 		string $userId = '',
 		?UuidInterface $inviteKeysId = null,
 	): RetValueOrError {
@@ -188,7 +188,7 @@ final class WorkGroupsPrivileges
 			}
 
 			$privilegeTypeList = $query->fetchAll(PDO::FETCH_ASSOC);
-			$maximumPrivilegeTypeValue = InviteKeyPrivilegeType::NONE->value;
+			$maximumPrivilegeTypeValue = InviteKeyPrivilegeType::none->value;
 			foreach ($privilegeTypeList as $row)
 			{
 				$privilegeTypeValue = intval($row['privilege_type']);

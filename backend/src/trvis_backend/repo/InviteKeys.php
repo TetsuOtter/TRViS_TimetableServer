@@ -44,7 +44,7 @@ final class InviteKeys
 			'expires_at' => Utils::utcDateStrToDateTime($data['expires_at']),
 			'disabled_at' => Utils::utcDateStrToDateTime($data['disabled_at']),
 			'use_limit' => $data['use_limit'],
-			'privilege_type' => InviteKeyPrivilegeType::fromInt($data['privilege_type'])->__toString(),
+			'privilege_type' => InviteKeyPrivilegeType::fromInt($data['privilege_type'])->name,
 		]);
 		return $inviteKey;
 	}
