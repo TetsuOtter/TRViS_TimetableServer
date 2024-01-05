@@ -197,15 +197,19 @@ final class InviteKeys
 	}
 
 	public function selectInviteKeyList(
+		string|UuidInterface $ownerOrWorkGroupsId,
 		?int $page,
 		?int $perPage,
 		?UuidInterface $topId,
 		bool $includeExpired = false,
 		?\DateTime $currentDateTime = null,
 	): RetValueOrError {
+		$isRequestWithOwnerUid = is_string($ownerOrWorkGroupsId);
 		$this->logger->debug(
-			"selectInviteKeyList page: {page}, perPage: {perPage}, topId: {topId}, includeExpired: {includeExpired}, currentDateTime: {currentDateTime}",
+			"selectInviteKeyListWithOwnerUid isRequestWithOwnerUid: {isRequestWithOwnerUid}, ownerOrWorkGroupsId: {ownerOrWorkGroupsId}, page: {page}, perPage: {perPage}, topId: {topId}, includeExpired: {includeExpired}, currentDateTime: {currentDateTime}",
 			[
+				'isRequestWithOwnerUid' => $isRequestWithOwnerUid,
+				'ownerOrWorkGroupsId' => $ownerOrWorkGroupsId,
 				'page' => $page,
 				'perPage' => $perPage,
 				'topId' => $topId,
@@ -228,13 +232,14 @@ final class InviteKeys
 			WHERE
 			SQL
 			.
-			($hasTopId ? ' invite_keys_id <= :top_id ' : '')
+			($isRequestWithOwnerUid ? ' owner = :ownerUid ' : ' work_groups_id = :workGroupsId ')
 			.
-			($hasTopId && !$includeExpired ? ' AND ' : '')
+			($hasTopId ? 'AND invite_keys_id <= :top_id ' : '')
 			.
 			(
 				$includeExpired ? '' :
 					<<<SQL
+					AND
 						disabled_at IS NULL
 					AND
 					(
@@ -245,6 +250,11 @@ final class InviteKeys
 					SQL
 			)
 		);
+		if ($isRequestWithOwnerUid) {
+			$query->bindValue(':ownerUid', $ownerOrWorkGroupsId, PDO::PARAM_STR);
+		} else {
+			$query->bindValue(':workGroupsId', $ownerOrWorkGroupsId->getBytes(), PDO::PARAM_STR);
+		}
 		if ($hasTopId) {
 			$query->bindValue(':top_id', $topId->getBytes(), PDO::PARAM_STR);
 		}
@@ -255,7 +265,7 @@ final class InviteKeys
 		try {
 			$isSuccess = $query->execute();
 			$this->logger->debug(
-				"selectInviteKeyList isSuccess: {isSuccess}",
+				"selectInviteKeyListWithOwnerUid isSuccess: {isSuccess}",
 				[
 					'isSuccess' => $isSuccess,
 				]
@@ -267,7 +277,7 @@ final class InviteKeys
 				}
 
 				$this->logger->debug(
-					"selectInviteKeyList inviteKeyList->length: {inviteKeyList}",
+					"selectInviteKeyListWithOwnerUid inviteKeyList->length: {inviteKeyList}",
 					[
 						'inviteKeyList' => count($inviteKeyList),
 					]
