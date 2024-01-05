@@ -31,23 +31,23 @@ final class WorkGroups
 		return $workGroup;
 	}
 
-	const SQL_SELECT_WORK_GROUP_ONE = <<<SQL
-SELECT
-	work_groups_id,
-	created_at,
-	description,
-	name
-FROM
-	work_groups
-WHERE
-	work_groups_id = :work_groups_id
-;
-SQL;
 	public function selectWorkGroupOne(
 		UuidInterface $workGroupId
 	): RetValueOrError {
 		$this->logger->debug("selectOne workGroupId: {workGroupId}", ['workGroupId' => $workGroupId]);
-		$query = $this->db->prepare($this::SQL_SELECT_WORK_GROUP_ONE);
+		$query = $this->db->prepare(<<<SQL
+			SELECT
+				work_groups_id,
+				created_at,
+				description,
+				name
+			FROM
+				work_groups
+			WHERE
+				work_groups_id = :work_groups_id
+			;
+			SQL
+		);
 		$query->bindValue(':work_groups_id', $workGroupId->getBytes(), PDO::PARAM_STR);
 
 		$isSuccess = $query->execute();
@@ -86,40 +86,6 @@ SQL;
 	const PER_PAGE_DEFAULT_VALUE = 10;
 	const PER_PAGE_MIN_VALUE = 5;
 	const PER_PAGE_MAX_VALUE = 100;
-	const SQL_SELECT_WORK_GROUP_PAGE = <<<SQL
-SELECT
-	work_groups_id,
-	created_at,
-	description,
-	name
-FROM
-	work_groups
-ORDER BY
-	work_groups_id DESC
-LIMIT
-	:perPage
-OFFSET
-	:offset
-;
-SQL;
-const SQL_SELECT_WORK_GROUP_PAGE_WITH_TOP = <<<SQL
-SELECT
-	work_groups_id,
-	created_at,
-	description,
-	name
-FROM
-	work_groups
-WHERE
-	work_groups_id <= :top_id
-ORDER BY
-	work_groups_id DESC
-LIMIT
-	:perPage
-OFFSET
-	:offset
-;
-SQL;
 	public function selectWorkGroupPage(
 		?int $page,
 		?int $perPage,
@@ -139,11 +105,31 @@ SQL;
 			$perPage = $this::PER_PAGE_MAX_VALUE;
 		}
 		$hasTopId = !is_null($topId);
+		$query = $this->db->prepare(
+			<<<SQL
+			SELECT
+				work_groups_id,
+				created_at,
+				description,
+				name
+			FROM
+				work_groups
+			SQL
+			.
+			($hasTopId ? 'WHERE work_groups_id <= :top_id ' : '')
+			.
+			<<<SQL
+			ORDER BY
+				work_groups_id DESC
+			LIMIT
+				:perPage
+			OFFSET
+				:offset
+			;
+			SQL
+		);
 		if ($hasTopId) {
-			$query = $this->db->prepare($this::SQL_SELECT_WORK_GROUP_PAGE_WITH_TOP);
 			$query->bindValue(':top_id', $topId->getBytes(), PDO::PARAM_STR);
-		} else {
-			$query = $this->db->prepare($this::SQL_SELECT_WORK_GROUP_PAGE);
 		}
 		$query->bindValue(':perPage', $perPage, PDO::PARAM_INT);
 		$query->bindValue(':offset', ($page - 1) * $perPage, PDO::PARAM_INT);
@@ -173,26 +159,26 @@ SQL;
 		return RetValueOrError::withValue($workGroups);
 	}
 
-	const SQL_CREATE_WORK_GROUP = <<<SQL
-INSERT INTO work_groups (
-	work_groups_id,
-	owner,
-	description,
-	name
-) VALUES (
-	:work_groups_id,
-	:owner,
-	:description,
-	:name
-);
-SQL;
 	public function insertWorkGroup(
 		UuidInterface $workGroupId,
 		string $owner,
 		string $description,
 		string $name
 	): RetValueOrError {
-		$query = $this->db->prepare($this::SQL_CREATE_WORK_GROUP);
+		$query = $this->db->prepare(<<<SQL
+			INSERT INTO work_groups (
+				work_groups_id,
+				owner,
+				description,
+				name
+			) VALUES (
+				:work_groups_id,
+				:owner,
+				:description,
+				:name
+			);
+			SQL
+		);
 
 		$query->bindValue(':work_groups_id', $workGroupId->getBytes(), PDO::PARAM_STR);
 		$query->bindValue(':owner', $owner, PDO::PARAM_STR);
@@ -226,35 +212,11 @@ SQL;
 		return RetValueOrError::withError(Constants::HTTP_INTERNAL_SERVER_ERROR, "Failed to execute SQL - " . $errCode);
 	}
 
-	const SQL_UPDATE_WORK_GROUP = <<<SQL
-UPDATE work_groups SET
-	description = :description,
-	name = :name
-WHERE
-	work_groups_id = :work_groups_id
-;
-SQL;
-	const SQL_UPDATE_WORK_GROUP_NAME = <<<SQL
-UPDATE work_groups SET
-	name = :name
-WHERE
-	work_groups_id = :work_groups_id
-;
-SQL;
-	const SQL_UPDATE_WORK_GROUP_DESCRIPTION = <<<SQL
-UPDATE work_groups SET
-	description = :description
-WHERE
-	work_groups_id = :work_groups_id
-;
-SQL;
 	public function updateWorkGroup(
 		UuidInterface $workGroupId,
 		?string $description,
 		?string $name
 	): RetValueOrError {
-		$sql = '';
-		$query = $this->db->prepare($this::SQL_UPDATE_WORK_GROUP);
 		$hasName = !is_null($name);
 		$hasDescription = !is_null($description);
 		$this->logger->info(
@@ -267,17 +229,26 @@ SQL;
 				'hasDescription' => $hasDescription,
 			],
 		);
-		if ($hasName && $hasDescription) {
-			$sql = $this::SQL_UPDATE_WORK_GROUP;
-		} else if ($hasName) {
-			$sql = $this::SQL_UPDATE_WORK_GROUP_NAME;
-		} else if ($hasDescription) {
-			$sql = $this::SQL_UPDATE_WORK_GROUP_DESCRIPTION;
-		} else {
+		if (!$hasName && !$hasDescription) {
 			return $this->selectWorkGroupOne($workGroupId);
 		}
 
-		$query = $this->db->prepare($sql);
+		$query = $this->db->prepare(<<<SQL
+			UPDATE work_groups SET
+			SQL
+			.
+			($hasName ? 'name = :name ' : '')
+			.
+			($hasName && $hasDescription ? ', ' : '')
+			.
+			($hasDescription ? 'description = :description ' : '')
+			.
+			<<<SQL
+			WHERE
+				work_groups_id = :work_groups_id
+			;
+			SQL
+		);
 		$query->bindValue(':work_groups_id', $workGroupId->getBytes(), PDO::PARAM_STR);
 		if ($hasDescription) {
 			$query->bindValue(':description', $description, PDO::PARAM_STR);
@@ -313,16 +284,16 @@ SQL;
 		return RetValueOrError::withError(Constants::HTTP_INTERNAL_SERVER_ERROR, "Failed to execute SQL - " . $errCode);
 	}
 
-	const SQL_DELETE_WORK_GROUP = <<<SQL
-DELETE FROM work_groups
-WHERE
-	work_groups_id = :work_groups_id
-;
-SQL;
 	public function deleteWorkGroup(
 		UuidInterface $workGroupId
 	): RetValueOrError {
-		$query = $this->db->prepare($this::SQL_DELETE_WORK_GROUP);
+		$query = $this->db->prepare(<<<SQL
+			DELETE FROM work_groups
+			WHERE
+				work_groups_id = :work_groups_id
+			;
+			SQL
+		);
 		$query->bindValue(':work_groups_id', $workGroupId->getBytes(), PDO::PARAM_STR);
 
 		$isSuccess = $query->execute();
