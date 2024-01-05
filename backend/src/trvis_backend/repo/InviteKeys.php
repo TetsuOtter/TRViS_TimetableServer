@@ -138,7 +138,6 @@ final class InviteKeys
 
 	public function selectInviteKey(
 		UuidInterface $inviteKeyId,
-		bool $useTransaction = false,
 		bool $selectForUpdate = false,
 	): RetValueOrError {
 		$this->logger->debug(
@@ -167,10 +166,6 @@ final class InviteKeys
 		$query->bindValue(':invite_keys_id', $inviteKeyId->getBytes(), PDO::PARAM_STR);
 
 		try {
-			if ($useTransaction) {
-				$this->db->beginTransaction();
-			}
-
 			$isSuccess = $query->execute();
 			$this->logger->debug(
 				"selectInviteKey isSuccess: {isSuccess}",
@@ -198,10 +193,6 @@ final class InviteKeys
 				]
 			);
 			return RetValueOrError::withError(500, "Failed to execute SQL - " . $errCode, $errCode);
-		} finally {
-			if ($useTransaction) {
-				$this->db->commit();
-			}
 		}
 	}
 
@@ -302,270 +293,20 @@ final class InviteKeys
 		}
 	}
 
-	public function useInviteKey(
-		UuidInterface $inviteKeyId,
-		string $userId,
-		bool $useTransaction = true,
-	): RetValueOrError {
-		$this->logger->debug(
-			"useInviteKey inviteKeyId: {inviteKeyId}, userId: {userId}, useTransaction: {useTransaction}",
-			[
-				'inviteKeyId' => $inviteKeyId,
-				'userId' => $userId,
-				'useTransaction' => $useTransaction,
-			]
-		);
-
-		if ($useTransaction) {
-			$this->db->beginTransaction();
-		}
-
-		try
-		{
-			// 将来的にuse_limitを適用したいため、transaction内でselectしておく
-			$inviteKeyData = $this->selectInviteKey(
-				inviteKeyId: $inviteKeyId,
-				useTransaction: false,
-				selectForUpdate: true,
-			);
-			if ($inviteKeyData->isError) {
-				$this->logger->warning(
-					"useInviteKey inviteKeyData->isError: {isError}, inviteKeyData->statusCode: {statusCode}",
-					[
-						'isError' => $inviteKeyData->isError,
-						'statusCode' => $inviteKeyData->statusCode,
-					]
-				);
-				if ($useTransaction) {
-					$this->db->commit();
-				}
-				return $inviteKeyData;
-			}
-
-			$WorkGroupsPrivilegesRepo = new WorkGroupsPrivileges($this->db, $this->logger);
-			$workGroupId = $inviteKeyData->value->work_groups_id;
-			$privilegeType = $inviteKeyData->value->privilege_type;
-			$currentPrivilegeType = $WorkGroupsPrivilegesRepo->selectPrivilegeType(
-				workGroupsId: $workGroupId,
-				userId: $userId,
-				selectForUpdate: true,
-			);
-			if ($currentPrivilegeType->isError && $currentPrivilegeType->statusCode !== Constants::HTTP_NOT_FOUND) {
-				$this->logger->warning(
-					"useInviteKey currentPrivilegeType->isError: {isError}, currentPrivilegeType->statusCode: {statusCode}",
-					[
-						'isError' => $currentPrivilegeType->isError,
-						'statusCode' => $currentPrivilegeType->statusCode,
-					]
-				);
-				if ($useTransaction) {
-					$this->db->commit();
-				}
-				return $currentPrivilegeType;
-			}
-
-			$this->logger->debug(
-				"useInviteKey requestedPrivilegeType: {requestedPrivilegeType}, currentPrivilegeType: {currentPrivilegeType}",
-				[
-					'requestedPrivilegeType' => $privilegeType,
-					'currentPrivilegeType' => $currentPrivilegeType->value,
-				]
-			);
-			if (!$currentPrivilegeType->isError && $privilegeType->value <= $currentPrivilegeType->value->value) {
-				$this->logger->warning(
-					"useInviteKey: already have the same or higher privilege - current:{currentPrivilegeType}, requested:{requestedPrivilegeType}",
-					[
-						'currentPrivilegeType' => $currentPrivilegeType->value,
-						'requestedPrivilegeType' => $privilegeType,
-					]
-				);
-				if ($useTransaction) {
-					$this->db->commit();
-				}
-				return RetValueOrError::withError(
-					Constants::HTTP_OK,
-					"You already have the same or higher privilege - " . $currentPrivilegeType->value->name,
-				);
-			}
-
-			if ($currentPrivilegeType->isError) {
-				$execResult = $WorkGroupsPrivilegesRepo->insert(
-					workGroupsId: $workGroupId,
-					privilegeType: $privilegeType,
-					userId: $userId,
-					inviteKeysId: $inviteKeyId,
-				);
-			} else {
-				$execResult = $WorkGroupsPrivilegesRepo->changeType(
-					workGroupsId: $workGroupId,
-					newPrivilegeType: $privilegeType,
-					userId: $userId,
-					inviteKeysId: $inviteKeyId,
-				);
-			}
-
-			if ($useTransaction) {
-				if ($execResult->isError) {
-					$this->logger->warning('apply invite key failed');
-					$this->db->rollBack();
-				} else {
-					$this->logger->warning('apply invite key success');
-					$this->db->commit();
-				}
-			}
-			return $execResult;
-		}
-		catch (\Throwable $th)
-		{
-			if ($useTransaction) {
-				$this->db->rollBack();
-			}
-
-			$errCode = $th->getCode();
-			$errInfo = $th->getMessage();
-			$this->logger->error(
-				"Failed to execute SQL ({errorCode} -> {errorInfo})",
-				[
-					"errorCode" => $errCode,
-					"errorInfo" => $errInfo,
-				]
-			);
-			return RetValueOrError::withError(
-				Constants::HTTP_INTERNAL_SERVER_ERROR,
-				"Failed to execute SQL - " . $errCode,
-				$errCode
-			);
-		}
-	}
-
 	public function disableInviteKey(
 		UuidInterface $inviteKeyId,
 		string $userId,
-		bool $useTransaction = true,
 	): RetValueOrError {
 		$this->logger->debug(
-			"disableInviteKey inviteKeyId: {inviteKeyId}, userId: {userId}, useTransaction: {useTransaction}",
+			"disableInviteKey inviteKeyId: {inviteKeyId}, userId: {userId}",
 			[
 				'inviteKeyId' => $inviteKeyId,
 				'userId' => $userId,
-				'useTransaction' => $useTransaction,
 			]
 		);
 
-		if ($useTransaction) {
-			$this->db->beginTransaction();
-		}
-
 		try
 		{
-			$inviteKeyData = $this->selectInviteKey(
-				inviteKeyId: $inviteKeyId,
-				useTransaction: false,
-				selectForUpdate: true,
-			);
-			if ($inviteKeyData->isError) {
-				$this->logger->warning(
-					"disableInviteKey inviteKeyData->isError: {isError}, inviteKeyData->statusCode: {statusCode}",
-					[
-						'isError' => $inviteKeyData->isError,
-						'statusCode' => $inviteKeyData->statusCode,
-					]
-				);
-				if ($useTransaction) {
-					$this->db->commit();
-				}
-				return $inviteKeyData;
-			}
-
-			$inviteKeyData = $inviteKeyData->value;
-			if ($inviteKeyData->disabled_at !== null) {
-				$this->logger->info(
-					"disableInviteKey: already disabled (inviteKeyId: {inviteKeyId})",
-					[
-						'inviteKeyId' => $inviteKeyId,
-					]
-				);
-				if ($useTransaction) {
-					$this->db->commit();
-				}
-				return RetValueOrError::withError(
-					Constants::HTTP_BAD_REQUEST,
-					"InviteKey already disabled",
-				);
-			}
-			$now = new \DateTime;
-			if ($inviteKeyData->valid_from != null && $now < $inviteKeyData->valid_from) {
-				$this->logger->info(
-					"disableInviteKey: not valid yet (inviteKeyId: {inviteKeyId}, validFrom: {validFrom}, now: {now})",
-					[
-						'inviteKeyId' => $inviteKeyId,
-						'validFrom' => $inviteKeyData->valid_from,
-						'now' => $now,
-					]
-				);
-				if ($useTransaction) {
-					$this->db->commit();
-				}
-				return RetValueOrError::withError(
-					Constants::HTTP_BAD_REQUEST,
-					"InviteKey is not valid yet",
-				);
-			}
-			if ($inviteKeyData->expires_at != null && $inviteKeyData->expires_at < $now) {
-				$this->logger->info(
-					"disableInviteKey: already expired (inviteKeyId: {inviteKeyId}, expiresAt: {expiresAt}, now: {now})",
-					[
-						'inviteKeyId' => $inviteKeyId,
-						'expiresAt' => $inviteKeyData->expires_at,
-						'now' => $now,
-					]
-				);
-				if ($useTransaction) {
-					$this->db->commit();
-				}
-				return RetValueOrError::withError(
-					Constants::HTTP_BAD_REQUEST,
-					"InviteKey is already expired",
-				);
-			}
-
-			$WorkGroupsPrivilegesRepo = new WorkGroupsPrivileges($this->db, $this->logger);
-			$workGroupsId = $inviteKeyData->value->work_groups_id;
-			$currentPrivilegeType = $WorkGroupsPrivilegesRepo->selectPrivilegeType(
-				userId: $userId,
-				workGroupsId: $workGroupsId,
-				selectForUpdate: true,
-			);
-			if ($currentPrivilegeType->isError) {
-				$this->logger->warning(
-					"disableInviteKey currentPrivilegeType->isError: {isError}, currentPrivilegeType->statusCode: {statusCode}",
-					[
-						'isError' => $currentPrivilegeType->isError,
-						'statusCode' => $currentPrivilegeType->statusCode,
-					]
-				);
-				if ($useTransaction) {
-					$this->db->commit();
-				}
-				return $currentPrivilegeType;
-			}
-
-			if ($currentPrivilegeType->value->value < InviteKeyPrivilegeType::ADMIN->value) {
-				$this->logger->warning(
-					"disableInviteKey: not enough privilege (currentPrivilegeType: {currentPrivilegeType})",
-					[
-						'currentPrivilegeType' => $currentPrivilegeType->value,
-					]
-				);
-				if ($useTransaction) {
-					$this->db->commit();
-				}
-				return RetValueOrError::withError(
-					Constants::HTTP_FORBIDDEN,
-					"You don't have enough privilege to disable this InviteKey",
-				);
-			}
-
 			$query = $this->db->prepare(<<<SQL
 				UPDATE
 					invite_keys
@@ -578,24 +319,15 @@ final class InviteKeys
 			);
 			$query->bindValue(':invite_keys_id', $inviteKeyId->getBytes(), PDO::PARAM_STR);
 			$query->bindValue(':user_id', $userId, PDO::PARAM_STR);
-			$query->bindValue(':work_groups_id', $workGroupsId->getBytes(), PDO::PARAM_STR);
+
 			if ($query->execute()) {
 				$this->logger->debug("disableInviteKey Success");
-				if ($useTransaction) {
-					$this->db->commit();
-				}
 				return RetValueOrError::withValue(null);
 			} else {
 				$this->logger->error("disableInviteKey Unknown error");
-				if ($useTransaction) {
-					$this->db->rollBack();
-				}
 				return RetValueOrError::withError(500, "Unknown error");
 			}
-		} catch (\Throwable $th) {
-			if ($useTransaction) {
-				$this->db->rollBack();
-			}
+		} catch (\PDOException $th) {
 			$errCode = $th->getCode();
 			$errInfo = $th->getMessage();
 
