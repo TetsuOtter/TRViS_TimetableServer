@@ -16,6 +16,10 @@ services:
       - type: bind
         source: ./backend-logs
         target: /var/log/apache2
+      - type: bind
+        read_only: true
+        source: ./my_apache2.conf
+        target: /etc/apache2/mods-enabled/my_apache2.conf
   firebase:
     build:
       context: ./firebase
