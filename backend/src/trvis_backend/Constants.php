@@ -32,6 +32,6 @@ final class Constants
 	const HTTP_GATEWAY_TIMEOUT = 504;
 	const HTTP_VERSION_NOT_SUPPORTED = 505;
 
-	const UUID_NULL = new Uuid(Uuid::NIL);
+	const UUID_NULL = Uuid::fromString(Uuid::NIL);
 	const UID_ANONUMOUS = '';
 }
