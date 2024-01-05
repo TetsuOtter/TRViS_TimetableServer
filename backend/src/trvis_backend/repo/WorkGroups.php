@@ -81,29 +81,16 @@ final class WorkGroups
 		return RetValueOrError::withValue($workGroup);
 	}
 
-	const PAGE_MIN_VALUE = 1;
-	const PAGE_DEFAULT_VALUE = 1;
-	const PER_PAGE_DEFAULT_VALUE = 10;
-	const PER_PAGE_MIN_VALUE = 5;
-	const PER_PAGE_MAX_VALUE = 100;
 	public function selectWorkGroupPage(
-		?int $page,
-		?int $perPage,
+		int $pageFrom1,
+		int $perPage,
 		?UuidInterface $topId,
 	): RetValueOrError {
-		$this->logger->debug("selectPage(page:{page}, perPage:{perPage}, topId:{topId})", [
-			'page' => $page,
+		$this->logger->debug("selectPage(pageFrom1:{page}, perPage:{perPage}, topId:{topId})", [
+			'page' => $pageFrom1,
 			'perPage' => $perPage,
 			'topId' => $topId,
 		]);
-		if (is_null($page) || $page < $this::PAGE_MIN_VALUE) {
-			$page = $this::PAGE_DEFAULT_VALUE;
-		}
-		if (is_null($perPage) || $perPage < $this::PER_PAGE_DEFAULT_VALUE) {
-			$perPage = $this::PER_PAGE_DEFAULT_VALUE;
-		} else if ($this::PER_PAGE_MAX_VALUE < $perPage) {
-			$perPage = $this::PER_PAGE_MAX_VALUE;
-		}
 		$hasTopId = !is_null($topId);
 		$query = $this->db->prepare(
 			<<<SQL
@@ -132,7 +119,7 @@ final class WorkGroups
 			$query->bindValue(':top_id', $topId->getBytes(), PDO::PARAM_STR);
 		}
 		$query->bindValue(':perPage', $perPage, PDO::PARAM_INT);
-		$query->bindValue(':offset', ($page - 1) * $perPage, PDO::PARAM_INT);
+		$query->bindValue(':offset', ($pageFrom1 - 1) * $perPage, PDO::PARAM_INT);
 
 		$isSuccess = $query->execute();
 		if (!$isSuccess) {

@@ -3,6 +3,7 @@
 namespace dev_t0r\trvis_backend\api;
 
 use dev_t0r\trvis_backend\api\AbstractWorkGroupApi;
+use dev_t0r\trvis_backend\Constants;
 use dev_t0r\trvis_backend\model\WorkGroup;
 use dev_t0r\trvis_backend\repo\WorkGroups;
 use dev_t0r\trvis_backend\Utils;
@@ -133,11 +134,15 @@ class WorkGroupApi extends AbstractWorkGroupApi
 			}
 
 			$p = intval($p);
-			if ($p < WorkGroups::PAGE_MIN_VALUE)
+			if ($p < Constants::PAGE_MIN_VALUE)
 			{
 				$this->logger->warning("Value out of range (p:{p})", ['p' => $p]);
 				return Utils::withError($response, 400, "Value out of range (parameter `p`)");
 			}
+		}
+		else
+		{
+			$p = Constants::PAGE_DEFAULT_VALUE;
 		}
 
 		$hasLimit = !is_null($limit);
@@ -150,11 +155,15 @@ class WorkGroupApi extends AbstractWorkGroupApi
 			}
 
 			$limit = intval($limit);
-			if ($limit < WorkGroups::PER_PAGE_MIN_VALUE || WorkGroups::PER_PAGE_MAX_VALUE < $limit)
+			if ($limit < Constants::PER_PAGE_MIN_VALUE || Constants::PER_PAGE_MAX_VALUE < $limit)
 			{
 				$this->logger->warning("Value out of range (limit:{limit})", ['limit' => $limit]);
 				return Utils::withError($response, 400, "Value out of range (parameter `limit`)");
 			}
+		}
+		else
+		{
+			$limit = Constants::PER_PAGE_DEFAULT_VALUE;
 		}
 
 		$hasTop = !is_null($top);
