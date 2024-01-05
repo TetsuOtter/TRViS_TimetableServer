@@ -33,4 +33,5 @@ final class Constants
 	const HTTP_VERSION_NOT_SUPPORTED = 505;
 
 	const UUID_NULL = new Uuid(Uuid::NIL);
+	const UID_ANONUMOUS = '';
 }
