@@ -136,7 +136,7 @@ final class WorkGroupsPrivileges
 
 	public function selectPrivilegeType(
 		UuidInterface $workGroupsId,
-		string $userId = '',
+		string $userId = Constants::UID_ANONUMOUS,
 		bool $includeAnonymous = false,
 		bool $selectForUpdate = false,
 	): RetValueOrError {
@@ -148,6 +148,11 @@ final class WorkGroupsPrivileges
 			]
 		);
 
+		if ($userId === Constants::UID_ANONUMOUS)
+		{
+			// リクエスト対象自体がAnonumousの場合は、わざわざOR条件にする必要はない
+			$includeAnonymous = false;
+		}
 		try
 		{
 			$query = $this->db->prepare(
