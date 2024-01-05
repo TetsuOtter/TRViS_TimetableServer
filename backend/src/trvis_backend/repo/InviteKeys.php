@@ -52,7 +52,7 @@ final class InviteKeys
 	public function insertInviteKey(
 		UuidInterface $inviteKeyId,
 		UuidInterface $workGroupId,
-		UuidInterface $owner,
+		string $owner,
 		string $description,
 		?\DateTimeInterface $validFrom,
 		?\DateTimeInterface $expiresAt,
@@ -101,7 +101,7 @@ final class InviteKeys
 
 		$query->bindValue(':invite_keys_id', $inviteKeyId->getBytes(), PDO::PARAM_STR);
 		$query->bindValue(':work_groups_id', $workGroupId->getBytes(), PDO::PARAM_STR);
-		$query->bindValue(':owner', $owner->getBytes(), PDO::PARAM_STR);
+		$query->bindValue(':owner', $owner, PDO::PARAM_STR);
 		$query->bindValue(':description', $description, PDO::PARAM_STR);
 		$query->bindValue(':valid_from', Utils::utcDateStrOrNull($validFrom), PDO::PARAM_STR);
 		$query->bindValue(':expires_at', Utils::utcDateStrOrNull($expiresAt), PDO::PARAM_STR);
