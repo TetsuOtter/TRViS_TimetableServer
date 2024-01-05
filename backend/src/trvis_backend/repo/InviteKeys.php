@@ -118,28 +118,22 @@ final class InviteKeys
 			);
 			if ($isSuccess) {
 				return RetValueOrError::withValue(null);
-			}
-
-			$errCode = $query->errorCode();
-			$errInfo = implode('\n\t', $query->errorInfo());
-			if (is_numeric($errCode)) {
-				$errCodeInt = intval($errCode);
 			} else {
-				$errCodeInt = 500;
+				$this->logger->error("Unknown error");
+				return RetValueOrError::withError(500, "Unknown error");
 			}
-		} catch (\Throwable $th) {
+		} catch (\PDOException $th) {
 			$errCode = $th->getCode();
 			$errInfo = $th->getMessage();
-			$errCodeInt = $errCode;
+			$this->logger->error(
+				"Failed to execute SQL ({errorCode} -> {errorInfo})",
+				[
+					"errorCode" => $errCode,
+					"errorInfo" => $errInfo,
+				]
+			);
+			return RetValueOrError::withError(500, "Failed to execute SQL - " . $errCode, $errCode);
 		}
-		$this->logger->error(
-			"Failed to execute SQL ({errorCode} -> {errorInfo})",
-			[
-				"errorCode" => $errCode,
-				"errorInfo" => $errInfo,
-			]
-		);
-		return RetValueOrError::withError(500, "Failed to execute SQL - " . $errCode, $errCodeInt);
 	}
 
 	public function selectInviteKey(
@@ -184,38 +178,31 @@ final class InviteKeys
 					'isSuccess' => $isSuccess,
 				]
 			);
-			if ($isSuccess) {
-				$inviteKey = $query->fetch(PDO::FETCH_ASSOC);
-				if ($inviteKey === false) {
-					return RetValueOrError::withError(404, "InviteKey not found");
-				}
-				return RetValueOrError::withValue($this::_fetchResultToInviteKey($inviteKey));
+			if (!$isSuccess) {
+				$this->logger->error("Unknown error");
+				return RetValueOrError::withError(500, "Unknown error");
 			}
-
-			$errCode = $query->errorCode();
-			$errInfo = implode('\n\t', $query->errorInfo());
-			if (is_numeric($errCode)) {
-				$errCodeInt = intval($errCode);
-			} else {
-				$errCodeInt = 500;
+			$inviteKey = $query->fetch(PDO::FETCH_ASSOC);
+			if ($inviteKey === false) {
+				return RetValueOrError::withError(404, "InviteKey not found");
 			}
-		} catch (\Throwable $th) {
+			return RetValueOrError::withValue($this::_fetchResultToInviteKey($inviteKey));
+		} catch (\PDOException $th) {
 			$errCode = $th->getCode();
 			$errInfo = $th->getMessage();
-			$errCodeInt = $errCode;
+			$this->logger->error(
+				"Failed to execute SQL ({errorCode} -> {errorInfo})",
+				[
+					"errorCode" => $errCode,
+					"errorInfo" => $errInfo,
+				]
+			);
+			return RetValueOrError::withError(500, "Failed to execute SQL - " . $errCode, $errCode);
 		} finally {
 			if ($useTransaction) {
 				$this->db->commit();
 			}
 		}
-		$this->logger->error(
-			"Failed to execute SQL ({errorCode} -> {errorInfo})",
-			[
-				"errorCode" => $errCode,
-				"errorInfo" => $errInfo,
-			]
-		);
-		return RetValueOrError::withError(500, "Failed to execute SQL - " . $errCode, $errCodeInt);
 	}
 
 	public function selectInviteKeyList(
@@ -297,28 +284,22 @@ final class InviteKeys
 				return RetValueOrError::withValue(
 					array_map(fn($inviteKey) => $this::_fetchResultToInviteKey($inviteKey), $inviteKeyList)
 				);
-			}
-
-			$errCode = $query->errorCode();
-			$errInfo = implode('\n\t', $query->errorInfo());
-			if (is_numeric($errCode)) {
-				$errCodeInt = intval($errCode);
 			} else {
-				$errCodeInt = 500;
+				$this->logger->error("Unknown error");
+				return RetValueOrError::withError(500, "Unknown error");
 			}
-		} catch (\Throwable $th) {
+		} catch (\PDOException $th) {
 			$errCode = $th->getCode();
 			$errInfo = $th->getMessage();
-			$errCodeInt = $errCode;
+			$this->logger->error(
+				"Failed to execute SQL ({errorCode} -> {errorInfo})",
+				[
+					"errorCode" => $errCode,
+					"errorInfo" => $errInfo,
+				]
+			);
+			return RetValueOrError::withError(500, "Failed to execute SQL - " . $errCode, $errCode);
 		}
-		$this->logger->error(
-			"Failed to execute SQL ({errorCode} -> {errorInfo})",
-			[
-				"errorCode" => $errCode,
-				"errorInfo" => $errInfo,
-			]
-		);
-		return RetValueOrError::withError(500, "Failed to execute SQL - " . $errCode, $errCodeInt);
 	}
 
 	public function useInviteKey(
@@ -442,7 +423,6 @@ final class InviteKeys
 
 			$errCode = $th->getCode();
 			$errInfo = $th->getMessage();
-			$errCodeInt = $errCode;
 			$this->logger->error(
 				"Failed to execute SQL ({errorCode} -> {errorInfo})",
 				[
@@ -453,7 +433,7 @@ final class InviteKeys
 			return RetValueOrError::withError(
 				Constants::HTTP_INTERNAL_SERVER_ERROR,
 				"Failed to execute SQL - " . $errCode,
-				$errCodeInt
+				$errCode
 			);
 		}
 	}
@@ -605,14 +585,12 @@ final class InviteKeys
 					$this->db->commit();
 				}
 				return RetValueOrError::withValue(null);
-			}
-
-			$errCode = $query->errorCode();
-			$errInfo = implode('\n\t', $query->errorInfo());
-			if (is_numeric($errCode)) {
-				$errCodeInt = intval($errCode);
 			} else {
-				$errCodeInt = 500;
+				$this->logger->error("disableInviteKey Unknown error");
+				if ($useTransaction) {
+					$this->db->rollBack();
+				}
+				return RetValueOrError::withError(500, "Unknown error");
 			}
 		} catch (\Throwable $th) {
 			if ($useTransaction) {
@@ -620,20 +598,19 @@ final class InviteKeys
 			}
 			$errCode = $th->getCode();
 			$errInfo = $th->getMessage();
-			$errCodeInt = $errCode;
-		}
 
-		$this->logger->error(
-			"Failed to execute SQL ({errorCode} -> {errorInfo})",
-			[
-				"errorCode" => $errCode,
-				"errorInfo" => $errInfo,
-			]
-		);
-		return RetValueOrError::withError(
-			Constants::HTTP_INTERNAL_SERVER_ERROR,
-			"Failed to execute SQL - " . $errCode,
-			$errCodeInt,
-		);
+			$this->logger->error(
+				"Failed to execute SQL ({errorCode} -> {errorInfo})",
+				[
+					"errorCode" => $errCode,
+					"errorInfo" => $errInfo,
+				]
+			);
+			return RetValueOrError::withError(
+				Constants::HTTP_INTERNAL_SERVER_ERROR,
+				"Failed to execute SQL - " . $errCode,
+				$errCode,
+			);
+		}
 	}
 }
