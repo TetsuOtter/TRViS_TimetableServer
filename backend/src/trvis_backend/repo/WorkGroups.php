@@ -82,11 +82,13 @@ final class WorkGroups
 	}
 
 	public function selectWorkGroupPage(
+		string $userId,
 		int $pageFrom1,
 		int $perPage,
 		?UuidInterface $topId,
 	): RetValueOrError {
-		$this->logger->debug("selectPage(pageFrom1:{page}, perPage:{perPage}, topId:{topId})", [
+		$this->logger->debug("selectPage(userId:{userId}, pageFrom1:{page}, perPage:{perPage}, topId:{topId})", [
+			'userId' => $userId,
 			'page' => $pageFrom1,
 			'perPage' => $perPage,
 			'topId' => $topId,
@@ -96,14 +98,27 @@ final class WorkGroups
 			<<<SQL
 			SELECT
 				work_groups_id,
-				created_at,
-				description,
+				work_groups.created_at AS created_at,
+				work_groups.description AS description,
 				name
 			FROM
 				work_groups
+			JOIN
+				work_groups_privileges
+			USING
+				(work_groups_id)
+			WHERE
 			SQL
 			.
-			($hasTopId ? 'WHERE work_groups_id <= :top_id ' : '')
+			($hasTopId ? ' work_groups_id <= :top_id AND ' : '')
+			.
+			(
+				$userId === Constants::UID_ANONUMOUS
+					? ' uid = :userId '
+					: ' uid IN (:userId, \'\') '
+			)
+			.
+			'AND privilege_type >= ' . InviteKeyPrivilegeType::read->value . ' '
 			.
 			<<<SQL
 			ORDER BY
@@ -118,6 +133,7 @@ final class WorkGroups
 		if ($hasTopId) {
 			$query->bindValue(':top_id', $topId->getBytes(), PDO::PARAM_STR);
 		}
+		$query->bindValue(':userId', $userId, PDO::PARAM_STR);
 		$query->bindValue(':perPage', $perPage, PDO::PARAM_INT);
 		$query->bindValue(':offset', ($pageFrom1 - 1) * $perPage, PDO::PARAM_INT);
 
@@ -217,14 +233,14 @@ final class WorkGroups
 			],
 		);
 		if (!$hasName && !$hasDescription) {
-			return $this->selectWorkGroupOne($workGroupId);
+			return RetValueOrError::withValue(null);
 		}
 
 		$query = $this->db->prepare(<<<SQL
 			UPDATE work_groups SET
 			SQL
 			.
-			($hasName ? 'name = :name ' : '')
+			($hasName ? ' name = :name ' : '')
 			.
 			($hasName && $hasDescription ? ', ' : '')
 			.
@@ -247,7 +263,7 @@ final class WorkGroups
 		try {
 			$isSuccess = $query->execute();
 			if ($isSuccess) {
-				return $this->selectWorkGroupOne($workGroupId);
+				return RetValueOrError::withValue(null);
 			}
 
 			$errCode = $query->errorCode();

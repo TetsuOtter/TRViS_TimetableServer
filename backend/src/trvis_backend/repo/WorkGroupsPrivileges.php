@@ -171,7 +171,7 @@ final class WorkGroupsPrivileges
 				AND
 				SQL)
 				.
-				($includeAnonymous ? 'uid = :userId' : 'uid IN (:userId, \'\')')
+				($includeAnonymous ? ' uid = :userId' : ' uid IN (:userId, \'\')')
 				.
 				';'
 			);

@@ -3,15 +3,15 @@
 namespace dev_t0r\trvis_backend\api;
 
 use dev_t0r\trvis_backend\api\AbstractWorkGroupApi;
+use dev_t0r\trvis_backend\auth\MyAuthMiddleware;
 use dev_t0r\trvis_backend\Constants;
 use dev_t0r\trvis_backend\model\WorkGroup;
-use dev_t0r\trvis_backend\repo\WorkGroups;
+use dev_t0r\trvis_backend\service\WorkGroupsService;
 use dev_t0r\trvis_backend\Utils;
 use PDO;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
-use Ramsey\Uuid\Lazy\LazyUuidFromString;
 use Ramsey\Uuid\Uuid;
 
 /**
@@ -23,17 +23,13 @@ use Ramsey\Uuid\Uuid;
  */
 class WorkGroupApi extends AbstractWorkGroupApi
 {
-	private readonly PDO $db;
-	private readonly LoggerInterface $logger;
-	private readonly WorkGroups $workGroupsRepo;
+	private readonly WorkGroupsService $workGroupsService;
 
 	public function __construct(
-		PDO $db,
-		LoggerInterface $logger,
+		private readonly PDO $db,
+		private readonly LoggerInterface $logger,
 	) {
-		$this->db = $db;
-		$this->logger = $logger;
-		$this->workGroupsRepo = new WorkGroups($db, $logger);
+		$this->workGroupsService = new WorkGroupsService($db, $logger);
 	}
 
 	const MAX_LEN_DESCRIPTION = 255;
@@ -43,6 +39,13 @@ class WorkGroupApi extends AbstractWorkGroupApi
 		ServerRequestInterface $request,
 		ResponseInterface $response
 	): ResponseInterface {
+		$userId = MyAuthMiddleware::getUserIdOrNull($request);
+		if ($userId === null)
+		{
+			$this->logger->warning("Token was not set");
+			return Utils::withError($response, Constants::HTTP_UNAUTHORIZED, "Token was not set");
+		}
+
 		$body = $request->getParsedBody();
 		$requestData = new WorkGroup();
 		$requestData->setData($body);
@@ -71,19 +74,11 @@ class WorkGroupApi extends AbstractWorkGroupApi
 			return Utils::withError($response, 400, $message);
 		}
 
-		$uuid = Uuid::uuid7();
-
-		$insertResult = $this->workGroupsRepo->insertWorkGroup(
-			$uuid,
-			'',
-			$req_value_description,
-			$req_value_name
-		);
-		if ($insertResult->isError) {
-			return $insertResult->getResponseWithJson($response);
-		}
-
-		return $this->workGroupsRepo->selectWorkGroupOne($uuid)->getResponseWithJson($response, 201);
+		return $this->workGroupsService->createWorkGroup(
+			userId: $userId,
+			description: $req_value_description,
+			name: $req_value_name,
+		)->getResponseWithJson($response);
 	}
 
 	public function deleteWorkGroup(
@@ -91,12 +86,16 @@ class WorkGroupApi extends AbstractWorkGroupApi
 		ResponseInterface $response,
 		string $workGroupId
 	): ResponseInterface {
+		$userId = MyAuthMiddleware::getUserIdOrAnonymous($request);
 		if (!Uuid::isValid($workGroupId))
 		{
 			$this->logger->warning("Invalid UUID format ({workGroupId})", ['workGroupId' => $workGroupId]);
 			return Utils::withUuidError($response);
 		}
-		return $this->workGroupsRepo->deleteWorkGroup(Uuid::fromString($workGroupId))->getResponseWithJson($response);
+		return $this->workGroupsService->deleteWorkGroup(
+			userId: $userId ?? Constants::UID_ANONUMOUS,
+			workGroupsId: Uuid::fromString($workGroupId),
+		)->getResponseWithJson($response);
 	}
 
 	public function getWorkGroup(
@@ -104,6 +103,7 @@ class WorkGroupApi extends AbstractWorkGroupApi
 		ResponseInterface $response,
 		string $workGroupId
 	): ResponseInterface {
+		$userId = MyAuthMiddleware::getUserIdOrAnonymous($request);
 		if (!Uuid::isValid($workGroupId))
 		{
 			$this->logger->warning("Invalid UUID format ({workGroupId})", ['workGroupId' => $workGroupId]);
@@ -112,13 +112,17 @@ class WorkGroupApi extends AbstractWorkGroupApi
 
 		$uuid = Uuid::fromString($workGroupId);
 		$this->logger->debug("workGroupId parsed: {workGroupId}", ['workGroupId' => $uuid]);
-		return $this->workGroupsRepo->selectWorkGroupOne($uuid)->getResponseWithJson($response);
+		return $this->workGroupsService->selectWorkGroupOne(
+			currentUserId: $userId,
+			workGroupsId: $uuid,
+		)->getResponseWithJson($response);
 	}
 
 	public function getWorkGroupList(
 		ServerRequestInterface $request,
 		ResponseInterface $response
 	): ResponseInterface {
+		$userId = MyAuthMiddleware::getUserIdOrAnonymous($request);
 		$queryParams = $request->getQueryParams();
 		$p = (key_exists('p', $queryParams)) ? $queryParams['p'] : null;
 		$limit = (key_exists('limit', $queryParams)) ? $queryParams['limit'] : null;
@@ -175,7 +179,12 @@ class WorkGroupApi extends AbstractWorkGroupApi
 
 		$uuid = $hasTop ? Uuid::fromString($top) : null;
 
-		return $this->workGroupsRepo->selectWorkGroupPage($p, $limit, $uuid)->getResponseWithJson($response);
+		return $this->workGroupsService->selectWorkGroupPage(
+			userId: $userId,
+			pageFrom1: $p,
+			perPage: $limit,
+			topId: $uuid,
+		)->getResponseWithJson($response);
 	}
 
 	public function updateWorkGroup(
@@ -183,6 +192,7 @@ class WorkGroupApi extends AbstractWorkGroupApi
 		ResponseInterface $response,
 		string $workGroupId
 	): ResponseInterface {
+		$userId = MyAuthMiddleware::getUserIdOrAnonymous($request);
 		$body = $request->getParsedBody();
 		$requestData = new WorkGroup();
 		$requestData->setData($body);
@@ -222,10 +232,11 @@ class WorkGroupApi extends AbstractWorkGroupApi
 			}
 		}
 
-		return $this->workGroupsRepo->updateWorkGroup(
-			Uuid::fromString($workGroupId),
-			$req_value_description,
-			$req_value_name
+		return $this->workGroupsService->updateWorkGroup(
+			userId: $userId,
+			workGroupsId: Uuid::fromString($workGroupId),
+			description: $req_value_description,
+			name: $req_value_name,
 		)->getResponseWithJson($response);
 	}
 }

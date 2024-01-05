@@ -1,9 +1,12 @@
 <?php
 
 namespace dev_t0r\trvis_backend\auth;
+
+use dev_t0r\trvis_backend\Constants;
 use dev_t0r\trvis_backend\Utils;
 use Kreait\Firebase\Contract\Auth;
 use Kreait\Firebase\Exception\Auth\FailedToVerifyToken;
+use Lcobucci\JWT\UnencryptedToken;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
@@ -59,6 +62,22 @@ final class MyAuthMiddleware implements MiddlewareInterface
 		$response = $handler->handle($request);
 
 		return $response;
+	}
+
+	public static function getTokenOrNull(
+		ServerRequestInterface $request,
+	): ?UnencryptedToken {
+		return $request->getAttribute(self::ATTR_NAME_TOKEN_OBJ);
+	}
+	public static function getUserIdOrNull(
+		ServerRequestInterface $request,
+	): ?string {
+		return self::getTokenOrNull($request)?->claims()->get('sub');
+	}
+	public static function getUserIdOrAnonymous(
+		ServerRequestInterface $request,
+	): string {
+		return self::getUserIdOrNull($request) ?? Constants::UID_ANONUMOUS;
 	}
 }
 
