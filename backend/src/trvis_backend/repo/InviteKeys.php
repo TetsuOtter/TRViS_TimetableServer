@@ -19,6 +19,18 @@ final class InviteKeys
 	) {
 	}
 
+	const SQL_COLUMNS = <<<SQL
+		invite_keys_id,
+		work_groups_id,
+		owner,
+		description,
+		valid_from,
+		expires_at,
+		use_limit,
+		disabled_at,
+		privilege_type
+	SQL;
+
 	static function _fetchResultToInviteKey(
 		mixed $data
 	): InviteKey {
@@ -37,30 +49,6 @@ final class InviteKeys
 		return $inviteKey;
 	}
 
-	const SQL_INSERT_INVITE_KEY = <<<SQL
-INSERT INTO
-	invite_keys (
-		invite_keys_id,
-		work_groups_id,
-		owner,
-		description,
-		valid_from,
-		expires_at,
-		use_limit,
-		privilege_type
-	)
-VALUES (
-	:invite_keys_id,
-	:work_groups_id,
-	:owner,
-	:description,
-	:valid_from,
-	:expires_at,
-	:use_limit,
-	:privilege_type
-)
-;
-SQL;
 	public function insertInviteKey(
 		UuidInterface $inviteKeyId,
 		UuidInterface $workGroupId,
@@ -84,7 +72,33 @@ SQL;
 				'privilegeType' => $privilegeType
 			]
 		);
-		$query = $this->db->prepare($this::SQL_INSERT_INVITE_KEY);
+
+		$query = $this->db->prepare(<<<SQL
+			INSERT INTO
+				invite_keys (
+					invite_keys_id,
+					work_groups_id,
+					owner,
+					description,
+					valid_from,
+					expires_at,
+					use_limit,
+					privilege_type
+				)
+			VALUES (
+				:invite_keys_id,
+				:work_groups_id,
+				:owner,
+				:description,
+				:valid_from,
+				:expires_at,
+				:use_limit,
+				:privilege_type
+			)
+			;
+			SQL
+		);
+
 		$query->bindValue(':invite_keys_id', $inviteKeyId->getBytes(), PDO::PARAM_STR);
 		$query->bindValue(':work_groups_id', $workGroupId->getBytes(), PDO::PARAM_STR);
 		$query->bindValue(':owner', $owner->getBytes(), PDO::PARAM_STR);
@@ -128,24 +142,6 @@ SQL;
 		return RetValueOrError::withError(500, "Failed to execute SQL - " . $errCode, $errCodeInt);
 	}
 
-	const SQL_SELECT_INVITE_KEY_COLUMNS = <<<SQL
-	invite_keys_id,
-	work_groups_id,
-	created_at,
-	description,
-	valid_from,
-	expires_at,
-	use_limit,
-	disabled_at,
-	privilege_type
-FROM
-	invite_keys
-SQL;
-	const SQL_SELECT_INVITE_KEY_ONE = $this::SQL_SELECT_INVITE_KEY_COLUMNS . <<<SQL
-WHERE
-	invite_keys_id = :invite_keys_id
-;
-SQL;
 	public function selectInviteKey(
 		UuidInterface $inviteKeyId,
 		bool $useTransaction = false,
@@ -157,8 +153,23 @@ SQL;
 				'inviteKeyId' => $inviteKeyId,
 			]
 		);
-		$sql = ($selectForUpdate ? 'SELECT FOR UPDATE' : 'SELECT') . $this::SQL_SELECT_INVITE_KEY_ONE;
-		$query = $this->db->prepare($sql);
+
+		$query = $this->db->prepare(
+			'SELECT'
+			.
+			($selectForUpdate ? ' FOR UPDATE ' : '')
+			.
+			self::SQL_COLUMNS
+			.
+			<<<SQL
+			FROM
+				invite_keys
+			WHERE
+				invite_keys_id = :invite_keys_id
+			;
+			SQL
+		);
+
 		$query->bindValue(':invite_keys_id', $inviteKeyId->getBytes(), PDO::PARAM_STR);
 
 		try {
@@ -207,57 +218,6 @@ SQL;
 		return RetValueOrError::withError(500, "Failed to execute SQL - " . $errCode, $errCodeInt);
 	}
 
-	const SQL_WHERE_TOP_ID = ' invite_keys_id <= :top_id ';
-	const SQL_SELECT_INVITE_KEY_PAGING = <<<SQL
-ORDER BY
-	invite_keys_id DESC
-OFFSET
-	:offset
-LIMIT
-	:limit
-;
-SQL;
-const SQL_SELECT_INVITE_KEY_EXCLUDE_EXPIRED = <<<SQL
-	disabled_at IS NULL
-AND
-(
-		expires_at IS NULL
-	OR
-		:currentDateTime BETWEEN valid_from AND expires_at
-)
-SQL;
-	static function _getSql_SelectInviteKeyList(
-		bool $hasTopId,
-		bool $includeExpired,
-	): string {
-		$sql = 'SELECT' . self::SQL_SELECT_INVITE_KEY_COLUMNS . ' WHERE ';
-		if ($hasTopId) {
-			$sql .= self::SQL_WHERE_TOP_ID;
-		}
-		if (!$includeExpired) {
-			if ($hasTopId) {
-					$sql .= ' AND ';
-			}
-			$sql .= self::SQL_SELECT_INVITE_KEY_EXCLUDE_EXPIRED;
-		}
-
-		return $sql . self::SQL_SELECT_INVITE_KEY_PAGING;
-	}
-	const SQL_SELECT_INVITE_KEY_INCLUDE_EXPIRED = <<<SQL
-SELECT
-	invite_keys_id,
-	work_groups_id,
-	created_at,
-	description,
-	valid_from,
-	expires_at,
-	use_limit,
-	disabled_at,
-	privilege_type
-FROM
-	invite_keys
-;
-SQL;
 	public function selectInviteKeyList(
 		?int $page,
 		?int $perPage,
@@ -275,16 +235,42 @@ SQL;
 				'currentDateTime' => $currentDateTime,
 			]
 		);
+
 		$hasTopId = !is_null($topId);
-		$query = $this->db->prepare($this->_getSql_SelectInviteKeyList(
-			$hasTopId,
-			$includeExpired,
-		));
+		$hasCurrentDateTimeValue = !is_null($currentDateTime);
+		$currentDateTimePlaceholder = $hasCurrentDateTimeValue ? ':currentDateTime' : 'CURRENT_TIMESTAMP()';
+		$query = $this->db->prepare(
+			'SELECT'
+			.
+			self::SQL_COLUMNS
+			.
+			<<<SQL
+			FROM
+				invite_keys
+			WHERE
+			SQL
+			.
+			($hasTopId ? ' invite_keys_id <= :top_id ' : '')
+			.
+			($hasTopId && !$includeExpired ? ' AND ' : '')
+			.
+			(
+				$includeExpired ? '' :
+					<<<SQL
+						disabled_at IS NULL
+					AND
+					(
+							expires_at IS NULL
+						OR
+							{$currentDateTimePlaceholder} BETWEEN valid_from AND expires_at
+					)
+					SQL
+			)
+		);
 		if ($hasTopId) {
 			$query->bindValue(':top_id', $topId->getBytes(), PDO::PARAM_STR);
 		}
-		if (!$includeExpired) {
-			$currentDateTime ??= new \DateTime;
+		if (!$includeExpired && $hasCurrentDateTimeValue) {
 			$query->bindValue(':currentDateTime', Utils::utcDateStrOrNull($currentDateTime), PDO::PARAM_STR);
 		}
 
@@ -335,19 +321,8 @@ SQL;
 		return RetValueOrError::withError(500, "Failed to execute SQL - " . $errCode, $errCodeInt);
 	}
 
-	const SQL_SELECT_PRIVILEGES = <<<SQL
-SELECT
-	privilege_type
-FROM
-	work_groups_privileges
-WHERE
-	uid = :user_id
-AND
-	work_groups_id = :work_groups_id
-;
-SQL;
 	public function getPrivilegeValue(
-		UuidInterface $userId,
+		string $userId,
 		UuidInterface $workGroupId,
 		bool $useTransaction = false,
 		bool $selectForUpdate = false,
@@ -366,8 +341,23 @@ SQL;
 			$this->db->beginTransaction();
 		}
 		try {
-			$query = $this->db->prepare(($selectForUpdate ? 'SELECT FOR UPDATE' : 'SELECT') . $this::SQL_SELECT_PRIVILEGES);
-			$query->bindValue(':user_id', $userId->getBytes(), PDO::PARAM_STR);
+			$query = $this->db->prepare(
+				'SELECT'
+				.
+				($selectForUpdate ? ' FOR UPDATE ' : '')
+				.
+				<<<SQL
+					privilege_type
+				FROM
+					work_groups_privileges
+				WHERE
+					uid = :user_id
+				AND
+					work_groups_id = :work_groups_id
+				;
+				SQL
+			);
+			$query->bindValue(':user_id', $userId, PDO::PARAM_STR);
 			$query->bindValue(':work_groups_id', $workGroupId->getBytes(), PDO::PARAM_STR);
 			if ($query->execute()) {
 				$privilege = $query->fetch(PDO::FETCH_ASSOC);
@@ -420,7 +410,7 @@ SQL;
 
 	public function useInviteKey(
 		UuidInterface $inviteKeyId,
-		UuidInterface $userId,
+		string $userId,
 		bool $useTransaction = true,
 	): RetValueOrError {
 		$this->logger->debug(
@@ -557,7 +547,7 @@ SQL;
 
 	public function disableInviteKey(
 		UuidInterface $inviteKeyId,
-		UuidInterface $userId,
+		string $userId,
 		bool $useTransaction = true,
 	): RetValueOrError {
 		$this->logger->debug(
@@ -683,9 +673,18 @@ SQL;
 				);
 			}
 
-			$query = $this->db->prepare($this::SQL_DISABLE_INVITE_KEY);
+			$query = $this->db->prepare(<<<SQL
+				UPDATE
+					invite_keys
+				SET
+					disabled_at = CURRENT_TIMESTAMP()
+				WHERE
+					invite_keys_id = :invite_keys_id
+				;
+				SQL
+			);
 			$query->bindValue(':invite_keys_id', $inviteKeyId->getBytes(), PDO::PARAM_STR);
-			$query->bindValue(':user_id', $userId->getBytes(), PDO::PARAM_STR);
+			$query->bindValue(':user_id', $userId, PDO::PARAM_STR);
 			$query->bindValue(':work_groups_id', $workGroupId->getBytes(), PDO::PARAM_STR);
 			if ($query->execute()) {
 				$this->logger->debug("disableInviteKey Success");
