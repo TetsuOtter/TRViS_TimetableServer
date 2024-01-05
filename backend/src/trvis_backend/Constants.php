@@ -2,6 +2,8 @@
 
 namespace dev_t0r\trvis_backend;
 
+use Ramsey\Uuid\Uuid;
+
 final class Constants
 {
 	const HTTP_OK = 200;
@@ -29,4 +31,6 @@ final class Constants
 	const HTTP_SERVICE_UNAVAILABLE = 503;
 	const HTTP_GATEWAY_TIMEOUT = 504;
 	const HTTP_VERSION_NOT_SUPPORTED = 505;
+
+	const UUID_NULL = new Uuid(Uuid::NIL);
 }
