@@ -2,8 +2,21 @@
 
 namespace dev_t0r\trvis_backend;
 
+Utils::__init__();
+
 final class Utils
 {
+	private static \DateTimeZone $UTC;
+	public static function __init__()
+	{
+		self::$UTC = new \DateTimeZone('UTC');
+	}
+
+	public static function getUTC(): \DateTimeZone
+	{
+		return self::$UTC;
+	}
+
 	public static function withJson(
 		\Psr\Http\Message\ResponseInterface $oldResponse,
 		mixed $data,
@@ -42,7 +55,6 @@ final class Utils
 		return self::withError($oldResponse, 400, 'Bad Request (Invalid UUID format)');
 	}
 
-	private const UTC = new \DateTimeZone('UTC');
 	public static function utcDateStrOrNull(?\DateTimeInterface $date): ?string {
 		if (is_null($date)) {
 			return null;
@@ -54,7 +66,7 @@ final class Utils
 				$date = clone $date;
 			else
 				$date = \DateTime::createFromInterface($date);
-			$date = $date->setTimezone(self::UTC);
+			$date = $date->setTimezone(self::$UTC);
 		}
 
 		return $date->format('Y-m-d H:i:s.v');
@@ -65,7 +77,7 @@ final class Utils
 			return null;
 		}
 
-		$date = \DateTime::createFromFormat('Y-m-d H:i:s.u', $dateStr, self::UTC);
+		$date = \DateTime::createFromFormat('Y-m-d H:i:s.u', $dateStr, self::$UTC);
 		if ($date === false) {
 			throw new \Exception("Invalid date string: $dateStr");
 		}

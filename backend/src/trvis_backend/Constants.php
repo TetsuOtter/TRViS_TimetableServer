@@ -2,10 +2,18 @@
 
 namespace dev_t0r\trvis_backend;
 
+use Ramsey\Uuid\UuidInterface;
 use Ramsey\Uuid\Uuid;
+
+Constants::__init__();
 
 final class Constants
 {
+	public static function __init__()
+	{
+		self::$UUID_NULL = Uuid::fromString(Uuid::NIL);
+	}
+
 	const HTTP_OK = 200;
 	const HTTP_CREATED = 201;
 	const HTTP_ACCEPTED = 202;
@@ -32,7 +40,11 @@ final class Constants
 	const HTTP_GATEWAY_TIMEOUT = 504;
 	const HTTP_VERSION_NOT_SUPPORTED = 505;
 
-	const UUID_NULL = Uuid::fromString(Uuid::NIL);
+	private static $UUID_NULL = null;
+	public static function getUuidNull(): UuidInterface
+	{
+		return self::$UUID_NULL;
+	}
 	const UID_ANONUMOUS = '';
 
 	const PAGE_MIN_VALUE = 1;
