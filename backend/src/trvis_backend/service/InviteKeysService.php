@@ -99,7 +99,9 @@ final class InviteKeysService
 		}
 		catch (\Throwable $th)
 		{
-			$this->db->rollBack();
+			if ($this->db->inTransaction()) {
+				$this->db->rollBack();
+			}
 
 			$this->logger->error(
 				"Unknown error: {exception}",
