@@ -30,6 +30,7 @@ final class InviteKeys
 		use_limit,
 		disabled_at,
 		privilege_type
+
 	SQL;
 
 	static function _fetchResultToInviteKey(
@@ -237,7 +238,7 @@ final class InviteKeys
 			.
 			($isRequestWithOwnerUid ? ' owner = :ownerUid ' : ' work_groups_id = :workGroupsId ')
 			.
-			($hasTopId ? 'AND invite_keys_id <= :top_id ' : '')
+			($hasTopId ? ' AND invite_keys_id <= :top_id ' : '')
 			.
 			' AND deleted_at IS NULL '
 			.
