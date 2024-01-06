@@ -59,7 +59,7 @@ final class InviteKeysService
 			return $ownerPrivilegeType;
 		}
 
-		if ($ownerPrivilegeType->value->value < InviteKeyPrivilegeType::admin->value) {
+		if ($ownerPrivilegeType->value < InviteKeyPrivilegeType::admin) {
 			return RetValueOrError::withError(
 				Constants::HTTP_FORBIDDEN,
 				"You don't have enough privilege to create InviteKey",
@@ -158,7 +158,7 @@ final class InviteKeysService
 		if ($privilegeType->isError) {
 			return $privilegeType;
 		}
-		if ($privilegeType->value->value < InviteKeyPrivilegeType::admin->value) {
+		if ($privilegeType->value < InviteKeyPrivilegeType::admin) {
 			return RetValueOrError::withError(
 				Constants::HTTP_FORBIDDEN,
 				"You don't have enough privilege to get InviteKey list",
@@ -364,7 +364,7 @@ final class InviteKeysService
 				return $currentPrivilegeType;
 			}
 
-			if ($currentPrivilegeType->value->value < InviteKeyPrivilegeType::admin->value) {
+			if ($currentPrivilegeType->value < InviteKeyPrivilegeType::admin) {
 				$this->logger->warning(
 					"disableInviteKey: not enough privilege (currentPrivilegeType: {currentPrivilegeType})",
 					[
