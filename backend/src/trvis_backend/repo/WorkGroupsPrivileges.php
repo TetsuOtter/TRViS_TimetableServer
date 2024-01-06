@@ -161,8 +161,6 @@ final class WorkGroupsPrivileges
 			$query = $this->db->prepare(
 				'SELECT'
 				.
-				($selectForUpdate ? ' FOR UPDATE' : '')
-				.
 				(<<<SQL
 					privilege_type,
 					uid,
@@ -177,6 +175,8 @@ final class WorkGroupsPrivileges
 				($includeAnonymous ? ' uid = :userId' : ' uid IN (:userId, \'\')')
 				.
 				' AND deleted_at IS NULL'
+				.
+				($selectForUpdate ? ' FOR UPDATE' : '')
 				.
 				';'
 			);

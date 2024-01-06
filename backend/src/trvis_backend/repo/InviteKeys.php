@@ -152,8 +152,6 @@ final class InviteKeys
 		$query = $this->db->prepare(
 			'SELECT'
 			.
-			($selectForUpdate ? ' FOR UPDATE ' : '')
-			.
 			self::SQL_COLUMNS
 			.
 			<<<SQL
@@ -163,8 +161,11 @@ final class InviteKeys
 				invite_keys_id = :invite_keys_id
 			AND
 				deleted_at IS NULL
-			;
 			SQL
+			.
+			($selectForUpdate ? ' FOR UPDATE ' : '')
+			.
+			';'
 		);
 
 		$query->bindValue(':invite_keys_id', $inviteKeyId->getBytes(), PDO::PARAM_STR);
