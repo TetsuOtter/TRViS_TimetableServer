@@ -308,6 +308,39 @@ final class InviteKeysService
 			}
 
 			$inviteKeyData = $inviteKeyData->value;
+			$currentUserPrivilegeType = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
+				userId: $userId,
+				workGroupsId: $inviteKeyData->work_groups_id,
+				selectForUpdate: true,
+			);
+			if ($currentUserPrivilegeType->isError) {
+				$this->db->rollBack();
+				return $currentUserPrivilegeType;
+			}
+			if ($currentUserPrivilegeType->value < InviteKeyPrivilegeType::read) {
+				$this->logger->warning(
+					"disableInviteKey: not enough privilege (currentUserPrivilegeType: {currentUserPrivilegeType})",
+					[
+						'currentUserPrivilegeType' => $currentUserPrivilegeType->value,
+					]
+				);
+				$this->db->rollBack();
+				return Utils::errWorkGroupNotFound();
+			}
+			if ($currentUserPrivilegeType->value < InviteKeyPrivilegeType::admin) {
+				$this->logger->warning(
+					"disableInviteKey: not enough privilege (currentUserPrivilegeType: {currentUserPrivilegeType})",
+					[
+						'currentUserPrivilegeType' => $currentUserPrivilegeType->value,
+					]
+				);
+				$this->db->rollBack();
+				return RetValueOrError::withError(
+					Constants::HTTP_FORBIDDEN,
+					"You don't have enough privilege to disable this InviteKey",
+				);
+			}
+
 			if ($inviteKeyData->disabled_at !== null) {
 				$this->logger->info(
 					"disableInviteKey: already disabled (inviteKeyId: {inviteKeyId})",
