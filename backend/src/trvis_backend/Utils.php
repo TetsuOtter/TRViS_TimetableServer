@@ -2,6 +2,8 @@
 
 namespace dev_t0r\trvis_backend;
 
+use dev_t0r\trvis_backend\model\JsonDateTime;
+
 Utils::__init__();
 
 final class Utils
@@ -77,7 +79,7 @@ final class Utils
 		return $date->format('Y-m-d H:i:s.v');
 	}
 
-	public static function utcDateStrToDateTime(?string $dateStr): ?\DateTime {
+	public static function dbDateStrToDateTime(?string $dateStr): ?JsonDateTime {
 		if (is_null($dateStr)) {
 			return null;
 		}
@@ -86,7 +88,7 @@ final class Utils
 		if ($date === false) {
 			throw new \Exception("Invalid date string: $dateStr");
 		}
-		return $date;
+		return new JsonDateTime($date);
 	}
 
 	public static function errWorkGroupNotFound(): RetValueOrError {

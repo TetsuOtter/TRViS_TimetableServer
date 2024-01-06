@@ -42,9 +42,9 @@ final class InviteKeys
 			'work_groups_id' => Uuid::fromBytes($data['work_groups_id']),
 			'owner' => Uuid::fromBytes($data['owner']),
 			'description' => $data['description'],
-			'valid_from' => Utils::utcDateStrToDateTime($data['valid_from']),
-			'expires_at' => Utils::utcDateStrToDateTime($data['expires_at']),
-			'disabled_at' => Utils::utcDateStrToDateTime($data['disabled_at']),
+			'valid_from' => Utils::dbDateStrToDateTime($data['valid_from']),
+			'expires_at' => Utils::dbDateStrToDateTime($data['expires_at']),
+			'disabled_at' => Utils::dbDateStrToDateTime($data['disabled_at']),
 			'use_limit' => $data['use_limit'],
 			'privilege_type' => InviteKeyPrivilegeType::fromInt($data['privilege_type'])->name,
 		]);
