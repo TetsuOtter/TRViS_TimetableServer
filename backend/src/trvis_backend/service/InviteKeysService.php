@@ -59,7 +59,7 @@ final class InviteKeysService
 			return $ownerPrivilegeType;
 		}
 
-		if ($ownerPrivilegeType->value < InviteKeyPrivilegeType::admin) {
+		if (!$ownerPrivilegeType->value->hasPrivilege(InviteKeyPrivilegeType::admin)) {
 			return RetValueOrError::withError(
 				Constants::HTTP_FORBIDDEN,
 				"You don't have enough privilege to create InviteKey",
@@ -160,7 +160,7 @@ final class InviteKeysService
 		if ($privilegeType->isError) {
 			return $privilegeType;
 		}
-		if ($privilegeType->value < InviteKeyPrivilegeType::admin) {
+		if (!$privilegeType->value->hasPrivilege(InviteKeyPrivilegeType::admin)) {
 			return RetValueOrError::withError(
 				Constants::HTTP_FORBIDDEN,
 				"You don't have enough privilege to get InviteKey list",
@@ -319,7 +319,7 @@ final class InviteKeysService
 				$this->db->rollBack();
 				return $currentUserPrivilegeType;
 			}
-			if ($currentUserPrivilegeType->value < InviteKeyPrivilegeType::read) {
+			if (!$currentUserPrivilegeType->value->hasPrivilege(InviteKeyPrivilegeType::read)) {
 				$this->logger->warning(
 					"disableInviteKey: not enough privilege (currentUserPrivilegeType: {currentUserPrivilegeType})",
 					[
@@ -329,7 +329,7 @@ final class InviteKeysService
 				$this->db->rollBack();
 				return Utils::errWorkGroupNotFound();
 			}
-			if ($currentUserPrivilegeType->value < InviteKeyPrivilegeType::admin) {
+			if (!$currentUserPrivilegeType->value->hasPrivilege(InviteKeyPrivilegeType::admin)) {
 				$this->logger->warning(
 					"disableInviteKey: not enough privilege (currentUserPrivilegeType: {currentUserPrivilegeType})",
 					[

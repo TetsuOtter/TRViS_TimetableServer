@@ -36,4 +36,8 @@ enum InviteKeyPrivilegeType: int {
 				throw new \Exception("Invalid privilege type: $int");
 		}
 	}
+
+	public function hasPrivilege(InviteKeyPrivilegeType $privilegeType): bool {
+		return $privilegeType->value <= $this->value;
+	}
 }

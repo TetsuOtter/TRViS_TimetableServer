@@ -56,7 +56,7 @@ final class WorkGroupsService
 			'workGroupsId' => $workGroupsId,
 			'privilegeType' => $privilegeType,
 		]);
-		if ($privilegeType < InviteKeyPrivilegeType::read) {
+		if (!$privilegeType->hasPrivilege(InviteKeyPrivilegeType::read)) {
 			// 権限不足の場合は、404を返す
 			return Utils::errWorkGroupNotFound();
 		}
@@ -185,11 +185,11 @@ final class WorkGroupsService
 			'workGroupsId' => $workGroupsId,
 			'userPrivilegeType' => $userPrivilegeType,
 		]);
-		if ($userPrivilegeType < InviteKeyPrivilegeType::read) {
+		if (!$userPrivilegeType->hasPrivilege(InviteKeyPrivilegeType::read)) {
 			// READ権限不足の場合は、404を返す
 			return Utils::errWorkGroupNotFound();
 		}
-		if ($userPrivilegeType < InviteKeyPrivilegeType::write) {
+		if (!$userPrivilegeType->hasPrivilege(InviteKeyPrivilegeType::write)) {
 			// READ権限がありWRITE権限がない場合は、403を返す
 			return RetValueOrError::withError(
 				Constants::HTTP_FORBIDDEN,
@@ -234,11 +234,11 @@ final class WorkGroupsService
 			'workGroupsId' => $workGroupsId,
 			'userPrivilegeType' => $userPrivilegeType,
 		]);
-		if ($userPrivilegeType < InviteKeyPrivilegeType::read) {
+		if (!$userPrivilegeType->hasPrivilege(InviteKeyPrivilegeType::read)) {
 			// READ権限不足の場合は、404を返す
 			return Utils::errWorkGroupNotFound();
 		}
-		if ($userPrivilegeType < InviteKeyPrivilegeType::admin) {
+		if (!$userPrivilegeType->hasPrivilege(InviteKeyPrivilegeType::admin)) {
 			// READ権限がありADMIN権限がない場合は、403を返す
 			return RetValueOrError::withError(
 				Constants::HTTP_FORBIDDEN,
