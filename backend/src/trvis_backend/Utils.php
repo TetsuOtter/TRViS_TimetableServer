@@ -17,6 +17,11 @@ final class Utils
 		return self::$UTC;
 	}
 
+	public static function getUtcNow(): \DateTime
+	{
+		return new \DateTime('now', self::$UTC);
+	}
+
 	public static function withJson(
 		\Psr\Http\Message\ResponseInterface $oldResponse,
 		mixed $data,
@@ -82,5 +87,9 @@ final class Utils
 			throw new \Exception("Invalid date string: $dateStr");
 		}
 		return $date;
+	}
+
+	public static function errWorkGroupNotFound(): RetValueOrError {
+		return RetValueOrError::withError(Constants::HTTP_NOT_FOUND, "WorkGroup not found");
 	}
 }

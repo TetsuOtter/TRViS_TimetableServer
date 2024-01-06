@@ -7,6 +7,7 @@ use dev_t0r\trvis_backend\repo\InviteKeyPrivilegeType;
 use dev_t0r\trvis_backend\repo\InviteKeys;
 use dev_t0r\trvis_backend\repo\WorkGroupsPrivileges;
 use dev_t0r\trvis_backend\RetValueOrError;
+use dev_t0r\trvis_backend\Utils;
 use PDO;
 use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
@@ -320,7 +321,7 @@ final class InviteKeysService
 					"InviteKey already disabled",
 				);
 			}
-			$now = new \DateTime;
+			$now = Utils::getUtcNow();
 			if ($inviteKeyData->valid_from != null && $now < $inviteKeyData->valid_from) {
 				$this->logger->info(
 					"disableInviteKey: not valid yet (inviteKeyId: {inviteKeyId}, validFrom: {validFrom}, now: {now})",

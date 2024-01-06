@@ -4,9 +4,11 @@ namespace dev_t0r\trvis_backend\service;
 
 use dev_t0r\trvis_backend\Constants;
 use dev_t0r\trvis_backend\repo\InviteKeyPrivilegeType;
+use dev_t0r\trvis_backend\repo\InviteKeys;
 use dev_t0r\trvis_backend\repo\WorkGroups;
 use dev_t0r\trvis_backend\repo\WorkGroupsPrivileges;
 use dev_t0r\trvis_backend\RetValueOrError;
+use dev_t0r\trvis_backend\Utils;
 use PDO;
 use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
@@ -16,12 +18,14 @@ final class WorkGroupsService
 {
 	private readonly WorkGroups $workGroupsRepo;
 	private readonly WorkGroupsPrivileges $workGroupsPrivilegesRepo;
+	private readonly InviteKeys $inviteKeysRepo;
 	public function __construct(
 		private readonly PDO $db,
 		private readonly LoggerInterface $logger,
 	) {
 		$this->workGroupsRepo = new WorkGroups($db, $logger);
 		$this->workGroupsPrivilegesRepo = new WorkGroupsPrivileges($db, $logger);
+		$this->inviteKeysRepo = new InviteKeys($db, $logger);
 	}
 
 	public function selectWorkGroupOne(
@@ -54,10 +58,7 @@ final class WorkGroupsService
 		]);
 		if ($privilegeType < InviteKeyPrivilegeType::read) {
 			// 権限不足の場合は、404を返す
-			return RetValueOrError::withError(
-				Constants::HTTP_NOT_FOUND,
-				'Work group not found',
-			);
+			return Utils::errWorkGroupNotFound();
 		}
 
 		return $this->workGroupsRepo->selectWorkGroupOne($workGroupsId);
@@ -186,10 +187,7 @@ final class WorkGroupsService
 		]);
 		if ($userPrivilegeType < InviteKeyPrivilegeType::read) {
 			// READ権限不足の場合は、404を返す
-			return RetValueOrError::withError(
-				Constants::HTTP_NOT_FOUND,
-				'Work group not found',
-			);
+			return Utils::errWorkGroupNotFound();
 		}
 		if ($userPrivilegeType < InviteKeyPrivilegeType::write) {
 			// READ権限がありWRITE権限がない場合は、403を返す
@@ -238,10 +236,7 @@ final class WorkGroupsService
 		]);
 		if ($userPrivilegeType < InviteKeyPrivilegeType::read) {
 			// READ権限不足の場合は、404を返す
-			return RetValueOrError::withError(
-				Constants::HTTP_NOT_FOUND,
-				'Work group not found',
-			);
+			return Utils::errWorkGroupNotFound();
 		}
 		if ($userPrivilegeType < InviteKeyPrivilegeType::admin) {
 			// READ権限がありADMIN権限がない場合は、403を返す
@@ -251,6 +246,65 @@ final class WorkGroupsService
 			);
 		}
 
+		$this->db->beginTransaction();
+		try {
+			$now = Utils::getUtcNow();
+			$this->logger->debug("deleteWorkGroup now: {now}", [
+				'now' => $now,
+			]);
+
+			$deleteWorkGroupResult = $this->workGroupsRepo->deleteWorkGroup(
+				workGroupId: $workGroupsId,
+				deletedAt: $now,
+			);
+			if ($deleteWorkGroupResult->isError) {
+				$this->db->rollBack();
+				return $deleteWorkGroupResult;
+			}
+
+			$deletePrivilegeResult = $this->workGroupsPrivilegesRepo->deleteByWorkGroupId(
+				workGroupsId: $workGroupsId,
+				deletedAt: $now,
+			);
+			if ($deletePrivilegeResult->isError && $deletePrivilegeResult->statusCode !== Constants::HTTP_NOT_FOUND) {
+				$this->db->rollBack();
+				return $deletePrivilegeResult;
+			}
+
+			$deleteInviteKeyResult = $this->inviteKeysRepo->deleteByWorkGroupId(
+				workGroupsId: $workGroupsId,
+				deletedAt: $now,
+			);
+			if ($deleteInviteKeyResult->isError && $deleteInviteKeyResult->statusCode !== Constants::HTTP_NOT_FOUND) {
+				$this->db->rollBack();
+				return $deleteInviteKeyResult;
+			}
+
+			$this->db->commit();
+			$this->logger->info(
+				"deleteWorkGroup({workGroupsId}) by user:'{userId}' success",
+				[
+					'workGroupsId' => $workGroupsId,
+					'userId' => $userId,
+				],
+			);
+			return RetValueOrError::withValue(null);
+		} catch (\Throwable $e) {
+			$this->logger->error(
+				"Failed to delete work group: {exception}",
+				[
+					'exception' => $e,
+				],
+			);
+			if ($this->db->inTransaction()) {
+				$this->db->rollBack();
+			}
+			return RetValueOrError::withError(
+				Constants::HTTP_INTERNAL_SERVER_ERROR,
+				'unknown error - ',
+				$e->getCode(),
+			);
+		}
 		return $this->workGroupsRepo->deleteWorkGroup($workGroupsId);
 	}
 }

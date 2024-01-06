@@ -2,6 +2,7 @@
 
 namespace dev_t0r\trvis_backend\repo;
 
+use DateTimeInterface;
 use dev_t0r\trvis_backend\Constants;
 use dev_t0r\trvis_backend\model\InviteKey;
 use dev_t0r\trvis_backend\RetValueOrError;
@@ -159,6 +160,8 @@ final class InviteKeys
 				invite_keys
 			WHERE
 				invite_keys_id = :invite_keys_id
+			AND
+				deleted_at IS NULL
 			;
 			SQL
 		);
@@ -235,6 +238,8 @@ final class InviteKeys
 			($isRequestWithOwnerUid ? ' owner = :ownerUid ' : ' work_groups_id = :workGroupsId ')
 			.
 			($hasTopId ? 'AND invite_keys_id <= :top_id ' : '')
+			.
+			' AND deleted_at IS NULL '
 			.
 			(
 				$includeExpired ? '' :
@@ -324,6 +329,10 @@ final class InviteKeys
 					disabled_at = CURRENT_TIMESTAMP()
 				WHERE
 					invite_keys_id = :invite_keys_id
+				AND
+					disabled_at IS NULL
+				AND
+					deleted_at IS NULL
 				;
 				SQL
 			);
@@ -331,6 +340,12 @@ final class InviteKeys
 			$query->bindValue(':user_id', $userId, PDO::PARAM_STR);
 
 			if ($query->execute()) {
+				$rowCount = $query->rowCount();
+				if ($rowCount === 0) {
+					$this->logger->error("disableInviteKey Not found");
+					return RetValueOrError::withError(404, "Invite key not found");
+				}
+
 				$this->logger->debug("disableInviteKey Success");
 				return RetValueOrError::withValue(null);
 			} else {
@@ -353,6 +368,65 @@ final class InviteKeys
 				"Failed to execute SQL - " . $errCode,
 				$errCode,
 			);
+		}
+	}
+
+	public function deleteByWorkGroupId(
+		UuidInterface $workGroupsId,
+		?DateTimeInterface $deletedAt = null,
+	): RetValueOrError {
+		$this->logger->debug(
+			"deleteLinkedInviteKeys workGroupsId: {workGroupsId}, deletedAt: {deletedAt}",
+			[
+				'workGroupsId' => $workGroupsId,
+				'deletedAt' => $deletedAt,
+			]
+		);
+
+		$hasDeletedAt = !is_null($deletedAt);
+		$deletedAtPlaceholder = $hasDeletedAt ? ':deleted_at' : 'CURRENT_TIMESTAMP()';
+		try {
+			$query = $this->db->prepare(<<<SQL
+				UPDATE
+					invite_keys
+				SET
+					deleted_at = $deletedAtPlaceholder
+				WHERE
+					work_groups_id = :work_groups_id
+				AND
+					deleted_at IS NULL
+				;
+				SQL
+			);
+			$query->bindValue(':work_groups_id', $workGroupsId->getBytes(), PDO::PARAM_STR);
+			if ($hasDeletedAt) {
+				$query->bindValue($deletedAtPlaceholder, Utils::utcDateStrOrNull($deletedAt), PDO::PARAM_STR);
+			}
+
+			$query->execute();
+			$rowCount = $query->rowCount();
+			$this->logger->debug(
+				"deleteLinkedInviteKeys deleted: {rows} rows",
+				[
+					'rows' => $rowCount,
+				]
+			);
+			if ($rowCount === 0) {
+				return RetValueOrError::withError(404, "InviteKeys not found");
+			} else {
+				return RetValueOrError::withValue(null);
+			}
+		} catch (\PDOException $th) {
+			$errCode = $th->getCode();
+			$errInfo = $th->getMessage();
+			$this->logger->error(
+				"Failed to execute SQL ({errorCode} -> {errorInfo})",
+				[
+					"errorCode" => $errCode,
+					"errorInfo" => $errInfo,
+				]
+			);
+			return RetValueOrError::withError(500, "Failed to execute SQL - " . $errCode, $errCode);
 		}
 	}
 }

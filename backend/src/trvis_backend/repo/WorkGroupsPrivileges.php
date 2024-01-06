@@ -1,8 +1,11 @@
 <?php
 
 namespace dev_t0r\trvis_backend\repo;
+
+use DateTimeInterface;
 use dev_t0r\trvis_backend\Constants;
 use dev_t0r\trvis_backend\RetValueOrError;
+use dev_t0r\trvis_backend\Utils;
 use PDO;
 use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
@@ -173,6 +176,8 @@ final class WorkGroupsPrivileges
 				.
 				($includeAnonymous ? ' uid = :userId' : ' uid IN (:userId, \'\')')
 				.
+				' AND deleted_at IS NULL'
+				.
 				';'
 			);
 			$query->bindValue(':userId', $userId, PDO::PARAM_STR);
@@ -180,11 +185,7 @@ final class WorkGroupsPrivileges
 			$query->execute();
 			if ($query->rowCount() === 0)
 			{
-				return RetValueOrError::withError(
-					Constants::HTTP_NOT_FOUND,
-					'work group privilege not found',
-					0,
-				);
+				return Utils::errWorkGroupNotFound();
 			}
 
 			$privilegeTypeList = $query->fetchAll(PDO::FETCH_ASSOC);
@@ -222,6 +223,78 @@ final class WorkGroupsPrivileges
 			$errInfo = $e->errorInfo;
 			$this->logger->error(
 				'failed to select work group  ({errorCode} -> {errorInfo})',
+				[
+					"errorCode" => $errCode,
+					"errorInfo" => $errInfo,
+				]
+			);
+			return RetValueOrError::withError(
+				Constants::HTTP_INTERNAL_SERVER_ERROR,
+				"Failed to execute SQL - " . $errCode,
+				$errCode,
+			);
+		}
+	}
+
+	public function deleteByWorkGroupId(
+		UuidInterface $workGroupsId,
+		?DateTimeInterface $deletedAt = null,
+	): RetValueOrError {
+		$this->logger->info(
+			'deleting work group privileges (WorkGroup:{workGroupsId}, deletedAt:{deletedAt})',
+			[
+				'workGroupsId' => $workGroupsId,
+				'deletedAt' => $deletedAt,
+			]
+		);
+
+		$hasDeletedAt = !is_null($deletedAt);
+		$deletedAtPlaceholder = $hasDeletedAt ? ':deleted_at' : 'CURRENT_TIMESTAMP()';
+		try
+		{
+			$query = $this->db->prepare(<<<SQL
+				UPDATE
+					work_groups_privileges
+				SET
+					deleted_at = $deletedAtPlaceholder
+				WHERE
+					work_groups_id = :workGroupsId
+				AND
+					deleted_at IS NULL
+				;
+				SQL
+			);
+			$query->bindValue(':workGroupsId', $workGroupsId->getBytes(), PDO::PARAM_STR);
+			if ($hasDeletedAt)
+			{
+				$query->bindValue($deletedAtPlaceholder, Utils::utcDateStrOrNull($deletedAt), PDO::PARAM_STR);
+			}
+
+			$query->execute();
+			$rowCount = $query->rowCount();
+			$this->logger->debug(
+				'deleted work group privileges (WorkGroup:{workGroupsId}, deletedAt:{deletedAt}, rowCount:{rowCount})',
+				[
+					'workGroupsId' => $workGroupsId,
+					'deletedAt' => $deletedAt,
+					'rowCount' => $rowCount,
+				]
+			);
+			if ($rowCount === 0) {
+				return RetValueOrError::withError(
+					Constants::HTTP_NOT_FOUND,
+					'work group privileges not found',
+				);
+			} else {
+				return RetValueOrError::withValue(null);
+			}
+		}
+		catch (\PDOException $e)
+		{
+			$errCode = $e->getCode();
+			$errInfo = $e->errorInfo;
+			$this->logger->error(
+				'failed to delete work group privileges ({errorCode} -> {errorInfo})',
 				[
 					"errorCode" => $errCode,
 					"errorInfo" => $errInfo,

@@ -2,9 +2,11 @@
 
 namespace dev_t0r\trvis_backend\repo;
 
+use DateTimeInterface;
 use dev_t0r\trvis_backend\Constants;
 use dev_t0r\trvis_backend\model\WorkGroup;
 use dev_t0r\trvis_backend\RetValueOrError;
+use dev_t0r\trvis_backend\Utils;
 use PDO;
 use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
@@ -45,6 +47,8 @@ final class WorkGroups
 				work_groups
 			WHERE
 				work_groups_id = :work_groups_id
+			AND
+				deleted_at IS NULL
 			;
 			SQL
 		);
@@ -73,7 +77,7 @@ final class WorkGroups
 					'workGroupId' => $workGroupId,
 				]
 			);
-			return RetValueOrError::withError(404, "WorkGroup not found");
+			return Utils::errWorkGroupNotFound();
 		}
 
 		$workGroup = $this->_fetchResultToWorkGroup($data);
@@ -118,6 +122,10 @@ final class WorkGroups
 					: ' uid IN (:userId, \'\') '
 			)
 			.
+			' AND work_groups.deleted_at IS NULL '
+			.
+			' AND work_groups_privileges.deleted_at IS NULL '
+			.
 			'AND privilege_type >= ' . InviteKeyPrivilegeType::read->value . ' '
 			.
 			<<<SQL
@@ -152,11 +160,10 @@ final class WorkGroups
 
 		$this->logger->debug("select success - rowCount: {rowCount}", ['rowCount' => $query->rowCount()]);
 
-		$workGroups = [];
-		while ($data = $query->fetch(PDO::FETCH_ASSOC)) {
-			$workGroup = $this->_fetchResultToWorkGroup($data);
-			array_push($workGroups, $workGroup);
-		}
+		$workGroups = array_map(
+			fn ($data) => $this->_fetchResultToWorkGroup($data),
+			$query->fetchAll(PDO::FETCH_ASSOC),
+		);
 
 		$this->logger->debug("select result - workGroup: {workGroups}", ['workGroups' => $workGroups]);
 		return RetValueOrError::withValue($workGroups);
@@ -249,6 +256,8 @@ final class WorkGroups
 			<<<SQL
 			WHERE
 				work_groups_id = :work_groups_id
+			AND
+				deleted_at IS NULL
 			;
 			SQL
 		);
@@ -263,7 +272,17 @@ final class WorkGroups
 		try {
 			$isSuccess = $query->execute();
 			if ($isSuccess) {
-				return RetValueOrError::withValue(null);
+				if ($query->rowCount() === 0) {
+					$this->logger->info(
+						"WorkGroup not found ({workGroupId})",
+						[
+							'workGroupId' => $workGroupId,
+						]
+					);
+					return Utils::errWorkGroupNotFound();
+				} else {
+					return RetValueOrError::withValue(null);
+				}
 			}
 
 			$errCode = $query->errorCode();
@@ -288,46 +307,60 @@ final class WorkGroups
 	}
 
 	public function deleteWorkGroup(
-		UuidInterface $workGroupId
+		UuidInterface $workGroupId,
+		?DateTimeInterface $deletedAt = null,
 	): RetValueOrError {
+		$this->logger->info(
+			"deleteWorkGroup({workGroupId}, {deletedAt})",
+			[
+				'workGroupId' => $workGroupId,
+				'deletedAt' => $deletedAt,
+			]
+		);
+		$hasDeletedAt = !is_null($deletedAt);
+		$deletedAtPlaceholder = $hasDeletedAt ? ':deleted_at' : 'CURRENT_TIMESTAMP()';
 		$query = $this->db->prepare(<<<SQL
-			DELETE FROM work_groups
+			UPDATE
+				work_groups
+			SET
+				deleted_at = $deletedAtPlaceholder
 			WHERE
 				work_groups_id = :work_groups_id
+			AND
+				deleted_at IS NULL
 			;
 			SQL
 		);
 		$query->bindValue(':work_groups_id', $workGroupId->getBytes(), PDO::PARAM_STR);
+		if ($hasDeletedAt) {
+			$query->bindValue($deletedAtPlaceholder, Utils::utcDateStrOrNull($deletedAt), PDO::PARAM_STR);
+		}
 
-		$isSuccess = $query->execute();
-		if (!$isSuccess) {
-			$errCode = $query->errorCode();
+		try {
+			$query->execute();
+
+			if ($query->rowCount() === 0) {
+				$this->logger->info(
+					"WorkGroup not found ({workGroupId})",
+					[
+						'workGroupId' => $workGroupId,
+					]
+				);
+				return Utils::errWorkGroupNotFound();
+			} else {
+				return RetValueOrError::withValue(null);
+			}
+
+		} catch (\PDOException $ex) {
+			$errCode = $ex->getCode();
 			$this->logger->error(
 				"Failed to execute SQL ({errorCode} -> {errorInfo})",
 				[
 					"errorCode" => $errCode,
-					"errorInfo" => implode('\n\t', $query->errorInfo()),
+					"errorInfo" => $ex->getMessage(),
 				],
 			);
 			return RetValueOrError::withError(500, "Failed to execute SQL - " . $errCode);
 		}
-
-		$rowCount = $query->rowCount();
-		if ($rowCount === 0) {
-			$this->logger->info(
-				"WorkGroup not found ({workGroupId})",
-				[
-					'workGroupId' => $workGroupId,
-				]
-			);
-			return RetValueOrError::withError(404, "WorkGroup not found");
-		}
-		$this->logger->info(
-			"WorkGroup deleted ({workGroupId})",
-			[
-				'workGroupId' => $workGroupId,
-			]
-		);
-		return RetValueOrError::withValue(null);
 	}
 }
