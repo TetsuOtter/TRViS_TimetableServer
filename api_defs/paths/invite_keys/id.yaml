@@ -8,7 +8,6 @@ path:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '#/components/parameters/WorkGroupId'
       - $ref: '#/components/parameters/InviteKeyId'
     responses:
       '200':
@@ -33,7 +32,6 @@ path:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '#/components/parameters/WorkGroupId'
       - $ref: '#/components/parameters/InviteKeyId'
     responses:
       '200':
@@ -58,7 +56,6 @@ path:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '#/components/parameters/WorkGroupId'
       - $ref: '#/components/parameters/InviteKeyId'
     requestBody:
       description: 更新後のInviteKeyの情報
@@ -93,7 +90,6 @@ path:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '#/components/parameters/WorkGroupId'
       - $ref: '#/components/parameters/InviteKeyId'
     responses:
       '200':

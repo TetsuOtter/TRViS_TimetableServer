@@ -68,7 +68,6 @@ abstract class AbstractInviteKeyApi
      *
      * @param ServerRequestInterface $request  Request
      * @param ResponseInterface      $response Response
-     * @param string $workGroupId WorkGroupのID
      * @param string $inviteKeyId InviteKeyのID
      *
      * @return ResponseInterface
@@ -77,7 +76,6 @@ abstract class AbstractInviteKeyApi
     public function deleteInviteKey(
         ServerRequestInterface $request,
         ResponseInterface $response,
-        string $workGroupId,
         string $inviteKeyId
     ): ResponseInterface {
         $message = "How about implementing deleteInviteKey as a DELETE method in dev_t0r\trvis_backend\api\InviteKeyApi class?";
@@ -92,7 +90,6 @@ abstract class AbstractInviteKeyApi
      *
      * @param ServerRequestInterface $request  Request
      * @param ResponseInterface      $response Response
-     * @param string $workGroupId WorkGroupのID
      * @param string $inviteKeyId InviteKeyのID
      *
      * @return ResponseInterface
@@ -101,7 +98,6 @@ abstract class AbstractInviteKeyApi
     public function getInviteKey(
         ServerRequestInterface $request,
         ResponseInterface $response,
-        string $workGroupId,
         string $inviteKeyId
     ): ResponseInterface {
         $message = "How about implementing getInviteKey as a GET method in dev_t0r\trvis_backend\api\InviteKeyApi class?";
@@ -168,7 +164,6 @@ abstract class AbstractInviteKeyApi
      *
      * @param ServerRequestInterface $request  Request
      * @param ResponseInterface      $response Response
-     * @param string $workGroupId WorkGroupのID
      * @param string $inviteKeyId InviteKeyのID
      *
      * @return ResponseInterface
@@ -177,7 +172,6 @@ abstract class AbstractInviteKeyApi
     public function updateInviteKey(
         ServerRequestInterface $request,
         ResponseInterface $response,
-        string $workGroupId,
         string $inviteKeyId
     ): ResponseInterface {
         $body = $request->getParsedBody();
@@ -193,7 +187,6 @@ abstract class AbstractInviteKeyApi
      *
      * @param ServerRequestInterface $request  Request
      * @param ResponseInterface      $response Response
-     * @param string $workGroupId WorkGroupのID
      * @param string $inviteKeyId InviteKeyのID
      *
      * @return ResponseInterface
@@ -202,7 +195,6 @@ abstract class AbstractInviteKeyApi
     public function useInviteKey(
         ServerRequestInterface $request,
         ResponseInterface $response,
-        string $workGroupId,
         string $inviteKeyId
     ): ResponseInterface {
         $message = "How about implementing useInviteKey as a POST method in dev_t0r\trvis_backend\api\InviteKeyApi class?";
