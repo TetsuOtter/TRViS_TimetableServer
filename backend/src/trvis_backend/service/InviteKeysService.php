@@ -388,31 +388,6 @@ final class InviteKeysService
 				);
 			}
 
-			$workGroupsId = $inviteKeyData->value->work_groups_id;
-			$currentPrivilegeType = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
-				userId: $userId,
-				workGroupsId: $workGroupsId,
-				selectForUpdate: true,
-			);
-			if ($currentPrivilegeType->isError) {
-				$this->db->rollBack();
-				return $currentPrivilegeType;
-			}
-
-			if ($currentPrivilegeType->value < InviteKeyPrivilegeType::admin) {
-				$this->logger->warning(
-					"disableInviteKey: not enough privilege (currentPrivilegeType: {currentPrivilegeType})",
-					[
-						'currentPrivilegeType' => $currentPrivilegeType->value,
-					]
-				);
-				$this->db->rollBack();
-				return RetValueOrError::withError(
-					Constants::HTTP_FORBIDDEN,
-					"You don't have enough privilege to disable this InviteKey",
-				);
-			}
-
 			$disableInviteKeyResult = $this->inviteKeysRepo->disableInviteKey(
 				inviteKeyId: $inviteKeyId,
 				userId: $userId,
