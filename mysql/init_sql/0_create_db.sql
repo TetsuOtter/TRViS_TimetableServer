@@ -73,6 +73,10 @@ CREATE TABLE
     ON UPDATE CURRENT_TIMESTAMP
   ,
 
+  deleted_at
+    DATETIME
+  ,
+
   description
     VARCHAR(255)
     NOT NULL
@@ -114,6 +118,10 @@ CREATE TABLE
     NOT NULL
     DEFAULT CURRENT_TIMESTAMP
     ON UPDATE CURRENT_TIMESTAMP
+  ,
+
+  deleted_at
+    DATETIME
   ,
 
   owner
@@ -215,6 +223,10 @@ CREATE TABLE
     ON UPDATE CURRENT_TIMESTAMP
   ,
 
+  deleted_at
+    DATETIME
+  ,
+
   name
     VARCHAR(255)
     NOT NULL
@@ -301,6 +313,10 @@ CREATE TABLE
     NOT NULL
     DEFAULT CURRENT_TIMESTAMP
     ON UPDATE CURRENT_TIMESTAMP
+  ,
+
+  deleted_at
+    DATETIME
   ,
 
   train_number
@@ -420,6 +436,10 @@ CREATE TABLE
     ON UPDATE CURRENT_TIMESTAMP
   ,
 
+  deleted_at
+    DATETIME
+  ,
+
   name
     VARCHAR(255)
     NOT NULL
@@ -489,6 +509,10 @@ CREATE TABLE
     NOT NULL
     DEFAULT CURRENT_TIMESTAMP
     ON UPDATE CURRENT_TIMESTAMP
+  ,
+
+  deleted_at
+    DATETIME
   ,
 
   name
@@ -570,6 +594,10 @@ CREATE TABLE
     NOT NULL
     DEFAULT CURRENT_TIMESTAMP
     ON UPDATE CURRENT_TIMESTAMP
+  ,
+
+  deleted_at
+    DATETIME
   ,
 
   drive_time_mm
@@ -710,6 +738,10 @@ CREATE TABLE
     DEFAULT CURRENT_TIMESTAMP
   ,
 
+  deleted_at
+    DATETIME
+  ,
+
   owner
     VARCHAR(255)
     CHARACTER SET ascii
@@ -796,6 +828,10 @@ CREATE TABLE
     NOT NULL
     DEFAULT CURRENT_TIMESTAMP
     ON UPDATE CURRENT_TIMESTAMP
+  ,
+
+  deleted_at
+    DATETIME
   ,
 
   privilege_type
