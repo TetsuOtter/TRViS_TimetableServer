@@ -6,7 +6,9 @@ info:
 
 servers:
   - url: http://localhost:8080/api/v1
-    description: ローカル開発環境
+    description: ローカル開発環境(Docker)
+  - url: http://localhost:8888/api/v1
+    description: ローカル開発環境(ホストマシン)
   - url: https://trvis.t0r.dev/api/v1
     description: 本番環境
 
