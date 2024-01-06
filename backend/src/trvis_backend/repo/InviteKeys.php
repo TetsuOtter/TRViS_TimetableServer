@@ -255,6 +255,15 @@ final class InviteKeys
 					)
 					SQL
 			)
+			.
+			<<<SQL
+			ORDER BY
+				invite_keys_id DESC
+			LIMIT
+				:limit
+			OFFSET
+				:offset
+			SQL
 		);
 		if ($isRequestWithOwnerUid) {
 			$query->bindValue(':ownerUid', $ownerOrWorkGroupsId, PDO::PARAM_STR);
@@ -267,6 +276,8 @@ final class InviteKeys
 		if (!$includeExpired && $hasCurrentDateTimeValue) {
 			$query->bindValue(':currentDateTime', Utils::utcDateStrOrNull($currentDateTime), PDO::PARAM_STR);
 		}
+		$query->bindValue(':limit', $perPage, PDO::PARAM_INT);
+		$query->bindValue(':offset', $page * $perPage, PDO::PARAM_INT);
 
 		try {
 			$isSuccess = $query->execute();
