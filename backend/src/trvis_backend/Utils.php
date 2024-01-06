@@ -76,7 +76,8 @@ final class Utils
 			$date = $date->setTimezone(self::$UTC);
 		}
 
-		return $date->format('Y-m-d H:i:s.v');
+		// ミリ秒部分は使用しない (そこまで精度は必要ないため)
+		return $date->format('Y-m-d H:i:s');
 	}
 
 	public static function dbDateStrToDateTime(?string $dateStr): ?JsonDateTime {
@@ -84,7 +85,8 @@ final class Utils
 			return null;
 		}
 
-		$date = \DateTime::createFromFormat('Y-m-d H:i:s.u', $dateStr, self::$UTC);
+		// ミリ秒部分は使用しない (そこまで精度は必要ないため)
+		$date = \DateTime::createFromFormat('Y-m-d H:i:s', $dateStr, self::$UTC);
 		if ($date === false) {
 			throw new \Exception("Invalid date string: $dateStr");
 		}
