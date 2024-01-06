@@ -93,6 +93,34 @@ final class Utils
 		return new JsonDateTime($date);
 	}
 
+	public static function fromJsonDateStrToDateTime(mixed $dateStr): ?\DateTime {
+		if (is_null($dateStr) || !is_string($dateStr) || empty($dateStr)) {
+			return null;
+		}
+
+		if (str_ends_with($dateStr, 'Z')) {
+			$dateStr = substr($dateStr, 0, -1) . '+00:00';
+		}
+		$date = \DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $dateStr, self::$UTC);
+		if ($date === false) {
+			return null;
+		}
+		return $date;
+	}
+
+	public static function getValue(mixed $d, string $key): mixed {
+		if (is_object($d)) {
+			if (property_exists($d, $key)) {
+				return $d->{$key};
+			}
+		} else if (is_array($d)) {
+			if (array_key_exists($key, $d)) {
+				return $d[$key];
+			}
+		}
+		return false;
+	}
+
 	public static function errWorkGroupNotFound(): RetValueOrError {
 		return RetValueOrError::withError(Constants::HTTP_NOT_FOUND, "WorkGroup not found");
 	}

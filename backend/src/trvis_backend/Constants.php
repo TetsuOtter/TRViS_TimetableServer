@@ -52,4 +52,6 @@ final class Constants
 	const PER_PAGE_DEFAULT_VALUE = 10;
 	const PER_PAGE_MIN_VALUE = 5;
 	const PER_PAGE_MAX_VALUE = 100;
+
+	const DESCRIPTION_MAX_LENGTH = 255;
 }
