@@ -23,7 +23,7 @@ final class InviteKeys
 	const SQL_COLUMNS = <<<SQL
 		invite_keys_id,
 		work_groups_id,
-		owner,
+		created_at,
 		description,
 		valid_from,
 		expires_at,
@@ -40,7 +40,7 @@ final class InviteKeys
 		$inviteKey->setData([
 			'invite_keys_id' => Uuid::fromBytes($data['invite_keys_id']),
 			'work_groups_id' => Uuid::fromBytes($data['work_groups_id']),
-			'owner' => Uuid::fromBytes($data['owner']),
+			'created_at' => Utils::dbDateStrToDateTime($data['created_at']),
 			'description' => $data['description'],
 			'valid_from' => Utils::dbDateStrToDateTime($data['valid_from']),
 			'expires_at' => Utils::dbDateStrToDateTime($data['expires_at']),
