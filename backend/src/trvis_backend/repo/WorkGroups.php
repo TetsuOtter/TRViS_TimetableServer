@@ -33,6 +33,9 @@ final class WorkGroups
 		return $workGroup;
 	}
 
+	/**
+	 * @return RetValueOrError<WorkGroup>
+	 */
 	public function selectWorkGroupOne(
 		UuidInterface $workGroupId
 	): RetValueOrError {
@@ -85,6 +88,9 @@ final class WorkGroups
 		return RetValueOrError::withValue($workGroup);
 	}
 
+	/**
+	 * @return RetValueOrError<array<WorkGroup>>
+	 */
 	public function selectWorkGroupPage(
 		string $userId,
 		int $pageFrom1,
@@ -169,6 +175,9 @@ final class WorkGroups
 		return RetValueOrError::withValue($workGroups);
 	}
 
+	/**
+	 * @return RetValueOrError<null>
+	 */
 	public function insertWorkGroup(
 		UuidInterface $workGroupId,
 		string $owner,
@@ -222,6 +231,9 @@ final class WorkGroups
 		return RetValueOrError::withError(Constants::HTTP_INTERNAL_SERVER_ERROR, "Failed to execute SQL - " . $errCode);
 	}
 
+	/**
+	 * @return RetValueOrError<null>
+	 */
 	public function updateWorkGroup(
 		UuidInterface $workGroupId,
 		?string $description,
@@ -306,6 +318,9 @@ final class WorkGroups
 		return RetValueOrError::withError(Constants::HTTP_INTERNAL_SERVER_ERROR, "Failed to execute SQL - " . $errCode);
 	}
 
+	/**
+	 * @return RetValueOrError<null>
+	 */
 	public function deleteWorkGroup(
 		UuidInterface $workGroupId,
 		?DateTimeInterface $deletedAt = null,

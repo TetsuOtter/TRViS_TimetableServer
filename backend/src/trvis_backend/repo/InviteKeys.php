@@ -51,6 +51,9 @@ final class InviteKeys
 		return $inviteKey;
 	}
 
+	/**
+	 * @return RetValueOrError<null>
+	 */
 	public function insertInviteKey(
 		UuidInterface $inviteKeyId,
 		UuidInterface $workGroupId,
@@ -138,6 +141,9 @@ final class InviteKeys
 		}
 	}
 
+	/**
+	 * @return RetValueOrError<InviteKey>
+	 */
 	public function selectInviteKey(
 		UuidInterface $inviteKeyId,
 		bool $selectForUpdate = false,
@@ -201,6 +207,9 @@ final class InviteKeys
 		}
 	}
 
+	/**
+	 * @return RetValueOrError<array<InviteKey>>
+	 */
 	public function selectInviteKeyList(
 		string|UuidInterface $ownerOrWorkGroupsId,
 		?int $page,
@@ -321,6 +330,9 @@ final class InviteKeys
 		}
 	}
 
+	/**
+	 * @return RetValueOrError<null>
+	 */
 	public function disableInviteKey(
 		UuidInterface $inviteKeyId,
 		string $userId,
@@ -384,6 +396,9 @@ final class InviteKeys
 		}
 	}
 
+	/**
+	 * @return RetValueOrError<null>
+	 */
 	public function deleteByWorkGroupId(
 		UuidInterface $workGroupsId,
 		?DateTimeInterface $deletedAt = null,

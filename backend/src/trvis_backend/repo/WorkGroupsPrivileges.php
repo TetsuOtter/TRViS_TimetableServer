@@ -19,6 +19,9 @@ final class WorkGroupsPrivileges
 	) {
 	}
 
+	/**
+	 * @return RetValueOrError<null>
+	 */
 	public function insert(
 		UuidInterface $workGroupsId,
 		InviteKeyPrivilegeType $privilegeType = InviteKeyPrivilegeType::none,
@@ -80,6 +83,9 @@ final class WorkGroupsPrivileges
 		}
 	}
 
+	/**
+	 * @return RetValueOrError<null>
+	 */
 	public function changeType(
 		UuidInterface $workGroupsId,
 		InviteKeyPrivilegeType $newPrivilegeType = InviteKeyPrivilegeType::none,
@@ -137,6 +143,9 @@ final class WorkGroupsPrivileges
 		}
 	}
 
+	/**
+	 * @return RetValueOrError<InviteKeyPrivilegeType>
+	 */
 	public function selectPrivilegeType(
 		UuidInterface $workGroupsId,
 		string $userId = Constants::UID_ANONUMOUS,
@@ -236,6 +245,9 @@ final class WorkGroupsPrivileges
 		}
 	}
 
+	/**
+	 * @return RetValueOrError<null>
+	 */
 	public function deleteByWorkGroupId(
 		UuidInterface $workGroupsId,
 		?DateTimeInterface $deletedAt = null,

@@ -3,14 +3,22 @@
 namespace dev_t0r\trvis_backend;
 use Psr\Http\Message\ResponseInterface;
 
+/**
+ * @template T
+ */
 final class RetValueOrError
 {
 	public readonly bool $isError;
+	/** @var T */
 	public readonly mixed $value;
 	public readonly int $statusCode;
 	public readonly int $errorCode;
 	public readonly string $errorMsg;
 
+	/**
+	 * @template T
+	 * @param T $value
+	 */
 	private function __construct(
 		bool $isError = false,
 		mixed $value = null,
@@ -25,6 +33,10 @@ final class RetValueOrError
 		$this->errorMsg = $errorMsg ?? '';
 	}
 
+	/**
+	 * @template T
+	 * @param T $value
+	 */
 	public static function withValue(
 		mixed $value,
 		int $statusCode = null,
