@@ -81,6 +81,30 @@ abstract class AbstractWorkGroupApi
     }
 
     /**
+     * GET getPrivilege
+     * Summary: 権限情報を取得する
+     * Notes: このWorkGroupに関する自身の権限を取得する。  管理者の場合は、指定のユーザの権限を取得することも可能。
+     * Output-Formats: [application/json]
+     *
+     * @param ServerRequestInterface $request  Request
+     * @param ResponseInterface      $response Response
+     * @param string $workGroupId WorkGroupのID
+     *
+     * @return ResponseInterface
+     * @throws HttpNotImplementedException to force implementation class to override this method
+     */
+    public function getPrivilege(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        string $workGroupId
+    ): ResponseInterface {
+        $queryParams = $request->getQueryParams();
+        $uid = (key_exists('uid', $queryParams)) ? $queryParams['uid'] : null;
+        $message = "How about implementing getPrivilege as a GET method in dev_t0r\trvis_backend\api\WorkGroupApi class?";
+        throw new HttpNotImplementedException($request, $message);
+    }
+
+    /**
      * GET getWorkGroup
      * Summary: 1件取得する
      * Notes: Workのまとまり (WorkGroup) の情報を1件取得する
@@ -123,6 +147,31 @@ abstract class AbstractWorkGroupApi
         $limit = (key_exists('limit', $queryParams)) ? $queryParams['limit'] : null;
         $top = (key_exists('top', $queryParams)) ? $queryParams['top'] : null;
         $message = "How about implementing getWorkGroupList as a GET method in dev_t0r\trvis_backend\api\WorkGroupApi class?";
+        throw new HttpNotImplementedException($request, $message);
+    }
+
+    /**
+     * PUT updatePrivilege
+     * Summary: 権限を更新する
+     * Notes: このWorkGroupに対する自身の権限を更新する。(現在の権限以下の権限のみ設定可能)  管理者の場合は、指定のユーザの権限を追加・更新することも可能。(invite_key_idはNULLになります)
+     * Output-Formats: [application/json]
+     *
+     * @param ServerRequestInterface $request  Request
+     * @param ResponseInterface      $response Response
+     * @param string $workGroupId WorkGroupのID
+     *
+     * @return ResponseInterface
+     * @throws HttpNotImplementedException to force implementation class to override this method
+     */
+    public function updatePrivilege(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        string $workGroupId
+    ): ResponseInterface {
+        $queryParams = $request->getQueryParams();
+        $uid = (key_exists('uid', $queryParams)) ? $queryParams['uid'] : null;
+        $body = $request->getParsedBody();
+        $message = "How about implementing updatePrivilege as a PUT method in dev_t0r\trvis_backend\api\WorkGroupApi class?";
         throw new HttpNotImplementedException($request, $message);
     }
 

@@ -69,3 +69,11 @@ ColorId:
     type: string
     format: uuid
   description: ColorのID
+
+UidQuery:
+  in: query
+  name: uid
+  required: false
+  schema:
+    type: string
+  description: ユーザのID

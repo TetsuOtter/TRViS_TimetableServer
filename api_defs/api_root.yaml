@@ -47,6 +47,8 @@ paths:
     $ref: "./paths/work_groups/index.yaml#/path"
   /work_groups/{workGroupId}:
     $ref: "./paths/work_groups/id.yaml#/path"
+  /work_groups/{workGroupId}/privileges:
+    $ref: "./paths/work_groups/id_privileges.yaml#/path"
 
   /work_groups/{workGroupId}/invite_keys:
     $ref: "./paths/invite_keys/wg_index.yaml#/path"
@@ -155,6 +157,9 @@ components:
     TRViS_json:
       $ref: "./objects/TRViS.yaml#/TRViS_json_root"
 
+    WorkGroupsPrivilege:
+      $ref: "./objects/WorkGroupsPrivilege.yaml#/WorkGroupsPrivilege"
+
   parameters:
     WorkGroupId:
       $ref: "./parameters/id.yaml#/WorkGroupId"
@@ -172,6 +177,8 @@ components:
       $ref: "./parameters/id.yaml#/StationTrackId"
     ColorId:
       $ref: "./parameters/id.yaml#/ColorId"
+    UidQuery:
+      $ref: "./parameters/id.yaml#/UidQuery"
     
     PageNumber:
       $ref: "./parameters/paging.yaml#/PageNumber"

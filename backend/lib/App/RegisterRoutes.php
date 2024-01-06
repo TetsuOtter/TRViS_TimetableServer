@@ -4405,6 +4405,107 @@ class RegisterRoutes
         [
             'httpMethod' => 'GET',
             'basePathWithoutHost' => '/api/v1',
+            'path' => '/work_groups/{workGroupId}/privileges',
+            'apiPackage' => 'dev_t0r\trvis_backend\api',
+            'classname' => 'AbstractWorkGroupApi',
+            'userClassname' => 'WorkGroupApi',
+            'operationId' => 'getPrivilege',
+            'responses' => [
+                '200' => [
+                    'jsonSchema' => '{
+  "description" : "取得成功",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/WorkGroupsPrivilege"
+      }
+    }
+  }
+}',
+                ],
+                '400' => [
+                    'jsonSchema' => '{
+  "description" : "リクエストが不正",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/schema"
+      },
+      "examples" : {
+        "example" : {
+          "value" : {
+            "code" : 400,
+            "message" : "Bad Request"
+          }
+        }
+      }
+    }
+  }
+}',
+                ],
+                '401' => [
+                    'jsonSchema' => '{
+  "description" : "認証トークンのエラー",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/schema"
+      },
+      "examples" : {
+        "TokenIsNotSet" : {
+          "description" : "認証トークンがセットされていない場合",
+          "value" : {
+            "code" : 401,
+            "message" : "Token is not set"
+          }
+        },
+        "TokenIsExpired" : {
+          "description" : "認証トークンが期限切れな場合",
+          "value" : {
+            "code" : 1401,
+            "message" : "Token is expired"
+          }
+        }
+      }
+    }
+  }
+}',
+                ],
+                '404' => [
+                    'jsonSchema' => '{
+  "description" : "コンテンツが存在しない",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/schema"
+      },
+      "examples" : {
+        "example" : {
+          "value" : {
+            "code" : 404,
+            "message" : "Content Not Found"
+          }
+        }
+      }
+    }
+  }
+}',
+                ],
+            ],
+            'authMethods' => [
+                // http security schema named 'bearerAuth'
+                [
+                    'type' => 'http',
+                    'isBasic' => true,
+                    'isBearer' => true,
+                    'isApiKey' => false,
+                    'isOAuth' => false,
+                ],
+            ],
+        ],
+        [
+            'httpMethod' => 'GET',
+            'basePathWithoutHost' => '/api/v1',
             'path' => '/work_groups/{workGroupId}',
             'apiPackage' => 'dev_t0r\trvis_backend\api',
             'classname' => 'AbstractWorkGroupApi',
@@ -4464,6 +4565,127 @@ class RegisterRoutes
           "value" : {
             "code" : 1401,
             "message" : "Token is expired"
+          }
+        }
+      }
+    }
+  }
+}',
+                ],
+                '404' => [
+                    'jsonSchema' => '{
+  "description" : "コンテンツが存在しない",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/schema"
+      },
+      "examples" : {
+        "example" : {
+          "value" : {
+            "code" : 404,
+            "message" : "Content Not Found"
+          }
+        }
+      }
+    }
+  }
+}',
+                ],
+            ],
+            'authMethods' => [
+                // http security schema named 'bearerAuth'
+                [
+                    'type' => 'http',
+                    'isBasic' => true,
+                    'isBearer' => true,
+                    'isApiKey' => false,
+                    'isOAuth' => false,
+                ],
+            ],
+        ],
+        [
+            'httpMethod' => 'PUT',
+            'basePathWithoutHost' => '/api/v1',
+            'path' => '/work_groups/{workGroupId}/privileges',
+            'apiPackage' => 'dev_t0r\trvis_backend\api',
+            'classname' => 'AbstractWorkGroupApi',
+            'userClassname' => 'WorkGroupApi',
+            'operationId' => 'updatePrivilege',
+            'responses' => [
+                '200' => [
+                    'jsonSchema' => '{
+  "description" : "更新成功",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/WorkGroupsPrivilege"
+      }
+    }
+  }
+}',
+                ],
+                '400' => [
+                    'jsonSchema' => '{
+  "description" : "リクエストが不正",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/schema"
+      },
+      "examples" : {
+        "example" : {
+          "value" : {
+            "code" : 400,
+            "message" : "Bad Request"
+          }
+        }
+      }
+    }
+  }
+}',
+                ],
+                '401' => [
+                    'jsonSchema' => '{
+  "description" : "認証トークンのエラー",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/schema"
+      },
+      "examples" : {
+        "TokenIsNotSet" : {
+          "description" : "認証トークンがセットされていない場合",
+          "value" : {
+            "code" : 401,
+            "message" : "Token is not set"
+          }
+        },
+        "TokenIsExpired" : {
+          "description" : "認証トークンが期限切れな場合",
+          "value" : {
+            "code" : 1401,
+            "message" : "Token is expired"
+          }
+        }
+      }
+    }
+  }
+}',
+                ],
+                '403' => [
+                    'jsonSchema' => '{
+  "description" : "許可されていない操作を行おうとした",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/schema"
+      },
+      "examples" : {
+        "example" : {
+          "value" : {
+            "code" : 1403,
+            "message" : "Not Allowed Command"
           }
         }
       }

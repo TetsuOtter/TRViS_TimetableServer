@@ -195,7 +195,9 @@ Class | Method | HTTP request | Description
 *AbstractWorkGroupApi* | **createWorkGroup** | **POST** /work_groups | 作成する
 *AbstractWorkGroupApi* | **getWorkGroupList** | **GET** /work_groups | 複数件取得する
 *AbstractWorkGroupApi* | **deleteWorkGroup** | **DELETE** /work_groups/{workGroupId} | 削除する
+*AbstractWorkGroupApi* | **getPrivilege** | **GET** /work_groups/{workGroupId}/privileges | 権限情報を取得する
 *AbstractWorkGroupApi* | **getWorkGroup** | **GET** /work_groups/{workGroupId} | 1件取得する
+*AbstractWorkGroupApi* | **updatePrivilege** | **PUT** /work_groups/{workGroupId}/privileges | 権限を更新する
 *AbstractWorkGroupApi* | **updateWorkGroup** | **PUT** /work_groups/{workGroupId} | 更新する
 
 
@@ -220,6 +222,7 @@ Class | Method | HTTP request | Description
 * dev_t0r\trvis_backend\model\Train
 * dev_t0r\trvis_backend\model\Work
 * dev_t0r\trvis_backend\model\WorkGroup
+* dev_t0r\trvis_backend\model\WorkGroupsPrivilege
 
 
 ## Authentication

@@ -239,4 +239,27 @@ class WorkGroupApi extends AbstractWorkGroupApi
 			name: $req_value_name,
 		)->getResponseWithJson($response);
 	}
+
+	public function getPrivilege(
+		ServerRequestInterface $request,
+		ResponseInterface $response,
+		string $workGroupId
+	): ResponseInterface {
+		$queryParams = $request->getQueryParams();
+		$hasUid = key_exists('uid', $queryParams);
+		$uid = ($hasUid) ? $queryParams['uid'] : null;
+		return Utils::withError($response, Constants::HTTP_NOT_IMPLEMENTED, "Not implemented");
+	}
+
+	public function updatePrivilege(
+		ServerRequestInterface $request,
+		ResponseInterface $response,
+		string $workGroupId
+	): ResponseInterface {
+		$queryParams = $request->getQueryParams();
+		$hasUid = key_exists('uid', $queryParams);
+		$uid = ($hasUid) ? $queryParams['uid'] : null;
+		$body = $request->getParsedBody();
+		return Utils::withError($response, Constants::HTTP_NOT_IMPLEMENTED, "Not implemented");
+	}
 }

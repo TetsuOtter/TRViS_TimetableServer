@@ -1,0 +1,38 @@
+WorkGroupsPrivilege:
+  type: object
+  title: WorkGroupsPrivilege
+  required:
+    - privilege_type
+  properties:
+    uid:
+      type: string
+      readOnly: true
+      description: UserID
+    work_groups_id:
+      type: string
+      format: uuid
+      readOnly: true
+      description: WorkGroupのID (UUID)
+    invite_keys_id:
+      type: string
+      format: uuid
+      readOnly: true
+      description: InviteKeyのID (UUID)
+    created_at:
+      type: string
+      format: date-time
+      readOnly: true
+      description: 作成日時
+    updated_at:
+      type: string
+      format: date-time
+      readOnly: true
+      description: 更新日時
+    privilege_type:
+      type: string
+      description: 権限の種類
+      enum:
+        - read
+        - write
+        - admin
+      example: admin
