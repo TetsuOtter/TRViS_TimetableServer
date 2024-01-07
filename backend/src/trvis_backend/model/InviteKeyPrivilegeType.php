@@ -2,7 +2,7 @@
 
 namespace dev_t0r\trvis_backend\model;
 
-enum InviteKeyPrivilegeType: int {
+enum InviteKeyPrivilegeType: int implements \JsonSerializable {
 	case none = 0;
 	case read = 1;
 	case write = 2;
@@ -39,5 +39,9 @@ enum InviteKeyPrivilegeType: int {
 
 	public function hasPrivilege(InviteKeyPrivilegeType $privilegeType): bool {
 		return $privilegeType->value <= $this->value;
+	}
+
+	public function jsonSerialize(): string {
+		return $this->name;
 	}
 }
