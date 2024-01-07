@@ -6,6 +6,7 @@ use dev_t0r\trvis_backend\api\AbstractWorkGroupApi;
 use dev_t0r\trvis_backend\auth\MyAuthMiddleware;
 use dev_t0r\trvis_backend\Constants;
 use dev_t0r\trvis_backend\model\WorkGroup;
+use dev_t0r\trvis_backend\repo\InviteKeyPrivilegeType;
 use dev_t0r\trvis_backend\service\WorkGroupsService;
 use dev_t0r\trvis_backend\Utils;
 use PDO;
@@ -275,10 +276,54 @@ class WorkGroupApi extends AbstractWorkGroupApi
 		ResponseInterface $response,
 		string $workGroupId
 	): ResponseInterface {
+		$userId = MyAuthMiddleware::getUserIdOrAnonymous($request);
 		$queryParams = $request->getQueryParams();
-		$hasUid = key_exists('uid', $queryParams);
-		$uid = ($hasUid) ? $queryParams['uid'] : null;
+		$uid = (key_exists('uid', $queryParams)) ? $queryParams['uid'] : null;
+		$hasUidAnonymous = key_exists('uid-anonymous', $queryParams);
+		$uidAnonymous = ($hasUidAnonymous) ? $queryParams['uid-anonymous'] : null;
 		$body = $request->getParsedBody();
-		return Utils::withError($response, Constants::HTTP_NOT_IMPLEMENTED, "Not implemented");
+		$req_value_privilege_type = Utils::getValue($body, 'privilege_type');
+
+		if (!Uuid::isValid($workGroupId))
+		{
+			$this->logger->warning("Invalid UUID format ({workGroupId})", ['workGroupId' => $workGroupId]);
+			return Utils::withUuidError($response);
+		}
+
+		if ($hasUidAnonymous && is_null($uid) && ($uidAnonymous === '' || $uidAnonymous === 'true'))
+		{
+			$uid = Constants::UID_ANONYMOUS;
+		}
+
+		if ($req_value_privilege_type === false || is_null($req_value_privilege_type)) {
+			$message = "Missing the required parameter 'privilege_type' when calling createInviteKey";
+			$this->logger->warning($message);
+			return Utils::withError($response, Constants::HTTP_BAD_REQUEST, $message);
+		}
+		try {
+			if (is_int($req_value_privilege_type)) {
+				// 裏機能的に、数値での指定にも対応する
+				$req_value_privilege_type = InviteKeyPrivilegeType::fromInt($req_value_privilege_type);
+			} else if (is_string($req_value_privilege_type)) {
+				$req_value_privilege_type = InviteKeyPrivilegeType::fromString($req_value_privilege_type);
+			} else {
+				$message = "Invalid type for parameter privilege_type, expected: string";
+				$this->logger->warning($message);
+				return Utils::withError($response, Constants::HTTP_BAD_REQUEST, $message);
+			}
+		} catch (\Exception $e) {
+			$message = $e->getMessage();
+			$this->logger->warning('Invalid value for parameter privilege_type - {msg}', [
+				'msg' => $message,
+			]);
+			return Utils::withError($response, Constants::HTTP_BAD_REQUEST, $message);
+		}
+
+		return $this->workGroupsService->updatePrivilege(
+			workGroupsId: Uuid::fromString($workGroupId),
+			senderUserId: $userId,
+			targetUserId: $uid,
+			newPrivilegeType: $req_value_privilege_type,
+		)->getResponseWithJson($response);
 	}
 }

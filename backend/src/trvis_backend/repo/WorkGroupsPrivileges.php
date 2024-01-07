@@ -109,6 +109,7 @@ final class WorkGroupsPrivileges
 				UPDATE
 					work_groups_privileges
 				SET
+					updated_at = CURRENT_TIMESTAMP(),
 					invite_keys_id = :inviteKeysId,
 					privilege_type = :privilegeType
 				WHERE
@@ -123,6 +124,20 @@ final class WorkGroupsPrivileges
 			$query->bindValue(':inviteKeysId', $inviteKeysId?->getBytes(), PDO::PARAM_STR);
 			$query->bindValue(':privilegeType', $newPrivilegeType->value, PDO::PARAM_INT);
 			$query->execute();
+
+			if ($query->rowCount() === 0) {
+				$this->logger->warning(
+					'work group privileges for specified user not found (user:{userId}, WorkGroup:{workGroupsId})',
+					[
+						'userId' => $userId,
+						'workGroupsId' => $workGroupsId,
+					]
+				);
+				return RetValueOrError::withError(
+					Constants::HTTP_NOT_FOUND,
+					'work group privileges for specified user not found'
+				);
+			}
 			return RetValueOrError::withValue(null);
 		}
 		catch (\PDOException $e)
@@ -313,7 +328,7 @@ final class WorkGroupsPrivileges
 
 			$privilegeTypeList = $query->fetchAll(PDO::FETCH_ASSOC);
 			$maximumPrivilegeTypeValue = InviteKeyPrivilegeType::none->value;
-			$privilegeTypeObject = new WorkGroupsPrivilege();
+			$privilegeTypeObject = null;
 			foreach ($privilegeTypeList as $row)
 			{
 				$privilegeTypeValue = intval($row['privilege_type']);
@@ -330,10 +345,11 @@ final class WorkGroupsPrivileges
 					'privilege type: {privilege_type} (UID:{uid}, InviteKey:{invite_keys_id})',
 					$obj
 				);
-				if ($maximumPrivilegeTypeValue < $privilegeTypeValue)
+				if ($maximumPrivilegeTypeValue < $privilegeTypeValue || is_null($privilegeTypeObject))
 				{
 					$maximumPrivilegeTypeValue = $privilegeTypeValue;
 
+					$privilegeTypeObject ??= new WorkGroupsPrivilege();
 					$privilegeTypeObject->setData($obj);
 				}
 			}

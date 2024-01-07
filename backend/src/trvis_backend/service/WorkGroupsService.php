@@ -377,4 +377,107 @@ final class WorkGroupsService
 		}
 		return $targetPrivilegeTypeResult;
 	}
+
+	public function updatePrivilege(
+		UuidInterface $workGroupsId,
+		string $senderUserId,
+		?string $targetUserId,
+		InviteKeyPrivilegeType $newPrivilegeType
+	): RetValueOrError {
+		$this->logger->debug(
+			'updatePrivilege(workGroupsId:{workGroupsId}, senderUserId:{userId}, targetUserId:{targetUserId}, newPrivilegeType:{newPrivilegeType})',
+			[
+				'workGroupsId' => $workGroupsId,
+				'userId' => $senderUserId,
+				'targetUserId' => $targetUserId,
+				'newPrivilegeType' => $newPrivilegeType,
+			],
+		);
+
+		if (is_null($targetUserId)) {
+			$targetUserId = $senderUserId;
+		}
+
+		$senderPrivilegeTypeResult = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
+			workGroupsId: $workGroupsId,
+			userId: $senderUserId,
+			includeAnonymous: true,
+		);
+		if ($senderPrivilegeTypeResult->isError) {
+			$this->logger->warning(
+				'returning error: {statusCode} {errorMsg}',
+				[
+					'statusCode' => $senderPrivilegeTypeResult->statusCode,
+					'errorMsg' => $senderPrivilegeTypeResult->errorMsg,
+				],
+			);
+			return $senderPrivilegeTypeResult;
+		}
+
+		$senderPrivilegeType = $senderPrivilegeTypeResult->value;
+		$this->logger->debug("getPrivileges(workGroupsId: {workGroupsId}) userPrivilegeType: {userPrivilegeType}", [
+			'workGroupsId' => $workGroupsId,
+			'userPrivilegeType' => $senderPrivilegeType,
+		]);
+
+		if (!$senderPrivilegeType->hasPrivilege(InviteKeyPrivilegeType::read)) {
+			return Utils::errWorkGroupNotFound();
+		}
+
+		if ($senderUserId === $targetUserId) {
+			if ($senderPrivilegeType->value < $newPrivilegeType->value) {
+				return RetValueOrError::withError(
+					Constants::HTTP_FORBIDDEN,
+					'You don\'t have permission to update your privilege to higher than your current privilege',
+				);
+			}
+		} else if (!$senderPrivilegeType->hasPrivilege(InviteKeyPrivilegeType::admin)) {
+			// adminでない場合、他のユーザーの権限を編集することはできない
+			return RetValueOrError::withError(
+				Constants::HTTP_FORBIDDEN,
+				'You don\'t have permission to update privileges of other users'
+			);
+		}
+
+		$changePrivilegeResult = $this->workGroupsPrivilegesRepo->changeType(
+			workGroupsId: $workGroupsId,
+			newPrivilegeType: $newPrivilegeType,
+			userId: $targetUserId,
+		);
+		if ($changePrivilegeResult->isError) {
+			if ($changePrivilegeResult->statusCode !== Constants::HTTP_NOT_FOUND) {
+				$this->logger->warning(
+					'returning error: {statusCode} {errorMsg}',
+					[
+						'statusCode' => $changePrivilegeResult->statusCode,
+						'errorMsg' => $changePrivilegeResult->errorMsg,
+					],
+				);
+				return $changePrivilegeResult;
+			}
+
+			$insertPrivilegeResult = $this->workGroupsPrivilegesRepo->insert(
+				workGroupsId: $workGroupsId,
+				userId: $targetUserId,
+				privilegeType: $newPrivilegeType,
+			);
+
+			if ($insertPrivilegeResult->isError) {
+				$this->logger->warning(
+					'returning error: {statusCode} {errorMsg}',
+					[
+						'statusCode' => $insertPrivilegeResult->statusCode,
+						'errorMsg' => $insertPrivilegeResult->errorMsg,
+					],
+				);
+				return $insertPrivilegeResult;
+			}
+		}
+
+		return $this->workGroupsPrivilegesRepo->selectPrivilegeTypeObject(
+			workGroupsId: $workGroupsId,
+			userId: $targetUserId,
+			includeAnonymous: false,
+		);
+	}
 }
