@@ -101,7 +101,12 @@ final class Utils
 		if (str_ends_with($dateStr, 'Z')) {
 			$dateStr = substr($dateStr, 0, -1) . '+00:00';
 		}
-		$date = \DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $dateStr, self::$UTC);
+		$date = false;
+		$date = \DateTime::createFromFormat(
+			str_contains($dateStr, '.') ? 'Y-m-d\TH:i:s.uP' : \DateTime::ATOM,
+			$dateStr,
+			self::$UTC,
+		);
 		if ($date === false) {
 			return null;
 		}
