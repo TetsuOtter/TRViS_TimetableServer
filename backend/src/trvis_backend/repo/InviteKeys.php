@@ -60,8 +60,8 @@ final class InviteKeys
 		UuidInterface $workGroupId,
 		string $owner,
 		string $description,
-		?\DateTimeInterface $validFrom,
-		?\DateTimeInterface $expiresAt,
+		?DateTimeInterface $validFrom,
+		?DateTimeInterface $expiresAt,
 		?int $useLimit,
 		InviteKeyPrivilegeType $privilegeType
 	): RetValueOrError {
