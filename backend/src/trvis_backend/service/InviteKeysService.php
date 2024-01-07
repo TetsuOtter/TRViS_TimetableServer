@@ -51,6 +51,7 @@ final class InviteKeysService
 		$ownerPrivilegeType = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
 			workGroupsId: $workGroupId,
 			userId: $owner,
+			includeAnonymous: true,
 			// ここでチェックした直後に権限が変更されても、その変更は無視する
 			// ロックして権限の変更を遅らせても、結局はInviteKeyの作成後に権限が変更されることになるため
 			selectForUpdate: false,
@@ -154,6 +155,7 @@ final class InviteKeysService
 		$privilegeType = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
 			workGroupsId: $workGroupsId,
 			userId: $userId,
+			includeAnonymous: true,
 			selectForUpdate: false,
 		);
 
@@ -208,6 +210,7 @@ final class InviteKeysService
 			$currentPrivilegeType = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
 				workGroupsId: $workGroupId,
 				userId: $userId,
+				includeAnonymous: false,
 				selectForUpdate: true,
 			);
 			if ($currentPrivilegeType->isError && $currentPrivilegeType->statusCode !== Constants::HTTP_NOT_FOUND) {
@@ -313,6 +316,7 @@ final class InviteKeysService
 			$currentUserPrivilegeType = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
 				userId: $userId,
 				workGroupsId: $inviteKeyData->work_groups_id,
+				includeAnonymous: true,
 				selectForUpdate: true,
 			);
 			if ($currentUserPrivilegeType->isError) {

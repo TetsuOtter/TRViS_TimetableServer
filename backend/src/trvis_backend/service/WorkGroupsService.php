@@ -174,7 +174,7 @@ final class WorkGroupsService
 		$selectPriviledeTypeResult = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
 			workGroupsId: $workGroupsId,
 			userId: $userId,
-			includeAnonymous: false,
+			includeAnonymous: true,
 		);
 		if ($selectPriviledeTypeResult->isError) {
 			return $selectPriviledeTypeResult;
@@ -223,7 +223,7 @@ final class WorkGroupsService
 		$selectPriviledeTypeResult = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
 			workGroupsId: $workGroupsId,
 			userId: $userId,
-			includeAnonymous: false,
+			includeAnonymous: true,
 		);
 		if ($selectPriviledeTypeResult->isError) {
 			return $selectPriviledeTypeResult;
