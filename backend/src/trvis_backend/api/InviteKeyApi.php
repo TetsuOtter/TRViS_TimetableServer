@@ -4,7 +4,7 @@ namespace dev_t0r\trvis_backend\api;
 
 use dev_t0r\trvis_backend\auth\MyAuthMiddleware;
 use dev_t0r\trvis_backend\Constants;
-use dev_t0r\trvis_backend\repo\InviteKeyPrivilegeType;
+use dev_t0r\trvis_backend\model\InviteKeyPrivilegeType;
 use dev_t0r\trvis_backend\service\InviteKeysService;
 use dev_t0r\trvis_backend\Utils;
 use PDO;

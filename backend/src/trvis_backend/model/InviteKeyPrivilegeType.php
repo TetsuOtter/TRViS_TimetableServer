@@ -1,6 +1,6 @@
 <?php
 
-namespace dev_t0r\trvis_backend\repo;
+namespace dev_t0r\trvis_backend\model;
 
 enum InviteKeyPrivilegeType: int {
 	case none = 0;

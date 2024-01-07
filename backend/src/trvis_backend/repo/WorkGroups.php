@@ -4,6 +4,7 @@ namespace dev_t0r\trvis_backend\repo;
 
 use DateTimeInterface;
 use dev_t0r\trvis_backend\Constants;
+use dev_t0r\trvis_backend\model\InviteKeyPrivilegeType;
 use dev_t0r\trvis_backend\model\WorkGroup;
 use dev_t0r\trvis_backend\RetValueOrError;
 use dev_t0r\trvis_backend\Utils;

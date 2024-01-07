@@ -3,7 +3,7 @@
 namespace dev_t0r\trvis_backend\service;
 
 use dev_t0r\trvis_backend\Constants;
-use dev_t0r\trvis_backend\repo\InviteKeyPrivilegeType;
+use dev_t0r\trvis_backend\model\InviteKeyPrivilegeType;
 use dev_t0r\trvis_backend\repo\InviteKeys;
 use dev_t0r\trvis_backend\repo\WorkGroupsPrivileges;
 use dev_t0r\trvis_backend\RetValueOrError;
