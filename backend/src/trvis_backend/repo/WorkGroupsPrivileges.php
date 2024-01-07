@@ -120,7 +120,7 @@ final class WorkGroupsPrivileges
 			);
 			$query->bindValue(':userId', $userId, PDO::PARAM_STR);
 			$query->bindValue(':workGroupsId', $workGroupsId->getBytes(), PDO::PARAM_STR);
-			$query->bindValue(':inviteKeysId', $inviteKeysId->getBytes(), PDO::PARAM_STR);
+			$query->bindValue(':inviteKeysId', $inviteKeysId?->getBytes(), PDO::PARAM_STR);
 			$query->bindValue(':privilegeType', $newPrivilegeType->value, PDO::PARAM_INT);
 			$query->execute();
 			return RetValueOrError::withValue(null);
