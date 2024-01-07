@@ -112,6 +112,22 @@ final class Utils
 		}
 		return $date;
 	}
+	public static function fromJsonDateOnlyStrToDateTime(mixed $dateStr): ?\DateTime {
+		if (is_null($dateStr) || !is_string($dateStr) || empty($dateStr)) {
+			return null;
+		}
+
+		if (str_contains($dateStr, ':')) {
+			$date = self::fromJsonDateStrToDateTime($dateStr);
+			$date?->setTime(0, 0, 0, 0);
+		} else {
+			$date = \DateTime::createFromFormat('Y-m-d', $dateStr, self::$UTC);
+			if ($date === false) {
+				return null;
+			}
+		}
+		return $date;
+	}
 
 	public static function getValue(mixed $d, string $key): mixed {
 		if (is_object($d)) {
@@ -126,7 +142,39 @@ final class Utils
 		return false;
 	}
 
+	/**
+	 * @param array<string> $keys
+	 * @return array<string, string|int>
+	 */
+	public static function getArrayForUpdateSource(
+		array $keys,
+		array|object $requestBody,
+		object $getDataResult,
+	): array {
+		$checkPropExists = is_array($requestBody)
+		? (fn(string $key): bool => array_key_exists($key, $requestBody))
+		: (fn(string $key): bool => property_exists($requestBody, $key))
+		;
+
+		$kvpArray = [];
+		foreach ($keys as $key) {
+			if ($checkPropExists($key) && property_exists($getDataResult, $key)) {
+				$value = $getDataResult->{$key};
+				if ($value instanceof \DateTimeInterface) {
+					$value = self::utcDateStrOrNull($value);
+				} else if ($value instanceof \BackedEnum) {
+					$value = $value->value;
+				}
+				$kvpArray[$key] = $value;
+			}
+		}
+		return $kvpArray;
+	}
+
 	public static function errWorkGroupNotFound(): RetValueOrError {
 		return RetValueOrError::withError(Constants::HTTP_NOT_FOUND, "WorkGroup not found");
+	}
+	public static function errWorkNotFound(): RetValueOrError {
+		return RetValueOrError::withError(Constants::HTTP_NOT_FOUND, "Work not found");
 	}
 }
