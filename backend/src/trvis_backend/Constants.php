@@ -54,4 +54,5 @@ final class Constants
 	const PER_PAGE_MAX_VALUE = 100;
 
 	const DESCRIPTION_MAX_LENGTH = 255;
+	const NAME_MAX_LENGTH = 255;
 }
