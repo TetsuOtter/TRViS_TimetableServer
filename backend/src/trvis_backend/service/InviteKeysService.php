@@ -4,8 +4,8 @@ namespace dev_t0r\trvis_backend\service;
 
 use dev_t0r\trvis_backend\Constants;
 use dev_t0r\trvis_backend\model\InviteKeyPrivilegeType;
-use dev_t0r\trvis_backend\repo\InviteKeys;
-use dev_t0r\trvis_backend\repo\WorkGroupsPrivileges;
+use dev_t0r\trvis_backend\repo\InviteKeysRepo;
+use dev_t0r\trvis_backend\repo\WorkGroupsPrivilegesRepo;
 use dev_t0r\trvis_backend\RetValueOrError;
 use dev_t0r\trvis_backend\Utils;
 use PDO;
@@ -15,15 +15,15 @@ use Ramsey\Uuid\UuidInterface;
 
 final class InviteKeysService
 {
-	private readonly InviteKeys $inviteKeysRepo;
-	private readonly WorkGroupsPrivileges $workGroupsPrivilegesRepo;
+	private readonly InviteKeysRepo $inviteKeysRepo;
+	private readonly WorkGroupsPrivilegesRepo $workGroupsPrivilegesRepo;
 
 	public function __construct(
 		private readonly PDO $db,
 		private readonly LoggerInterface $logger,
 	) {
-		$this->inviteKeysRepo = new InviteKeys($db, $logger);
-		$this->workGroupsPrivilegesRepo = new WorkGroupsPrivileges($db, $logger);
+		$this->inviteKeysRepo = new InviteKeysRepo($db, $logger);
+		$this->workGroupsPrivilegesRepo = new WorkGroupsPrivilegesRepo($db, $logger);
 	}
 
 	public function createInviteKey(

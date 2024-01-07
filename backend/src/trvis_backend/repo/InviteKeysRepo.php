@@ -13,7 +13,7 @@ use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
-final class InviteKeys
+final class InviteKeysRepo
 {
 	public function __construct(
 		private readonly PDO $db,

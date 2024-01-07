@@ -13,7 +13,7 @@ use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
-final class WorkGroups
+final class WorkGroupsRepo
 {
 	public function __construct(
 		private PDO $db,
