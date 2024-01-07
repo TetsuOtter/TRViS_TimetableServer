@@ -58,6 +58,16 @@ final class RetValueOrError
 			errorCode: $errorCode,
 		);
 	}
+	public static function withBadReq(
+		string $errorMsg,
+		int $errorCode = null,
+	): RetValueOrError {
+		return self::withError(
+			statusCode: Constants::HTTP_BAD_REQUEST,
+			errorMsg: $errorMsg,
+			errorCode: $errorCode,
+		);
+	}
 
 	public function getResponseWithJson(ResponseInterface $response, int $statusCode = null): ResponseInterface
 	{
