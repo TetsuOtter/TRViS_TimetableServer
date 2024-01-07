@@ -305,6 +305,5 @@ final class WorkGroupsService
 				$e->getCode(),
 			);
 		}
-		return $this->workGroupsRepo->deleteWorkGroup($workGroupsId);
 	}
 }
