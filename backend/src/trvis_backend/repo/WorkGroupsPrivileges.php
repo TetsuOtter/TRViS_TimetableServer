@@ -181,7 +181,7 @@ final class WorkGroupsPrivileges
 				AND
 				SQL)
 				.
-				($includeAnonymous ? ' uid = :userId' : ' uid IN (:userId, \'\')')
+				($includeAnonymous ? ' uid IN (:userId, \'\')' : ' uid = :userId')
 				.
 				' AND deleted_at IS NULL'
 				.
