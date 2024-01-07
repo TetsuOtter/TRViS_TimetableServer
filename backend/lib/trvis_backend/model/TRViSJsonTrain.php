@@ -84,7 +84,7 @@ class TRViSJsonTrain extends BaseModel
       "nullable" : true,
       "example" : "東  京"
     },
-    "BegionRemarks" : {
+    "BeginRemarks" : {
       "type" : "string",
       "description" : "乗車前の注意事項 (「乗継」など)",
       "nullable" : true,

@@ -77,7 +77,7 @@ final class MyAuthMiddleware implements MiddlewareInterface
 	public static function getUserIdOrAnonymous(
 		ServerRequestInterface $request,
 	): string {
-		return self::getUserIdOrNull($request) ?? Constants::UID_ANONUMOUS;
+		return self::getUserIdOrNull($request) ?? Constants::UID_ANONYMOUS;
 	}
 }
 

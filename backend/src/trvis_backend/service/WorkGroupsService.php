@@ -42,16 +42,16 @@ final class WorkGroupsService
 
 		// 本当は権限チェックはJOINを使ってやるべきだが、面倒なので別クエリでやる
 		// (頻繁に使われるAPIじゃないし、そこまでパフォーマンスに影響はないはず)
-		$selectPriviledeTypeResult = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
+		$selectPrivilegeTypeResult = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
 			workGroupsId: $workGroupsId,
-			userId: $currentUserId ?? Constants::UID_ANONUMOUS,
+			userId: $currentUserId ?? Constants::UID_ANONYMOUS,
 			includeAnonymous: true,
 		);
-		if ($selectPriviledeTypeResult->isError) {
-			return $selectPriviledeTypeResult;
+		if ($selectPrivilegeTypeResult->isError) {
+			return $selectPrivilegeTypeResult;
 		}
 
-		$privilegeType = $selectPriviledeTypeResult->value;
+		$privilegeType = $selectPrivilegeTypeResult->value;
 		$this->logger->debug("selectOne privilegeType: {privilegeType}", [
 			'workGroupsId' => $workGroupsId,
 			'privilegeType' => $privilegeType,
@@ -171,16 +171,16 @@ final class WorkGroupsService
 			],
 		);
 
-		$selectPriviledeTypeResult = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
+		$selectPrivilegeTypeResult = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
 			workGroupsId: $workGroupsId,
 			userId: $userId,
 			includeAnonymous: true,
 		);
-		if ($selectPriviledeTypeResult->isError) {
-			return $selectPriviledeTypeResult;
+		if ($selectPrivilegeTypeResult->isError) {
+			return $selectPrivilegeTypeResult;
 		}
 
-		$userPrivilegeType = $selectPriviledeTypeResult->value;
+		$userPrivilegeType = $selectPrivilegeTypeResult->value;
 		$this->logger->debug("updateWorkGroup userPrivilegeType: {userPrivilegeType}", [
 			'workGroupsId' => $workGroupsId,
 			'userPrivilegeType' => $userPrivilegeType,
@@ -220,16 +220,16 @@ final class WorkGroupsService
 			],
 		);
 
-		$selectPriviledeTypeResult = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
+		$selectPrivilegeTypeResult = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
 			workGroupsId: $workGroupsId,
 			userId: $userId,
 			includeAnonymous: true,
 		);
-		if ($selectPriviledeTypeResult->isError) {
-			return $selectPriviledeTypeResult;
+		if ($selectPrivilegeTypeResult->isError) {
+			return $selectPrivilegeTypeResult;
 		}
 
-		$userPrivilegeType = $selectPriviledeTypeResult->value;
+		$userPrivilegeType = $selectPrivilegeTypeResult->value;
 		$this->logger->debug("deleteWorkGroup userPrivilegeType: {userPrivilegeType}", [
 			'workGroupsId' => $workGroupsId,
 			'userPrivilegeType' => $userPrivilegeType,
@@ -325,23 +325,23 @@ final class WorkGroupsService
 			$targetUserId = $senderUserId;
 		}
 
-		$senderPriviledeTypeResult = $this->workGroupsPrivilegesRepo->selectPrivilegeTypeObject(
+		$senderPrivilegeTypeResult = $this->workGroupsPrivilegesRepo->selectPrivilegeTypeObject(
 			workGroupsId: $workGroupsId,
 			userId: $senderUserId,
 			includeAnonymous: true,
 		);
-		if ($senderPriviledeTypeResult->isError) {
+		if ($senderPrivilegeTypeResult->isError) {
 			$this->logger->warning(
 				'returning error: {statusCode} {errorMsg}',
 				[
-					'statusCode' => $senderPriviledeTypeResult->statusCode,
-					'errorMsg' => $senderPriviledeTypeResult->errorMsg,
+					'statusCode' => $senderPrivilegeTypeResult->statusCode,
+					'errorMsg' => $senderPrivilegeTypeResult->errorMsg,
 				],
 			);
-			return $senderPriviledeTypeResult;
+			return $senderPrivilegeTypeResult;
 		}
 
-		$senderPrivilegeType = $senderPriviledeTypeResult->value->privilege_type;
+		$senderPrivilegeType = $senderPrivilegeTypeResult->value->privilege_type;
 		$this->logger->debug("getPrivileges userPrivilegeType: {userPrivilegeType}", [
 			'workGroupsId' => $workGroupsId,
 			'userPrivilegeType' => $senderPrivilegeType,
@@ -352,7 +352,7 @@ final class WorkGroupsService
 			if (!$senderPrivilegeType->hasPrivilege(InviteKeyPrivilegeType::read)) {
 				return Utils::errWorkGroupNotFound();
 			} else {
-				return $senderPriviledeTypeResult;
+				return $senderPrivilegeTypeResult;
 			}
 		}
 

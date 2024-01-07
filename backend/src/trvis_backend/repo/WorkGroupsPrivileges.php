@@ -149,7 +149,7 @@ final class WorkGroupsPrivileges
 	 */
 	public function selectPrivilegeType(
 		UuidInterface $workGroupsId,
-		string $userId = Constants::UID_ANONUMOUS,
+		string $userId = Constants::UID_ANONYMOUS,
 		bool $includeAnonymous = false,
 		bool $selectForUpdate = false,
 	): RetValueOrError {
@@ -161,9 +161,9 @@ final class WorkGroupsPrivileges
 			]
 		);
 
-		if ($userId === Constants::UID_ANONUMOUS)
+		if ($userId === Constants::UID_ANONYMOUS)
 		{
-			// リクエスト対象自体がAnonumousの場合は、わざわざOR条件にする必要はない
+			// リクエスト対象自体がAnonymousの場合は、わざわざOR条件にする必要はない
 			$includeAnonymous = false;
 		}
 		try
@@ -251,7 +251,7 @@ final class WorkGroupsPrivileges
 	 */
 	public function selectPrivilegeTypeObject(
 		UuidInterface $workGroupsId,
-		string $userId = Constants::UID_ANONUMOUS,
+		string $userId = Constants::UID_ANONYMOUS,
 		bool $includeAnonymous = false,
 		bool $selectForUpdate = false,
 	): RetValueOrError {
@@ -265,7 +265,7 @@ final class WorkGroupsPrivileges
 			]
 		);
 
-		if ($userId === Constants::UID_ANONUMOUS)
+		if ($userId === Constants::UID_ANONYMOUS)
 		{
 			$this->logger->debug('userId is anonymous, so includeAnonymous is set to false');
 			$includeAnonymous = false;

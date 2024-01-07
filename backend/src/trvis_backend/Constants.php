@@ -45,7 +45,7 @@ final class Constants
 	{
 		return self::$UUID_NULL;
 	}
-	const UID_ANONUMOUS = '';
+	const UID_ANONYMOUS = '';
 
 	const PAGE_MIN_VALUE = 1;
 	const PAGE_DEFAULT_VALUE = 1;

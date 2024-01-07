@@ -123,7 +123,7 @@ final class WorkGroups
 			($hasTopId ? ' work_groups_id <= :top_id AND ' : '')
 			.
 			(
-				$userId === Constants::UID_ANONUMOUS
+				$userId === Constants::UID_ANONYMOUS
 					? ' uid = :userId '
 					: ' uid IN (:userId, \'\') '
 			)

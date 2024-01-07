@@ -116,7 +116,7 @@ TRViS_json_Train:
       nullable: true
       description: 行先
       example: '東  京'
-    BegionRemarks:
+    BeginRemarks:
       type: string
       nullable: true
       description: 乗車前の注意事項 (「乗継」など)

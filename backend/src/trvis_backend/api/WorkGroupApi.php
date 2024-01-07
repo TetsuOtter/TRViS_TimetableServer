@@ -93,7 +93,7 @@ class WorkGroupApi extends AbstractWorkGroupApi
 			return Utils::withUuidError($response);
 		}
 		return $this->workGroupsService->deleteWorkGroup(
-			userId: $userId ?? Constants::UID_ANONUMOUS,
+			userId: $userId ?? Constants::UID_ANONYMOUS,
 			workGroupsId: Uuid::fromString($workGroupId),
 		)->getResponseWithJson($response);
 	}
