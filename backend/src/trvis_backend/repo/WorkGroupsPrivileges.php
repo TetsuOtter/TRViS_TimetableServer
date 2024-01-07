@@ -4,6 +4,7 @@ namespace dev_t0r\trvis_backend\repo;
 
 use DateTimeInterface;
 use dev_t0r\trvis_backend\Constants;
+use dev_t0r\trvis_backend\model\WorkGroupsPrivilege;
 use dev_t0r\trvis_backend\RetValueOrError;
 use dev_t0r\trvis_backend\Utils;
 use PDO;
@@ -225,6 +226,124 @@ final class WorkGroupsPrivileges
 			return RetValueOrError::withValue(
 				InviteKeyPrivilegeType::fromInt($maximumPrivilegeTypeValue)
 			);
+		}
+		catch (\PDOException $e)
+		{
+			$errCode = $e->getCode();
+			$errInfo = $e->errorInfo;
+			$this->logger->error(
+				'failed to select work group  ({errorCode} -> {errorInfo})',
+				[
+					"errorCode" => $errCode,
+					"errorInfo" => $errInfo,
+				]
+			);
+			return RetValueOrError::withError(
+				Constants::HTTP_INTERNAL_SERVER_ERROR,
+				"Failed to execute SQL - " . $errCode,
+				$errCode,
+			);
+		}
+	}
+
+	/**
+	 * @return RetValueOrError<WorkGroupsPrivilege>
+	 */
+	public function selectPrivilegeTypeObject(
+		UuidInterface $workGroupsId,
+		string $userId = Constants::UID_ANONUMOUS,
+		bool $includeAnonymous = false,
+		bool $selectForUpdate = false,
+	): RetValueOrError {
+		$this->logger->debug(
+			'selecting work group privilege (user:{userId}, WorkGroup:{workGroupsId}, includeAnonymous:{includeAnonymous}, selectForUpdate:{selectForUpdate})',
+			[
+				'userId' => $userId,
+				'workGroupsId' => $workGroupsId,
+				'includeAnonymous' => $includeAnonymous ? 'true' : 'false',
+				'selectForUpdate' => $selectForUpdate ? 'true' : 'false',
+			]
+		);
+
+		if ($userId === Constants::UID_ANONUMOUS)
+		{
+			$this->logger->debug('userId is anonymous, so includeAnonymous is set to false');
+			$includeAnonymous = false;
+		}
+		try
+		{
+			$query = $this->db->prepare(
+				'SELECT'
+				.
+				(<<<SQL
+					uid,
+					work_groups_id,
+					invite_keys_id,
+					created_at,
+					updated_at,
+					privilege_type
+				FROM
+					work_groups_privileges
+				WHERE
+					work_groups_id = :workGroupsId
+				AND
+				SQL)
+				.
+				($includeAnonymous ? ' uid IN (:userId, \'\')' : ' uid = :userId')
+				.
+				' AND deleted_at IS NULL'
+				.
+				($selectForUpdate ? ' FOR UPDATE' : '')
+				.
+				';'
+			);
+			$query->bindValue(':userId', $userId, PDO::PARAM_STR);
+			$query->bindValue(':workGroupsId', $workGroupsId->getBytes(), PDO::PARAM_STR);
+			$query->execute();
+			$this->logger->debug(
+				'rowCount: {rowCount}',
+				[
+					'rowCount' => $query->rowCount(),
+				],
+			);
+			if ($query->rowCount() === 0)
+			{
+				return Utils::errWorkGroupNotFound();
+			}
+
+			$privilegeTypeList = $query->fetchAll(PDO::FETCH_ASSOC);
+			$maximumPrivilegeTypeValue = InviteKeyPrivilegeType::none->value;
+			$privilegeTypeObject = new WorkGroupsPrivilege();
+			foreach ($privilegeTypeList as $row)
+			{
+				$privilegeTypeValue = intval($row['privilege_type']);
+				$inviteKeysId = $row['invite_keys_id'];
+				$obj = [
+					'uid' => $row['uid'],
+					'work_groups_id' => Uuid::fromBytes($row['work_groups_id']),
+					'invite_keys_id' => is_null($inviteKeysId) ? null : Uuid::fromBytes($inviteKeysId),
+					'created_at' => Utils::dbDateStrToDateTime($row['created_at']),
+					'updated_at'=> Utils::dbDateStrToDateTime($row['updated_at']),
+					'privilege_type' => InviteKeyPrivilegeType::fromInt($privilegeTypeValue),
+				];
+				$this->logger->debug(
+					'privilege type: {privilege_type} (UID:{uid}, InviteKey:{invite_keys_id})',
+					$obj
+				);
+				if ($maximumPrivilegeTypeValue < $privilegeTypeValue)
+				{
+					$maximumPrivilegeTypeValue = $privilegeTypeValue;
+
+					$privilegeTypeObject->setData($obj);
+				}
+			}
+			$this->logger->debug(
+				'maximum privilege type: {privilegeType}',
+				[
+					'privilegeType' => $maximumPrivilegeTypeValue,
+				]
+			);
+			return RetValueOrError::withValue($privilegeTypeObject);
 		}
 		catch (\PDOException $e)
 		{

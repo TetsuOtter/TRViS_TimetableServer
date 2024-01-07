@@ -306,4 +306,75 @@ final class WorkGroupsService
 			);
 		}
 	}
+
+	public function getPrivileges(
+		UuidInterface $workGroupsId,
+		string $senderUserId,
+		?string $targetUserId,
+	): RetValueOrError {
+		$this->logger->debug(
+			"getPrivileges(workGroupsId:{workGroupsId}, senderUserId:{userId}, targetUserId:{targetUserId})",
+			[
+				'workGroupsId' => $workGroupsId,
+				'userId' => $senderUserId,
+				'targetUserId' => $targetUserId,
+			],
+		);
+
+		if (is_null($targetUserId)) {
+			$targetUserId = $senderUserId;
+		}
+
+		$senderPriviledeTypeResult = $this->workGroupsPrivilegesRepo->selectPrivilegeTypeObject(
+			workGroupsId: $workGroupsId,
+			userId: $senderUserId,
+			includeAnonymous: true,
+		);
+		if ($senderPriviledeTypeResult->isError) {
+			$this->logger->warning(
+				'returning error: {statusCode} {errorMsg}',
+				[
+					'statusCode' => $senderPriviledeTypeResult->statusCode,
+					'errorMsg' => $senderPriviledeTypeResult->errorMsg,
+				],
+			);
+			return $senderPriviledeTypeResult;
+		}
+
+		$senderPrivilegeType = $senderPriviledeTypeResult->value->privilege_type;
+		$this->logger->debug("getPrivileges userPrivilegeType: {userPrivilegeType}", [
+			'workGroupsId' => $workGroupsId,
+			'userPrivilegeType' => $senderPrivilegeType,
+		]);
+
+		if ($senderUserId === $targetUserId) {
+			// READ権限不足の場合は、404を返す
+			if (!$senderPrivilegeType->hasPrivilege(InviteKeyPrivilegeType::read)) {
+				return Utils::errWorkGroupNotFound();
+			} else {
+				return $senderPriviledeTypeResult;
+			}
+		}
+
+		if (!$senderPrivilegeType->hasPrivilege(InviteKeyPrivilegeType::admin)) {
+			// adminでない場合、他のユーザーの権限を取得することはできない
+			return RetValueOrError::withError(
+				Constants::HTTP_FORBIDDEN,
+				'You don\'t have permission to get privileges of other users'
+			);
+		}
+
+		$targetPrivilegeTypeResult = $this->workGroupsPrivilegesRepo->selectPrivilegeTypeObject(
+			workGroupsId: $workGroupsId,
+			userId: $targetUserId,
+			includeAnonymous: true,
+		);
+		if ($targetPrivilegeTypeResult->isError && $targetPrivilegeTypeResult->statusCode === Constants::HTTP_NOT_FOUND) {
+			return RetValueOrError::withError(
+				Constants::HTTP_NOT_FOUND,
+				'Privilege not found',
+			);
+		}
+		return $targetPrivilegeTypeResult;
+	}
 }

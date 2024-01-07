@@ -245,10 +245,22 @@ class WorkGroupApi extends AbstractWorkGroupApi
 		ResponseInterface $response,
 		string $workGroupId
 	): ResponseInterface {
+		$userId = MyAuthMiddleware::getUserIdOrAnonymous($request);
 		$queryParams = $request->getQueryParams();
 		$hasUid = key_exists('uid', $queryParams);
 		$uid = ($hasUid) ? $queryParams['uid'] : null;
-		return Utils::withError($response, Constants::HTTP_NOT_IMPLEMENTED, "Not implemented");
+
+		if (!Uuid::isValid($workGroupId))
+		{
+			$this->logger->warning("Invalid UUID format ({workGroupId})", ['workGroupId' => $workGroupId]);
+			return Utils::withUuidError($response);
+		}
+
+		return $this->workGroupsService->getPrivileges(
+			workGroupsId: Uuid::fromString($workGroupId),
+			senderUserId: $userId,
+			targetUserId: $uid,
+		)->getResponseWithJson($response);
 	}
 
 	public function updatePrivilege(
