@@ -60,7 +60,7 @@ final class InviteKeyApi extends AbstractInviteKeyApi
 		}
 
 		if ($req_value_valid_from !== false && !is_null($req_value_valid_from)) {
-			$req_value_valid_from = Utils::fromJsonDateStrToDateTime($req_value_valid_from, $this->logger);
+			$req_value_valid_from = Utils::fromJsonDateStrToDateTime($req_value_valid_from);
 			if (is_null($req_value_valid_from)) {
 				$message = "Invalid date string for parameter valid_from";
 				$this->logger->warning($message);
