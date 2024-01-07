@@ -249,11 +249,18 @@ class WorkGroupApi extends AbstractWorkGroupApi
 		$queryParams = $request->getQueryParams();
 		$hasUid = key_exists('uid', $queryParams);
 		$uid = ($hasUid) ? $queryParams['uid'] : null;
+		$hasUidAnonymous = key_exists('uid-anonymous', $queryParams);
+		$uidAnonymous = ($hasUidAnonymous) ? $queryParams['uid-anonymous'] : null;
 
 		if (!Uuid::isValid($workGroupId))
 		{
 			$this->logger->warning("Invalid UUID format ({workGroupId})", ['workGroupId' => $workGroupId]);
 			return Utils::withUuidError($response);
+		}
+
+		if ($hasUidAnonymous && is_null($uid) && ($uidAnonymous === '' || $uidAnonymous === 'true'))
+		{
+			$uid = Constants::UID_ANONYMOUS;
 		}
 
 		return $this->workGroupsService->getPrivileges(

@@ -13,6 +13,7 @@ path:
     parameters:
       - $ref: '#/components/parameters/WorkGroupId'
       - $ref: '#/components/parameters/UidQuery'
+      - $ref: '#/components/parameters/UidAnonymousQuery'
     responses:
       '200':
         description: 取得成功
@@ -41,6 +42,7 @@ path:
     parameters:
       - $ref: '#/components/parameters/WorkGroupId'
       - $ref: '#/components/parameters/UidQuery'
+      - $ref: '#/components/parameters/UidAnonymousQuery'
     requestBody:
       description: 更新後の権限情報
       required: true

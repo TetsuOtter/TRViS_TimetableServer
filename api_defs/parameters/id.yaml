@@ -77,3 +77,14 @@ UidQuery:
   schema:
     type: string
   description: ユーザのID
+
+UidAnonymousQuery:
+  in: query
+  name: uid-anonymous
+  required: false
+  schema:
+    type: boolean
+  description: |
+    匿名ユーザ・すべてのユーザに対する操作か
+
+    `uid` が指定された場合、そちらが優先される

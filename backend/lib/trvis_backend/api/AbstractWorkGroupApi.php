@@ -100,6 +100,7 @@ abstract class AbstractWorkGroupApi
     ): ResponseInterface {
         $queryParams = $request->getQueryParams();
         $uid = (key_exists('uid', $queryParams)) ? $queryParams['uid'] : null;
+        $uidAnonymous = (key_exists('uid-anonymous', $queryParams)) ? $queryParams['uid-anonymous'] : null;
         $message = "How about implementing getPrivilege as a GET method in dev_t0r\trvis_backend\api\WorkGroupApi class?";
         throw new HttpNotImplementedException($request, $message);
     }
@@ -170,6 +171,7 @@ abstract class AbstractWorkGroupApi
     ): ResponseInterface {
         $queryParams = $request->getQueryParams();
         $uid = (key_exists('uid', $queryParams)) ? $queryParams['uid'] : null;
+        $uidAnonymous = (key_exists('uid-anonymous', $queryParams)) ? $queryParams['uid-anonymous'] : null;
         $body = $request->getParsedBody();
         $message = "How about implementing updatePrivilege as a PUT method in dev_t0r\trvis_backend\api\WorkGroupApi class?";
         throw new HttpNotImplementedException($request, $message);

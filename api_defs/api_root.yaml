@@ -179,6 +179,8 @@ components:
       $ref: "./parameters/id.yaml#/ColorId"
     UidQuery:
       $ref: "./parameters/id.yaml#/UidQuery"
+    UidAnonymousQuery:
+      $ref: "./parameters/id.yaml#/UidAnonymousQuery"
     
     PageNumber:
       $ref: "./parameters/paging.yaml#/PageNumber"
