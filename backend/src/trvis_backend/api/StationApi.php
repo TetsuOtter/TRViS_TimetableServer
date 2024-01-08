@@ -5,11 +5,14 @@ namespace dev_t0r\trvis_backend\api;
 use dev_t0r\trvis_backend\auth\MyAuthMiddleware;
 use dev_t0r\trvis_backend\Constants;
 use dev_t0r\trvis_backend\model\Station;
-use dev_t0r\trvis_backend\model\StationLocationLonlat;
 use dev_t0r\trvis_backend\model\StationRecordType;
 use dev_t0r\trvis_backend\RetValueOrError;
 use dev_t0r\trvis_backend\service\StationsService;
 use dev_t0r\trvis_backend\Utils;
+use dev_t0r\trvis_backend\validator\EnumValidationRule;
+use dev_t0r\trvis_backend\validator\FloatValidationRule;
+use dev_t0r\trvis_backend\validator\LonLatValidationRule;
+use dev_t0r\trvis_backend\validator\RequestValidator;
 use PDO;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -18,170 +21,39 @@ use Ramsey\Uuid\Uuid;
 
 final class StationApi extends AbstractStationApi
 {
-	private static function _validateAndConvertInput(
-		array|object|null &$d,
-		LoggerInterface $logger,
-		bool $checkRequired = true,
-		string|int|null $key = null,
-		bool $isKvpArray = false,
-		bool $allowNestedArray = true,
-	): RetValueOrError
-	{
-		if (is_null($d)) {
-			return RetValueOrError::withBadReq("Missing required body");
-		}
-
-		if (is_array($d) && !$isKvpArray) {
-			if (!array_is_list($d)) {
-				return self::_validateAndConvertInput($d, $logger, $checkRequired, $key, true, false);
-			}
-
-			if (!$allowNestedArray) {
-				return RetValueOrError::withBadReq("Nested array is not allowed");
-			}
-			foreach ($d as $_key => $value) {
-				$result = self::_validateAndConvertInput($value, $logger, $checkRequired, $_key, $isKvpArray, false);
-				if ($result->isError) {
-					return $result;
-				}
-			}
-			return RetValueOrError::withValue(null);
-		}
-
-		$key ??= 0;
-		$checkPropExists = $isKvpArray
-			? (fn(string $key): bool => array_key_exists($key, $d))
-			: (fn(string $key): bool => property_exists($d, $key))
-		;
-		$getValue = $isKvpArray
-			? (fn(string $key): mixed => $d[$key])
-			: (fn(string $key): mixed => $d->{$key})
-		;
-		$setValue = $isKvpArray
-			? (fn(string $key, array &$d, mixed $value): mixed => $d[$key] = $value)
-			: (fn(string $key, object &$d, mixed $value): mixed => $d->{$key} = $value)
-		;
-
-		$nameExists = $checkPropExists('name');
-		$descriptionExists = $checkPropExists('description');
-		if ($checkRequired) {
-			if (!$nameExists) {
-				return RetValueOrError::withBadReq("Missing required field: 'name' @ $key");
-			}
-			if (!$descriptionExists) {
-				return RetValueOrError::withBadReq("Missing required field: 'description' @ $key");
-			}
-		}
-
-		if ($nameExists) {
-			$nameValue = $getValue('name');
-			if (!is_string($nameValue)) {
-				return RetValueOrError::withBadReq("Invalid type for 'name' @ $key (expected: string)");
-			}
-			$nameLength = strlen($nameValue);
-			if ($nameLength <= 0) {
-				return RetValueOrError::withBadReq("Invalid value for 'name' @ $key (length <= 0)");
-			} else if (Constants::NAME_MAX_LENGTH < $nameLength) {
-				return RetValueOrError::withBadReq("Invalid value for 'name' @ $key (length > " . Constants::NAME_MAX_LENGTH . ")");
-			}
-		}
-
-		if ($descriptionExists) {
-			$descriptionValue = $getValue('description');
-			if (!is_string($descriptionValue)) {
-				return RetValueOrError::withBadReq("Invalid type for 'description' @ $key (expected: string)");
-			}
-			$descriptionLength = strlen($descriptionValue);
-			if (Constants::DESCRIPTION_MAX_LENGTH < $descriptionLength) {
-				return RetValueOrError::withBadReq("Invalid value for 'description' @ $key (length > " . Constants::DESCRIPTION_MAX_LENGTH . ")");
-			}
-		}
-
-		if ($checkPropExists('location_km')) {
-			$locationKm = $getValue('location_km');
-			if (!is_float($locationKm) && !is_int($locationKm)) {
-				return RetValueOrError::withBadReq("Invalid value for 'location_km' @ $key (not a float/int)");
-			}
-			if (is_nan($locationKm)) {
-				return RetValueOrError::withBadReq("Invalid value for 'location_km' @ $key (NaN)");
-			}
-			if (is_infinite($locationKm)) {
-				return RetValueOrError::withBadReq("Invalid value for 'location_km' @ $key (infinite)");
-			}
-		}
-
-		if ($checkPropExists('location_lonlat')
-			&& !is_null($locationLonLat = $getValue('location_lonlat'))) {
-			$lon = Utils::getValue($locationLonLat, 'longitude');
-			$lat = Utils::getValue($locationLonLat, 'latitude');
-			if (!is_float($lon) && !is_int($lon)) {
-				return RetValueOrError::withBadReq("Invalid value for 'location_lonlat.longitude' @ $key (not a float/int)");
-			}
-			if (is_nan($lon)) {
-				return RetValueOrError::withBadReq("Invalid value for 'location_lonlat.longitude' @ $key (NaN)");
-			}
-			if ($lon < -180.0 || 180.0 < $lon) {
-				return RetValueOrError::withBadReq("Invalid value for 'location_lonlat.longitude' @ $key (out of range)");
-			}
-
-			if (!is_float($lat) && !is_int($lat)) {
-				return RetValueOrError::withBadReq("Invalid value for 'location_lonlat.latitude' @ $key (not a float/int)");
-			}
-			if (is_nan($lat)) {
-				return RetValueOrError::withBadReq("Invalid value for 'location_lonlat.latitude' @ $key (NaN)");
-			}
-			if ($lat < -90.0 || 90.0 < $lat) {
-				return RetValueOrError::withBadReq("Invalid value for 'location_lonlat.latitude' @ $key (out of range)");
-			}
-
-			$lonlatObj = new StationLocationLonlat;
-			$lonlatObj->setData([
-				'longitude' => $lon,
-				'latitude' => $lat,
-			]);
-			$setValue('location_lonlat', $d, $lonlatObj);
-		}
-
-		if ($checkPropExists('on_station_detect_radius_m')) {
-			$radius = $getValue('on_station_detect_radius_m');
-			if (!is_float($radius) && !is_int($radius)) {
-				return RetValueOrError::withBadReq("Invalid value for 'on_station_detect_radius_m' @ $key (not a float/int)");
-			}
-			if (is_nan($radius)) {
-				return RetValueOrError::withBadReq("Invalid value for 'on_station_detect_radius_m' @ $key (NaN)");
-			}
-			if (is_infinite($radius)) {
-				return RetValueOrError::withBadReq("Invalid value for 'on_station_detect_radius_m' @ $key (infinite)");
-			}
-		}
-
-		if ($checkPropExists('record_type')) {
-			try {
-				$contentType = $getValue('record_type');
-				if (is_int($contentType)) {
-					$contentType = StationRecordType::from($contentType);
-				} else if (is_string($contentType)) {
-					// 裏機能的に、文字列での指定にも対応する
-					$contentType = StationRecordType::fromString($contentType);
-				} else {
-					$message = "Invalid type for parameter record_type, expected: int";
-					return RetValueOrError::withBadReq($message);
-				}
-				$setValue('record_type', $d, $contentType);
-			} catch (\Exception $e) {
-				return RetValueOrError::withBadReq($e->getMessage());
-			}
-		}
-
-		return RetValueOrError::withValue(null);
-	}
-
 	private readonly StationsService $stationsService;
+	private readonly RequestValidator $bodyValidator;
 	public function __construct(
 		private PDO $db,
 		private readonly LoggerInterface $logger,
 	) {
 		$this->stationsService = new StationsService($db, $logger);
+		$this->bodyValidator = new RequestValidator(
+			RequestValidator::getNameValidationRule(),
+			RequestValidator::getDescriptionValidationRule(),
+			new FloatValidationRule(
+				key: 'location_km',
+				isNullable: false,
+				isRequired: true,
+			),
+			new LonLatValidationRule(
+				key: 'location_lonlat',
+				isNullable: true,
+				isRequired: false,
+			),
+			new FloatValidationRule(
+				key: 'on_station_detect_radius_m',
+				isNullable: false,
+				isRequired: true,
+				minValue: 0.0,
+			),
+			new EnumValidationRule(
+				key: 'record_type',
+				isNullable: false,
+				isRequired: true,
+				className: StationRecordType::class,
+			),
+		);
 	}
 
 	public function createStation(
@@ -198,7 +70,11 @@ final class StationApi extends AbstractStationApi
 		}
 
 		$body = $request->getParsedBody();
-		$validateResult = self::_validateAndConvertInput($body, $this->logger);
+		$validateResult = $this->bodyValidator->validate(
+			d: $body,
+			checkRequired: true,
+			allowNestedArray: true,
+		);
 		if ($validateResult->isError) {
 			$this->logger->error(
 				"invalid input: {message}",
@@ -393,9 +269,8 @@ final class StationApi extends AbstractStationApi
 				return Utils::withError($response, Constants::HTTP_BAD_REQUEST, 'empty request body');
 			}
 
-			$validateBodyResult = self::_validateAndConvertInput(
+			$validateBodyResult = $this->bodyValidator->validate(
 				d: $body,
-				logger: $this->logger,
 				checkRequired: false,
 				allowNestedArray: false,
 			);

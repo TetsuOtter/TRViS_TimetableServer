@@ -7,6 +7,11 @@ use dev_t0r\trvis_backend\Constants;
 use dev_t0r\trvis_backend\model\InviteKeyPrivilegeType;
 use dev_t0r\trvis_backend\service\InviteKeysService;
 use dev_t0r\trvis_backend\Utils;
+use dev_t0r\trvis_backend\validator\DateTimeValidationRule;
+use dev_t0r\trvis_backend\validator\EnumValidationRule;
+use dev_t0r\trvis_backend\validator\IntValidationRule;
+use dev_t0r\trvis_backend\validator\RequestValidator;
+use dev_t0r\trvis_backend\validator\StringValidationRule;
 use PDO;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -16,12 +21,41 @@ use Ramsey\Uuid\Uuid;
 final class InviteKeyApi extends AbstractInviteKeyApi
 {
 	private readonly InviteKeysService $inviteKeysService;
+	private readonly RequestValidator $bodyValidator;
 
 	public function __construct(
 		private readonly PDO $db,
 		private readonly LoggerInterface $logger,
 	) {
 		$this->inviteKeysService = new InviteKeysService($db, $logger);
+
+		$this->bodyValidator = new RequestValidator(
+			RequestValidator::getDescriptionValidationRule(),
+			new DateTimeValidationRule(
+				key: 'valid_from',
+				isDateOnly: false,
+				isRequired: false,
+				isNullable: true,
+			),
+			new DateTimeValidationRule(
+				key: 'expires_at',
+				isDateOnly: false,
+				isRequired: false,
+				isNullable: true,
+			),
+			new IntValidationRule(
+				key: 'use_limit',
+				isRequired: false,
+				isNullable: true,
+				minValue: 1,
+			),
+			new EnumValidationRule(
+				key: 'privilege_type',
+				className: InviteKeyPrivilegeType::class,
+				isRequired: true,
+				isNullable: false,
+			),
+		);
 	}
 
 	public function createInviteKey(
@@ -38,95 +72,20 @@ final class InviteKeyApi extends AbstractInviteKeyApi
 		}
 
 		$body = $request->getParsedBody();
-		$req_value_description = Utils::getValue($body, 'description');
-		$req_value_valid_from = Utils::getValue($body, 'valid_from');
-		$req_value_expires_at = Utils::getValue($body, 'expires_at');
-		$req_value_use_limit = Utils::getValue($body, 'use_limit');
-		$req_value_privilege_type = Utils::getValue($body, 'privilege_type');
-
-		// validate params
-		if ($req_value_description === false || is_null($req_value_description) || empty($req_value_description)) {
-			$message = "Missing the required parameter 'description' when calling createInviteKey";
-			$this->logger->warning($message);
-			return Utils::withError($response, Constants::HTTP_BAD_REQUEST, $message);
-		}
-		if (Constants::DESCRIPTION_MAX_LENGTH < strlen($req_value_description)) {
-			$message = sprintf(
-				"Invalid length for parameter description, must be smaller than or equal to %d.",
-				Constants::DESCRIPTION_MAX_LENGTH,
-			);
-			$this->logger->warning($message);
-			return Utils::withError($response, Constants::HTTP_BAD_REQUEST, $message);
-		}
-
-		if ($req_value_valid_from !== false && !is_null($req_value_valid_from)) {
-			$req_value_valid_from = Utils::fromJsonDateStrToDateTime($req_value_valid_from);
-			if (is_null($req_value_valid_from)) {
-				$message = "Invalid date string for parameter valid_from";
-				$this->logger->warning($message);
-				return Utils::withError($response, Constants::HTTP_BAD_REQUEST, $message);
-			}
-		} else {
-			$req_value_valid_from = null;
-		}
-
-		if ($req_value_expires_at !== false && !is_null($req_value_expires_at)) {
-			$req_value_expires_at = Utils::fromJsonDateStrToDateTime($req_value_expires_at);
-			if (is_null($req_value_expires_at)) {
-				$message = "Invalid date string for parameter expires_at";
-				$this->logger->warning($message);
-				return Utils::withError($response, Constants::HTTP_BAD_REQUEST, $message);
-			}
-		} else {
-			$req_value_expires_at = null;
-		}
-
-		if (!is_null($req_value_valid_from) && !is_null($req_value_expires_at)) {
-			if ($req_value_expires_at <= $req_value_valid_from) {
-				$message = "Invalid value for parameter expires_at, must be after valid_from";
-				$this->logger->warning($message);
-				return Utils::withError($response, Constants::HTTP_BAD_REQUEST, $message);
-			}
-		}
-
 		// TODO: 現在から一定期間以内のexpires_atはBad Requestにする
 		// TODO: valid_from ~ expires_atが一定以下の期間しかない場合はBad Requestにする
-
-		if ($req_value_use_limit !== false && !is_null($req_value_use_limit)) {
-			if (!is_int($req_value_use_limit)) {
-				$message = "Invalid type for parameter use_limit, expected: int";
-				$this->logger->warning($message);
-				return Utils::withError($response, Constants::HTTP_BAD_REQUEST, $message);
-			}
-		} else {
-			$req_value_use_limit = null;
+		$validateResult = $this->bodyValidator->validate($body);
+		if (!$validateResult->isError) {
+			$this->logger->warning(
+				"Invalid request body: {msg}",
+				[
+					'msg' => $validateResult->errorMsg
+				],
+			);
+			return $validateResult->getResponseWithJson($response);
 		}
 
-		if ($req_value_privilege_type === false || is_null($req_value_privilege_type)) {
-			$message = "Missing the required parameter 'privilege_type' when calling createInviteKey";
-			$this->logger->warning($message);
-			return Utils::withError($response, Constants::HTTP_BAD_REQUEST, $message);
-		}
-		try {
-			if (is_int($req_value_privilege_type)) {
-				// 裏機能的に、数値での指定にも対応する
-				$req_value_privilege_type = InviteKeyPrivilegeType::fromInt($req_value_privilege_type);
-			} else if (is_string($req_value_privilege_type)) {
-				$req_value_privilege_type = InviteKeyPrivilegeType::fromString($req_value_privilege_type);
-			} else {
-				$message = "Invalid type for parameter privilege_type, expected: string";
-				$this->logger->warning($message);
-				return Utils::withError($response, Constants::HTTP_BAD_REQUEST, $message);
-			}
-		} catch (\Exception $e) {
-			$message = $e->getMessage();
-			$this->logger->warning('Invalid value for parameter privilege_type - {msg}', [
-				'msg' => $message,
-			]);
-			return Utils::withError($response, Constants::HTTP_BAD_REQUEST, $message);
-		}
-
-		if ($req_value_privilege_type->value <= InviteKeyPrivilegeType::none->value) {
+		if ($body->privilege_type->value <= InviteKeyPrivilegeType::none->value) {
 			$message = "Invalid value for parameter privilege_type, must be greater than " . InviteKeyPrivilegeType::none;
 			$this->logger->warning($message);
 			return Utils::withError($response, Constants::HTTP_BAD_REQUEST, $message);
@@ -135,11 +94,11 @@ final class InviteKeyApi extends AbstractInviteKeyApi
 		return $this->inviteKeysService->createInviteKey(
 			owner: $userId,
 			workGroupId: Uuid::fromString($workGroupId),
-			description: $req_value_description,
-			validFrom: $req_value_valid_from,
-			expiresAt: $req_value_expires_at,
-			useLimit: $req_value_use_limit,
-			privilegeType: $req_value_privilege_type,
+			description: $body->description,
+			validFrom: $body->valid_from,
+			expiresAt: $body->expires_at,
+			useLimit: $body->use_limit,
+			privilegeType: $body->privilege_type,
 		)->getResponseWithJson($response);
 	}
 

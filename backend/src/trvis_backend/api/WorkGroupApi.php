@@ -6,9 +6,10 @@ use dev_t0r\trvis_backend\api\AbstractWorkGroupApi;
 use dev_t0r\trvis_backend\auth\MyAuthMiddleware;
 use dev_t0r\trvis_backend\Constants;
 use dev_t0r\trvis_backend\model\InviteKeyPrivilegeType;
-use dev_t0r\trvis_backend\model\WorkGroup;
 use dev_t0r\trvis_backend\service\WorkGroupsService;
 use dev_t0r\trvis_backend\Utils;
+use dev_t0r\trvis_backend\validator\EnumValidationRule;
+use dev_t0r\trvis_backend\validator\RequestValidator;
 use PDO;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -25,12 +26,17 @@ use Ramsey\Uuid\Uuid;
 class WorkGroupApi extends AbstractWorkGroupApi
 {
 	private readonly WorkGroupsService $workGroupsService;
+	private readonly RequestValidator $bodyValidator;
 
 	public function __construct(
 		private readonly PDO $db,
 		private readonly LoggerInterface $logger,
 	) {
 		$this->workGroupsService = new WorkGroupsService($db, $logger);
+		$this->bodyValidator = new RequestValidator(
+			RequestValidator::getDescriptionValidationRule(),
+			RequestValidator::getNameValidationRule(),
+		);
 	}
 
 	const MAX_LEN_DESCRIPTION = 255;
@@ -48,37 +54,26 @@ class WorkGroupApi extends AbstractWorkGroupApi
 		}
 
 		$body = $request->getParsedBody();
-		$requestData = new WorkGroup();
-		$requestData->setData($body);
-		$d = $requestData->getData();
-
-		$req_value_description = $d->{'description'};
-		$req_value_name = $d->{'name'};
-
-		// validate params
-		if ($this::MAX_LEN_DESCRIPTION < strlen($req_value_description)) {
-			$message = sprintf(
-				"Invalid length for parameter description, must be smaller than or equal to %d.",
-				$this::MAX_LEN_DESCRIPTION
+		$validateResult = $this->bodyValidator->validate(
+			d: $body,
+			checkRequired: true,
+			allowNestedArray: false,
+		);
+		if ($validateResult->isError)
+		{
+			$this->logger->warning(
+				"Invalid request body: {msg}",
+				[
+					'msg' => $validateResult->errorMsg
+				],
 			);
-			return Utils::withError($response, 400, $message);
-		}
-		if (empty($req_value_name)) {
-			$message = "Missing the required parameter 'name' when calling createWorkGroup";
-			return Utils::withError($response, 400, $message);
-		}
-		if ($this::MAX_LEN_NAME < strlen($req_value_name)) {
-			$message = sprintf(
-				"Invalid length for parameter name, must be smaller than or equal to %d.",
-				$this::MAX_LEN_NAME
-			);
-			return Utils::withError($response, 400, $message);
+			return $validateResult->getResponseWithJson($response);
 		}
 
 		return $this->workGroupsService->createWorkGroup(
 			userId: $userId,
-			description: $req_value_description,
-			name: $req_value_name,
+			description: Utils::getValueOrNull($body, 'description'),
+			name: Utils::getValueOrNull($body, 'name'),
 		)->getResponseWithJson($response);
 	}
 
@@ -195,49 +190,34 @@ class WorkGroupApi extends AbstractWorkGroupApi
 	): ResponseInterface {
 		$userId = MyAuthMiddleware::getUserIdOrAnonymous($request);
 		$body = $request->getParsedBody();
-		$requestData = new WorkGroup();
-		$requestData->setData($body);
-		$d = $requestData->getData();
 
-		$req_value_description = $d->{'description'};
-		$req_value_name = $d->{'name'};
-
-		// validate params
 		if (!Uuid::isValid($workGroupId))
 		{
 			$this->logger->warning("Invalid UUID format ({workGroupId})", ['workGroupId' => $workGroupId]);
 			return Utils::withUuidError($response);
 		}
-		if (!is_null($req_value_description))
+
+		$validateResult = $this->bodyValidator->validate(
+			d: $body,
+			checkRequired: false,
+			allowNestedArray: false,
+		);
+		if ($validateResult->isError)
 		{
-			if ($this::MAX_LEN_DESCRIPTION < strlen($req_value_description)) {
-				$message = sprintf(
-					"Invalid length for parameter description, must be smaller than or equal to %d.",
-					$this::MAX_LEN_DESCRIPTION
-				);
-				return Utils::withError($response, 400, $message);
-			}
-		}
-		if (!is_null($req_value_name))
-		{
-			if (empty($req_value_name)) {
-				$message = "Missing the required parameter 'name' when calling createWorkGroup";
-				return Utils::withError($response, 400, $message);
-			}
-			if ($this::MAX_LEN_NAME < strlen($req_value_name)) {
-				$message = sprintf(
-					"Invalid length for parameter name, must be smaller than or equal to %d.",
-					$this::MAX_LEN_NAME
-				);
-				return Utils::withError($response, 400, $message);
-			}
+			$this->logger->warning(
+				"Invalid request body: {msg}",
+				[
+					'msg' => $validateResult->errorMsg
+				],
+			);
+			return $validateResult->getResponseWithJson($response);
 		}
 
 		return $this->workGroupsService->updateWorkGroup(
 			userId: $userId,
 			workGroupsId: Uuid::fromString($workGroupId),
-			description: $req_value_description,
-			name: $req_value_name,
+			description: Utils::getValueOrNull($body, 'description'),
+			name: Utils::getValueOrNull($body, 'name'),
 		)->getResponseWithJson($response);
 	}
 
@@ -282,7 +262,6 @@ class WorkGroupApi extends AbstractWorkGroupApi
 		$hasUidAnonymous = key_exists('uid-anonymous', $queryParams);
 		$uidAnonymous = ($hasUidAnonymous) ? $queryParams['uid-anonymous'] : null;
 		$body = $request->getParsedBody();
-		$req_value_privilege_type = Utils::getValue($body, 'privilege_type');
 
 		if (!Uuid::isValid($workGroupId))
 		{
@@ -295,35 +274,34 @@ class WorkGroupApi extends AbstractWorkGroupApi
 			$uid = Constants::UID_ANONYMOUS;
 		}
 
-		if ($req_value_privilege_type === false || is_null($req_value_privilege_type)) {
-			$message = "Missing the required parameter 'privilege_type' when calling createInviteKey";
-			$this->logger->warning($message);
-			return Utils::withError($response, Constants::HTTP_BAD_REQUEST, $message);
-		}
-		try {
-			if (is_int($req_value_privilege_type)) {
-				// 裏機能的に、数値での指定にも対応する
-				$req_value_privilege_type = InviteKeyPrivilegeType::fromInt($req_value_privilege_type);
-			} else if (is_string($req_value_privilege_type)) {
-				$req_value_privilege_type = InviteKeyPrivilegeType::fromString($req_value_privilege_type);
-			} else {
-				$message = "Invalid type for parameter privilege_type, expected: string";
-				$this->logger->warning($message);
-				return Utils::withError($response, Constants::HTTP_BAD_REQUEST, $message);
-			}
-		} catch (\Exception $e) {
-			$message = $e->getMessage();
-			$this->logger->warning('Invalid value for parameter privilege_type - {msg}', [
-				'msg' => $message,
-			]);
-			return Utils::withError($response, Constants::HTTP_BAD_REQUEST, $message);
+		$validateResult = (new RequestValidator(
+			new EnumValidationRule(
+				key: 'privilege_type',
+				className: InviteKeyPrivilegeType::class,
+				isRequired: true,
+				isNullable: false,
+			),
+		))->validate(
+			d: $body,
+			checkRequired: true,
+			allowNestedArray: false,
+		);
+		if ($validateResult->isError)
+		{
+			$this->logger->warning(
+				"Invalid request body: {msg}",
+				[
+					'msg' => $validateResult->errorMsg
+				],
+			);
+			return $validateResult->getResponseWithJson($response);
 		}
 
 		return $this->workGroupsService->updatePrivilege(
 			workGroupsId: Uuid::fromString($workGroupId),
 			senderUserId: $userId,
 			targetUserId: $uid,
-			newPrivilegeType: $req_value_privilege_type,
+			newPrivilegeType: Utils::getValueOrNull($body, 'privilege_type'),
 		)->getResponseWithJson($response);
 	}
 }
