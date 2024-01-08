@@ -459,6 +459,11 @@ CREATE TABLE
     NOT NULL
   ,
 
+  record_type
+    TINYINT
+    NOT NULL
+  ,
+
   PRIMARY KEY (
     stations_id
   ),
