@@ -119,14 +119,13 @@ final class Utils
 
 		if (str_contains($dateStr, ':')) {
 			$date = self::fromJsonDateStrToDateTime($dateStr);
-			$date?->setTime(0, 0, 0, 0);
 		} else {
 			$date = \DateTime::createFromFormat('Y-m-d', $dateStr, self::$UTC);
 			if ($date === false) {
 				return null;
 			}
 		}
-		return $date;
+		return $date?->setTime(0, 0, 0, 0);
 	}
 
 	public static function getValue(mixed $d, string $key): mixed {
