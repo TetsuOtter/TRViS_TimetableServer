@@ -140,6 +140,10 @@ final class Utils
 		}
 		return false;
 	}
+	public static function getValueOrNull(mixed $d, string $key): mixed {
+		$ret = self::getValue($d, $key);
+		return $ret === false ? null : $ret;
+	}
 
 	/**
 	 * @param array<string> $keys
