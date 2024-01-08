@@ -54,6 +54,12 @@ class StationTrack extends BaseModel
       "format" : "uuid",
       "readOnly" : true
     },
+    "stations_id" : {
+      "type" : "string",
+      "description" : "StationのID (UUID)",
+      "format" : "uuid",
+      "readOnly" : true
+    },
     "created_at" : {
       "type" : "string",
       "description" : "作成日時",

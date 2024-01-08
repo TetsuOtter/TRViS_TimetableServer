@@ -54,6 +54,12 @@ class Train extends BaseModel
       "format" : "uuid",
       "readOnly" : true
     },
+    "works_id" : {
+      "type" : "string",
+      "description" : "WorkのID (UUID)",
+      "format" : "uuid",
+      "readOnly" : true
+    },
     "created_at" : {
       "type" : "string",
       "description" : "作成日時",

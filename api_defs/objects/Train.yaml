@@ -12,6 +12,11 @@ Train:
       format: uuid
       readOnly: true
       description: TrainのID (UUID)
+    works_id:
+      type: string
+      format: uuid
+      readOnly: true
+      description: WorkのID (UUID)
     created_at:
       type: string
       format: date-time

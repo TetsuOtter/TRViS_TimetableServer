@@ -54,6 +54,12 @@ class Station extends BaseModel
       "format" : "uuid",
       "readOnly" : true
     },
+    "work_groups_id" : {
+      "type" : "string",
+      "description" : "WorkGroupのID (UUID)",
+      "format" : "uuid",
+      "readOnly" : true
+    },
     "created_at" : {
       "type" : "string",
       "description" : "作成日時",
