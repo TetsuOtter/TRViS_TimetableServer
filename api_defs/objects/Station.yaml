@@ -5,6 +5,7 @@ Station:
     - description
     - name
     - location_km
+    - record_type
   properties:
     stations_id:
       type: string

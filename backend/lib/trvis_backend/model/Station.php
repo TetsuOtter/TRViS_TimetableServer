@@ -45,7 +45,7 @@ class Station extends BaseModel
     protected const MODEL_SCHEMA = <<<'SCHEMA'
 {
   "title" : "Station",
-  "required" : [ "description", "location_km", "name" ],
+  "required" : [ "description", "location_km", "name", "record_type" ],
   "type" : "object",
   "properties" : {
     "stations_id" : {
