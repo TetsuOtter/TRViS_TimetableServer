@@ -189,4 +189,7 @@ final class Utils
 	public static function errTrainNotFound(): RetValueOrError {
 		return RetValueOrError::withError(Constants::HTTP_NOT_FOUND, "Train not found");
 	}
+	public static function errTimetableRowNotFound(): RetValueOrError {
+		return RetValueOrError::withError(Constants::HTTP_NOT_FOUND, "TimetableRow not found");
+	}
 }
