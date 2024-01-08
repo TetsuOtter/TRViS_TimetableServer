@@ -7,7 +7,7 @@ Train:
     - direction
     - day_count
   properties:
-    train_id:
+    trains_id:
       type: string
       format: uuid
       readOnly: true

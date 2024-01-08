@@ -48,7 +48,7 @@ class Train extends BaseModel
   "required" : [ "day_count", "description", "direction", "train_number" ],
   "type" : "object",
   "properties" : {
-    "train_id" : {
+    "trains_id" : {
       "type" : "string",
       "description" : "TrainのID (UUID)",
       "format" : "uuid",
