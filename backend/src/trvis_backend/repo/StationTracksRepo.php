@@ -204,8 +204,6 @@ final class StationTracksRepo
 					stations.deleted_at IS NULL
 				AND
 					station_tracks.deleted_at IS NULL
-				AND
-					stations.deleted_at IS NULL
 				;
 				SQL
 			);
