@@ -180,4 +180,7 @@ final class Utils
 	public static function errStationNotFound(): RetValueOrError {
 		return RetValueOrError::withError(Constants::HTTP_NOT_FOUND, "Station not found");
 	}
+	public static function errStationTrackNotFound(): RetValueOrError {
+		return RetValueOrError::withError(Constants::HTTP_NOT_FOUND, "Station Track not found");
+	}
 }
