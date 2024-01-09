@@ -8,8 +8,6 @@ path:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '#/components/parameters/WorkGroupId'
-      - $ref: '#/components/parameters/WorkId'
       - $ref: '#/components/parameters/TrainId'
     responses:
       '200':
@@ -34,8 +32,6 @@ path:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '#/components/parameters/WorkGroupId'
-      - $ref: '#/components/parameters/WorkId'
       - $ref: '#/components/parameters/TrainId'
     requestBody:
       description: 更新後のWorkの情報
@@ -70,8 +66,6 @@ path:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '#/components/parameters/WorkGroupId'
-      - $ref: '#/components/parameters/WorkId'
       - $ref: '#/components/parameters/TrainId'
     responses:
       '200':

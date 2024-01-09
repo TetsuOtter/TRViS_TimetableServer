@@ -59,39 +59,30 @@ paths:
 
   /work_groups/{workGroupId}/stations:
     $ref: "./paths/stations/index.yaml#/path"
-  /work_groups/{workGroupId}/stations/{stationId}:
+  /stations/{stationId}:
     $ref: "./paths/stations/id.yaml#/path"
 
-  /work_groups/{workGroupId}/stations/{stationId}/tracks:
+  /stations/{stationId}/tracks:
     $ref: "./paths/station_tracks/index.yaml#/path"
-  /work_groups/{workGroupId}/stations/{stationId}/tracks/{stationTrackId}:
+  /tracks/{stationTrackId}:
     $ref: "./paths/station_tracks/id.yaml#/path"
 
   /work_groups/{workGroupId}/works:
     $ref: "./paths/works/index.yaml#/path"
-  /work_groups/{workGroupId}/works/{workId}:
+  /works/{workId}:
     $ref: "./paths/works/id.yaml#/path"
-  # 将来的には対応させたい
-  # /works/{id}:
-  #   $ref: "./paths/works/id.yaml#/path"
 
-  /work_groups/{workGroupId}/works/{workId}/trains:
+  /works/{workId}/trains:
     $ref: "./paths/trains/index.yaml#/path"
-  /work_groups/{workGroupId}/works/{workId}/trains/{trainId}:
+  /trains/{trainId}:
     $ref: "./paths/trains/id.yaml#/path"
-  # 将来的には対応させたい
-  # /trains/{id}:
-  #   $ref: "./paths/trains/id.yaml#/path"
 
-  /work_groups/{workGroupId}/works/{workId}/trains/{trainId}/timetable_rows:
+  /trains/{trainId}/timetable_rows:
     $ref: "./paths/timetable_rows/index.yaml#/path"
-  /work_groups/{workGroupId}/works/{workId}/trains/{trainId}/timetable_rows/{timetableRowId}:
+  /timetable_rows/{timetableRowId}:
     $ref: "./paths/timetable_rows/id.yaml#/path"
-  # 将来的には対応させたい
-  # /trains/{trainId}/timetable_rows:
-  #   $ref: "./paths/timetable_rows/index.yaml#/path"
 
-  /colors:
+  /work_groups/{workGroupId}/colors:
     $ref: "./paths/colors/index.yaml#/path"
   /colors/{colorId}:
     $ref: "./paths/colors/id.yaml#/path"

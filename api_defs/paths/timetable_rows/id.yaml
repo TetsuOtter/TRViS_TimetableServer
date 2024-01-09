@@ -8,9 +8,6 @@ path:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '#/components/parameters/WorkGroupId'
-      - $ref: '#/components/parameters/WorkId'
-      - $ref: '#/components/parameters/TrainId'
       - $ref: '#/components/parameters/TimetableRowId'
     responses:
       '200':
@@ -35,9 +32,6 @@ path:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '#/components/parameters/WorkGroupId'
-      - $ref: '#/components/parameters/WorkId'
-      - $ref: '#/components/parameters/TrainId'
       - $ref: '#/components/parameters/TimetableRowId'
     requestBody:
       description: 更新後のTimetableRowの情報
@@ -72,9 +66,6 @@ path:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '#/components/parameters/WorkGroupId'
-      - $ref: '#/components/parameters/WorkId'
-      - $ref: '#/components/parameters/TrainId'
       - $ref: '#/components/parameters/TimetableRowId'
     responses:
       '200':

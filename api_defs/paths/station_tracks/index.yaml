@@ -8,7 +8,6 @@ path:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '#/components/parameters/WorkGroupId'
       - $ref: '#/components/parameters/StationId'
       - $ref: '#/components/parameters/PageNumber'
       - $ref: '#/components/parameters/PageSize'
@@ -36,7 +35,6 @@ path:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '#/components/parameters/WorkGroupId'
       - $ref: '#/components/parameters/StationId'
     requestBody:
       description: 作成するStationの情報

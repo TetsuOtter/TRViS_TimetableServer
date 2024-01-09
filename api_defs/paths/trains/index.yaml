@@ -8,7 +8,6 @@ path:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '#/components/parameters/WorkGroupId'
       - $ref: '#/components/parameters/WorkId'
       - $ref: '#/components/parameters/PageNumber'
       - $ref: '#/components/parameters/PageSize'
@@ -36,7 +35,6 @@ path:
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '#/components/parameters/WorkGroupId'
       - $ref: '#/components/parameters/WorkId'
     requestBody:
       description: 作成するTrainの情報
