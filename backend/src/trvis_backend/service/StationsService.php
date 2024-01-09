@@ -94,10 +94,10 @@ final class StationsService
 			],
 		);
 		$insertResult = $this->stationsRepo->insertList(
-			workGroupsId: $workGroupsId,
+			parentId: $workGroupsId,
 			ownerUserId: $senderUserId,
-			stationsIdList: $stationsIdList,
-			stations: $stationsList,
+			idList: $stationsIdList,
+			valueList: $stationsList,
 		);
 		if ($insertResult->isError) {
 			$this->logger->warning(
@@ -118,7 +118,7 @@ final class StationsService
 		);
 
 		return $this->stationsRepo->selectList(
-			stationsIdList: $stationsIdList,
+			idList: $stationsIdList,
 		);
 	}
 
@@ -138,7 +138,7 @@ final class StationsService
 		);
 
 		$checkIdResult = $this->stationsRepo->selectWorkGroupsId(
-			stationsId: $stationsId,
+			id: $stationsId,
 		);
 		if ($checkIdResult->isError) {
 			$this->logger->warning(
@@ -191,7 +191,7 @@ final class StationsService
 			);
 		}
 		$deleteResult = $this->stationsRepo->deleteOne(
-			stationsId: $stationsId,
+			id: $stationsId,
 		);
 		if ($deleteResult->isError) {
 			$this->logger->warning(
@@ -222,7 +222,7 @@ final class StationsService
 		);
 
 		$selectWorkResult = $this->stationsRepo->selectOne(
-			stationsId: $stationsId,
+			id: $stationsId,
 		);
 		$this->logger->debug(
 			'selectWorkResult -> {selectWorkResult}',
@@ -321,7 +321,7 @@ final class StationsService
 		}
 
 		return $this->stationsRepo->selectPage(
-			workGroupsId: $workGroupsId,
+			parentId: $workGroupsId,
 			pageFrom1: $pageFrom1,
 			perPage: $perPage,
 			topId: $topId,
@@ -347,7 +347,7 @@ final class StationsService
 		);
 
 		$checkIdResult = $this->stationsRepo->selectWorkGroupsId(
-			stationsId: $stationsId,
+			id: $stationsId,
 		);
 		if ($checkIdResult->isError) {
 			$this->logger->warning(
@@ -413,8 +413,8 @@ final class StationsService
 			$data->getData(),
 		);
 		$updateResult = $this->stationsRepo->update(
-			stationsId: $stationsId,
-			stationsProps: $kvpArray,
+			id: $stationsId,
+			props: $kvpArray,
 		);
 		if ($updateResult->isError) {
 			$this->logger->warning(
@@ -428,7 +428,7 @@ final class StationsService
 		}
 
 		return $this->stationsRepo->selectOne(
-			stationsId: $stationsId,
+			id: $stationsId,
 		);
 	}
 }
