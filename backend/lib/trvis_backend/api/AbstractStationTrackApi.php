@@ -45,7 +45,6 @@ abstract class AbstractStationTrackApi
      *
      * @param ServerRequestInterface $request  Request
      * @param ResponseInterface      $response Response
-     * @param string $workGroupId WorkGroupのID
      * @param string $stationId StationのID
      *
      * @return ResponseInterface
@@ -54,7 +53,6 @@ abstract class AbstractStationTrackApi
     public function createStationTrack(
         ServerRequestInterface $request,
         ResponseInterface $response,
-        string $workGroupId,
         string $stationId
     ): ResponseInterface {
         $body = $request->getParsedBody();
@@ -70,8 +68,6 @@ abstract class AbstractStationTrackApi
      *
      * @param ServerRequestInterface $request  Request
      * @param ResponseInterface      $response Response
-     * @param string $workGroupId WorkGroupのID
-     * @param string $stationId StationのID
      * @param string $stationTrackId Station TrackのID
      *
      * @return ResponseInterface
@@ -80,8 +76,6 @@ abstract class AbstractStationTrackApi
     public function deleteStationTrack(
         ServerRequestInterface $request,
         ResponseInterface $response,
-        string $workGroupId,
-        string $stationId,
         string $stationTrackId
     ): ResponseInterface {
         $message = "How about implementing deleteStationTrack as a DELETE method in dev_t0r\trvis_backend\api\StationTrackApi class?";
@@ -96,8 +90,6 @@ abstract class AbstractStationTrackApi
      *
      * @param ServerRequestInterface $request  Request
      * @param ResponseInterface      $response Response
-     * @param string $workGroupId WorkGroupのID
-     * @param string $stationId StationのID
      * @param string $stationTrackId Station TrackのID
      *
      * @return ResponseInterface
@@ -106,8 +98,6 @@ abstract class AbstractStationTrackApi
     public function getStationTrack(
         ServerRequestInterface $request,
         ResponseInterface $response,
-        string $workGroupId,
-        string $stationId,
         string $stationTrackId
     ): ResponseInterface {
         $message = "How about implementing getStationTrack as a GET method in dev_t0r\trvis_backend\api\StationTrackApi class?";
@@ -122,7 +112,6 @@ abstract class AbstractStationTrackApi
      *
      * @param ServerRequestInterface $request  Request
      * @param ResponseInterface      $response Response
-     * @param string $workGroupId WorkGroupのID
      * @param string $stationId StationのID
      *
      * @return ResponseInterface
@@ -131,7 +120,6 @@ abstract class AbstractStationTrackApi
     public function getStationTrackList(
         ServerRequestInterface $request,
         ResponseInterface $response,
-        string $workGroupId,
         string $stationId
     ): ResponseInterface {
         $queryParams = $request->getQueryParams();
@@ -150,8 +138,6 @@ abstract class AbstractStationTrackApi
      *
      * @param ServerRequestInterface $request  Request
      * @param ResponseInterface      $response Response
-     * @param string $workGroupId WorkGroupのID
-     * @param string $stationId StationのID
      * @param string $stationTrackId Station TrackのID
      *
      * @return ResponseInterface
@@ -160,8 +146,6 @@ abstract class AbstractStationTrackApi
     public function updateStationTrack(
         ServerRequestInterface $request,
         ResponseInterface $response,
-        string $workGroupId,
-        string $stationId,
         string $stationTrackId
     ): ResponseInterface {
         $body = $request->getParsedBody();

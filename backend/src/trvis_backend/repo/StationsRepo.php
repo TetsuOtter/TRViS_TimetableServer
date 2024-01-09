@@ -117,17 +117,13 @@ final class StationsRepo
 	 */
 	public function selectOne(
 		UuidInterface $stationsId,
-		?UuidInterface $workGroupsId,
 	): RetValueOrError {
 		$this->logger->debug(
-			'selectOne stationsId: {stationsId}, workGroupsId: {workGroupsId}',
+			'selectOne stationsId: {stationsId}',
 			[
 				'stationsId' => $stationsId,
-				'workGroupsId' => $workGroupsId,
 			],
 		);
-
-		$hasWorkGroupsId = !is_null($workGroupsId);
 
 		try
 		{
@@ -142,14 +138,9 @@ final class StationsRepo
 				AND
 					deleted_at IS NULL
 				SQL
-				.
-				($hasWorkGroupsId ? ' AND work_groups_id = :work_groups_id ' : '')
 			);
 
 			$query->bindValue(':stations_id', $stationsId->getBytes(), PDO::PARAM_STR);
-			if ($hasWorkGroupsId) {
-				$query->bindValue(':work_groups_id', $workGroupsId->getBytes());
-			}
 
 			$query->execute();
 			$result = $query->fetch(PDO::FETCH_ASSOC);

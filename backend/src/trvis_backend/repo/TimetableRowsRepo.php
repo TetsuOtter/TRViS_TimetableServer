@@ -228,73 +228,28 @@ final class TimetableRowsRepo
 	 */
 	public function selectOne(
 		UuidInterface $timetableRowsId,
-		?UuidInterface $workGroupsId,
-		?UuidInterface $worksId,
-		?UuidInterface $trainsId,
 	): RetValueOrError {
 		$this->logger->debug(
-			'selectOne timetable_rowsId: {timetableRowsId}, workGroupsId: {workGroupsId}, worksId: {worksId}, trainsId: {trainsId}',
+			'selectOne timetable_rowsId: {timetableRowsId}',
 			[
 				'timetableRowsId' => $timetableRowsId,
-				'workGroupsId' => $workGroupsId,
-				'worksId' => $worksId,
-				'trainsId' => $trainsId,
 			],
 		);
-
-		$hasWorkGroupsId = !is_null($workGroupsId);
-		$whereWorkGroupsIdQuerySegment = $hasWorkGroupsId
-			? ' AND works.work_groups_id = :work_groups_id '
-			: '';
-		$hasWorksId = !is_null($worksId);
-		$whereWorksIdQuerySegment = $hasWorksId
-			? ' AND trains.works_id = :works_id '
-			: '';
-		$hasTrainsId = !is_null($trainsId);
-		$whereTrainsIdQuerySegment = $hasTrainsId
-			? ' AND timetable_rows.trains_id = :trains_id '
-			: '';
 
 		try
 		{
 			$query = $this->db->prepare(
-				'SELECT ' . self::SQL_SELECT_COLUMNS
-				.
-				<<<SQL
+				'SELECT ' . self::SQL_SELECT_COLUMNS . <<<SQL
 				FROM
 					timetable_rows
-				JOIN
-					trains
-				USING
-					(trains_id)
-				JOIN
-					works
-				USING
-					(works_id)
 				WHERE
 					timetable_rows.timetable_rows_id = :timetable_rows_id
 				AND
 					timetable_rows.deleted_at IS NULL
-				$whereTrainsIdQuerySegment
-				AND
-					trains.deleted_at IS NULL
-				$whereWorksIdQuerySegment
-				AND
-					works.deleted_at IS NULL
-				$whereWorkGroupsIdQuerySegment
 				SQL
 			);
 
 			$query->bindValue(':timetable_rows_id', $timetableRowsId->getBytes());
-			if ($hasWorkGroupsId) {
-				$query->bindValue(':work_groups_id', $workGroupsId->getBytes());
-			}
-			if ($hasWorksId) {
-				$query->bindValue(':works_id', $worksId->getBytes());
-			}
-			if ($hasTrainsId) {
-				$query->bindValue(':trains_id', $trainsId->getBytes());
-			}
 
 			$query->execute();
 			$result = $query->fetch(PDO::FETCH_ASSOC);
@@ -333,8 +288,6 @@ final class TimetableRowsRepo
 	 */
 	public function selectWorkGroupsId(
 		UuidInterface $timetableRowsId,
-		?UuidInterface $worksId,
-		?UuidInterface $trainsId,
 	): RetValueOrError {
 		$this->logger->debug(
 			'selectWorkGroupsId timetableRowsId: {timetableRowsId}',
@@ -343,14 +296,6 @@ final class TimetableRowsRepo
 			],
 		);
 
-		$hasWorksId = !is_null($worksId);
-		$whereWorksIdQuerySegment = $hasWorksId
-			? ' AND trains.works_id = :works_id '
-			: '';
-		$hasTrainsId = !is_null($trainsId);
-		$whereTrainsIdQuerySegment = $hasTrainsId
-			? ' AND timetable_rows.trains_id = :trains_id '
-			: '';
 		try
 		{
 			$query = $this->db->prepare(
@@ -371,22 +316,14 @@ final class TimetableRowsRepo
 					timetable_rows.timetable_rows_id = :timetable_rows_id
 				AND
 					timetable_rows.deleted_at IS NULL
-				$whereTrainsIdQuerySegment
 				AND
 					trains.deleted_at IS NULL
-				$whereWorksIdQuerySegment
 				AND
 					works.deleted_at IS NULL
 				SQL
 			);
 
 			$query->bindValue(':timetable_rows_id', $timetableRowsId->getBytes(), PDO::PARAM_STR);
-			if ($hasTrainsId) {
-				$query->bindValue(':trains_id', $trainsId->getBytes(), PDO::PARAM_STR);
-			}
-			if ($hasWorksId) {
-				$query->bindValue(':works_id', $worksId->getBytes(), PDO::PARAM_STR);
-			}
 
 			$query->execute();
 			$result = $query->fetch(PDO::FETCH_ASSOC);
@@ -420,18 +357,14 @@ final class TimetableRowsRepo
 	 * @return RetValueOrError<array<TimetableRow>>
 	 */
 	public function selectPage(
-		?UuidInterface $workGroupsId,
-		?UuidInterface $worksId,
 		UuidInterface $trainsId,
 		int $pageFrom1,
 		int $perPage,
 		?UuidInterface $topId,
 	): RetValueOrError {
 		$this->logger->debug(
-			'selectList workGroupsId: {workGroupsId}, worksId: {worksId}, trainsId: {trainsId}, pageFrom1: {pageFrom1}, perPage: {perPage}, topId: {topId}',
+			'selectList trainsId: {trainsId}, pageFrom1: {pageFrom1}, perPage: {perPage}, topId: {topId}',
 			[
-				'workGroupsId' => $workGroupsId,
-				'worksId' => $worksId,
 				'trainsId' => $trainsId,
 				'pageFrom1' => $pageFrom1,
 				'perPage' => $perPage,
@@ -440,41 +373,17 @@ final class TimetableRowsRepo
 		);
 
 		$hasTopId = !is_null($topId);
-		$hasWorkGroupsId = !is_null($workGroupsId);
-		$whereWorkGroupsIdQuerySegment = $hasWorkGroupsId
-			? ' AND works.work_groups_id = :work_groups_id '
-			: '';
-		$hasWorksId = !is_null($worksId);
-		$whereWorksIdQuerySegment = $hasWorksId
-			? ' AND trains.works_id = :works_id '
-			: '';
 
 		try
 		{
 			$query = $this->db->prepare(
-				'SELECT ' . self::SQL_SELECT_COLUMNS
-				.
-				<<<SQL
+				'SELECT ' . self::SQL_SELECT_COLUMNS . <<<SQL
 				FROM
 					timetable_rows
-				JOIN
-					trains
-				USING
-					(trains_id)
-				JOIN
-					works
-				USING
-					(works_id)
 				WHERE
 					timetable_rows.trains_id = :trains_id
 				AND
 					timetable_rows.deleted_at IS NULL
-				AND
-					trains.deleted_at IS NULL
-				$whereWorksIdQuerySegment
-				AND
-					works.deleted_at IS NULL
-				$whereWorkGroupsIdQuerySegment
 				SQL
 				.
 				(!$hasTopId ? ' ' : ' AND timetable_row.timetable_rows_id <= :top_id ')
@@ -490,12 +399,6 @@ final class TimetableRowsRepo
 			);
 
 			$query->bindValue(':trains_id', $trainsId->getBytes(), PDO::PARAM_STR);
-			if ($hasWorkGroupsId) {
-				$query->bindValue(':work_groups_id', $workGroupsId->getBytes(), PDO::PARAM_STR);
-			}
-			if ($hasWorksId) {
-				$query->bindValue(':works_id', $worksId->getBytes(), PDO::PARAM_STR);
-			}
 			if ($hasTopId) {
 				$query->bindValue(':top_id', $topId);
 			}

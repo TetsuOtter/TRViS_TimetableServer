@@ -138,16 +138,10 @@ class WorkApi extends AbstractWorkApi
 	public function deleteWork(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		string $workGroupId,
 		string $workId
 	): ResponseInterface {
 		$userId = MyAuthMiddleware::getUserIdOrAnonymous($request);
 
-		if (!Uuid::isValid($workGroupId))
-		{
-			$this->logger->warning("Invalid UUID format ({workGroupId})", ['workGroupId' => $workGroupId]);
-			return Utils::withUuidError($response);
-		}
 		if (!Uuid::isValid($workId))
 		{
 			$this->logger->warning("Invalid UUID format ({workId})", ['workId' => $workId]);
@@ -155,7 +149,6 @@ class WorkApi extends AbstractWorkApi
 		}
 
 		return $this->worksService->delete(
-			workGroupsId: Uuid::fromString($workGroupId),
 			senderUserId: $userId,
 			worksId: Uuid::fromString($workId),
 		)->getResponseWithJson($response);
@@ -164,16 +157,10 @@ class WorkApi extends AbstractWorkApi
 	public function getWork(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		string $workGroupId,
 		string $workId
 	): ResponseInterface {
 		$userId = MyAuthMiddleware::getUserIdOrAnonymous($request);
 
-		if (!Uuid::isValid($workGroupId))
-		{
-			$this->logger->warning("Invalid UUID format ({workGroupId})", ['workGroupId' => $workGroupId]);
-			return Utils::withUuidError($response);
-		}
 		if (!Uuid::isValid($workId))
 		{
 			$this->logger->warning("Invalid UUID format ({workId})", ['workId' => $workId]);
@@ -181,7 +168,6 @@ class WorkApi extends AbstractWorkApi
 		}
 
 		return $this->worksService->getOne(
-			workGroupsId: Uuid::fromString($workGroupId),
 			senderUserId: $userId,
 			worksId: Uuid::fromString($workId),
 		)->getResponseWithJson($response);
@@ -268,16 +254,10 @@ class WorkApi extends AbstractWorkApi
 	public function updateWork(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		string $workGroupId,
 		string $workId
 	): ResponseInterface {
 		$userId = MyAuthMiddleware::getUserIdOrAnonymous($request);
 
-		if (!Uuid::isValid($workGroupId))
-		{
-			$this->logger->warning("Invalid UUID format ({workGroupId})", ['workGroupId' => $workGroupId]);
-			return Utils::withUuidError($response);
-		}
 		if (!Uuid::isValid($workId))
 		{
 			$this->logger->warning("Invalid UUID format ({workId})", ['workId' => $workId]);
@@ -309,7 +289,6 @@ class WorkApi extends AbstractWorkApi
 		return $this->worksService->update(
 			senderUserId: $userId,
 			worksId: Uuid::fromString($workId),
-			workGroupsId: Uuid::fromString($workGroupId),
 			data: $workData,
 			requestBody: $body,
 		)->getResponseWithJson($response);

@@ -68,7 +68,6 @@ abstract class AbstractStationApi
      *
      * @param ServerRequestInterface $request  Request
      * @param ResponseInterface      $response Response
-     * @param string $workGroupId WorkGroupのID
      * @param string $stationId StationのID
      *
      * @return ResponseInterface
@@ -77,7 +76,6 @@ abstract class AbstractStationApi
     public function deleteStation(
         ServerRequestInterface $request,
         ResponseInterface $response,
-        string $workGroupId,
         string $stationId
     ): ResponseInterface {
         $message = "How about implementing deleteStation as a DELETE method in dev_t0r\trvis_backend\api\StationApi class?";
@@ -92,7 +90,6 @@ abstract class AbstractStationApi
      *
      * @param ServerRequestInterface $request  Request
      * @param ResponseInterface      $response Response
-     * @param string $workGroupId WorkGroupのID
      * @param string $stationId StationのID
      *
      * @return ResponseInterface
@@ -101,7 +98,6 @@ abstract class AbstractStationApi
     public function getStation(
         ServerRequestInterface $request,
         ResponseInterface $response,
-        string $workGroupId,
         string $stationId
     ): ResponseInterface {
         $message = "How about implementing getStation as a GET method in dev_t0r\trvis_backend\api\StationApi class?";
@@ -142,7 +138,6 @@ abstract class AbstractStationApi
      *
      * @param ServerRequestInterface $request  Request
      * @param ResponseInterface      $response Response
-     * @param string $workGroupId WorkGroupのID
      * @param string $stationId StationのID
      *
      * @return ResponseInterface
@@ -151,7 +146,6 @@ abstract class AbstractStationApi
     public function updateStation(
         ServerRequestInterface $request,
         ResponseInterface $response,
-        string $workGroupId,
         string $stationId
     ): ResponseInterface {
         $body = $request->getParsedBody();

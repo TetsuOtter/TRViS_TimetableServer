@@ -48,16 +48,10 @@ final class StationTrackApi extends AbstractStationTrackApi
 	public function createStationTrack(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		string $workGroupId,
 		string $stationId,
 	): ResponseInterface {
 		$userId = MyAuthMiddleware::getUserIdOrAnonymous($request);
 
-		if (!Uuid::isValid($workGroupId))
-		{
-			$this->logger->warning("Invalid UUID format ({workGroupId})", ['workGroupId' => $workGroupId]);
-			return Utils::withUuidError($response);
-		}
 		if (!Uuid::isValid($stationId))
 		{
 			$this->logger->warning("Invalid UUID format ({stationId})", ['stationId' => $stationId]);
@@ -100,7 +94,6 @@ final class StationTrackApi extends AbstractStationTrackApi
 		}
 
 		$createResult = $this->stationTracksService->create(
-			workGroupsId: Uuid::fromString($workGroupId),
 			stationsId: Uuid::fromString($stationId),
 			senderUserId: $userId,
 			stationTracksList: $stationTracksList,
@@ -113,22 +106,10 @@ final class StationTrackApi extends AbstractStationTrackApi
 	public function deleteStationTrack(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		string $workGroupId,
-		string $stationId,
 		string $stationTrackId,
 		): ResponseInterface {
 			$userId = MyAuthMiddleware::getUserIdOrAnonymous($request);
 
-			if (!Uuid::isValid($workGroupId))
-			{
-				$this->logger->warning("Invalid UUID format ({workGroupId})", ['workGroupId' => $workGroupId]);
-				return Utils::withUuidError($response);
-			}
-			if (!Uuid::isValid($stationId))
-			{
-				$this->logger->warning("Invalid UUID format ({stationId})", ['stationId' => $stationId]);
-				return Utils::withUuidError($response);
-			}
 			if (!Uuid::isValid($stationTrackId))
 			{
 				$this->logger->warning("Invalid UUID format ({stationTrackId})", ['stationTrackId' => $stationTrackId]);
@@ -136,9 +117,7 @@ final class StationTrackApi extends AbstractStationTrackApi
 			}
 
 			return $this->stationTracksService->delete(
-				workGroupsId: Uuid::fromString($workGroupId),
 				senderUserId: $userId,
-				stationsId: Uuid::fromString($stationId),
 				stationTracksId: Uuid::fromString($stationTrackId),
 			)->getResponseWithJson($response);
 		}
@@ -146,22 +125,10 @@ final class StationTrackApi extends AbstractStationTrackApi
 	public function getStationTrack(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		string $workGroupId,
-		string $stationId,
 		string $stationTrackId,
 		): ResponseInterface {
 			$userId = MyAuthMiddleware::getUserIdOrAnonymous($request);
 
-			if (!Uuid::isValid($workGroupId))
-			{
-				$this->logger->warning("Invalid UUID format ({workGroupId})", ['workGroupId' => $workGroupId]);
-				return Utils::withUuidError($response);
-			}
-			if (!Uuid::isValid($stationId))
-			{
-				$this->logger->warning("Invalid UUID format ({stationId})", ['stationId' => $stationId]);
-				return Utils::withUuidError($response);
-			}
 			if (!Uuid::isValid($stationTrackId))
 			{
 				$this->logger->warning("Invalid UUID format ({stationTrackId})", ['stationTrackId' => $stationTrackId]);
@@ -169,9 +136,7 @@ final class StationTrackApi extends AbstractStationTrackApi
 			}
 
 			return $this->stationTracksService->getOne(
-				workGroupsId: Uuid::fromString($workGroupId),
 				senderUserId: $userId,
-				stationsId: Uuid::fromString($stationId),
 				stationTracksId: Uuid::fromString($stationTrackId),
 			)->getResponseWithJson($response);
 		}
@@ -179,16 +144,10 @@ final class StationTrackApi extends AbstractStationTrackApi
 	public function getStationTrackList(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		string $workGroupId,
 		string $stationId,
 		): ResponseInterface {
 			$userId = MyAuthMiddleware::getUserIdOrAnonymous($request);
 
-			if (!Uuid::isValid($workGroupId))
-			{
-				$this->logger->warning("Invalid UUID format ({workGroupId})", ['workGroupId' => $workGroupId]);
-				return Utils::withUuidError($response);
-			}
 			if (!Uuid::isValid($stationId))
 			{
 				$this->logger->warning("Invalid UUID format ({stationId})", ['stationId' => $stationId]);
@@ -252,7 +211,6 @@ final class StationTrackApi extends AbstractStationTrackApi
 			$uuid = $hasTop ? Uuid::fromString($top) : null;
 
 			return $this->stationTracksService->getPage(
-				workGroupsId: Uuid::fromString($workGroupId),
 				stationsId: Uuid::fromString($stationId),
 				senderUserId: $userId,
 				pageFrom1: $p,
@@ -264,22 +222,10 @@ final class StationTrackApi extends AbstractStationTrackApi
 	public function updateStationTrack(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		string $workGroupId,
-		string $stationId,
 		string $stationTrackId,
 		): ResponseInterface {
 			$userId = MyAuthMiddleware::getUserIdOrAnonymous($request);
 
-			if (!Uuid::isValid($workGroupId))
-			{
-				$this->logger->warning("Invalid UUID format ({workGroupId})", ['workGroupId' => $workGroupId]);
-				return Utils::withUuidError($response);
-			}
-			if (!Uuid::isValid($stationId))
-			{
-				$this->logger->warning("Invalid UUID format ({stationId})", ['stationId' => $stationId]);
-				return Utils::withUuidError($response);
-			}
 			if (!Uuid::isValid($stationTrackId))
 			{
 				$this->logger->warning("Invalid UUID format ({stationTrackId})", ['stationTrackId' => $stationTrackId]);
@@ -311,8 +257,6 @@ final class StationTrackApi extends AbstractStationTrackApi
 			return $this->stationTracksService->update(
 				senderUserId: $userId,
 				stationTracksId: Uuid::fromString($stationTrackId),
-				stationsId: Uuid::fromString($stationId),
-				workGroupsId: Uuid::fromString($workGroupId),
 				data: $stationTrackData,
 				requestBody: $body,
 			)->getResponseWithJson($response);

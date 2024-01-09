@@ -45,8 +45,6 @@ abstract class AbstractTimetableRowApi
      *
      * @param ServerRequestInterface $request  Request
      * @param ResponseInterface      $response Response
-     * @param string $workGroupId WorkGroupのID
-     * @param string $workId WorkのID
      * @param string $trainId TrainのID
      *
      * @return ResponseInterface
@@ -55,8 +53,6 @@ abstract class AbstractTimetableRowApi
     public function createTimetableRow(
         ServerRequestInterface $request,
         ResponseInterface $response,
-        string $workGroupId,
-        string $workId,
         string $trainId
     ): ResponseInterface {
         $body = $request->getParsedBody();
@@ -72,9 +68,6 @@ abstract class AbstractTimetableRowApi
      *
      * @param ServerRequestInterface $request  Request
      * @param ResponseInterface      $response Response
-     * @param string $workGroupId WorkGroupのID
-     * @param string $workId WorkのID
-     * @param string $trainId TrainのID
      * @param string $timetableRowId Timetable RowのID
      *
      * @return ResponseInterface
@@ -83,9 +76,6 @@ abstract class AbstractTimetableRowApi
     public function deleteTimetableRow(
         ServerRequestInterface $request,
         ResponseInterface $response,
-        string $workGroupId,
-        string $workId,
-        string $trainId,
         string $timetableRowId
     ): ResponseInterface {
         $message = "How about implementing deleteTimetableRow as a DELETE method in dev_t0r\trvis_backend\api\TimetableRowApi class?";
@@ -100,9 +90,6 @@ abstract class AbstractTimetableRowApi
      *
      * @param ServerRequestInterface $request  Request
      * @param ResponseInterface      $response Response
-     * @param string $workGroupId WorkGroupのID
-     * @param string $workId WorkのID
-     * @param string $trainId TrainのID
      * @param string $timetableRowId Timetable RowのID
      *
      * @return ResponseInterface
@@ -111,9 +98,6 @@ abstract class AbstractTimetableRowApi
     public function getTimetableRow(
         ServerRequestInterface $request,
         ResponseInterface $response,
-        string $workGroupId,
-        string $workId,
-        string $trainId,
         string $timetableRowId
     ): ResponseInterface {
         $message = "How about implementing getTimetableRow as a GET method in dev_t0r\trvis_backend\api\TimetableRowApi class?";
@@ -128,8 +112,6 @@ abstract class AbstractTimetableRowApi
      *
      * @param ServerRequestInterface $request  Request
      * @param ResponseInterface      $response Response
-     * @param string $workGroupId WorkGroupのID
-     * @param string $workId WorkのID
      * @param string $trainId TrainのID
      *
      * @return ResponseInterface
@@ -138,8 +120,6 @@ abstract class AbstractTimetableRowApi
     public function getTimetableRowList(
         ServerRequestInterface $request,
         ResponseInterface $response,
-        string $workGroupId,
-        string $workId,
         string $trainId
     ): ResponseInterface {
         $queryParams = $request->getQueryParams();
@@ -158,9 +138,6 @@ abstract class AbstractTimetableRowApi
      *
      * @param ServerRequestInterface $request  Request
      * @param ResponseInterface      $response Response
-     * @param string $workGroupId WorkGroupのID
-     * @param string $workId WorkのID
-     * @param string $trainId TrainのID
      * @param string $timetableRowId Timetable RowのID
      *
      * @return ResponseInterface
@@ -169,9 +146,6 @@ abstract class AbstractTimetableRowApi
     public function updateTimetableRow(
         ServerRequestInterface $request,
         ResponseInterface $response,
-        string $workGroupId,
-        string $workId,
-        string $trainId,
         string $timetableRowId
     ): ResponseInterface {
         $body = $request->getParsedBody();

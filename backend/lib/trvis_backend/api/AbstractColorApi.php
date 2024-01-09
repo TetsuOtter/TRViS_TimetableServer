@@ -68,7 +68,6 @@ abstract class AbstractColorApi
      *
      * @param ServerRequestInterface $request  Request
      * @param ResponseInterface      $response Response
-     * @param string $workGroupId WorkGroupのID
      * @param string $colorId ColorのID
      *
      * @return ResponseInterface
@@ -77,7 +76,6 @@ abstract class AbstractColorApi
     public function deleteColor(
         ServerRequestInterface $request,
         ResponseInterface $response,
-        string $workGroupId,
         string $colorId
     ): ResponseInterface {
         $message = "How about implementing deleteColor as a DELETE method in dev_t0r\trvis_backend\api\ColorApi class?";
@@ -92,7 +90,6 @@ abstract class AbstractColorApi
      *
      * @param ServerRequestInterface $request  Request
      * @param ResponseInterface      $response Response
-     * @param string $workGroupId WorkGroupのID
      * @param string $colorId ColorのID
      *
      * @return ResponseInterface
@@ -101,7 +98,6 @@ abstract class AbstractColorApi
     public function getColor(
         ServerRequestInterface $request,
         ResponseInterface $response,
-        string $workGroupId,
         string $colorId
     ): ResponseInterface {
         $message = "How about implementing getColor as a GET method in dev_t0r\trvis_backend\api\ColorApi class?";
@@ -142,7 +138,6 @@ abstract class AbstractColorApi
      *
      * @param ServerRequestInterface $request  Request
      * @param ResponseInterface      $response Response
-     * @param string $workGroupId WorkGroupのID
      * @param string $colorId ColorのID
      *
      * @return ResponseInterface
@@ -151,7 +146,6 @@ abstract class AbstractColorApi
     public function updateColor(
         ServerRequestInterface $request,
         ResponseInterface $response,
-        string $workGroupId,
         string $colorId
     ): ResponseInterface {
         $body = $request->getParsedBody();

@@ -112,21 +112,16 @@ final class StationApi extends AbstractStationApi
 		if (!$createResult->isError && (!is_array($body) || !array_is_list($body))) {
 			$createResult = RetValueOrError::withValue($createResult->value[0]);
 		}
-		return $createResult->getResponseWithJson($response);	}
+		return $createResult->getResponseWithJson($response);
+	}
 
 	public function deleteStation(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		string $workGroupId,
 		string $stationId
 		): ResponseInterface {
 			$userId = MyAuthMiddleware::getUserIdOrAnonymous($request);
 
-			if (!Uuid::isValid($workGroupId))
-			{
-				$this->logger->warning("Invalid UUID format ({workGroupId})", ['workGroupId' => $workGroupId]);
-				return Utils::withUuidError($response);
-			}
 			if (!Uuid::isValid($stationId))
 			{
 				$this->logger->warning("Invalid UUID format ({stationId})", ['stationId' => $stationId]);
@@ -134,7 +129,6 @@ final class StationApi extends AbstractStationApi
 			}
 
 			return $this->stationsService->delete(
-				workGroupsId: Uuid::fromString($workGroupId),
 				senderUserId: $userId,
 				stationsId: Uuid::fromString($stationId),
 			)->getResponseWithJson($response);
@@ -143,16 +137,10 @@ final class StationApi extends AbstractStationApi
 	public function getStation(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		string $workGroupId,
 		string $stationId
 		): ResponseInterface {
 			$userId = MyAuthMiddleware::getUserIdOrAnonymous($request);
 
-			if (!Uuid::isValid($workGroupId))
-			{
-				$this->logger->warning("Invalid UUID format ({workGroupId})", ['workGroupId' => $workGroupId]);
-				return Utils::withUuidError($response);
-			}
 			if (!Uuid::isValid($stationId))
 			{
 				$this->logger->warning("Invalid UUID format ({stationId})", ['stationId' => $stationId]);
@@ -160,7 +148,6 @@ final class StationApi extends AbstractStationApi
 			}
 
 			return $this->stationsService->getOne(
-				workGroupsId: Uuid::fromString($workGroupId),
 				senderUserId: $userId,
 				stationsId: Uuid::fromString($stationId),
 			)->getResponseWithJson($response);
@@ -247,16 +234,10 @@ final class StationApi extends AbstractStationApi
 	public function updateStation(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		string $workGroupId,
 		string $stationId
 		): ResponseInterface {
 			$userId = MyAuthMiddleware::getUserIdOrAnonymous($request);
 
-			if (!Uuid::isValid($workGroupId))
-			{
-				$this->logger->warning("Invalid UUID format ({workGroupId})", ['workGroupId' => $workGroupId]);
-				return Utils::withUuidError($response);
-			}
 			if (!Uuid::isValid($stationId))
 			{
 				$this->logger->warning("Invalid UUID format ({stationId})", ['stationId' => $stationId]);
@@ -288,7 +269,6 @@ final class StationApi extends AbstractStationApi
 			return $this->stationsService->update(
 				senderUserId: $userId,
 				stationsId: Uuid::fromString($stationId),
-				workGroupsId: Uuid::fromString($workGroupId),
 				data: $stationData,
 				requestBody: $body,
 			)->getResponseWithJson($response);

@@ -91,51 +91,27 @@ final class StationTracksRepo
 	 */
 	public function selectOne(
 		UuidInterface $stationTracksId,
-		?UuidInterface $workGroupsId,
-		?UuidInterface $stationsId,
 	): RetValueOrError {
 		$this->logger->debug(
-			'selectOne stationTracksId: {stationTracksId}, workGroupsId: {workGroupsId}, stationsId: {stationsId}',
+			'selectOne stationTracksId: {stationTracksId}',
 			[
 				'stationTracksId' => $stationTracksId,
-				'workGroupsId' => $workGroupsId,
-				'stationsId' => $stationsId,
 			],
 		);
-
-		$hasWorkGroupsId = !is_null($workGroupsId);
-		$hasStationsId = !is_null($stationsId);
 
 		try
 		{
 			$query = $this->db->prepare(
-				'SELECT ' . self::SQL_SELECT_COLUMNS
-				.
-				' FROM station_tracks '
-				.
-				($hasWorkGroupsId ? ' JOIN stations USING (stations_id) ' : '')
-				.
-				<<<SQL
+				'SELECT ' . self::SQL_SELECT_COLUMNS . <<<SQL
+					FROM station_tracks
 				WHERE
 					station_tracks.station_tracks_id = :station_tracks_id
 				AND
 					station_tracks.deleted_at IS NULL
 				SQL
-				.
-				($hasWorkGroupsId ? ' AND stations.deleted_at IS NULL ' : '')
-				.
-				($hasWorkGroupsId ? ' AND stations.work_groups_id = :work_groups_id ' : '')
-				.
-				($hasStationsId ? ' AND station_tracks.stations_id = :stations_id ' : '')
 			);
 
 			$query->bindValue(':station_tracks_id', $stationTracksId->getBytes(), PDO::PARAM_STR);
-			if ($hasWorkGroupsId) {
-				$query->bindValue(':work_groups_id', $workGroupsId->getBytes());
-			}
-			if ($hasStationsId) {
-				$query->bindValue(':stations_id', $stationsId->getBytes());
-			}
 
 			$query->execute();
 			$result = $query->fetch(PDO::FETCH_ASSOC);
@@ -174,7 +150,6 @@ final class StationTracksRepo
 	 */
 	public function selectWorkGroupsId(
 		UuidInterface $stationTracksId,
-		?UuidInterface $stationsId,
 	): RetValueOrError {
 		$this->logger->debug(
 			'selectWorkGroupsId stationTracksId: {stationTracksId}',
@@ -183,8 +158,6 @@ final class StationTracksRepo
 			],
 		);
 
-		$hasStationsId = !is_null($stationsId);
-		$stationsIdQuerySegment = $hasStationsId ? ' AND stations.stations_id = :stations_id ' : '';
 		try
 		{
 			$query = $this->db->prepare(
@@ -199,7 +172,6 @@ final class StationTracksRepo
 					(stations_id)
 				WHERE
 					station_tracks.station_tracks_id = :station_tracks_id
-				$stationsIdQuerySegment
 				AND
 					stations.deleted_at IS NULL
 				AND
@@ -209,9 +181,6 @@ final class StationTracksRepo
 			);
 
 			$query->bindValue(':station_tracks_id', $stationTracksId->getBytes(), PDO::PARAM_STR);
-			if ($hasStationsId) {
-				$query->bindValue(':stations_id', $stationsId->getBytes(), PDO::PARAM_STR);
-			}
 
 			$query->execute();
 			$result = $query->fetch(PDO::FETCH_ASSOC);
@@ -245,16 +214,14 @@ final class StationTracksRepo
 	 * @return RetValueOrError<array<StationTrack>>
 	 */
 	public function selectPage(
-		?UuidInterface $workGroupsId,
 		UuidInterface $stationsId,
 		int $pageFrom1,
 		int $perPage,
 		?UuidInterface $topId,
 	): RetValueOrError {
 		$this->logger->debug(
-			'selectList workGroupsId: {workGroupsId}, stationsId: {stationsId}, pageFrom1: {pageFrom1}, perPage: {perPage}, topId: {topId}',
+			'selectList stationsId: {stationsId}, pageFrom1: {pageFrom1}, perPage: {perPage}, topId: {topId}',
 			[
-				'workGroupsId' => $workGroupsId,
 				'stationsId' => $stationsId,
 				'pageFrom1' => $pageFrom1,
 				'perPage' => $perPage,
@@ -263,31 +230,16 @@ final class StationTracksRepo
 		);
 
 		$hasTopId = !is_null($topId);
-		$hasWorkGroupsId = !is_null($workGroupsId);
 
 		try
 		{
 			$query = $this->db->prepare(
 				'SELECT ' . self::SQL_SELECT_COLUMNS
 				.
-				' FROM station_tracks '
-				.
-				($hasWorkGroupsId
-					? <<<SQL
-						JOIN
-							stations
-						USING
-							(stations_id)
-						WHERE
-							stations.work_groups_id = :work_groups_id
-						AND
-							stations.deleted_at IS NULL
-						AND
-						SQL
-					: ' WHERE '
-				)
-				.
 				<<<SQL
+				FROM
+					station_tracks
+				WHERE
 					station_tracks.stations_id = :stations_id
 				AND
 					station_tracks.deleted_at IS NULL
@@ -306,9 +258,6 @@ final class StationTracksRepo
 			);
 
 			$query->bindValue(':stations_id', $stationsId->getBytes(), PDO::PARAM_STR);
-			if ($hasWorkGroupsId) {
-				$query->bindValue(':work_groups_id', $workGroupsId->getBytes(), PDO::PARAM_STR);
-			}
 			if ($hasTopId) {
 				$query->bindValue(':top_id', $topId);
 			}

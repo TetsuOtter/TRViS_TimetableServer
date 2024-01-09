@@ -128,33 +128,29 @@ final class StationsService
 	public function delete(
 		string $senderUserId,
 		UuidInterface $stationsId,
-		?UuidInterface $workGroupsId,
 	): RetValueOrError {
 		$this->logger->debug(
-			'deleteStation senderUserId: {senderUserId}, stationsId: {stationsId}, workGroupsId: {workGroupsId}',
+			'deleteStation senderUserId: {senderUserId}, stationsId: {stationsId}',
 			[
 				'senderUserId' => $senderUserId,
 				'stationsId' => $stationsId,
-				'workGroupsId' => $workGroupsId,
 			],
 		);
 
-		if (is_null($workGroupsId)) {
-			$checkIdResult = $this->stationsRepo->selectWorkGroupsId(
-				stationsId: $stationsId,
+		$checkIdResult = $this->stationsRepo->selectWorkGroupsId(
+			stationsId: $stationsId,
+		);
+		if ($checkIdResult->isError) {
+			$this->logger->warning(
+				'checkIdResult -> Error[{errorCode}]: {errorMsg}',
+				[
+					'errorCode' => $checkIdResult->errorCode,
+					'errorMsg' => $checkIdResult->errorMsg,
+				],
 			);
-			if ($checkIdResult->isError) {
-				$this->logger->warning(
-					'checkIdResult -> Error[{errorCode}]: {errorMsg}',
-					[
-						'errorCode' => $checkIdResult->errorCode,
-						'errorMsg' => $checkIdResult->errorMsg,
-					],
-				);
-				return $checkIdResult;
-			}
-			$workGroupsId = $checkIdResult->value;
+			return $checkIdResult;
 		}
+		$workGroupsId = $checkIdResult->value;
 
 		$senderPrivilegeCheckResult = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
 			workGroupsId: $workGroupsId,
@@ -216,41 +212,35 @@ final class StationsService
 	public function getOne(
 		string $senderUserId,
 		UuidInterface $stationsId,
-		?UuidInterface $workGroupsId,
 	): RetValueOrError {
 		$this->logger->debug(
-			'getOneStation senderUserId: {senderUserId}, stationsId: {stationsId}, workGroupsId: {workGroupsId}',
+			'getOneStation senderUserId: {senderUserId}, stationsId: {stationsId}',
 			[
 				'senderUserId' => $senderUserId,
 				'stationsId' => $stationsId,
-				'workGroupsId' => $workGroupsId,
 			],
 		);
 
-		$selectWorkResult = null;
-		if (is_null($workGroupsId)) {
-			$selectWorkResult = $this->stationsRepo->selectOne(
-				stationsId: $stationsId,
-				workGroupsId: $workGroupsId,
-			);
-			$this->logger->debug(
-				'selectWorkResult -> {selectWorkResult}',
+		$selectWorkResult = $this->stationsRepo->selectOne(
+			stationsId: $stationsId,
+		);
+		$this->logger->debug(
+			'selectWorkResult -> {selectWorkResult}',
+			[
+				'selectWorkResult' => $selectWorkResult->value,
+			],
+		);
+		if ($selectWorkResult->isError) {
+			$this->logger->warning(
+				'selectWorkResult -> Error[{errorCode}]: {errorMsg}',
 				[
-					'selectWorkResult' => $selectWorkResult->value,
+					'errorCode' => $selectWorkResult->errorCode,
+					'errorMsg' => $selectWorkResult->errorMsg,
 				],
 			);
-			if ($selectWorkResult->isError) {
-				$this->logger->warning(
-					'selectWorkResult -> Error[{errorCode}]: {errorMsg}',
-					[
-						'errorCode' => $selectWorkResult->errorCode,
-						'errorMsg' => $selectWorkResult->errorMsg,
-					],
-				);
-				return $selectWorkResult;
-			}
-			$workGroupsId = $selectWorkResult->value->work_groups_id;
+			return $selectWorkResult;
 		}
+		$workGroupsId = $selectWorkResult->value->work_groups_id;
 
 		$senderPrivilegeCheckResult = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
 			workGroupsId: $workGroupsId,
@@ -278,11 +268,6 @@ final class StationsService
 		if (!$senderPrivilege->hasPrivilege(InviteKeyPrivilegeType::read)) {
 			return Utils::errWorkGroupNotFound();
 		}
-
-		$selectWorkResult ??= $this->stationsRepo->selectOne(
-			stationsId: $stationsId,
-			workGroupsId: $workGroupsId,
-		);
 
 		return $selectWorkResult;
 	}
@@ -349,36 +334,32 @@ final class StationsService
 	public function update(
 		string $senderUserId,
 		UuidInterface $stationsId,
-		?UuidInterface $workGroupsId,
 		Station $data,
 		object|array $requestBody,
 	): RetValueOrError {
 		$this->logger->debug(
-			'updateStation senderUserId: {senderUserId}, stationsId: {stationsId}, workGroupsId: {workGroupsId}, data: {data}',
+			'updateStation senderUserId: {senderUserId}, stationsId: {stationsId}, data: {data}',
 			[
 				'senderUserId' => $senderUserId,
 				'stationsId' => $stationsId,
-				'workGroupsId' => $workGroupsId,
 				'data' => $data,
 			],
 		);
 
-		if (is_null($workGroupsId)) {
-			$checkIdResult = $this->stationsRepo->selectWorkGroupsId(
-				stationsId: $stationsId,
+		$checkIdResult = $this->stationsRepo->selectWorkGroupsId(
+			stationsId: $stationsId,
+		);
+		if ($checkIdResult->isError) {
+			$this->logger->warning(
+				'checkIdResult -> Error[{errorCode}]: {errorMsg}',
+				[
+					'errorCode' => $checkIdResult->errorCode,
+					'errorMsg' => $checkIdResult->errorMsg,
+				],
 			);
-			if ($checkIdResult->isError) {
-				$this->logger->warning(
-					'checkIdResult -> Error[{errorCode}]: {errorMsg}',
-					[
-						'errorCode' => $checkIdResult->errorCode,
-						'errorMsg' => $checkIdResult->errorMsg,
-					],
-				);
-				return $checkIdResult;
-			}
-			$workGroupsId = $checkIdResult->value;
+			return $checkIdResult;
 		}
+		$workGroupsId = $checkIdResult->value;
 
 		$senderPrivilegeCheckResult = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
 			workGroupsId: $workGroupsId,
@@ -448,7 +429,6 @@ final class StationsService
 
 		return $this->stationsRepo->selectOne(
 			stationsId: $stationsId,
-			workGroupsId: null,
 		);
 	}
 }

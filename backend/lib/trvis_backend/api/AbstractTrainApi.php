@@ -45,7 +45,6 @@ abstract class AbstractTrainApi
      *
      * @param ServerRequestInterface $request  Request
      * @param ResponseInterface      $response Response
-     * @param string $workGroupId WorkGroupのID
      * @param string $workId WorkのID
      *
      * @return ResponseInterface
@@ -54,7 +53,6 @@ abstract class AbstractTrainApi
     public function createTrain(
         ServerRequestInterface $request,
         ResponseInterface $response,
-        string $workGroupId,
         string $workId
     ): ResponseInterface {
         $body = $request->getParsedBody();
@@ -70,8 +68,6 @@ abstract class AbstractTrainApi
      *
      * @param ServerRequestInterface $request  Request
      * @param ResponseInterface      $response Response
-     * @param string $workGroupId WorkGroupのID
-     * @param string $workId WorkのID
      * @param string $trainId TrainのID
      *
      * @return ResponseInterface
@@ -80,8 +76,6 @@ abstract class AbstractTrainApi
     public function deleteTrain(
         ServerRequestInterface $request,
         ResponseInterface $response,
-        string $workGroupId,
-        string $workId,
         string $trainId
     ): ResponseInterface {
         $message = "How about implementing deleteTrain as a DELETE method in dev_t0r\trvis_backend\api\TrainApi class?";
@@ -96,8 +90,6 @@ abstract class AbstractTrainApi
      *
      * @param ServerRequestInterface $request  Request
      * @param ResponseInterface      $response Response
-     * @param string $workGroupId WorkGroupのID
-     * @param string $workId WorkのID
      * @param string $trainId TrainのID
      *
      * @return ResponseInterface
@@ -106,8 +98,6 @@ abstract class AbstractTrainApi
     public function getTrain(
         ServerRequestInterface $request,
         ResponseInterface $response,
-        string $workGroupId,
-        string $workId,
         string $trainId
     ): ResponseInterface {
         $message = "How about implementing getTrain as a GET method in dev_t0r\trvis_backend\api\TrainApi class?";
@@ -122,7 +112,6 @@ abstract class AbstractTrainApi
      *
      * @param ServerRequestInterface $request  Request
      * @param ResponseInterface      $response Response
-     * @param string $workGroupId WorkGroupのID
      * @param string $workId WorkのID
      *
      * @return ResponseInterface
@@ -131,7 +120,6 @@ abstract class AbstractTrainApi
     public function getTrainList(
         ServerRequestInterface $request,
         ResponseInterface $response,
-        string $workGroupId,
         string $workId
     ): ResponseInterface {
         $queryParams = $request->getQueryParams();
@@ -150,8 +138,6 @@ abstract class AbstractTrainApi
      *
      * @param ServerRequestInterface $request  Request
      * @param ResponseInterface      $response Response
-     * @param string $workGroupId WorkGroupのID
-     * @param string $workId WorkのID
      * @param string $trainId TrainのID
      *
      * @return ResponseInterface
@@ -160,8 +146,6 @@ abstract class AbstractTrainApi
     public function updateTrain(
         ServerRequestInterface $request,
         ResponseInterface $response,
-        string $workGroupId,
-        string $workId,
         string $trainId
     ): ResponseInterface {
         $body = $request->getParsedBody();

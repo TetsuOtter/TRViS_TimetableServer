@@ -111,16 +111,10 @@ final class TrainApi extends AbstractTrainApi
 	public function createTrain(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		string $workGroupId,
 		string $workId,
 	): ResponseInterface {
 		$userId = MyAuthMiddleware::getUserIdOrAnonymous($request);
 
-		if (!Uuid::isValid($workGroupId))
-		{
-			$this->logger->warning("Invalid UUID format ({workGroupId})", ['workGroupId' => $workGroupId]);
-			return Utils::withUuidError($response);
-		}
 		if (!Uuid::isValid($workId))
 		{
 			$this->logger->warning("Invalid UUID format ({workId})", ['workId' => $workId]);
@@ -163,7 +157,6 @@ final class TrainApi extends AbstractTrainApi
 		}
 
 		$createResult = $this->trainsService->create(
-			workGroupsId: Uuid::fromString($workGroupId),
 			worksId: Uuid::fromString($workId),
 			senderUserId: $userId,
 			trainsList: $trainsList,
@@ -176,22 +169,10 @@ final class TrainApi extends AbstractTrainApi
 	public function deleteTrain(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		string $workGroupId,
-		string $workId,
 		string $trainId,
 		): ResponseInterface {
 			$userId = MyAuthMiddleware::getUserIdOrAnonymous($request);
 
-			if (!Uuid::isValid($workGroupId))
-			{
-				$this->logger->warning("Invalid UUID format ({workGroupId})", ['workGroupId' => $workGroupId]);
-				return Utils::withUuidError($response);
-			}
-			if (!Uuid::isValid($workId))
-			{
-				$this->logger->warning("Invalid UUID format ({workId})", ['workId' => $workId]);
-				return Utils::withUuidError($response);
-			}
 			if (!Uuid::isValid($trainId))
 			{
 				$this->logger->warning("Invalid UUID format ({trainId})", ['trainId' => $trainId]);
@@ -199,9 +180,7 @@ final class TrainApi extends AbstractTrainApi
 			}
 
 			return $this->trainsService->delete(
-				workGroupsId: Uuid::fromString($workGroupId),
 				senderUserId: $userId,
-				worksId: Uuid::fromString($workId),
 				trainsId: Uuid::fromString($trainId),
 			)->getResponseWithJson($response);
 		}
@@ -209,22 +188,10 @@ final class TrainApi extends AbstractTrainApi
 	public function getTrain(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		string $workGroupId,
-		string $workId,
 		string $trainId,
 		): ResponseInterface {
 			$userId = MyAuthMiddleware::getUserIdOrAnonymous($request);
 
-			if (!Uuid::isValid($workGroupId))
-			{
-				$this->logger->warning("Invalid UUID format ({workGroupId})", ['workGroupId' => $workGroupId]);
-				return Utils::withUuidError($response);
-			}
-			if (!Uuid::isValid($workId))
-			{
-				$this->logger->warning("Invalid UUID format ({workId})", ['workId' => $workId]);
-				return Utils::withUuidError($response);
-			}
 			if (!Uuid::isValid($trainId))
 			{
 				$this->logger->warning("Invalid UUID format ({trainId})", ['trainId' => $trainId]);
@@ -232,9 +199,7 @@ final class TrainApi extends AbstractTrainApi
 			}
 
 			return $this->trainsService->getOne(
-				workGroupsId: Uuid::fromString($workGroupId),
 				senderUserId: $userId,
-				worksId: Uuid::fromString($workId),
 				trainsId: Uuid::fromString($trainId),
 			)->getResponseWithJson($response);
 		}
@@ -242,16 +207,10 @@ final class TrainApi extends AbstractTrainApi
 	public function getTrainList(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		string $workGroupId,
 		string $workId,
 		): ResponseInterface {
 			$userId = MyAuthMiddleware::getUserIdOrAnonymous($request);
 
-			if (!Uuid::isValid($workGroupId))
-			{
-				$this->logger->warning("Invalid UUID format ({workGroupId})", ['workGroupId' => $workGroupId]);
-				return Utils::withUuidError($response);
-			}
 			if (!Uuid::isValid($workId))
 			{
 				$this->logger->warning("Invalid UUID format ({workId})", ['workId' => $workId]);
@@ -315,7 +274,6 @@ final class TrainApi extends AbstractTrainApi
 			$uuid = $hasTop ? Uuid::fromString($top) : null;
 
 			return $this->trainsService->getPage(
-				workGroupsId: Uuid::fromString($workGroupId),
 				worksId: Uuid::fromString($workId),
 				senderUserId: $userId,
 				pageFrom1: $p,
@@ -327,22 +285,10 @@ final class TrainApi extends AbstractTrainApi
 	public function updateTrain(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
-		string $workGroupId,
-		string $workId,
 		string $trainId,
 		): ResponseInterface {
 			$userId = MyAuthMiddleware::getUserIdOrAnonymous($request);
 
-			if (!Uuid::isValid($workGroupId))
-			{
-				$this->logger->warning("Invalid UUID format ({workGroupId})", ['workGroupId' => $workGroupId]);
-				return Utils::withUuidError($response);
-			}
-			if (!Uuid::isValid($workId))
-			{
-				$this->logger->warning("Invalid UUID format ({workId})", ['workId' => $workId]);
-				return Utils::withUuidError($response);
-			}
 			if (!Uuid::isValid($trainId))
 			{
 				$this->logger->warning("Invalid UUID format ({trainId})", ['trainId' => $trainId]);
@@ -369,8 +315,6 @@ final class TrainApi extends AbstractTrainApi
 			return $this->trainsService->update(
 				senderUserId: $userId,
 				trainsId: Uuid::fromString($trainId),
-				worksId: Uuid::fromString($workId),
-				workGroupsId: Uuid::fromString($workGroupId),
 				data: $trainData,
 				requestBody: $body,
 			)->getResponseWithJson($response);

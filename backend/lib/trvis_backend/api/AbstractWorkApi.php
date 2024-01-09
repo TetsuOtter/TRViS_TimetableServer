@@ -68,7 +68,6 @@ abstract class AbstractWorkApi
      *
      * @param ServerRequestInterface $request  Request
      * @param ResponseInterface      $response Response
-     * @param string $workGroupId WorkGroupのID
      * @param string $workId WorkのID
      *
      * @return ResponseInterface
@@ -77,7 +76,6 @@ abstract class AbstractWorkApi
     public function deleteWork(
         ServerRequestInterface $request,
         ResponseInterface $response,
-        string $workGroupId,
         string $workId
     ): ResponseInterface {
         $message = "How about implementing deleteWork as a DELETE method in dev_t0r\trvis_backend\api\WorkApi class?";
@@ -92,7 +90,6 @@ abstract class AbstractWorkApi
      *
      * @param ServerRequestInterface $request  Request
      * @param ResponseInterface      $response Response
-     * @param string $workGroupId WorkGroupのID
      * @param string $workId WorkのID
      *
      * @return ResponseInterface
@@ -101,7 +98,6 @@ abstract class AbstractWorkApi
     public function getWork(
         ServerRequestInterface $request,
         ResponseInterface $response,
-        string $workGroupId,
         string $workId
     ): ResponseInterface {
         $message = "How about implementing getWork as a GET method in dev_t0r\trvis_backend\api\WorkApi class?";
@@ -142,7 +138,6 @@ abstract class AbstractWorkApi
      *
      * @param ServerRequestInterface $request  Request
      * @param ResponseInterface      $response Response
-     * @param string $workGroupId WorkGroupのID
      * @param string $workId WorkのID
      *
      * @return ResponseInterface
@@ -151,7 +146,6 @@ abstract class AbstractWorkApi
     public function updateWork(
         ServerRequestInterface $request,
         ResponseInterface $response,
-        string $workGroupId,
         string $workId
     ): ResponseInterface {
         $body = $request->getParsedBody();

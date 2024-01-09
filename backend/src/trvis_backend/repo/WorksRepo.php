@@ -121,7 +121,6 @@ final class WorksRepo
 	 */
 	public function selectOne(
 		UuidInterface $worksId,
-		?UuidInterface $workGroupsId,
 	): RetValueOrError {
 		$this->logger->debug(
 			'selectOne workId: {worksId}',
@@ -130,14 +129,10 @@ final class WorksRepo
 			],
 		);
 
-		$hasWorkGroupsId = !is_null($workGroupsId);
-
 		try
 		{
 			$query = $this->db->prepare(
-				'SELECT ' . self::SQL_COLUMNS
-				.
-				<<<SQL
+				'SELECT ' . self::SQL_COLUMNS . <<<SQL
 				FROM
 					works
 				WHERE
@@ -145,14 +140,9 @@ final class WorksRepo
 				AND
 					deleted_at IS NULL
 				SQL
-				.
-				($hasWorkGroupsId ? ' AND work_groups_id = :work_groups_id ' : '')
 			);
 
 			$query->bindValue(':works_id', $worksId->getBytes(), PDO::PARAM_STR);
-			if ($hasWorkGroupsId) {
-				$query->bindValue(':work_groups_id', $workGroupsId->getBytes());
-			}
 
 			$query->execute();
 			$result = $query->fetch(PDO::FETCH_ASSOC);

@@ -132,7 +132,7 @@ class RegisterRoutes
         [
             'httpMethod' => 'POST',
             'basePathWithoutHost' => '/api/v1',
-            'path' => '/colors',
+            'path' => '/work_groups/{workGroupId}/colors',
             'apiPackage' => 'dev_t0r\trvis_backend\api',
             'classname' => 'AbstractColorApi',
             'userClassname' => 'ColorApi',
@@ -460,7 +460,7 @@ class RegisterRoutes
         [
             'httpMethod' => 'GET',
             'basePathWithoutHost' => '/api/v1',
-            'path' => '/colors',
+            'path' => '/work_groups/{workGroupId}/colors',
             'apiPackage' => 'dev_t0r\trvis_backend\api',
             'classname' => 'AbstractColorApi',
             'userClassname' => 'ColorApi',
@@ -1550,7 +1550,7 @@ class RegisterRoutes
         [
             'httpMethod' => 'DELETE',
             'basePathWithoutHost' => '/api/v1',
-            'path' => '/work_groups/{workGroupId}/stations/{stationId}',
+            'path' => '/stations/{stationId}',
             'apiPackage' => 'dev_t0r\trvis_backend\api',
             'classname' => 'AbstractStationApi',
             'userClassname' => 'StationApi',
@@ -1670,7 +1670,7 @@ class RegisterRoutes
         [
             'httpMethod' => 'GET',
             'basePathWithoutHost' => '/api/v1',
-            'path' => '/work_groups/{workGroupId}/stations/{stationId}',
+            'path' => '/stations/{stationId}',
             'apiPackage' => 'dev_t0r\trvis_backend\api',
             'classname' => 'AbstractStationApi',
             'userClassname' => 'StationApi',
@@ -1878,7 +1878,7 @@ class RegisterRoutes
         [
             'httpMethod' => 'PUT',
             'basePathWithoutHost' => '/api/v1',
-            'path' => '/work_groups/{workGroupId}/stations/{stationId}',
+            'path' => '/stations/{stationId}',
             'apiPackage' => 'dev_t0r\trvis_backend\api',
             'classname' => 'AbstractStationApi',
             'userClassname' => 'StationApi',
@@ -1985,7 +1985,7 @@ class RegisterRoutes
         [
             'httpMethod' => 'POST',
             'basePathWithoutHost' => '/api/v1',
-            'path' => '/work_groups/{workGroupId}/stations/{stationId}/tracks',
+            'path' => '/stations/{stationId}/tracks',
             'apiPackage' => 'dev_t0r\trvis_backend\api',
             'classname' => 'AbstractStationTrackApi',
             'userClassname' => 'StationTrackApi',
@@ -2086,7 +2086,7 @@ class RegisterRoutes
         [
             'httpMethod' => 'DELETE',
             'basePathWithoutHost' => '/api/v1',
-            'path' => '/work_groups/{workGroupId}/stations/{stationId}/tracks/{stationTrackId}',
+            'path' => '/tracks/{stationTrackId}',
             'apiPackage' => 'dev_t0r\trvis_backend\api',
             'classname' => 'AbstractStationTrackApi',
             'userClassname' => 'StationTrackApi',
@@ -2206,7 +2206,7 @@ class RegisterRoutes
         [
             'httpMethod' => 'GET',
             'basePathWithoutHost' => '/api/v1',
-            'path' => '/work_groups/{workGroupId}/stations/{stationId}/tracks/{stationTrackId}',
+            'path' => '/tracks/{stationTrackId}',
             'apiPackage' => 'dev_t0r\trvis_backend\api',
             'classname' => 'AbstractStationTrackApi',
             'userClassname' => 'StationTrackApi',
@@ -2313,7 +2313,7 @@ class RegisterRoutes
         [
             'httpMethod' => 'GET',
             'basePathWithoutHost' => '/api/v1',
-            'path' => '/work_groups/{workGroupId}/stations/{stationId}/tracks',
+            'path' => '/stations/{stationId}/tracks',
             'apiPackage' => 'dev_t0r\trvis_backend\api',
             'classname' => 'AbstractStationTrackApi',
             'userClassname' => 'StationTrackApi',
@@ -2414,7 +2414,7 @@ class RegisterRoutes
         [
             'httpMethod' => 'PUT',
             'basePathWithoutHost' => '/api/v1',
-            'path' => '/work_groups/{workGroupId}/stations/{stationId}/tracks/{stationTrackId}',
+            'path' => '/tracks/{stationTrackId}',
             'apiPackage' => 'dev_t0r\trvis_backend\api',
             'classname' => 'AbstractStationTrackApi',
             'userClassname' => 'StationTrackApi',
@@ -2521,7 +2521,7 @@ class RegisterRoutes
         [
             'httpMethod' => 'POST',
             'basePathWithoutHost' => '/api/v1',
-            'path' => '/work_groups/{workGroupId}/works/{workId}/trains/{trainId}/timetable_rows',
+            'path' => '/trains/{trainId}/timetable_rows',
             'apiPackage' => 'dev_t0r\trvis_backend\api',
             'classname' => 'AbstractTimetableRowApi',
             'userClassname' => 'TimetableRowApi',
@@ -2622,7 +2622,7 @@ class RegisterRoutes
         [
             'httpMethod' => 'DELETE',
             'basePathWithoutHost' => '/api/v1',
-            'path' => '/work_groups/{workGroupId}/works/{workId}/trains/{trainId}/timetable_rows/{timetableRowId}',
+            'path' => '/timetable_rows/{timetableRowId}',
             'apiPackage' => 'dev_t0r\trvis_backend\api',
             'classname' => 'AbstractTimetableRowApi',
             'userClassname' => 'TimetableRowApi',
@@ -2742,7 +2742,7 @@ class RegisterRoutes
         [
             'httpMethod' => 'GET',
             'basePathWithoutHost' => '/api/v1',
-            'path' => '/work_groups/{workGroupId}/works/{workId}/trains/{trainId}/timetable_rows/{timetableRowId}',
+            'path' => '/timetable_rows/{timetableRowId}',
             'apiPackage' => 'dev_t0r\trvis_backend\api',
             'classname' => 'AbstractTimetableRowApi',
             'userClassname' => 'TimetableRowApi',
@@ -2849,7 +2849,7 @@ class RegisterRoutes
         [
             'httpMethod' => 'GET',
             'basePathWithoutHost' => '/api/v1',
-            'path' => '/work_groups/{workGroupId}/works/{workId}/trains/{trainId}/timetable_rows',
+            'path' => '/trains/{trainId}/timetable_rows',
             'apiPackage' => 'dev_t0r\trvis_backend\api',
             'classname' => 'AbstractTimetableRowApi',
             'userClassname' => 'TimetableRowApi',
@@ -2950,7 +2950,7 @@ class RegisterRoutes
         [
             'httpMethod' => 'PUT',
             'basePathWithoutHost' => '/api/v1',
-            'path' => '/work_groups/{workGroupId}/works/{workId}/trains/{trainId}/timetable_rows/{timetableRowId}',
+            'path' => '/timetable_rows/{timetableRowId}',
             'apiPackage' => 'dev_t0r\trvis_backend\api',
             'classname' => 'AbstractTimetableRowApi',
             'userClassname' => 'TimetableRowApi',
@@ -3057,7 +3057,7 @@ class RegisterRoutes
         [
             'httpMethod' => 'POST',
             'basePathWithoutHost' => '/api/v1',
-            'path' => '/work_groups/{workGroupId}/works/{workId}/trains',
+            'path' => '/works/{workId}/trains',
             'apiPackage' => 'dev_t0r\trvis_backend\api',
             'classname' => 'AbstractTrainApi',
             'userClassname' => 'TrainApi',
@@ -3158,7 +3158,7 @@ class RegisterRoutes
         [
             'httpMethod' => 'DELETE',
             'basePathWithoutHost' => '/api/v1',
-            'path' => '/work_groups/{workGroupId}/works/{workId}/trains/{trainId}',
+            'path' => '/trains/{trainId}',
             'apiPackage' => 'dev_t0r\trvis_backend\api',
             'classname' => 'AbstractTrainApi',
             'userClassname' => 'TrainApi',
@@ -3278,7 +3278,7 @@ class RegisterRoutes
         [
             'httpMethod' => 'GET',
             'basePathWithoutHost' => '/api/v1',
-            'path' => '/work_groups/{workGroupId}/works/{workId}/trains/{trainId}',
+            'path' => '/trains/{trainId}',
             'apiPackage' => 'dev_t0r\trvis_backend\api',
             'classname' => 'AbstractTrainApi',
             'userClassname' => 'TrainApi',
@@ -3385,7 +3385,7 @@ class RegisterRoutes
         [
             'httpMethod' => 'GET',
             'basePathWithoutHost' => '/api/v1',
-            'path' => '/work_groups/{workGroupId}/works/{workId}/trains',
+            'path' => '/works/{workId}/trains',
             'apiPackage' => 'dev_t0r\trvis_backend\api',
             'classname' => 'AbstractTrainApi',
             'userClassname' => 'TrainApi',
@@ -3486,7 +3486,7 @@ class RegisterRoutes
         [
             'httpMethod' => 'PUT',
             'basePathWithoutHost' => '/api/v1',
-            'path' => '/work_groups/{workGroupId}/works/{workId}/trains/{trainId}',
+            'path' => '/trains/{trainId}',
             'apiPackage' => 'dev_t0r\trvis_backend\api',
             'classname' => 'AbstractTrainApi',
             'userClassname' => 'TrainApi',
@@ -3694,7 +3694,7 @@ class RegisterRoutes
         [
             'httpMethod' => 'DELETE',
             'basePathWithoutHost' => '/api/v1',
-            'path' => '/work_groups/{workGroupId}/works/{workId}',
+            'path' => '/works/{workId}',
             'apiPackage' => 'dev_t0r\trvis_backend\api',
             'classname' => 'AbstractWorkApi',
             'userClassname' => 'WorkApi',
@@ -3814,7 +3814,7 @@ class RegisterRoutes
         [
             'httpMethod' => 'GET',
             'basePathWithoutHost' => '/api/v1',
-            'path' => '/work_groups/{workGroupId}/works/{workId}',
+            'path' => '/works/{workId}',
             'apiPackage' => 'dev_t0r\trvis_backend\api',
             'classname' => 'AbstractWorkApi',
             'userClassname' => 'WorkApi',
@@ -4022,7 +4022,7 @@ class RegisterRoutes
         [
             'httpMethod' => 'PUT',
             'basePathWithoutHost' => '/api/v1',
-            'path' => '/work_groups/{workGroupId}/works/{workId}',
+            'path' => '/works/{workId}',
             'apiPackage' => 'dev_t0r\trvis_backend\api',
             'classname' => 'AbstractWorkApi',
             'userClassname' => 'WorkApi',
