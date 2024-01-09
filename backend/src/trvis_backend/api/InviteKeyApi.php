@@ -11,8 +11,8 @@ use dev_t0r\trvis_backend\Utils;
 use dev_t0r\trvis_backend\validator\DateTimeValidationRule;
 use dev_t0r\trvis_backend\validator\EnumValidationRule;
 use dev_t0r\trvis_backend\validator\IntValidationRule;
+use dev_t0r\trvis_backend\validator\PagingQueryValidator;
 use dev_t0r\trvis_backend\validator\RequestValidator;
-use dev_t0r\trvis_backend\validator\StringValidationRule;
 use PDO;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
@@ -147,9 +147,6 @@ final class InviteKeyApi extends AbstractInviteKeyApi
 	): ResponseInterface {
 		$userId = MyAuthMiddleware::getUserIdOrAnonymous($request);
 		$queryParams = $request->getQueryParams();
-		$p = (key_exists('p', $queryParams)) ? $queryParams['p'] : null;
-		$limit = (key_exists('limit', $queryParams)) ? $queryParams['limit'] : null;
-		$top = (key_exists('top', $queryParams)) ? $queryParams['top'] : null;
 		$isExpiredKeyExists = key_exists('expired', $queryParams);
 		$expired = $isExpiredKeyExists ? $queryParams['expired'] : null;
 
@@ -159,48 +156,9 @@ final class InviteKeyApi extends AbstractInviteKeyApi
 			return Utils::withUuidError($response);
 		}
 
-		if (!is_null($p)) {
-			if (!is_numeric($p)) {
-				$message = "Invalid type for parameter p, expected: int";
-				$this->logger->warning($message);
-				return Utils::withError($response, Constants::HTTP_BAD_REQUEST, $message);
-			}
-			$p = intval($p);
-			if ($p < Constants::PAGE_MIN_VALUE) {
-				$message = sprintf(
-					"Invalid value for parameter p, must be greater than or equal to %d.",
-					Constants::PAGE_MIN_VALUE,
-				);
-				$this->logger->warning($message);
-				return Utils::withError($response, Constants::HTTP_BAD_REQUEST, $message);
-			}
-		} else {
-			$p = Constants::PAGE_DEFAULT_VALUE;
-		}
-
-		if (!is_null($limit)) {
-			if (!is_numeric($limit)) {
-				$message = "Invalid type for parameter limit, expected: int";
-				$this->logger->warning($message);
-				return Utils::withError($response, Constants::HTTP_BAD_REQUEST, $message);
-			}
-			$limit = intval($limit);
-			if ($limit < Constants::PER_PAGE_MIN_VALUE || Constants::PER_PAGE_MAX_VALUE < $limit) {
-				$message = sprintf(
-					"Invalid value for parameter limit, must be between %d and %d.",
-					Constants::PER_PAGE_MIN_VALUE,
-					Constants::PER_PAGE_MAX_VALUE,
-				);
-				$this->logger->warning($message);
-				return Utils::withError($response, Constants::HTTP_BAD_REQUEST, $message);
-			}
-		} else {
-			$limit = Constants::PER_PAGE_DEFAULT_VALUE;
-		}
-
-		if (!is_null($top) && !Uuid::isValid($top)) {
-			$this->logger->warning("Invalid UUID format ({top})", ['top' => $top]);
-			return Utils::withUuidError($response);
+		$pagingParams = PagingQueryValidator::withRequest($request, $this->logger);
+		if ($pagingParams->isError) {
+			return $pagingParams->reqError->getResponseWithJson($response);
 		}
 
 		$includeExpired = false;
@@ -211,9 +169,9 @@ final class InviteKeyApi extends AbstractInviteKeyApi
 		return $this->inviteKeysService->selectInviteKeyListWithWorkGroupsId(
 			userId: $userId,
 			workGroupsId: Uuid::fromString($workGroupId),
-			page: $p,
-			perPage: $limit,
-			topId: is_null($top) ? null : Uuid::fromString($top),
+			page: $pagingParams->pageFrom1,
+			perPage: $pagingParams->perPage,
+			topId: $pagingParams->topId,
 			includeExpired: $includeExpired,
 		)->getResponseWithJson($response);
 	}

@@ -9,6 +9,7 @@ use dev_t0r\trvis_backend\model\InviteKeyPrivilegeType;
 use dev_t0r\trvis_backend\service\WorkGroupsService;
 use dev_t0r\trvis_backend\Utils;
 use dev_t0r\trvis_backend\validator\EnumValidationRule;
+use dev_t0r\trvis_backend\validator\PagingQueryValidator;
 use dev_t0r\trvis_backend\validator\RequestValidator;
 use PDO;
 use Psr\Http\Message\ServerRequestInterface;
@@ -119,67 +120,17 @@ class WorkGroupApi extends AbstractWorkGroupApi
 		ResponseInterface $response
 	): ResponseInterface {
 		$userId = MyAuthMiddleware::getUserIdOrAnonymous($request);
-		$queryParams = $request->getQueryParams();
-		$p = (key_exists('p', $queryParams)) ? $queryParams['p'] : null;
-		$limit = (key_exists('limit', $queryParams)) ? $queryParams['limit'] : null;
-		$top = (key_exists('top', $queryParams)) ? $queryParams['top'] : null;
 
-		$hasP = !is_null($p);
-		if ($hasP)
-		{
-			if (!is_numeric($p))
-			{
-				$this->logger->warning("Invalid number format (p:{p})", ['p' => $p]);
-				return Utils::withError($response, 400, "Invalid number format for parameter `p`");
-			}
-
-			$p = intval($p);
-			if ($p < Constants::PAGE_MIN_VALUE)
-			{
-				$this->logger->warning("Value out of range (p:{p})", ['p' => $p]);
-				return Utils::withError($response, 400, "Value out of range (parameter `p`)");
-			}
+		$pagingParams = PagingQueryValidator::withRequest($request, $this->logger);
+		if ($pagingParams->isError) {
+			return $pagingParams->reqError->getResponseWithJson($response);
 		}
-		else
-		{
-			$p = Constants::PAGE_DEFAULT_VALUE;
-		}
-
-		$hasLimit = !is_null($limit);
-		if ($hasLimit)
-		{
-			if (!is_numeric($limit))
-			{
-				$this->logger->warning("Invalid number format (limit:{limit})", ['limit' => $limit]);
-				return Utils::withError($response, 400, "Invalid number format for parameter `limit`");
-			}
-
-			$limit = intval($limit);
-			if ($limit < Constants::PER_PAGE_MIN_VALUE || Constants::PER_PAGE_MAX_VALUE < $limit)
-			{
-				$this->logger->warning("Value out of range (limit:{limit})", ['limit' => $limit]);
-				return Utils::withError($response, 400, "Value out of range (parameter `limit`)");
-			}
-		}
-		else
-		{
-			$limit = Constants::PER_PAGE_DEFAULT_VALUE;
-		}
-
-		$hasTop = !is_null($top);
-		if ($hasTop && !Uuid::isValid($top))
-		{
-			$this->logger->warning("Invalid UUID format ({workGroupId})", ['workGroupId' => $top]);
-			return Utils::withUuidError($response);
-		}
-
-		$uuid = $hasTop ? Uuid::fromString($top) : null;
 
 		return $this->workGroupsService->selectWorkGroupPage(
 			userId: $userId,
-			pageFrom1: $p,
-			perPage: $limit,
-			topId: $uuid,
+			pageFrom1: $pagingParams->pageFrom1,
+			perPage: $pagingParams->perPage,
+			topId: $pagingParams->topId,
 		)->getResponseWithJson($response);
 	}
 
