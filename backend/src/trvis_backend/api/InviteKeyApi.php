@@ -4,6 +4,7 @@ namespace dev_t0r\trvis_backend\api;
 
 use dev_t0r\trvis_backend\auth\MyAuthMiddleware;
 use dev_t0r\trvis_backend\Constants;
+use dev_t0r\trvis_backend\model\InviteKey;
 use dev_t0r\trvis_backend\model\InviteKeyPrivilegeType;
 use dev_t0r\trvis_backend\service\InviteKeysService;
 use dev_t0r\trvis_backend\Utils;
@@ -74,8 +75,12 @@ final class InviteKeyApi extends AbstractInviteKeyApi
 		$body = $request->getParsedBody();
 		// TODO: 現在から一定期間以内のexpires_atはBad Requestにする
 		// TODO: valid_from ~ expires_atが一定以下の期間しかない場合はBad Requestにする
-		$validateResult = $this->bodyValidator->validate($body);
-		if (!$validateResult->isError) {
+		$validateResult = $this->bodyValidator->validate(
+			d: $body,
+			checkRequired: true,
+			allowNestedArray: false,
+		);
+		if ($validateResult->isError) {
 			$this->logger->warning(
 				"Invalid request body: {msg}",
 				[
@@ -85,8 +90,10 @@ final class InviteKeyApi extends AbstractInviteKeyApi
 			return $validateResult->getResponseWithJson($response);
 		}
 
-		if ($body->privilege_type->value <= InviteKeyPrivilegeType::none->value) {
-			$message = "Invalid value for parameter privilege_type, must be greater than " . InviteKeyPrivilegeType::none;
+		$inviteKey = new InviteKey;
+		$inviteKey->setData($body);
+		if ($inviteKey->privilege_type->value <= InviteKeyPrivilegeType::none->value) {
+			$message = "Invalid value for parameter privilege_type, must be greater than " . InviteKeyPrivilegeType::none->name;
 			$this->logger->warning($message);
 			return Utils::withError($response, Constants::HTTP_BAD_REQUEST, $message);
 		}
@@ -94,11 +101,7 @@ final class InviteKeyApi extends AbstractInviteKeyApi
 		return $this->inviteKeysService->createInviteKey(
 			owner: $userId,
 			workGroupId: Uuid::fromString($workGroupId),
-			description: $body->description,
-			validFrom: $body->valid_from,
-			expiresAt: $body->expires_at,
-			useLimit: $body->use_limit,
-			privilegeType: $body->privilege_type,
+			inviteKey: $inviteKey,
 		)->getResponseWithJson($response);
 	}
 

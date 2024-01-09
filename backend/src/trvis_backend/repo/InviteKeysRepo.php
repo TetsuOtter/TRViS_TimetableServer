@@ -59,23 +59,15 @@ final class InviteKeysRepo
 		UuidInterface $inviteKeyId,
 		UuidInterface $workGroupId,
 		string $owner,
-		string $description,
-		?DateTimeInterface $validFrom,
-		?DateTimeInterface $expiresAt,
-		?int $useLimit,
-		InviteKeyPrivilegeType $privilegeType
+		InviteKey $inviteKey,
 	): RetValueOrError {
 		$this->logger->debug(
-			"insertInviteKey inviteKeyId: {inviteKeyId}, workGroupId: {workGroupId}, owner: {owner}, description: '{description}', validFrom: {validFrom}, expiresAt: {expiresAt}, useLimit: {useLimit}, privilegeType: {privilegeType}",
+			"insertInviteKey inviteKeyId: {inviteKeyId}, workGroupId: {workGroupId}, owner: {owner}, inviteKey: '{inviteKey}'",
 			[
 				'inviteKeyId' => $inviteKeyId,
 				'workGroupId' => $workGroupId,
 				'owner' => $owner,
-				'description' => $description,
-				'validFrom' => $validFrom,
-				'expiresAt' => $expiresAt,
-				'useLimit' => $useLimit,
-				'privilegeType' => $privilegeType
+				'inviteKey'=> $inviteKey,
 			]
 		);
 
@@ -108,11 +100,11 @@ final class InviteKeysRepo
 		$query->bindValue(':invite_keys_id', $inviteKeyId->getBytes(), PDO::PARAM_STR);
 		$query->bindValue(':work_groups_id', $workGroupId->getBytes(), PDO::PARAM_STR);
 		$query->bindValue(':owner', $owner, PDO::PARAM_STR);
-		$query->bindValue(':description', $description, PDO::PARAM_STR);
-		$query->bindValue(':valid_from', Utils::utcDateStrOrNull($validFrom), PDO::PARAM_STR);
-		$query->bindValue(':expires_at', Utils::utcDateStrOrNull($expiresAt), PDO::PARAM_STR);
-		$query->bindValue(':use_limit', $useLimit, PDO::PARAM_INT);
-		$query->bindValue(':privilege_type', $privilegeType->value, PDO::PARAM_INT);
+		$query->bindValue(':description', $inviteKey->description, PDO::PARAM_STR);
+		$query->bindValue(':valid_from', Utils::utcDateStrOrNull($inviteKey->valid_from), PDO::PARAM_STR);
+		$query->bindValue(':expires_at', Utils::utcDateStrOrNull($inviteKey->expires_at), PDO::PARAM_STR);
+		$query->bindValue(':use_limit', $inviteKey->use_limit, PDO::PARAM_INT);
+		$query->bindValue(':privilege_type', $inviteKey->privilege_type->value, PDO::PARAM_INT);
 
 		try {
 			$isSuccess = $query->execute();

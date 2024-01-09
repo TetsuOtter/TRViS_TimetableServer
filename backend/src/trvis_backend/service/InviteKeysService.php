@@ -3,6 +3,7 @@
 namespace dev_t0r\trvis_backend\service;
 
 use dev_t0r\trvis_backend\Constants;
+use dev_t0r\trvis_backend\model\InviteKey;
 use dev_t0r\trvis_backend\model\InviteKeyPrivilegeType;
 use dev_t0r\trvis_backend\repo\InviteKeysRepo;
 use dev_t0r\trvis_backend\repo\WorkGroupsPrivilegesRepo;
@@ -29,22 +30,14 @@ final class InviteKeysService
 	public function createInviteKey(
 		UuidInterface $workGroupId,
 		string $owner,
-		string $description,
-		?\DateTimeInterface $validFrom,
-		?\DateTimeInterface $expiresAt,
-		?int $useLimit,
-		InviteKeyPrivilegeType $privilegeType,
+		InviteKey $inviteKey,
 	): RetValueOrError {
 		$this->logger->debug(
-			"createInviteKey workGroupId: {workGroupId}, owner: {owner}, description: {description}, validFrom: {validFrom}, expiresAt: {expiresAt}, useLimit: {useLimit}, privilegeType: {privilegeType}",
+			"createInviteKey workGroupId: {workGroupId}, owner: {owner}, request: {request}",
 			[
 				'workGroupId' => $workGroupId,
 				'owner' => $owner,
-				'description' => $description,
-				'validFrom' => $validFrom,
-				'expiresAt' => $expiresAt,
-				'useLimit' => $useLimit,
-				'privilegeType' => $privilegeType,
+				'request' => $inviteKey,
 			]
 		);
 
@@ -82,11 +75,7 @@ final class InviteKeysService
 				inviteKeyId: $inviteKeyId,
 				workGroupId: $workGroupId,
 				owner: $owner,
-				description: $description,
-				validFrom: $validFrom,
-				expiresAt: $expiresAt,
-				useLimit: $useLimit,
-				privilegeType: $privilegeType,
+				inviteKey: $inviteKey,
 			);
 			if ($insertInviteKeyResult->isError) {
 				$this->db->rollBack();
