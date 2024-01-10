@@ -65,7 +65,7 @@ final class TimetableRowsRepo extends MyRepoBase
 
 		timetable_rows.marker_text AS marker_text,
 
-		timetable_rows.work_type AS work_type,
+		timetable_rows.work_type AS work_type
 
 	SQL;
 
