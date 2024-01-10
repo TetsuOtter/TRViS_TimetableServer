@@ -73,11 +73,13 @@ final class TimetableRowsRepo extends MyRepoBase
 		mixed $d,
 	): mixed {
 		$result = new TimetableRow();
+		$stationTracksId = $d['station_tracks_id'];
 		$colorsIdMarker = $d['colors_id_marker'];
 		$result->setData([
 			'timetable_rows_id' => Uuid::fromBytes($d['timetable_rows_id']),
 			'trains_id' => Uuid::fromBytes($d['trains_id']),
 			'stations_id' => Uuid::fromBytes($d['stations_id']),
+			'station_tracks_id' => is_null($stationTracksId) ? null : Uuid::fromBytes($stationTracksId),
 			'colors_id_marker' => is_null($colorsIdMarker) ? null : Uuid::fromBytes($colorsIdMarker),
 			'description' => $d['description'],
 			'created_at' => Utils::dbDateStrToDateTime($d['created_at']),
@@ -118,6 +120,7 @@ final class TimetableRowsRepo extends MyRepoBase
 		timetable_rows_id,
 		trains_id,
 		stations_id,
+		station_tracks_id,
 		colors_id,
 		description,
 		owner,
@@ -159,6 +162,7 @@ final class TimetableRowsRepo extends MyRepoBase
 				:timetable_rows_id_{$i},
 				{$this->PLACEHOLDER_PARENT_ID},
 				:stations_id_{$i},
+				:station_tracks_id_{$i},
 				:colors_id_{$i},
 				:description_{$i},
 				{$this->PLACEHOLDER_OWNER},
@@ -201,6 +205,7 @@ final class TimetableRowsRepo extends MyRepoBase
 	) {
 		$query->bindValue(":timetable_rows_id_$i", $id->getBytes(), PDO::PARAM_STR);
 		$query->bindValue(":stations_id_$i", $d->stations_id->getBytes(), PDO::PARAM_STR);
+		$query->bindValue(":station_tracks_id_$i", $d->station_tracks_id->getBytes(), PDO::PARAM_STR);
 		$query->bindValue(":colors_id_$i", $d->colors_id_marker?->getBytes(), PDO::PARAM_STR);
 		$query->bindValue(":description_$i", $d->description, PDO::PARAM_STR);
 
