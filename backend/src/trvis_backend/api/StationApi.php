@@ -106,9 +106,9 @@ final class StationApi extends AbstractStationApi
 		}
 
 		$createResult = $this->stationsService->create(
-			workGroupsId: Uuid::fromString($workGroupId),
+			parentId: Uuid::fromString($workGroupId),
 			senderUserId: $userId,
-			stationsList: $stationsList,
+			dataList: $stationsList,
 		);
 		if (!$createResult->isError && (!is_array($body) || !array_is_list($body))) {
 			$createResult = RetValueOrError::withValue($createResult->value[0]);
@@ -131,7 +131,7 @@ final class StationApi extends AbstractStationApi
 
 			return $this->stationsService->delete(
 				senderUserId: $userId,
-				stationsId: Uuid::fromString($stationId),
+				id: Uuid::fromString($stationId),
 			)->getResponseWithJson($response);
 		}
 
@@ -150,7 +150,7 @@ final class StationApi extends AbstractStationApi
 
 			return $this->stationsService->getOne(
 				senderUserId: $userId,
-				stationsId: Uuid::fromString($stationId),
+				id: Uuid::fromString($stationId),
 			)->getResponseWithJson($response);
 		}
 
@@ -173,7 +173,7 @@ final class StationApi extends AbstractStationApi
 			}
 
 			return $this->stationsService->getPage(
-				workGroupsId: Uuid::fromString($workGroupId),
+				parentId: Uuid::fromString($workGroupId),
 				senderUserId: $userId,
 				pageFrom1: $pagingParams->pageFrom1,
 				perPage: $pagingParams->perPage,
