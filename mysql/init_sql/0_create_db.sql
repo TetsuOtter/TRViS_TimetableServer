@@ -637,27 +637,27 @@ CREATE TABLE
     DEFAULT FALSE
   ,
 
-  arrive_hh
+  arrive_time_hh
     TINYINT(2) UNSIGNED
   ,
 
-  arrive_mm
+  arrive_time_mm
     TINYINT(2) UNSIGNED
   ,
 
-  arrive_ss
+  arrive_time_ss
     TINYINT(2) UNSIGNED
   ,
 
-  departure_hh
+  departure_time_hh
     TINYINT(2) UNSIGNED
   ,
 
-  departure_mm
+  departure_time_mm
     TINYINT(2) UNSIGNED
   ,
 
-  departure_ss
+  departure_time_ss
     TINYINT(2) UNSIGNED
   ,
 
