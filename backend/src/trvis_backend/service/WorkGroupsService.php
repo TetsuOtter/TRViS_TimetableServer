@@ -43,7 +43,7 @@ final class WorkGroupsService
 		// 本当は権限チェックはJOINを使ってやるべきだが、面倒なので別クエリでやる
 		// (頻繁に使われるAPIじゃないし、そこまでパフォーマンスに影響はないはず)
 		$selectPrivilegeTypeResult = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
-			workGroupsId: $workGroupsId,
+			id: $workGroupsId,
 			userId: $currentUserId ?? Constants::UID_ANONYMOUS,
 			includeAnonymous: true,
 		);
@@ -172,7 +172,7 @@ final class WorkGroupsService
 		);
 
 		$selectPrivilegeTypeResult = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
-			workGroupsId: $workGroupsId,
+			id: $workGroupsId,
 			userId: $userId,
 			includeAnonymous: true,
 		);
@@ -221,7 +221,7 @@ final class WorkGroupsService
 		);
 
 		$selectPrivilegeTypeResult = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
-			workGroupsId: $workGroupsId,
+			id: $workGroupsId,
 			userId: $userId,
 			includeAnonymous: true,
 		);
@@ -399,7 +399,7 @@ final class WorkGroupsService
 		}
 
 		$senderPrivilegeTypeResult = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
-			workGroupsId: $workGroupsId,
+			id: $workGroupsId,
 			userId: $senderUserId,
 			includeAnonymous: true,
 		);

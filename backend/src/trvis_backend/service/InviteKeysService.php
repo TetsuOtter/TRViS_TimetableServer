@@ -42,7 +42,7 @@ final class InviteKeysService
 		);
 
 		$ownerPrivilegeType = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
-			workGroupsId: $workGroupId,
+			id: $workGroupId,
 			userId: $owner,
 			includeAnonymous: true,
 			// ここでチェックした直後に権限が変更されても、その変更は無視する
@@ -142,7 +142,7 @@ final class InviteKeysService
 		?\DateTime $currentDateTime = null,
 	): RetValueOrError {
 		$privilegeType = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
-			workGroupsId: $workGroupsId,
+			id: $workGroupsId,
 			userId: $userId,
 			includeAnonymous: true,
 			selectForUpdate: false,
@@ -197,7 +197,7 @@ final class InviteKeysService
 			$workGroupId = $inviteKeyData->value->work_groups_id;
 			$privilegeType = $inviteKeyData->value->privilege_type;
 			$currentPrivilegeType = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
-				workGroupsId: $workGroupId,
+				id: $workGroupId,
 				userId: $userId,
 				includeAnonymous: false,
 				selectForUpdate: true,
@@ -304,7 +304,7 @@ final class InviteKeysService
 			$inviteKeyData = $inviteKeyData->value;
 			$currentUserPrivilegeType = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
 				userId: $userId,
-				workGroupsId: $inviteKeyData->work_groups_id,
+				id: $inviteKeyData->work_groups_id,
 				includeAnonymous: true,
 				selectForUpdate: true,
 			);
