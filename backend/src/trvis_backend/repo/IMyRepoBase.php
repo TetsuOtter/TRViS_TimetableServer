@@ -9,7 +9,7 @@ use Ramsey\Uuid\UuidInterface;
 /**
  * @template T
  */
-interface IMyRepoBase
+interface IMyRepoBase extends IMyRepoSelectPrivilegeType
 {
 	/**
 	 * @return RetValueOrError<T>
@@ -76,15 +76,5 @@ interface IMyRepoBase
 	 */
 	public function deleteByWorkGroupsId(
 		UuidInterface $workGroupsId,
-	): RetValueOrError;
-
-	/**
-	 * @return RetValueOrError<InviteKeyPrivilegeType>
-	 */
-	public function selectPrivilegeType(
-		UuidInterface $id,
-		string $userId = Constants::UID_ANONYMOUS,
-		bool $includeAnonymous = false,
-		bool $selectForUpdate = false,
 	): RetValueOrError;
 }
