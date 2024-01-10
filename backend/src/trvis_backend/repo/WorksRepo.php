@@ -91,9 +91,9 @@ final class WorksRepo extends MyRepoBase
 		return <<<SQL
 			(
 				:works_id_{$i},
-				:work_groups_id,
+				{$this->PLACEHOLDER_PARENT_ID},
 				:description_{$i},
-				:owner,
+				{$this->PLACEHOLDER_OWNER},
 				:name_{$i},
 				:affect_date_{$i},
 				:affix_content_type_{$i},
