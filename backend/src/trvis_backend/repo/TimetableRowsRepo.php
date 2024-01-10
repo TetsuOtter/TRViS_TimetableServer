@@ -238,4 +238,13 @@ final class TimetableRowsRepo extends MyRepoBase
 
 		$query->bindValue(":work_type_$i", $d->work_type?->value, PDO::PARAM_STR);
 	}
+
+	protected function _keyToUpdateQuerySetLine(
+		string $key,
+	): string {
+		if ($key === 'colors_id_marker') {
+			return "colors_id_marker = :{$key}";
+		}
+		return "{$key} = :{$key}";
+	}
 }
