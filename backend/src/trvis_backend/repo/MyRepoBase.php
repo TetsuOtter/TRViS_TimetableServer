@@ -4,6 +4,7 @@ namespace dev_t0r\trvis_backend\repo;
 use BackedEnum;
 use DateTimeInterface;
 use dev_t0r\trvis_backend\Constants;
+use dev_t0r\trvis_backend\model\InviteKeyPrivilegeType;
 use dev_t0r\trvis_backend\RetValueOrError;
 use dev_t0r\trvis_backend\Utils;
 use InvalidArgumentException;
@@ -680,6 +681,142 @@ abstract class MyRepoBase
 				],
 			);
 			return RetValueOrError::withValue($rowCount);
+		}
+		catch (\PDOException $ex)
+		{
+			$errCode = $ex->getCode();
+
+			$this->logger->error(
+				"Failed to execute SQL ({errorCode} -> {errorInfo})",
+				[
+					"errorCode" => $errCode,
+					"errorInfo" => $ex->getMessage(),
+				],
+			);
+			return RetValueOrError::withError(
+				Constants::HTTP_INTERNAL_SERVER_ERROR,
+				"Failed to execute SQL - " . $errCode,
+			);
+		}
+	}
+
+	/**
+	 * @return RetValueOrError<InviteKeyPrivilegeType>
+	 */
+	public function selectPrivilegeType(
+		UuidInterface $id,
+		string $userId = Constants::UID_ANONYMOUS,
+		bool $includeAnonymous = false,
+		bool $selectForUpdate = false,
+	): RetValueOrError {
+		$this->logger->debug(
+			'selectPrivilegeType {TABLE_NAME} id: {id}, userId: {userId}, includeAnonymous: {includeAnonymous}, selectForUpdate: {selectForUpdate}',
+			[
+				'TABLE_NAME' => $this->TABLE_NAME,
+				'id' => $id,
+				'userId' => $userId,
+				'includeAnonymous' => $includeAnonymous,
+				'selectForUpdate' => $selectForUpdate,
+			],
+		);
+
+		if ($userId === Constants::UID_ANONYMOUS)
+		{
+			// リクエスト対象自体がAnonymousの場合は、わざわざOR条件にする必要はない
+			$includeAnonymous = false;
+		}
+		$JOIN_QUERY = implode(
+			' ',
+			array_map(
+				fn(string $parentTableName): string => <<<SQL
+				INNER JOIN
+					{$parentTableName}
+				USING
+					({$parentTableName}_id)
+				SQL,
+				$this->parentTableNameList,
+			),
+		);
+		$PARENTS_WHERE_DELETED_AT_IS_NULL = implode(
+			' ',
+			array_map(
+				fn(string $parentTableName): string => <<<SQL
+				AND
+					{$parentTableName}.deleted_at IS NULL
+				SQL,
+				$this->parentTableNameList,
+			),
+		);
+		try
+		{
+			$query = $this->db->prepare(
+				<<<SQL
+				SELECT
+					work_groups_privileges.privilege_type,
+					work_groups_privileges.uid,
+					work_groups_privileges.invite_keys_id
+				FROM
+					{$this->TABLE_NAME}
+
+				{$JOIN_QUERY}
+
+				INNER JOIN
+					work_groups_privileges
+				USING
+					(work_groups_id)
+				WHERE
+					{$this->TABLE_NAME}_id = :id
+				AND
+					{$this->TABLE_NAME}.deleted_at IS NULL
+
+				{$PARENTS_WHERE_DELETED_AT_IS_NULL}
+
+				AND
+				SQL
+				.
+				($includeAnonymous ? ' uid IN (:userId, \'\')' : ' uid = :userId')
+				.
+				($selectForUpdate ? ' FOR UPDATE' : '')
+			);
+
+			$query->bindValue(':userId', $userId, PDO::PARAM_STR);
+			$query->bindValue(':id', $id->getBytes(), PDO::PARAM_STR);
+
+			$query->execute();
+			if ($query->rowCount() === 0)
+			{
+				$this->logger->warning('selectWorkGroupsId - rowCount is 0');
+				return Utils::errWorkGroupNotFound();
+			}
+
+			$privilegeTypeList = $query->fetchAll(PDO::FETCH_ASSOC);
+			$maximumPrivilegeTypeValue = InviteKeyPrivilegeType::none->value;
+			foreach ($privilegeTypeList as $row)
+			{
+				$privilegeTypeValue = intval($row['privilege_type']);
+				$inviteKeysId = $row['invite_keys_id'];
+				$this->logger->debug(
+					'privilege type: {privilegeType} (UID:{uid}, InviteKey:{inviteKeysId})',
+					[
+						'privilegeType' => $privilegeTypeValue,
+						'uid' => $row['uid'],
+						'inviteKeysId' => is_null($inviteKeysId) ? null : Uuid::fromBytes($inviteKeysId),
+					]
+				);
+				if ($maximumPrivilegeTypeValue < $privilegeTypeValue)
+				{
+					$maximumPrivilegeTypeValue = $privilegeTypeValue;
+				}
+			}
+			$this->logger->debug(
+				'maximum privilege type: {privilegeType}',
+				[
+					'privilegeType' => $maximumPrivilegeTypeValue,
+				]
+			);
+			return RetValueOrError::withValue(
+				InviteKeyPrivilegeType::fromInt($maximumPrivilegeTypeValue)
+			);
 		}
 		catch (\PDOException $ex)
 		{

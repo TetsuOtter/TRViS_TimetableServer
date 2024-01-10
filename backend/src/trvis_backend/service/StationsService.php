@@ -137,23 +137,8 @@ final class StationsService
 			],
 		);
 
-		$checkIdResult = $this->stationsRepo->selectWorkGroupsId(
+		$senderPrivilegeCheckResult = $this->stationsRepo->selectPrivilegeType(
 			id: $stationsId,
-		);
-		if ($checkIdResult->isError) {
-			$this->logger->warning(
-				'checkIdResult -> Error[{errorCode}]: {errorMsg}',
-				[
-					'errorCode' => $checkIdResult->errorCode,
-					'errorMsg' => $checkIdResult->errorMsg,
-				],
-			);
-			return $checkIdResult;
-		}
-		$workGroupsId = $checkIdResult->value;
-
-		$senderPrivilegeCheckResult = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
-			workGroupsId: $workGroupsId,
 			userId: $senderUserId,
 			includeAnonymous: true,
 		);
@@ -221,29 +206,8 @@ final class StationsService
 			],
 		);
 
-		$selectWorkResult = $this->stationsRepo->selectOne(
+		$senderPrivilegeCheckResult = $this->stationsRepo->selectPrivilegeType(
 			id: $stationsId,
-		);
-		$this->logger->debug(
-			'selectWorkResult -> {selectWorkResult}',
-			[
-				'selectWorkResult' => $selectWorkResult->value,
-			],
-		);
-		if ($selectWorkResult->isError) {
-			$this->logger->warning(
-				'selectWorkResult -> Error[{errorCode}]: {errorMsg}',
-				[
-					'errorCode' => $selectWorkResult->errorCode,
-					'errorMsg' => $selectWorkResult->errorMsg,
-				],
-			);
-			return $selectWorkResult;
-		}
-		$workGroupsId = $selectWorkResult->value->work_groups_id;
-
-		$senderPrivilegeCheckResult = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
-			workGroupsId: $workGroupsId,
 			userId: $senderUserId,
 			includeAnonymous: true,
 		);
@@ -269,7 +233,9 @@ final class StationsService
 			return Utils::errWorkGroupNotFound();
 		}
 
-		return $selectWorkResult;
+		return $this->stationsRepo->selectOne(
+			id: $stationsId,
+		);
 	}
 
 	/**
@@ -346,23 +312,8 @@ final class StationsService
 			],
 		);
 
-		$checkIdResult = $this->stationsRepo->selectWorkGroupsId(
+		$senderPrivilegeCheckResult = $this->stationsRepo->selectPrivilegeType(
 			id: $stationsId,
-		);
-		if ($checkIdResult->isError) {
-			$this->logger->warning(
-				'checkIdResult -> Error[{errorCode}]: {errorMsg}',
-				[
-					'errorCode' => $checkIdResult->errorCode,
-					'errorMsg' => $checkIdResult->errorMsg,
-				],
-			);
-			return $checkIdResult;
-		}
-		$workGroupsId = $checkIdResult->value;
-
-		$senderPrivilegeCheckResult = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
-			workGroupsId: $workGroupsId,
 			userId: $senderUserId,
 			includeAnonymous: true,
 		);
