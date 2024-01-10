@@ -13,7 +13,7 @@ use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
-final class WorkGroupsPrivilegesRepo
+final class WorkGroupsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 {
 	public function __construct(
 		private readonly PDO $db,
@@ -164,7 +164,7 @@ final class WorkGroupsPrivilegesRepo
 	 * @return RetValueOrError<InviteKeyPrivilegeType>
 	 */
 	public function selectPrivilegeType(
-		UuidInterface $workGroupsId,
+		UuidInterface $id,
 		string $userId = Constants::UID_ANONYMOUS,
 		bool $includeAnonymous = false,
 		bool $selectForUpdate = false,
@@ -173,7 +173,7 @@ final class WorkGroupsPrivilegesRepo
 			'selecting work group privilege (user:{userId}, WorkGroup:{workGroupsId})',
 			[
 				'userId' => $userId,
-				'workGroupsId' => $workGroupsId,
+				'workGroupsId' => $id,
 			]
 		);
 
@@ -207,7 +207,7 @@ final class WorkGroupsPrivilegesRepo
 				';'
 			);
 			$query->bindValue(':userId', $userId, PDO::PARAM_STR);
-			$query->bindValue(':workGroupsId', $workGroupsId->getBytes(), PDO::PARAM_STR);
+			$query->bindValue(':workGroupsId', $id->getBytes(), PDO::PARAM_STR);
 			$query->execute();
 			if ($query->rowCount() === 0)
 			{
