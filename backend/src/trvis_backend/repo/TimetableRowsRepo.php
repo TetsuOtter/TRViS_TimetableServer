@@ -3,6 +3,7 @@
 namespace dev_t0r\trvis_backend\repo;
 
 use dev_t0r\trvis_backend\model\TimetableRow;
+use dev_t0r\trvis_backend\model\WorkAtStationType;
 use dev_t0r\trvis_backend\Utils;
 use PDO;
 use PDOStatement;
@@ -110,7 +111,7 @@ final class TimetableRowsRepo extends MyRepoBase
 
 			'marker_text' => $d['marker_text'],
 
-			'work_type' => $d['work_type'],
+			'work_type' => WorkAtStationType::fromOrNull($d['work_type']),
 		]);
 		return $result;
 	}
@@ -235,6 +236,6 @@ final class TimetableRowsRepo extends MyRepoBase
 
 		$query->bindValue(":marker_text_$i", $d->marker_text, PDO::PARAM_STR);
 
-		$query->bindValue(":work_type_$i", $d->work_type, PDO::PARAM_STR);
+		$query->bindValue(":work_type_$i", $d->work_type?->value, PDO::PARAM_STR);
 	}
 }
