@@ -44,6 +44,8 @@ final class UuidValidationRule extends ValidationRuleBase
 			);
 		}
 
+		self::setValue($d, $isKvpArray, $this->key, Uuid::fromString($value));
+
 		return RetValueOrError::withValue(null);
 	}
 }
