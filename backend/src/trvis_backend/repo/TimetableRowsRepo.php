@@ -2,9 +2,7 @@
 
 namespace dev_t0r\trvis_backend\repo;
 
-use dev_t0r\trvis_backend\Constants;
 use dev_t0r\trvis_backend\model\TimetableRow;
-use dev_t0r\trvis_backend\RetValueOrError;
 use dev_t0r\trvis_backend\Utils;
 use PDO;
 use PDOStatement;
@@ -12,12 +10,23 @@ use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
-final class TimetableRowsRepo
+/**
+ * @extends MyRepoBase<TimetableRow>
+ */
+final class TimetableRowsRepo extends MyRepoBase
 {
 	public function __construct(
-		private readonly PDO $db,
-		private readonly LoggerInterface $logger,
+		PDO $db,
+		LoggerInterface $logger,
 	) {
+		parent::__construct(
+			db: $db,
+			logger: $logger,
+			TABLE_NAME: 'timetable_rows',
+			parentTableNameList: ['trains', 'works', 'work_groups'],
+			SQL_SELECT_COLUMNS: self::SQL_SELECT_COLUMNS,
+			SQL_INSERT_COLUMNS: self::SQL_INSERT_COLUMNS,
+		);
 	}
 
 	private const SQL_SELECT_COLUMNS = <<<SQL
@@ -60,9 +69,9 @@ final class TimetableRowsRepo
 
 	SQL;
 
-	private static function _fetchResultToObj(
+	protected function _fetchResultToObj(
 		mixed $d,
-	): TimetableRow {
+	): mixed {
 		$result = new TimetableRow();
 		$result->setData([
 			'timetable_rows_id' => Uuid::fromBytes($d['timetable_rows_id']),
@@ -141,17 +150,17 @@ final class TimetableRowsRepo
 		work_type
 	)
 	SQL;
-	static function _genInsertValuesQuerySegment(
+	protected function _genInsertValuesQuerySegment(
 		int $i
 	): string {
 		return <<<SQL
 			(
 				:timetable_rows_id_{$i},
-				:trains_id,
+				{$this->PLACEHOLDER_PARENT_ID},
 				:stations_id_{$i},
 				:colors_id_{$i},
 				:description_{$i},
-				:owner,
+				{$this->PLACEHOLDER_OWNER},
 
 				:drive_time_mm_{$i},
 				:drive_time_ss_{$i},
@@ -183,13 +192,13 @@ final class TimetableRowsRepo
 			)
 		SQL;
 	}
-	static function _setInsertValues(
+	protected function _setInsertValues(
 		PDOStatement $query,
 		int $i,
-		UuidInterface $timetableRowsId,
-		TimetableRow $d,
+		UuidInterface $id,
+		mixed $d,
 	) {
-		$query->bindValue(":timetable_rows_id_$i", $timetableRowsId->getBytes(), PDO::PARAM_STR);
+		$query->bindValue(":timetable_rows_id_$i", $id->getBytes(), PDO::PARAM_STR);
 		$query->bindValue(":stations_id_$i", $d->stations_id->getBytes(), PDO::PARAM_STR);
 		$query->bindValue(":colors_id_$i", $d->colors_id_marker?->getBytes(), PDO::PARAM_STR);
 		$query->bindValue(":description_$i", $d->description, PDO::PARAM_STR);
@@ -221,601 +230,5 @@ final class TimetableRowsRepo
 		$query->bindValue(":marker_text_$i", $d->marker_text, PDO::PARAM_STR);
 
 		$query->bindValue(":work_type_$i", $d->work_type, PDO::PARAM_STR);
-	}
-
-	/**
-	 * @return RetValueOrError<TimetableRow>
-	 */
-	public function selectOne(
-		UuidInterface $timetableRowsId,
-	): RetValueOrError {
-		$this->logger->debug(
-			'selectOne timetable_rowsId: {timetableRowsId}',
-			[
-				'timetableRowsId' => $timetableRowsId,
-			],
-		);
-
-		try
-		{
-			$query = $this->db->prepare(
-				'SELECT ' . self::SQL_SELECT_COLUMNS . <<<SQL
-				FROM
-					timetable_rows
-				WHERE
-					timetable_rows.timetable_rows_id = :timetable_rows_id
-				AND
-					timetable_rows.deleted_at IS NULL
-				SQL
-			);
-
-			$query->bindValue(':timetable_rows_id', $timetableRowsId->getBytes());
-
-			$query->execute();
-			$result = $query->fetch(PDO::FETCH_ASSOC);
-			if ($result === false) {
-				$this->logger->warning(
-					'selectOne({timetableRowsId}) - rowCount is 0',
-					[
-						'timetableRowsId' => $timetableRowsId,
-					],
-				);
-				return Utils::errTimetableRowNotFound();
-			}
-
-			return RetValueOrError::withValue(self::_fetchResultToObj($result));
-		}
-		catch (\PDOException $ex)
-		{
-			$errCode = $ex->getCode();
-
-			$this->logger->error(
-				"Failed to execute SQL ({errorCode} -> {errorInfo})",
-				[
-					"errorCode" => $errCode,
-					"errorInfo" => $ex->getMessage(),
-				],
-			);
-			return RetValueOrError::withError(
-				Constants::HTTP_INTERNAL_SERVER_ERROR,
-				"Failed to execute SQL - " . $errCode,
-			);
-		}
-	}
-
-	/**
-	 * @return RetValueOrError<UuidInterface>
-	 */
-	public function selectWorkGroupsId(
-		UuidInterface $timetableRowsId,
-	): RetValueOrError {
-		$this->logger->debug(
-			'selectWorkGroupsId timetableRowsId: {timetableRowsId}',
-			[
-				'timetableRowsId' => $timetableRowsId,
-			],
-		);
-
-		try
-		{
-			$query = $this->db->prepare(
-				<<<SQL
-				SELECT
-					works.work_groups_id AS work_groups_id
-				FROM
-					timetable_rows
-				JOIN
-					trains
-				USING
-					(trains_id)
-				JOIN
-					works
-				USING
-					(works_id)
-				WHERE
-					timetable_rows.timetable_rows_id = :timetable_rows_id
-				AND
-					timetable_rows.deleted_at IS NULL
-				AND
-					trains.deleted_at IS NULL
-				AND
-					works.deleted_at IS NULL
-				SQL
-			);
-
-			$query->bindValue(':timetable_rows_id', $timetableRowsId->getBytes(), PDO::PARAM_STR);
-
-			$query->execute();
-			$result = $query->fetch(PDO::FETCH_ASSOC);
-			if ($result === false) {
-				$this->logger->warning('selectWorkGroupsId - rowCount is 0');
-				return Utils::errTimetableRowNotFound();
-			}
-
-			$resultId = $result['work_groups_id'];
-			return RetValueOrError::withValue(Uuid::fromBytes($resultId));
-		}
-		catch (\PDOException $ex)
-		{
-			$errCode = $ex->getCode();
-
-			$this->logger->error(
-				"Failed to execute SQL ({errorCode} -> {errorInfo})",
-				[
-					"errorCode" => $errCode,
-					"errorInfo" => $ex->getMessage(),
-				],
-			);
-			return RetValueOrError::withError(
-				Constants::HTTP_INTERNAL_SERVER_ERROR,
-				"Failed to execute SQL - " . $errCode,
-			);
-		}
-	}
-
-	/**
-	 * @return RetValueOrError<array<TimetableRow>>
-	 */
-	public function selectPage(
-		UuidInterface $trainsId,
-		int $pageFrom1,
-		int $perPage,
-		?UuidInterface $topId,
-	): RetValueOrError {
-		$this->logger->debug(
-			'selectList trainsId: {trainsId}, pageFrom1: {pageFrom1}, perPage: {perPage}, topId: {topId}',
-			[
-				'trainsId' => $trainsId,
-				'pageFrom1' => $pageFrom1,
-				'perPage' => $perPage,
-				'topId' => $topId,
-			],
-		);
-
-		$hasTopId = !is_null($topId);
-
-		try
-		{
-			$query = $this->db->prepare(
-				'SELECT ' . self::SQL_SELECT_COLUMNS . <<<SQL
-				FROM
-					timetable_rows
-				WHERE
-					timetable_rows.trains_id = :trains_id
-				AND
-					timetable_rows.deleted_at IS NULL
-				SQL
-				.
-				(!$hasTopId ? ' ' : ' AND timetable_row.timetable_rows_id <= :top_id ')
-				.
-				<<<SQL
-				ORDER BY
-					timetable_rows_id DESC
-				LIMIT
-					:perPage
-				OFFSET
-					:offset
-				SQL
-			);
-
-			$query->bindValue(':trains_id', $trainsId->getBytes(), PDO::PARAM_STR);
-			if ($hasTopId) {
-				$query->bindValue(':top_id', $topId);
-			}
-			$query->bindValue(':perPage', $perPage, PDO::PARAM_INT);
-			$query->bindValue(':offset', ($pageFrom1 - 1) * $perPage, PDO::PARAM_INT);
-
-			$query->execute();
-			$this->logger->debug(
-				'rorCount: {rowCount}',
-				[
-					'rowCount' => $query->rowCount(),
-				],
-			);
-			$result = $query->fetchAll(PDO::FETCH_ASSOC);
-			if ($result === false) {
-				$this->logger->warning('selectList - rowCount is 0');
-				return Utils::errTimetableRowNotFound();
-			}
-
-			$timetableRow = array_map(
-				fn($data) => self::_fetchResultToObj($data),
-				$result,
-			);
-
-			return RetValueOrError::withValue($timetableRow);
-		}
-		catch (\PDOException $ex)
-		{
-			$errCode = $ex->getCode();
-
-			$this->logger->error(
-				"Failed to execute SQL ({errorCode} -> {errorInfo})",
-				[
-					"errorCode" => $errCode,
-					"errorInfo" => $ex->getMessage(),
-				],
-			);
-			return RetValueOrError::withError(
-				Constants::HTTP_INTERNAL_SERVER_ERROR,
-				"Failed to execute SQL - " . $errCode,
-			);
-		}
-	}
-
-	/**
-	 * @return RetValueOrError<array<TimetableRow>>
-	 */
-	public function selectList(
-		/** @param array<UuidInterface> $timetableRowsIdList */
-		array $timetableRowsIdList,
-	): RetValueOrError {
-		$this->logger->debug(
-			"selectList timetableRowsIdList: {timetableRowsIdList}",
-			[
-				"timetableRowsIdList" => $timetableRowsIdList,
-			],
-		);
-
-		$timetableRowsIdListCount = count($timetableRowsIdList);
-		$placeholders = implode(',', array_map(
-			fn($i) => ":timetable_rows_id_$i",
-			range(0, $timetableRowsIdListCount - 1),
-		));
-
-		try
-		{
-			$query = $this->db->prepare(
-				'SELECT ' . self::SQL_SELECT_COLUMNS . <<<SQL
-				FROM
-					timetable_row
-				WHERE
-					timetable_rows_id IN ($placeholders)
-				SQL
-			);
-
-			for ($i = 0; $i < $timetableRowsIdListCount; $i++) {
-				$query->bindValue(":timetable_rows_id_$i", $timetableRowsIdList[$i]->getBytes(), PDO::PARAM_STR);
-			}
-
-			$query->execute();
-			$this->logger->debug(
-				'rorCount: {rowCount}',
-				[
-					'rowCount' => $query->rowCount(),
-				],
-			);
-			$result = $query->fetchAll(PDO::FETCH_ASSOC);
-			if ($result === false) {
-				$this->logger->warning('selectList - rowCount is 0');
-				return Utils::errTimetableRowNotFound();
-			}
-
-			$timetableRow = array_map(
-				fn($data) => self::_fetchResultToObj($data),
-				$result,
-			);
-
-			return RetValueOrError::withValue($timetableRow);
-		}
-		catch (\PDOException $ex)
-		{
-			$errCode = $ex->getCode();
-
-			$this->logger->error(
-				"Failed to execute SQL ({errorCode} -> {errorInfo})",
-				[
-					"errorCode" => $errCode,
-					"errorInfo" => $ex->getMessage(),
-				],
-			);
-			return RetValueOrError::withError(
-				Constants::HTTP_INTERNAL_SERVER_ERROR,
-				"Failed to execute SQL - " . $errCode,
-			);
-		}
-	}
-
-	/**
-	 * @return RetValueOrError<null>
-	 */
-	public function insertList(
-		UuidInterface $trainsId,
-		string $ownerUserId,
-		/** @param array<UuidInterface> $timetableRowsIdList */
-		array $timetableRowsIdList,
-		/** @param array<TimetableRow> $timetableRow */
-		array $timetableRows,
-	): RetValueOrError {
-		$this->logger->debug(
-			'insertList trainsId: {trainsId}, timetableRow: {timetableRow}',
-			[
-				'trainsId' => $trainsId,
-				'timetableRow' => $timetableRows,
-			],
-		);
-
-		try
-		{
-			$timetableRowCount = count($timetableRows);
-			$query = $this->db->prepare(
-				'INSERT INTO timetable_row'
-				.
-				self::SQL_INSERT_COLUMNS
-				.
-				' VALUES '
-				.
-				implode(',', array_map(
-					fn($i) => self::_genInsertValuesQuerySegment($i),
-					range(0, $timetableRowCount - 1),
-				))
-			);
-			$query->bindValue(':trains_id', $trainsId->getBytes(), PDO::PARAM_STR);
-			$query->bindValue(':owner', $ownerUserId, PDO::PARAM_STR);
-			for ($i = 0; $i < $timetableRowCount; $i++) {
-				self::_setInsertValues($query, $i, $timetableRowsIdList[$i], $timetableRows[$i]);
-			}
-
-			$query->execute();
-			$rowCount = $query->rowCount();
-			$this->logger->debug(
-				'insertList - rowCount: {rowCount}',
-				[
-					'rowCount' => $rowCount,
-				],
-			);
-			return RetValueOrError::withValue(null);
-		}
-		catch (\PDOException $ex)
-		{
-			$errCode = $ex->getCode();
-
-			$this->logger->error(
-				"Failed to execute SQL ({errorCode} -> {errorInfo})",
-				[
-					"errorCode" => $errCode,
-					"errorInfo" => $ex->getMessage(),
-				],
-			);
-			return RetValueOrError::withError(
-				Constants::HTTP_INTERNAL_SERVER_ERROR,
-				"Failed to execute SQL - " . $errCode,
-			);
-		}
-	}
-
-	/**
-	 * @return RetValueOrError<null>
-	 */
-	public function update(
-		UuidInterface $timetableRowsId,
-		array $timetableRowsProps,
-	): RetValueOrError {
-		$this->logger->debug(
-			'updateList timetableRowsId: {timetableRowsId}, timetableRow: {timetableRow}',
-			[
-				'timetableRowsId' => $timetableRowsId,
-				'timetableRow' => $timetableRowsProps,
-			],
-		);
-
-		if (count($timetableRowsProps) === 0) {
-			return RetValueOrError::withValue(null);
-		}
-
-		try
-		{
-			$query = $this->db->prepare(
-				"UPDATE timetable_row SET "
-				.
-				implode(',', array_map(fn($key) => "{$key} = :{$key}", array_keys($timetableRowsProps)))
-				.
-				" WHERE timetable_rows_id = :timetable_rows_id AND deleted_at IS NULL"
-			);
-			$query->bindValue(':timetable_rows_id', $timetableRowsId->getBytes(), PDO::PARAM_STR);
-			foreach ($timetableRowsProps as $key => $value) {
-				$paramType = PDO::PARAM_STR;
-				if (is_int($value)) {
-					$paramType = PDO::PARAM_INT;
-				}
-				$query->bindValue(":{$key}", $value, $paramType);
-			}
-
-			$query->execute();
-			return RetValueOrError::withValue(null);
-		}
-		catch (\PDOException $ex)
-		{
-			$errCode = $ex->getCode();
-
-			$this->logger->error(
-				"Failed to execute SQL ({errorCode} -> {errorInfo})",
-				[
-					"errorCode" => $errCode,
-					"errorInfo" => $ex->getMessage(),
-				],
-			);
-			return RetValueOrError::withError(
-				Constants::HTTP_INTERNAL_SERVER_ERROR,
-				"Failed to execute SQL - " . $errCode,
-			);
-		}
-	}
-
-	public function deleteOne(
-		UuidInterface $timetableRowsId,
-	): RetValueOrError {
-		$this->logger->debug(
-			"deleteOne timetableRowsId: {timetableRowsId}",
-			[
-				"timetableRowsId" => $timetableRowsId,
-			],
-		);
-
-		try
-		{
-			$query = $this->db->prepare(<<<SQL
-				UPDATE
-					timetable_row
-				SET
-					deleted_at = CURRENT_TIMESTAMP()
-				WHERE
-					timetable_rows_id = :timetable_rows_id
-				AND
-					deleted_at IS NULL
-				;
-				SQL
-			);
-
-			$query->bindValue(":timetable_rows_id", $timetableRowsId->getBytes(), PDO::PARAM_STR);
-			$query->execute();
-			$rowCount = $query->rowCount();
-			$this->logger->debug(
-				"deleteOne - rowCount: {rowCount}",
-				[
-					"rowCount" => $rowCount,
-				],
-			);
-			if ($rowCount === 0) {
-				$this->logger->warning(
-					"TimetableRow not found ({timetableRowsId})",
-					[
-						"timetableRowsId" => $timetableRowsId,
-					],
-				);
-				return Utils::errTimetableRowNotFound();
-			}
-			return RetValueOrError::withValue(null);
-		}
-		catch (\PDOException $ex)
-		{
-			$errCode = $ex->getCode();
-
-			$this->logger->error(
-				"Failed to execute SQL ({errorCode} -> {errorInfo})",
-				[
-					"errorCode" => $errCode,
-					"errorInfo" => $ex->getMessage(),
-				],
-			);
-			return RetValueOrError::withError(
-				Constants::HTTP_INTERNAL_SERVER_ERROR,
-				"Failed to execute SQL - " . $errCode,
-			);
-		}
-	}
-
-	public function deleteByTrainsId(
-		UuidInterface $trainsId,
-	): RetValueOrError {
-		$this->logger->debug(
-			"deleteByTrainsId trainsId: {trainsId}",
-			[
-				"trainsId" => $trainsId,
-			],
-		);
-
-		try
-		{
-			$query = $this->db->prepare(<<<SQL
-				UPDATE
-					timetable_row
-				SET
-					deleted_at = CURRENT_TIMESTAMP()
-				WHERE
-					trains_id = :trains_id
-				AND
-					deleted_at IS NULL
-				;
-				SQL
-			);
-
-			$query->bindValue(":trains_id", $trainsId->getBytes(), PDO::PARAM_STR);
-			$query->execute();
-			$this->logger->debug(
-				"deleteByTrainsId - rowCount: {rowCount}",
-				[
-					"rowCount" => $query->rowCount(),
-				],
-			);
-			return RetValueOrError::withValue(null);
-		}
-		catch (\PDOException $ex)
-		{
-			$errCode = $ex->getCode();
-
-			$this->logger->error(
-				"Failed to execute SQL ({errorCode} -> {errorInfo})",
-				[
-					"errorCode" => $errCode,
-					"errorInfo" => $ex->getMessage(),
-				],
-			);
-			return RetValueOrError::withError(
-				Constants::HTTP_INTERNAL_SERVER_ERROR,
-				"Failed to execute SQL - " . $errCode,
-			);
-		}
-	}
-
-	public function deleteByWorkGroupsId(
-		UuidInterface $workGroupsId,
-	): RetValueOrError {
-		$this->logger->debug(
-			"deleteByWorkGroupsId workGroupsId: {workGroupsId}",
-			[
-				"workGroupsId" => $workGroupsId,
-			],
-		);
-
-		try
-		{
-			$query = $this->db->prepare(<<<SQL
-				UPDATE
-					timetable_row
-				JOIN
-					trains
-				USING
-					(trains_id)
-				JOIN
-					works
-				USING
-					(works_id)
-				SET
-					timetable_row.deleted_at = CURRENT_TIMESTAMP()
-				WHERE
-					works.work_groups_id = :work_groups_id
-				AND
-					timetable_row.deleted_at IS NULL
-				;
-				SQL
-			);
-
-			$query->bindValue(":work_groups_id", $workGroupsId->getBytes(), PDO::PARAM_STR);
-			$query->execute();
-			$this->logger->debug(
-				"deleteByWorkGroupsId - rowCount: {rowCount}",
-				[
-					"rowCount" => $query->rowCount(),
-				],
-			);
-			return RetValueOrError::withValue(null);
-		}
-		catch (\PDOException $ex)
-		{
-			$errCode = $ex->getCode();
-
-			$this->logger->error(
-				"Failed to execute SQL ({errorCode} -> {errorInfo})",
-				[
-					"errorCode" => $errCode,
-					"errorInfo" => $ex->getMessage(),
-				],
-			);
-			return RetValueOrError::withError(
-				Constants::HTTP_INTERNAL_SERVER_ERROR,
-				"Failed to execute SQL - " . $errCode,
-			);
-		}
 	}
 }
