@@ -2,6 +2,7 @@
 
 namespace dev_t0r\trvis_backend\repo;
 
+use dev_t0r\trvis_backend\model\TrvisContentType;
 use dev_t0r\trvis_backend\model\Work;
 use dev_t0r\trvis_backend\Utils;
 use PDO;
