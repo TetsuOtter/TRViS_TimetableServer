@@ -18,6 +18,7 @@ final class TrainsService extends MyServiceBase
 		LoggerInterface $logger,
 	) {
 		parent::__construct(
+			db: $db,
 			targetRepo: new TrainsRepo($db, $logger),
 			parentRepo: new WorksRepo($db, $logger),
 			logger: $logger,

@@ -5,8 +5,10 @@ namespace dev_t0r\trvis_backend\service;
 use dev_t0r\trvis_backend\model\TimetableRow;
 use dev_t0r\trvis_backend\repo\TimetableRowsRepo;
 use dev_t0r\trvis_backend\repo\TrainsRepo;
+use dev_t0r\trvis_backend\RetValueOrError;
 use PDO;
 use Psr\Log\LoggerInterface;
+use Ramsey\Uuid\UuidInterface;
 
 /**
  * @template-implements IMyServiceBase<TimetableRow, TimetableRowsRepo>
@@ -18,6 +20,7 @@ final class TimetableRowsService extends MyServiceBase
 		LoggerInterface $logger,
 	) {
 		parent::__construct(
+			db: $db,
 			targetRepo: new TimetableRowsRepo($db, $logger),
 			parentRepo: new TrainsRepo($db, $logger),
 			logger: $logger,

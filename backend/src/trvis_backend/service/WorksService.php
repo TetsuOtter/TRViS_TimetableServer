@@ -18,6 +18,7 @@ final class WorksService extends MyServiceBase
 		LoggerInterface $logger,
 	) {
 		parent::__construct(
+			db: $db,
 			targetRepo: new WorksRepo($db, $logger),
 			parentRepo: new WorkGroupsPrivilegesRepo($db, $logger),
 			logger: $logger,

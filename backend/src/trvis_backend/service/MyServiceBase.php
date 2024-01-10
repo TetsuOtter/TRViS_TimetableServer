@@ -7,6 +7,7 @@ use dev_t0r\trvis_backend\repo\IMyRepoBase;
 use dev_t0r\trvis_backend\repo\IMyRepoSelectPrivilegeType;
 use dev_t0r\trvis_backend\RetValueOrError;
 use dev_t0r\trvis_backend\Utils;
+use PDO;
 use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
@@ -19,6 +20,7 @@ use Ramsey\Uuid\UuidInterface;
 abstract class MyServiceBase implements IMyServiceBase
 {
 	public function __construct(
+		protected PDO $db,
 		/** @var TRepoTarget $targetRepo */
 		protected readonly IMyRepoBase $targetRepo,
 		protected readonly IMyRepoSelectPrivilegeType $parentRepo,
@@ -151,21 +153,90 @@ abstract class MyServiceBase implements IMyServiceBase
 				'idList' => $idList,
 			],
 		);
-		$insertResult = $this->targetRepo->insertList(
-			parentId: $parentId,
-			ownerUserId: $senderUserId,
-			idList: $idList,
-			valueList: $dataList,
-		);
-		if ($insertResult->isError) {
-			$this->logger->warning(
-				'insertResult -> Error[{errorCode}]: {errorMsg}',
+
+		$this->db->beginTransaction();
+		try
+		{
+			$beforeInsertResult = $this->beforeInsert(
+				parentId: $parentId,
+				ownerUserId: $senderUserId,
+				idList: $idList,
+				valueList: $dataList,
+			);
+			if (!is_null($beforeInsertResult)) {
+				$this->logger->warning(
+					'beforeInsertResult -> value:{value} -> [{errorCode}]: {errorMsg}',
+					[
+						'value' => $beforeInsertResult->value,
+						'errorCode' => $beforeInsertResult->errorCode,
+						'errorMsg' => $beforeInsertResult->errorMsg,
+					],
+				);
+				if ($beforeInsertResult->isError) {
+					$this->db->rollBack();
+				} else {
+					$this->db->commit();
+				}
+				return $beforeInsertResult;
+			}
+
+			$insertResult = $this->targetRepo->insertList(
+				parentId: $parentId,
+				ownerUserId: $senderUserId,
+				idList: $idList,
+				valueList: $dataList,
+			);
+
+			if ($insertResult->isError) {
+				$this->logger->warning(
+					'insertResult -> Error[{errorCode}]: {errorMsg}',
+					[
+						'errorCode' => $insertResult->errorCode,
+						'errorMsg' => $insertResult->errorMsg,
+					],
+				);
+				$this->db->rollBack();
+				return $insertResult;
+			}
+
+			$afterInsertResult = $this->afterInsert(
+				parentId: $parentId,
+				ownerUserId: $senderUserId,
+				idList: $idList,
+				valueList: $dataList,
+				insertResult: $insertResult,
+			);
+
+			if (!is_null($afterInsertResult)) {
+				$this->logger->warning(
+					'afterInsertResult -> value:{value} -> [{errorCode}]: {errorMsg}',
+					[
+						'value' => $afterInsertResult->value,
+						'errorCode' => $afterInsertResult->errorCode,
+						'errorMsg' => $afterInsertResult->errorMsg,
+					],
+				);
+				if ($afterInsertResult->isError) {
+					$this->db->rollBack();
+				} else {
+					$this->db->commit();
+				}
+				return $afterInsertResult;
+			}
+
+			$this->db->commit();
+		}
+		catch (\Throwable $e)
+		{
+			$this->logger->error(
+				'insert -> Exception[{exception}]',
 				[
-					'errorCode' => $insertResult->errorCode,
-					'errorMsg' => $insertResult->errorMsg,
+					'exception' => $e,
 				],
 			);
-			return $insertResult;
+			if ($this->db->inTransaction()) {
+				$this->db->rollBack();
+			}
 		}
 
 		$this->logger->debug(
@@ -179,6 +250,35 @@ abstract class MyServiceBase implements IMyServiceBase
 		return $this->targetRepo->selectList(
 			idList: $idList,
 		);
+	}
+
+	/**
+	 * @return RetValueOrError<mixed>
+	 */
+	protected function beforeInsert(
+		UuidInterface $parentId,
+		string $ownerUserId,
+		/** @param array<UuidInterface> $idList */
+		array $idList,
+		/** @param array<T> $valueList */
+		array $valueList,
+	): ?RetValueOrError {
+		return null;
+	}
+
+	/**
+	 * @return RetValueOrError<mixed>
+	 */
+	protected function afterInsert(
+		UuidInterface $parentId,
+		string $ownerUserId,
+		/** @param array<UuidInterface> $idList */
+		array $idList,
+		/** @param array<T> $valueList */
+		array $valueList,
+		RetValueOrError $insertResult,
+	): ?RetValueOrError {
+		return null;
 	}
 
 	/**
