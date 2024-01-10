@@ -17,7 +17,7 @@ use Ramsey\Uuid\UuidInterface;
 /**
  * @template T
  */
-abstract class MyRepoBase
+abstract class MyRepoBase implements IMyRepoBase
 {
 	const TABLE_NAME_WORK_GROUPS = 'work_groups';
 	protected readonly int $parentTableCount;
