@@ -73,11 +73,12 @@ final class TimetableRowsRepo extends MyRepoBase
 		mixed $d,
 	): mixed {
 		$result = new TimetableRow();
+		$colorsIdMarker = $d['colors_id_marker'];
 		$result->setData([
 			'timetable_rows_id' => Uuid::fromBytes($d['timetable_rows_id']),
 			'trains_id' => Uuid::fromBytes($d['trains_id']),
 			'stations_id' => Uuid::fromBytes($d['stations_id']),
-			'colors_id_marker' => Uuid::fromBytes($d['colors_id_marker']),
+			'colors_id_marker' => is_null($colorsIdMarker) ? null : Uuid::fromBytes($colorsIdMarker),
 			'description' => $d['description'],
 			'created_at' => Utils::dbDateStrToDateTime($d['created_at']),
 
