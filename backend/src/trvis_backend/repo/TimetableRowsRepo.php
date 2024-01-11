@@ -206,7 +206,7 @@ final class TimetableRowsRepo extends MyRepoBase
 	) {
 		$query->bindValue(":timetable_rows_id_$i", $id->getBytes(), PDO::PARAM_STR);
 		$query->bindValue(":stations_id_$i", $d->stations_id->getBytes(), PDO::PARAM_STR);
-		$query->bindValue(":station_tracks_id_$i", $d->station_tracks_id->getBytes(), PDO::PARAM_STR);
+		$query->bindValue(":station_tracks_id_$i", $d->station_tracks_id?->getBytes(), PDO::PARAM_STR);
 		$query->bindValue(":colors_id_$i", $d->colors_id_marker?->getBytes(), PDO::PARAM_STR);
 		$query->bindValue(":description_$i", $d->description, PDO::PARAM_STR);
 
