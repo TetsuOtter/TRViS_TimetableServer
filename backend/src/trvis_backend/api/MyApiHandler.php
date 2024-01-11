@@ -191,7 +191,7 @@ class MyApiHandler
 			$data->setData($body);
 			return $this->service->update(
 				senderUserId: $userId,
-				stationsId: Uuid::fromString($id),
+				id: Uuid::fromString($id),
 				data: $data,
 				requestBody: $body,
 			)->getResponseWithJson($response);

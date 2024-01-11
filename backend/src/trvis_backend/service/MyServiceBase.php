@@ -120,7 +120,7 @@ abstract class MyServiceBase implements IMyServiceBase
 	public function create(
 		UuidInterface $parentId,
 		string $senderUserId,
-		/** @param array<T> $stationsList */
+		/** @param array<T> $dataList */
 		array $dataList,
 	): RetValueOrError {
 		$this->logger->debug(
@@ -514,22 +514,23 @@ abstract class MyServiceBase implements IMyServiceBase
 	 */
 	public function update(
 		string $senderUserId,
-		UuidInterface $stationsId,
+		UuidInterface $id,
 		/** @param T $data */
 		object $data,
 		object|array $requestBody,
 	): RetValueOrError {
 		$this->logger->debug(
-			'updateStation senderUserId: {senderUserId}, stationsId: {stationsId}, data: {data}',
+			'update{dataTypeName} senderUserId: {senderUserId}, id: {id}, data: {data}',
 			[
+				'dataTypeName' => $this->dataTypeName,
 				'senderUserId' => $senderUserId,
-				'stationsId' => $stationsId,
+				'id' => $id,
 				'data' => $data,
 			],
 		);
 
 		$senderPrivilegeCheckResult = $this->checkPrivilegeToWrite(
-			id: $stationsId,
+			id: $id,
 			repo: $this->targetRepo,
 			senderUserId: $senderUserId,
 		);
@@ -548,7 +549,7 @@ abstract class MyServiceBase implements IMyServiceBase
 		{
 			$beforeUpdateResult = $this->beforeUpdate(
 				senderUserId: $senderUserId,
-				id: $stationsId,
+				id: $id,
 				data: $data,
 				kvpArray: $kvpArray,
 			);
@@ -570,7 +571,7 @@ abstract class MyServiceBase implements IMyServiceBase
 			}
 
 			$updateResult = $this->targetRepo->update(
-				id: $stationsId,
+				id: $id,
 				props: $kvpArray,
 			);
 
@@ -587,7 +588,7 @@ abstract class MyServiceBase implements IMyServiceBase
 
 			$afterUpdateResult = $this->afterUpdate(
 				senderUserId: $senderUserId,
-				id: $stationsId,
+				id: $id,
 				data: $data,
 				kvpArray: $kvpArray,
 				updateResult: $updateResult,
@@ -615,12 +616,12 @@ abstract class MyServiceBase implements IMyServiceBase
 				'{dataTypeName} updated -> {id}',
 				[
 					'dataTypeName' => $this->dataTypeName,
-					'id' => $stationsId,
+					'id' => $id,
 				],
 			);
 
 			$selectOneResult = $this->targetRepo->selectOne(
-				id: $stationsId,
+				id: $id,
 			);
 
 			if ($selectOneResult->isError) {

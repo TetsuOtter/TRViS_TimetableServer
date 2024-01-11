@@ -15,7 +15,7 @@ interface IMyServiceBase
 	public function create(
 		UuidInterface $parentId,
 		string $senderUserId,
-		/** @param array<T> $stationsList */
+		/** @param array<T> $dataList */
 		array $dataList,
 	): RetValueOrError;
 
@@ -51,7 +51,7 @@ interface IMyServiceBase
 	 */
 	public function update(
 		string $senderUserId,
-		UuidInterface $stationsId,
+		UuidInterface $id,
 		/** @param T $data */
 		object $data,
 		object|array $requestBody,
