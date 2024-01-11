@@ -225,6 +225,18 @@ abstract class MyServiceBase implements IMyServiceBase
 			}
 
 			$this->db->commit();
+
+			$this->logger->debug(
+				'{dataTypeName} inserted -> {idList}',
+				[
+					'dataTypeName' => $this->dataTypeName,
+					'idList' => $idList,
+				],
+			);
+
+			return $this->targetRepo->selectList(
+				idList: $idList,
+			);
 		}
 		catch (\Throwable $e)
 		{
@@ -237,19 +249,13 @@ abstract class MyServiceBase implements IMyServiceBase
 			if ($this->db->inTransaction()) {
 				$this->db->rollBack();
 			}
+
+			return RetValueOrError::withError(
+				statusCode: Constants::HTTP_INTERNAL_SERVER_ERROR,
+				errorMsg: "Unexpected error occurred during insert - {$e->getMessage()}",
+				errorCode: $e->getCode(),
+			);
 		}
-
-		$this->logger->debug(
-			'{dataTypeName} inserted -> {idList}',
-			[
-				'dataTypeName' => $this->dataTypeName,
-				'idList' => $idList,
-			],
-		);
-
-		return $this->targetRepo->selectList(
-			idList: $idList,
-		);
 	}
 
 	/**
