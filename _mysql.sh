@@ -7,6 +7,8 @@ DOCKER_EXEC_FLAGS=""
 # ref: https://hydrocul.github.io/wiki/blog/2016/1012-is-pipe-or-terminal.html
 if [ -t 0 ]; then
   DOCKER_EXEC_FLAGS+="-it"
+else
+  DOCKER_EXEC_FLAGS+="-i"
 fi
 
 docker exec $DOCKER_EXEC_FLAGS webmon-db mysql -u$MYSQL_USER -p$MYSQL_PASSWORD -D$MYSQL_DATABASE
