@@ -542,24 +542,161 @@ abstract class MyServiceBase implements IMyServiceBase
 			$requestBody,
 			$data->getData(),
 		);
-		$updateResult = $this->targetRepo->update(
-			id: $stationsId,
-			props: $kvpArray,
-		);
-		if ($updateResult->isError) {
-			$this->logger->warning(
-				'updateResult -> Error[{errorCode}]: {errorMsg}',
+
+		$this->db->beginTransaction();
+		try
+		{
+			$beforeUpdateResult = $this->beforeUpdate(
+				senderUserId: $senderUserId,
+				id: $stationsId,
+				data: $data,
+				kvpArray: $kvpArray,
+			);
+			if (!is_null($beforeUpdateResult)) {
+				$this->logger->warning(
+					'beforeUpdateResult -> value:{value} -> [{errorCode}]: {errorMsg}',
+					[
+						'value' => $beforeUpdateResult->value,
+						'errorCode' => $beforeUpdateResult->errorCode,
+						'errorMsg' => $beforeUpdateResult->errorMsg,
+					],
+				);
+				if ($beforeUpdateResult->isError) {
+					$this->db->rollBack();
+				} else {
+					$this->db->commit();
+				}
+				return $beforeUpdateResult;
+			}
+
+			$updateResult = $this->targetRepo->update(
+				id: $stationsId,
+				props: $kvpArray,
+			);
+
+			if ($updateResult->isError) {
+				$this->logger->warning(
+					'updateResult -> Error[{errorCode}]: {errorMsg}',
+					[
+						'errorCode' => $updateResult->errorCode,
+						'errorMsg' => $updateResult->errorMsg,
+					],
+				);
+				return $updateResult;
+			}
+
+			$afterUpdateResult = $this->afterUpdate(
+				senderUserId: $senderUserId,
+				id: $stationsId,
+				data: $data,
+				kvpArray: $kvpArray,
+				updateResult: $updateResult,
+			);
+
+			if (!is_null($afterUpdateResult)) {
+				$this->logger->warning(
+					'afterUpdateResult -> value:{value} -> [{errorCode}]: {errorMsg}',
+					[
+						'value' => $afterUpdateResult->value,
+						'errorCode' => $afterUpdateResult->errorCode,
+						'errorMsg' => $afterUpdateResult->errorMsg,
+					],
+				);
+
+				if ($afterUpdateResult->isError) {
+					$this->db->rollBack();
+				} else {
+					$this->db->commit();
+				}
+				return $afterUpdateResult;
+			}
+
+			$this->logger->debug(
+				'{dataTypeName} updated -> {id}',
 				[
-					'errorCode' => $updateResult->errorCode,
-					'errorMsg' => $updateResult->errorMsg,
+					'dataTypeName' => $this->dataTypeName,
+					'id' => $stationsId,
 				],
 			);
-			return $updateResult;
-		}
 
-		return $this->targetRepo->selectOne(
-			id: $stationsId,
-		);
+			$selectOneResult = $this->targetRepo->selectOne(
+				id: $stationsId,
+			);
+
+			if ($selectOneResult->isError) {
+				$this->logger->warning(
+					'selectOneResult -> Error[{errorCode}]: {errorMsg}',
+					[
+						'errorCode' => $selectOneResult->errorCode,
+						'errorMsg' => $selectOneResult->errorMsg,
+					],
+				);
+				$this->db->rollBack();
+				return $selectOneResult;
+			} else {
+				$this->logger->debug(
+					'selectOneResult -> value:{value}',
+					[
+						'value' => $selectOneResult->value,
+					],
+				);
+
+				$this->db->commit();
+				return $selectOneResult;
+			}
+		}
+		catch (\Throwable $e)
+		{
+			$this->logger->error(
+				'update -> Exception[{exception}]',
+				[
+					'exception' => $e,
+				],
+			);
+			if ($this->db->inTransaction()) {
+				$this->db->rollBack();
+			}
+
+			return RetValueOrError::withError(
+				statusCode: Constants::HTTP_INTERNAL_SERVER_ERROR,
+				errorMsg: "Unexpected error occurred during update - {$e->getMessage()}",
+				errorCode: $e->getCode(),
+			);
+		}
 	}
 
+	/**
+	 * 更新実行前に実行する処理。更新処理を継続する場合はnullを返す
+	 *
+	 * @return RetValueOrError<mixed>|null
+	 */
+	protected function beforeUpdate(
+		string $senderUserId,
+		UuidInterface $id,
+		/** @param T $data */
+		object $data,
+		/** @param array<string, mixed> $kvpArray */
+		array $kvpArray,
+	): ?RetValueOrError {
+		return null;
+	}
+
+	/**
+	 * 更新実行後に実行する処理。更新処理を継続する場合はnullを返す
+	 * (rollbackしたい場合はErrorを返す)
+	 *
+	 * @return RetValueOrError<mixed>|null
+	 */
+	protected function afterUpdate(
+		string $senderUserId,
+		UuidInterface $id,
+		/** @param T $data */
+		object $data,
+		/** @param array<string, mixed> $kvpArray */
+		array $kvpArray,
+		/** @param RetValueOrError<int> $updateResult */
+		RetValueOrError $updateResult,
+	): ?RetValueOrError {
+		return null;
+	}
 }
