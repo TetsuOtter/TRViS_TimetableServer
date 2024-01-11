@@ -259,7 +259,10 @@ abstract class MyServiceBase implements IMyServiceBase
 	}
 
 	/**
-	 * @return RetValueOrError<mixed>
+	 * INSERT前に実行する処理。処理を継続する場合はnullを返す
+	 * 処理を中断してrollbackしたい場合は何かしらのレスポンスを返す
+	 *
+	 * @return RetValueOrError<mixed>|null
 	 */
 	protected function beforeInsert(
 		UuidInterface $parentId,
@@ -273,7 +276,11 @@ abstract class MyServiceBase implements IMyServiceBase
 	}
 
 	/**
-	 * @return RetValueOrError<mixed>
+	 * INSERT後に実行する処理。処理を継続し、通常のレスポンスを返す場合はnullを返す
+	 * 処理を中断してrollbackしたい場合はErrorを返す
+	 * 自前のレスポンスを返したい場合はnull以外を返す
+	 *
+	 * @return RetValueOrError<mixed>|null
 	 */
 	protected function afterInsert(
 		UuidInterface $parentId,
@@ -282,6 +289,7 @@ abstract class MyServiceBase implements IMyServiceBase
 		array $idList,
 		/** @param array<T> $valueList */
 		array $valueList,
+		/** @param RetValueOrError<int> $insertResult */
 		RetValueOrError $insertResult,
 	): ?RetValueOrError {
 		return null;
