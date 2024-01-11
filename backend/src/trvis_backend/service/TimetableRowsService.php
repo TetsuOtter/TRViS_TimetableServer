@@ -11,7 +11,7 @@ use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\UuidInterface;
 
 /**
- * @template-implements IMyServiceBase<TimetableRow, TimetableRowsRepo>
+ * @extends MyServiceBase<TimetableRow, TimetableRowsRepo, TrainsRepo>
  */
 final class TimetableRowsService extends MyServiceBase
 {

@@ -16,6 +16,7 @@ use Ramsey\Uuid\UuidInterface;
 /**
  * @template T of BaseModel
  * @template TRepoTarget of IMyRepoBase<T>
+ * @template TRepoParent of IMyRepoSelectPrivilegeType
  * @implements IMyServiceBase<T>
  */
 abstract class MyServiceBase implements IMyServiceBase
@@ -24,6 +25,7 @@ abstract class MyServiceBase implements IMyServiceBase
 		protected PDO $db,
 		/** @var TRepoTarget $targetRepo */
 		protected readonly IMyRepoBase $targetRepo,
+		/** @var TRepoParent $parentRepo */
 		protected readonly IMyRepoSelectPrivilegeType $parentRepo,
 		protected readonly LoggerInterface $logger,
 		protected readonly string $dataTypeName,
