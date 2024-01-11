@@ -75,4 +75,14 @@ interface IMyRepoBase extends IMyRepoSelectPrivilegeType
 	public function deleteByWorkGroupsId(
 		UuidInterface $workGroupsId,
 	): RetValueOrError;
+
+	/**
+	 * 指定のIDから、Tableに存在しない/指定のWorkGroupに属さない (または消去された) IDを取得する
+	 * @return RetValueOrError<array<UuidInterface>>
+	 */
+	public function nonExistIdCheck(
+		/** @param array<UuidInterface> $idList */
+		array $idList,
+		?UuidInterface $workGroupsId,
+	): RetValueOrError;
 }

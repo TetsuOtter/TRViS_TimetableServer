@@ -11,6 +11,7 @@ use InvalidArgumentException;
 use PDO;
 use PDOStatement;
 use Psr\Log\LoggerInterface;
+use Ramsey\Uuid\Type\Hexadecimal;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
@@ -835,4 +836,150 @@ abstract class MyRepoBase implements IMyRepoBase
 			);
 		}
 	}
+
+	/**
+	 * 指定のIDから、Tableに存在しない/指定のWorkGroupに属さない (または消去された) IDを取得する
+	 * @return RetValueOrError<array<UuidInterface>>
+	 */
+	public function nonExistIdCheck(
+		/** @param array<UuidInterface> $idList */
+		array $idList,
+		?UuidInterface $workGroupsId,
+	): RetValueOrError {
+		$this->logger->debug(
+			'nonExistIdCheck {TABLE_NAME} idList: {idList}, workGroupsId: {workGroupsId}',
+			[
+				'TABLE_NAME' => $this->TABLE_NAME,
+				'idList' => $idList,
+				'workGroupsId' => $workGroupsId,
+			],
+		);
+
+		$idCount = count($idList);
+		if ($idCount === 0) {
+			return RetValueOrError::withValue([]);
+		} else if ($idCount === 1) {
+			$idPlaceholders = 'SELECT UNHEX(:id_0) AS id';
+		} else {
+			$idPlaceholders = implode(' UNION ', array_map(
+				fn($i) => "SELECT UNHEX(:id_$i)" . ($i === 0 ? ' AS id' : ''),
+				range(0, $idCount - 1),
+			));
+		}
+
+		if (is_null($workGroupsId)) {
+			$JOIN_QUERY = '';
+			$PARENTS_WHERE_DELETED_AT_IS_NULL = '';
+			$WORK_GROUPS_ID_CHECK = '';
+		} else {
+			$JOIN_QUERY = implode(
+				' ',
+				array_map(
+					fn(string $parentTableName): string => <<<SQL
+					INNER JOIN
+						{$parentTableName}
+					USING
+						({$parentTableName}_id)
+					SQL,
+					$this->parentTableNameList,
+				),
+			);
+			$PARENTS_WHERE_DELETED_AT_IS_NULL = implode(
+				' ',
+				array_map(
+					fn(string $parentTableName): string => <<<SQL
+					AND
+						{$parentTableName}.deleted_at IS NULL
+					SQL,
+					$this->parentTableNameList,
+				),
+			);
+			$WORK_GROUPS_ID_CHECK = " AND work_groups_id = :work_groups_id";
+		}
+
+		try
+		{
+			$query = $this->db->prepare(<<<SQL
+				SELECT
+					id
+				FROM
+					(
+						{$idPlaceholders}
+					) AS id_list
+				WHERE NOT EXISTS(
+					SELECT
+						*
+					FROM
+						{$this->TABLE_NAME}
+
+					{$JOIN_QUERY}
+
+					WHERE
+						{$this->TABLE_NAME}_id = id_list.id
+					AND
+						{$this->TABLE_NAME}.deleted_at IS NULL
+
+					{$PARENTS_WHERE_DELETED_AT_IS_NULL}
+
+					{$WORK_GROUPS_ID_CHECK}
+				)
+				SQL
+			);
+
+			for ($i = 0; $i < $idCount; $i++) {
+				$query->bindValue(":id_$i", $idList[$i]->getHex()->toString(), PDO::PARAM_STR);
+			}
+			if (!is_null($workGroupsId)) {
+				$query->bindValue(':work_groups_id', $workGroupsId->getBytes(), PDO::PARAM_STR);
+			}
+
+			$query->execute();
+			$rowCount = $query->rowCount();
+			$this->logger->debug(
+				'nonExistIdCheck - rowCount: {rowCount}',
+				[
+					'rowCount' => $rowCount,
+				],
+			);
+			$result = $query->fetchAll(PDO::FETCH_ASSOC);
+			$this->logger->debug(
+				'result: {result}',
+				[
+					'result' => $result,
+				],
+			);
+
+			$nonExistIdList = array_map(
+				fn($data) => Uuid::fromBytes($data['id']),
+				$result,
+			);
+
+			$this->logger->debug(
+				'nonExistIdList({TABLE_NAME}): {nonExistIdList}',
+				[
+					'TABLE_NAME' => $this->TABLE_NAME,
+					'nonExistIdList' => $nonExistIdList,
+				],
+			);
+
+			return RetValueOrError::withValue($nonExistIdList);
+		}
+		catch (\PDOException $ex)
+		{
+			$errCode = $ex->getCode();
+
+			$this->logger->error(
+				"Failed to execute SQL ({errorCode} -> {errorInfo})",
+				[
+					"errorCode" => $errCode,
+					"errorInfo" => $ex->getMessage(),
+				],
+			);
+			return RetValueOrError::withError(
+				Constants::HTTP_INTERNAL_SERVER_ERROR,
+				"Failed to execute SQL - " . $errCode,
+			);
+		}
+	}
+
 }
