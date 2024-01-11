@@ -2,6 +2,7 @@
 
 namespace dev_t0r\trvis_backend\service;
 use dev_t0r\BaseModel;
+use dev_t0r\trvis_backend\Constants;
 use dev_t0r\trvis_backend\model\InviteKeyPrivilegeType;
 use dev_t0r\trvis_backend\repo\IMyRepoBase;
 use dev_t0r\trvis_backend\repo\IMyRepoSelectPrivilegeType;
@@ -320,9 +321,123 @@ abstract class MyServiceBase implements IMyServiceBase
 			return $senderPrivilegeCheckResult;
 		}
 
-		return $this->targetRepo->deleteOne(
-			id: $id,
-		);
+		$this->db->beginTransaction();
+		try
+		{
+			$beforeDeleteResult = $this->beforeDelete(
+				senderUserId: $senderUserId,
+				id: $id,
+			);
+			if (!is_null($beforeDeleteResult)) {
+				$this->logger->warning(
+					'beforeDeleteResult -> value:{value} -> [{errorCode}]: {errorMsg}',
+					[
+						'value' => $beforeDeleteResult->value,
+						'errorCode' => $beforeDeleteResult->errorCode,
+						'errorMsg' => $beforeDeleteResult->errorMsg,
+					],
+				);
+				if ($beforeDeleteResult->isError) {
+					$this->db->rollBack();
+				} else {
+					$this->db->commit();
+				}
+				return $beforeDeleteResult;
+			}
+
+			$deleteResult = $this->targetRepo->deleteOne(
+				id: $id,
+			);
+
+			if ($deleteResult->isError) {
+				$this->logger->warning(
+					'deleteResult -> Error[{errorCode}]: {errorMsg}',
+					[
+						'errorCode' => $deleteResult->errorCode,
+						'errorMsg' => $deleteResult->errorMsg,
+					],
+				);
+				$this->db->rollBack();
+				return $deleteResult;
+			}
+
+			$afterDeleteResult = $this->afterDelete(
+				senderUserId: $senderUserId,
+				id: $id,
+				deleteResult: $deleteResult,
+			);
+
+			if (!is_null($afterDeleteResult)) {
+				$this->logger->warning(
+					'afterDeleteResult -> value:{value} -> [{errorCode}]: {errorMsg}',
+					[
+						'value' => $afterDeleteResult->value,
+						'errorCode' => $afterDeleteResult->errorCode,
+						'errorMsg' => $afterDeleteResult->errorMsg,
+					],
+				);
+
+				if ($afterDeleteResult->isError) {
+					$this->db->rollBack();
+				} else {
+					$this->db->commit();
+				}
+				return $afterDeleteResult;
+			}
+
+			$this->db->commit();
+
+			$this->logger->debug(
+				'{dataTypeName} deleted -> {count}',
+				[
+					'dataTypeName' => $this->dataTypeName,
+					'count' => $deleteResult->value,
+				],
+			);
+
+			return $deleteResult;
+		}
+		catch (\Throwable $e)
+		{
+			$this->logger->error(
+				'delete -> Exception[{exception}]',
+				[
+					'exception' => $e,
+				],
+			);
+			if ($this->db->inTransaction()) {
+				$this->db->rollBack();
+			}
+
+			return RetValueOrError::withError(
+				statusCode: Constants::HTTP_INTERNAL_SERVER_ERROR,
+				errorMsg: "Unexpected error occurred during delete - {$e->getMessage()}",
+				errorCode: $e->getCode(),
+			);
+		}
+	}
+
+	/**
+	 * 削除実行前に実行する処理。削除処理を継続する場合はnullを返す
+	 * @return RetValueOrError<mixed>|null
+	 */
+	protected function beforeDelete(
+		string $senderUserId,
+		UuidInterface $id,
+	): ?RetValueOrError {
+		return null;
+	}
+	/**
+	 * 削除実行前に実行する処理。削除処理を継続する場合はnullを返す
+	 * @return RetValueOrError<mixed>|null
+	 */
+	protected function afterDelete(
+		string $senderUserId,
+		UuidInterface $id,
+		/** @param RetValueOrError<int> $deleteResult */
+		RetValueOrError $deleteResult,
+	): ?RetValueOrError {
+		return null;
 	}
 
 	/**
