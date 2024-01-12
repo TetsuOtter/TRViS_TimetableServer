@@ -517,24 +517,23 @@ abstract class MyRepoBase implements IMyRepoBase
 			foreach ($props as $key => $value) {
 				$newValue = is_null($value) ? null : $this->_kvpToValueToBind($key, $value);
 
+				$paramType = PDO::PARAM_STR;
 				if (is_null($newValue)) {
 					$paramType = PDO::PARAM_NULL;
-				} else if ($value instanceof UuidInterface) {
+				} else if ($newValue instanceof UuidInterface) {
 					$newValue = $value->getBytes();
-				} else if ($value instanceof DateTimeInterface) {
-					$newValue = Utils::utcDateStrOrNull($value);
-				} else if ($value instanceof BackedEnum) {
-					$newValue = $value->value;
+				} else if ($$newValue instanceof DateTimeInterface) {
+					$newValue = Utils::utcDateStrOrNull($$newValue);
+				} else if ($$newValue instanceof BackedEnum) {
+					$newValue = $newValue->value;
 					$paramType = PDO::PARAM_INT;
 				} else if (is_int($newValue)) {
 					$paramType = PDO::PARAM_INT;
 				} else if (is_bool($newValue)) {
 					$paramType = PDO::PARAM_BOOL;
-				} else {
-					$paramType = PDO::PARAM_STR;
 				}
 
-				$query->bindValue(":{$key}", $value, $paramType);
+				$query->bindValue(":{$key}", $newValue, $paramType);
 			}
 
 			$query->execute();
