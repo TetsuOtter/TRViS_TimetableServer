@@ -57,4 +57,6 @@ final class Constants
 	const DESCRIPTION_MAX_LENGTH = 255;
 	const NAME_MIN_LENGTH = 1;
 	const NAME_MAX_LENGTH = 255;
+
+	const BULK_INSERT_MAX_COUNT = 100;
 }

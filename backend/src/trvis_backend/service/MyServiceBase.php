@@ -135,6 +135,13 @@ abstract class MyServiceBase implements IMyServiceBase
 			]
 		);
 
+		if (Constants::BULK_INSERT_MAX_COUNT < count($dataList)) {
+			return RetValueOrError::withError(
+				statusCode: Constants::HTTP_BAD_REQUEST,
+				errorMsg: "Too many data to insert at once. Max count is " . Constants::BULK_INSERT_MAX_COUNT,
+			);
+		}
+
 		$senderPrivilegeCheckResult = $this->checkPrivilegeToWrite(
 			id: $parentId,
 			repo: $this->parentRepo,
