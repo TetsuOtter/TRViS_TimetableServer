@@ -52,8 +52,8 @@ final class StationsRepo extends MyRepoBase
 		if (!is_null($d['location_lon']) && !is_null($d['location_lat'])) {
 			$lonlat = new StationLocationLonlat();
 			$lonlat->setData([
-				'longitude' => $d['location_lon'],
-				'latitude' => $d['location_lat'],
+				'longitude' => floatval($d['location_lon']),
+				'latitude' => floatval($d['location_lat']),
 			]);
 		}
 		$result->setData([
@@ -62,9 +62,9 @@ final class StationsRepo extends MyRepoBase
 			'description' => $d['description'],
 			'created_at' => Utils::dbDateStrToDateTime($d['created_at']),
 			'name' => $d['name'],
-			'location_km' => $d['location_km'],
+			'location_km' => floatval($d['location_km']),
 			'location_lonlat' => $lonlat,
-			'on_station_detect_radius_m' => $d['on_station_detect_radius_m'],
+			'on_station_detect_radius_m' => floatval($d['on_station_detect_radius_m']),
 			'record_type' => $d['record_type'],
 		]);
 		return $result;
