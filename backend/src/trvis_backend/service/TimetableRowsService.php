@@ -155,7 +155,7 @@ final class TimetableRowsService extends MyServiceBase
 		/** @param T $data */
 		object $data,
 		/** @param array<string, mixed> $kvpArray */
-		array $kvpArray,
+		array &$kvpArray,
 	): ?RetValueOrError {
 		$hasStationsId = array_key_exists('stations_id', $kvpArray);
 		$hasStationTracksId = array_key_exists('station_tracks_id', $kvpArray) && !is_null($kvpArray['station_tracks_id']);

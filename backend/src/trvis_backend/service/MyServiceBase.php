@@ -679,7 +679,7 @@ abstract class MyServiceBase implements IMyServiceBase
 		/** @param T $data */
 		object $data,
 		/** @param array<string, mixed> $kvpArray */
-		array $kvpArray,
+		array &$kvpArray,
 	): ?RetValueOrError {
 		return null;
 	}
