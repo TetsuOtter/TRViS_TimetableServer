@@ -203,6 +203,9 @@ final class DumpService
 			}
 		}
 		foreach ($timetableRowsDst as $_trainsId => $timetableRowsList) {
+			if ($trainObjs[$_trainsId]->data->Direction < 0) {
+				$timetableRowsList = array_reverse($timetableRowsList);
+			}
 			$trainObjs[$_trainsId]->data->TimetableRows = $timetableRowsList;
 		}
 
