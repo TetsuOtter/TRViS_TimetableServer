@@ -176,7 +176,7 @@ class TRViSJsonTimetableRow extends BaseModel
       "description" : "マーカーの色",
       "example" : "ff0000"
     },
-    "marker_text" : {
+    "MarkerText" : {
       "type" : "string",
       "description" : "マーカー部分に表示する文字列",
       "example" : "合図"
