@@ -3,6 +3,7 @@
 namespace dev_t0r\trvis_backend\service;
 
 use dev_t0r\trvis_backend\model\TimetableRow;
+use dev_t0r\trvis_backend\repo\ColorsRepo;
 use dev_t0r\trvis_backend\repo\StationsRepo;
 use dev_t0r\trvis_backend\repo\StationTracksRepo;
 use dev_t0r\trvis_backend\repo\TimetableRowsRepo;
@@ -19,6 +20,7 @@ final class TimetableRowsService extends MyServiceBase
 {
 	private readonly StationsRepo $stationsRepo;
 	private readonly StationTracksRepo $stationTracksRepo;
+	private readonly ColorsRepo $colorsRepo;
 
 	public function __construct(
 		PDO $db,
@@ -68,6 +70,7 @@ final class TimetableRowsService extends MyServiceBase
 
 		$this->stationsRepo = new StationsRepo($db, $logger);
 		$this->stationTracksRepo = new StationTracksRepo($db, $logger);
+		$this->colorsRepo = new ColorsRepo($db, $logger);
 	}
 
 	protected function beforeInsert(
@@ -144,7 +147,34 @@ final class TimetableRowsService extends MyServiceBase
 			}
 		}
 
-		// TODO: Colorの存在チェック
+		$colorsIdList = array_map(
+			fn(TimetableRow $row) => $row->colors_id_marker,
+			array_filter(
+				$valueList,
+				fn(TimetableRow $row) => !is_null($row->colors_id_marker)
+			)
+		);
+		if (0 < count($colorsIdList)) {
+			$nonExistColorIdCheckResult = $this->colorsRepo->nonExistIdCheck(
+				idList: $colorsIdList,
+				workGroupsId: $workGroupsId,
+			);
+			if ($nonExistColorIdCheckResult->isError) {
+				$this->logger->warning('Failed to check non exist color id - {error}', [
+					'error' => $nonExistColorIdCheckResult->errorMsg,
+				]);
+				return $nonExistColorIdCheckResult;
+			}
+			if (0 < count($nonExistColorIdCheckResult->value)) {
+				$this->logger->warning('some color id are not exist - {nonExistColorIdList}', [
+					'nonExistColorIdList' => $nonExistColorIdCheckResult->value,
+				]);
+				$nonExistColorIdListStr = implode(', ', $nonExistColorIdCheckResult->value);
+				return RetValueOrError::withBadReq(
+					errorMsg: "some color id are not exist - [{$nonExistColorIdListStr}]",
+				);
+			}
+		}
 
 		return null;
 	}
@@ -228,7 +258,27 @@ final class TimetableRowsService extends MyServiceBase
 			}
 		}
 
-		// TODO: Colorの存在チェック
+		if (array_key_exists('colors_id_marker', $kvpArray) && !is_null($kvpArray['colors_id_marker'])) {
+			$nonExistColorIdCheckResult = $this->colorsRepo->nonExistIdCheck(
+				idList: [$kvpArray['colors_id_marker']],
+				workGroupsId: $workGroupsId,
+			);
+			if ($nonExistColorIdCheckResult->isError) {
+				$this->logger->warning('Failed to check non exist color id - {error}', [
+					'error' => $nonExistColorIdCheckResult->errorMsg,
+				]);
+				return $nonExistColorIdCheckResult;
+			}
+			if (0 < count($nonExistColorIdCheckResult->value)) {
+				$this->logger->warning('some color id are not exist - {nonExistColorIdList}', [
+					'nonExistColorIdList' => $nonExistColorIdCheckResult->value,
+				]);
+				$nonExistColorIdListStr = implode(', ', $nonExistColorIdCheckResult->value);
+				return RetValueOrError::withBadReq(
+					errorMsg: "some color id are not exist - [{$nonExistColorIdListStr}]",
+				);
+			}
+		}
 
 		return null;
 	}
