@@ -2,8 +2,11 @@
 
 namespace dev_t0r\trvis_backend\repo;
 
+use dev_t0r\trvis_backend\Constants;
 use dev_t0r\trvis_backend\model\TimetableRow;
+use dev_t0r\trvis_backend\model\TRViSJsonTimetableRow;
 use dev_t0r\trvis_backend\model\WorkAtStationType;
+use dev_t0r\trvis_backend\RetValueOrError;
 use dev_t0r\trvis_backend\Utils;
 use PDO;
 use PDOStatement;
@@ -246,5 +249,204 @@ final class TimetableRowsRepo extends MyRepoBase
 			return "colors_id_marker = :{$key}";
 		}
 		return "{$key} = :{$key}";
+	}
+
+	/**
+	 * @param array<UuidInterface> $parentIdList
+	 * @param array<string, array<TRViSJsonTimetableRow>> $dst
+	 * @return RetValueOrError<array<UuidInterface>>
+	 */
+	public function dump(
+		array $parentIdList,
+		array &$dst,
+	): RetValueOrError {
+		$this->logger->debug(
+			'Dumping timetable rows... {parentIdList}',
+			[
+				'parentIdList' => $parentIdList,
+			],
+		);
+
+		$parentIdCount = count($parentIdList);
+		$parentIdListPlaceholder = implode(', ', array_fill(0, $parentIdCount, '?'));
+		try
+		{
+			// station_tracksとのJOINは、本当はstations_idも条件として加えるべきである。
+			// しかし、実装上の都合で同じWorkGroupの他の駅に属するstation_tracksも登録できてしまう。
+			// そのため、stations_idでの絞り込みは行わない。
+			$query = $this->db->prepare(<<<SQL
+				SELECT
+					HEX(timetable_rows.trains_id) AS parent_id,
+					timetable_rows.timetable_rows_id AS timetable_rows_id,
+					stations.name AS StationName,
+					stations.location_km * 1000 AS Location_m,
+					ST_X(stations.location_lonlat) AS Longitude_deg,
+					ST_Y(stations.location_lonlat) AS Latitude_deg,
+					stations.on_station_detect_radius_m AS OnStationDetectRadius_m,
+					stations.name AS FullName,
+					stations.record_type AS RecordType,
+					station_tracks.name AS TrackName,
+
+					timetable_rows.drive_time_mm AS DriveTime_MM,
+					timetable_rows.drive_time_ss AS DriveTime_SS,
+
+					timetable_rows.is_operation_only_stop AS IsOperationOnlyStop,
+					timetable_rows.is_pass AS IsPass,
+					timetable_rows.has_bracket AS HasBracket,
+					timetable_rows.is_last_stop AS IsLastStop,
+
+					IF(
+							timetable_rows.arrive_time_hh IS NULL
+						AND
+							timetable_rows.arrive_time_mm IS NULL
+						AND
+							timetable_rows.arrive_time_ss IS NULL
+						,
+						timetable_rows.arrive_str,
+						CONCAT(
+							IFNULL(timetable_rows.arrive_time_hh, ''),
+							':',
+							IFNULL(timetable_rows.arrive_time_mm, ''),
+							':',
+							IFNULL(timetable_rows.arrive_time_ss, '')
+						)
+					) AS Arrive,
+					IF(
+							timetable_rows.departure_time_hh IS NULL
+						AND
+							timetable_rows.departure_time_mm IS NULL
+						AND
+							timetable_rows.departure_time_ss IS NULL
+						,
+						timetable_rows.departure_str,
+						CONCAT(
+							IFNULL(timetable_rows.departure_time_hh, ''),
+							':',
+							IFNULL(timetable_rows.departure_time_mm, ''),
+							':',
+							IFNULL(timetable_rows.departure_time_ss, '')
+						)
+					) AS Departure,
+
+					timetable_rows.run_in_limit AS RunInLimit,
+					timetable_rows.run_out_limit AS RunOutLimit,
+
+					timetable_rows.remarks AS Remarks,
+
+					IF(
+						timetable_rows.colors_id IS NULL,
+						NULL,
+						CONCAT(
+							LPAD(HEX(colors.red_8bit), 2, '0'),
+							LPAD(HEX(colors.green_8bit), 2, '0'),
+							LPAD(HEX(colors.blue_8bit), 2, '0')
+						)
+					) AS MarkerColor,
+					timetable_rows.marker_text AS MarkerText,
+
+					timetable_rows.work_type AS WorkType
+				FROM
+					timetable_rows
+				JOIN
+					stations
+				USING
+					(stations_id)
+				LEFT JOIN
+					station_tracks
+				USING
+					(station_tracks_id)
+				LEFT JOIN
+					colors
+				USING
+					(colors_id)
+				WHERE
+					{$this->parentTableName}_id IN ($parentIdListPlaceholder)
+				ORDER BY
+					Location_m ASC
+				SQL
+			);
+			for ($i = 0; $i < $parentIdCount; ++$i) {
+				$query->bindValue($i + 1, $parentIdList[$i]->getBytes(), PDO::PARAM_STR);
+			}
+			$query->execute();
+			$rowCount = $query->rowCount();
+			$this->logger->debug(
+				'selected timetable {rowCount} rows.',
+				[
+					'rowCount' => $rowCount,
+				],
+			);
+			if ($rowCount === 0) {
+				return RetValueOrError::withValue([]);
+			}
+
+			$rowCountPerParent = [];
+			$timetableRowsIdList = [];
+			$timetableRowsIdListIndex = 0;
+			while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
+				$parentId = $row['parent_id'];
+				if (!array_key_exists($parentId, $rowCountPerParent)) {
+					$rowCountPerParent[$parentId] = 0;
+				}
+				$dst[$parentId][$rowCountPerParent[$parentId]++] = self::fetchResultRowToTrvisJsonData($row);
+				$timetableRowsIdList[$timetableRowsIdListIndex++] = Uuid::fromBytes($row['timetable_rows_id']);
+			}
+
+			return RetValueOrError::withValue($timetableRowsIdList);
+		}
+		catch (\PDOException $e)
+		{
+			$this->logger->error(
+				'Failed to dump timetable rows. {exception}',
+				[
+					'exception' => $e,
+				],
+			);
+			return RetValueOrError::withError(
+				Constants::HTTP_INTERNAL_SERVER_ERROR,
+				'Failed to execute SQL - ' . $e->getCode(),
+			);
+		}
+	}
+
+	/**
+	 * @param array<string, mixed> $kvpList
+	 */
+	private static function fetchResultRowToTrvisJsonData(
+		array $kvpList,
+	): TRViSJsonTimetableRow {
+		$d = new TRViSJsonTimetableRow();
+		$d->setData([
+			'StationName' => $kvpList['StationName'],
+			'Location_m' => $kvpList['Location_m'],
+			'Longitude_deg' => Utils::floatvalOrNull($kvpList['Longitude_deg']),
+			'Latitude_deg' => Utils::floatvalOrNull($kvpList['Latitude_deg']),
+			'OnStationDetectRadius_m' => Utils::floatvalOrNull($kvpList['OnStationDetectRadius_m']),
+			'FullName' => $kvpList['FullName'],
+			'RecordType' => $kvpList['RecordType'],
+			'TrackName' => $kvpList['TrackName'],
+
+			'DriveTime_MM' => $kvpList['DriveTime_MM'],
+			'DriveTime_SS' => $kvpList['DriveTime_SS'],
+
+			'IsOperationOnlyStop' => $kvpList['IsOperationOnlyStop'],
+			'IsPass' => $kvpList['IsPass'],
+			'HasBracket' => $kvpList['HasBracket'],
+			'IsLastStop' => $kvpList['IsLastStop'],
+
+			'Arrive' => $kvpList['Arrive'],
+			'Departure' => $kvpList['Departure'],
+
+			'RunInLimit' => $kvpList['RunInLimit'],
+			'RunOutLimit' => $kvpList['RunOutLimit'],
+
+			'Remarks' => $kvpList['Remarks'],
+
+			'MarkerColor' => $kvpList['MarkerColor'],
+			'MarkerText' => $kvpList['MarkerText'],
+
+			'WorkType' => $kvpList['WorkType'],
+		]);
+		return $d;
 	}
 }

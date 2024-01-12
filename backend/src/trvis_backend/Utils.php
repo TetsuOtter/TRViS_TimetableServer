@@ -174,6 +174,10 @@ final class Utils
 		return $kvpArray;
 	}
 
+	public static function floatvalOrNull(mixed $value): ?float {
+		return is_null($value) ? null : floatval($value);
+	}
+
 	public static function errWorkGroupNotFound(): RetValueOrError {
 		return RetValueOrError::withError(Constants::HTTP_NOT_FOUND, "WorkGroup not found");
 	}

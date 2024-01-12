@@ -2,7 +2,11 @@
 
 namespace dev_t0r\trvis_backend\repo;
 
+use dev_t0r\trvis_backend\Constants;
+use dev_t0r\trvis_backend\model\DataWithId;
 use dev_t0r\trvis_backend\model\Train;
+use dev_t0r\trvis_backend\model\TRViSJsonTrain;
+use dev_t0r\trvis_backend\RetValueOrError;
 use dev_t0r\trvis_backend\Utils;
 use PDO;
 use PDOStatement;
@@ -154,4 +158,132 @@ final class TrainsRepo extends MyRepoBase
 		$query->bindValue(":day_count_$i", $d->day_count, PDO::PARAM_INT);
 		$query->bindValue(":is_ride_on_moving_$i", $d->is_ride_on_moving, PDO::PARAM_BOOL);
 	}
+
+	/**
+	 * @param array<UuidInterface> $parentIdList
+	 * @param array<string, array<DataWithId<TRViSJsonTrain>>> $dst
+	 * @return RetValueOrError<array<UuidInterface>>
+	 */
+	public function dump(
+		array $parentIdList,
+		array &$dst,
+	): RetValueOrError {
+		$this->logger->debug(
+			'WorksRepo::dump() called - {parentIdList}',
+			[
+				'parentIdList' => $parentIdList,
+			],
+		);
+
+		$parentIdCount = count($parentIdList);
+		$parentIdListPlaceholder = implode(', ', array_fill(0, $parentIdCount, '?'));
+		try
+		{
+			// station_tracksとのJOINは、本当はstations_idも条件として加えるべきである。
+			// しかし、実装上の都合で同じWorkGroupの他の駅に属するstation_tracksも登録できてしまう。
+			// そのため、stations_idでの絞り込みは行わない。
+			$query = $this->db->prepare(<<<SQL
+				SELECT
+					HEX(trains.works_id) AS parent_id,
+					trains.trains_id AS trains_id,
+					trains.train_number AS TrainNumber,
+					trains.max_speed AS MaxSpeed,
+					trains.speed_type AS SpeedType,
+					trains.nominal_tractive_capacity AS NominalTractiveCapacity,
+					trains.car_count AS CarCount,
+					trains.destination AS Destination,
+					trains.begin_remarks AS BeginRemarks,
+					trains.after_remarks AS AfterRemarks,
+					trains.remarks AS Remarks,
+					trains.before_departure AS BeforeDeparture,
+					trains.after_arrive AS AfterArrive,
+					trains.train_info AS TrainInfo,
+					trains.direction AS Direction,
+					trains.day_count AS DayCount,
+					trains.is_ride_on_moving AS IsRideOnMoving
+				FROM
+					trains
+				WHERE
+					{$this->parentTableName}_id IN ($parentIdListPlaceholder)
+				SQL
+			);
+			for ($i = 0; $i < $parentIdCount; ++$i) {
+				$query->bindValue($i + 1, $parentIdList[$i]->getBytes(), PDO::PARAM_STR);
+			}
+			$query->execute();
+			$rowCount = $query->rowCount();
+			$this->logger->debug(
+				'selected train {rowCount} rows.',
+				[
+					'rowCount' => $rowCount,
+				],
+			);
+			if ($rowCount === 0) {
+				return RetValueOrError::withValue([]);
+			}
+
+			$rowCountPerParent = [];
+			$trainsIdList = [];
+			$trainsIdListIndex = 0;
+			while ($row = $query->fetch(PDO::FETCH_ASSOC)) {
+				$parentId = $row['parent_id'];
+				if (!array_key_exists($parentId, $rowCountPerParent)) {
+					$rowCountPerParent[$parentId] = 0;
+				}
+				$d = self::fetchResultRowToTrvisJsonData($row);
+				$dst[$parentId][$rowCountPerParent[$parentId]++] = $d;
+				$trainsIdList[$trainsIdListIndex++] = $d->id;
+			}
+
+			return RetValueOrError::withValue($trainsIdList);
+		}
+		catch (\PDOException $e)
+		{
+			$this->logger->error(
+				'Failed to dump train rows. {exception}',
+				[
+					'exception' => $e,
+				],
+			);
+			return RetValueOrError::withError(
+				Constants::HTTP_INTERNAL_SERVER_ERROR,
+				'Failed to execute SQL - ' . $e->getCode(),
+			);
+		}
+	}
+
+	/**
+	 * @param array<string, mixed> $kvpList
+	 * @return array<string, DataWithId<TRViSJsonTrain>>
+	 */
+	private static function fetchResultRowToTrvisJsonData(
+		array $kvpList,
+	): DataWithId {
+		$d = new TRViSJsonTrain();
+		$d->setData([
+			'TrainNumber' => $kvpList['TrainNumber'],
+			'MaxSpeed' => $kvpList['MaxSpeed'],
+			'SpeedType' => $kvpList['SpeedType'],
+			'NominalTractiveCapacity' => $kvpList['NominalTractiveCapacity'],
+			'CarCount' => $kvpList['CarCount'],
+			'Destination' => $kvpList['Destination'],
+			'BeginRemarks' => $kvpList['BeginRemarks'],
+			'AfterRemarks' => $kvpList['AfterRemarks'],
+			'Remarks' => $kvpList['Remarks'],
+			'BeforeDeparture' => $kvpList['BeforeDeparture'],
+			'AfterArrive' => $kvpList['AfterArrive'],
+			'TrainInfo' => $kvpList['TrainInfo'],
+			'Direction' => $kvpList['Direction'],
+			'DayCount' => $kvpList['DayCount'],
+			'IsRideOnMoving' => $kvpList['IsRideOnMoving'],
+
+			'TimetableRows' => [],
+		]);
+		return new DataWithId(
+			id: Uuid::fromBytes($kvpList['trains_id']),
+			data: $d,
+		);
+	}
+
+
 }
