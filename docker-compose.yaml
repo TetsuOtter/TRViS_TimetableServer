@@ -17,6 +17,14 @@ services:
       - type: bind
         source: ./proxy/logs
         target: /var/log/nginx
+  front:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: webmon-front
+    hostname: webmon-front
+    networks:
+      - proxy-front
   php:
     build:
       context: ./backend
