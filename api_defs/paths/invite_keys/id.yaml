@@ -2,11 +2,12 @@ path:
   get:
     summary: 1件取得する
     operationId: getInviteKey
-    description: 招待キーの情報を1件取得する
+    description: |
+      招待キーの情報を1件取得する
+
+      削除された招待キーは取得できませんが、無効化された招待キーは取得できます。
     tags:
       - invite_key
-    security:
-      - bearerAuth: []
     parameters:
       - $ref: '#/components/parameters/InviteKeyId'
     responses:
@@ -26,7 +27,10 @@ path:
   post:
     summary: 使用する
     operationId: useInviteKey
-    description: 招待キーを使用する
+    description: |
+      招待キーを使用する
+
+      サインインが必須です。サインインしたユーザに対して、この招待キーに割り当てられた権限が付与されます。
     tags:
       - invite_key
     security:
@@ -48,9 +52,12 @@ path:
         $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/404_ContentNotFound'
 
   put:
-    summary: 更新する
+    summary: (未実装) 更新する
     operationId: updateInviteKey
-    description: 既存の招待キーを更新する
+    description: |
+      既存の招待キーを更新する
+
+      指定のWorkGroupへのADMIN権限が必要です。
     tags:
       - invite_key
     security:
@@ -85,6 +92,8 @@ path:
       指定の招待キーを無効化する。
 
       なお、この操作はキーが有効な間だけ行える。
+
+      指定のWorkGroupへのADMIN権限が必要です。
     tags:
       - invite_key
     security:

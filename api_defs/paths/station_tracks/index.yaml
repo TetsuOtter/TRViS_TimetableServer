@@ -2,7 +2,10 @@ path:
   get:
     summary: 複数件取得する
     operationId: getStationTrackList
-    description: 指定のWorkGroupに属するStation (駅) の情報を複数件取得する
+    description: |
+      指定のStationに属するStationTrackの情報を複数件取得する
+
+      属するWorkGroupへのREAD権限が必要です。
     tags:
       - station_track
     security:
@@ -29,7 +32,10 @@ path:
   post:
     summary: 作成する
     operationId: createStationTrack
-    description: 指定のWorkGroupに属する Station (駅) を新しく作成する
+    description: |
+      指定のStationに属する StationTrack を新しく作成する
+
+      属するWorkGroupへのWRITE権限が必要です。
     tags:
       - station_track
     security:

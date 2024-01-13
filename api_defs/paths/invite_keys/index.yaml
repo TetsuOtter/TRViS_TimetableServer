@@ -2,7 +2,10 @@ path:
   get:
     summary: 一覧を取得する
     operationId: getMyInviteKeyList
-    description: 自身が作成した (オーナーな) 招待キーの一覧を取得する
+    description: |
+      自身が作成した (オーナーな) 招待キーの一覧を取得する
+
+      実行にはサインインが必要です。
     tags:
       - invite_key
     security:

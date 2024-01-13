@@ -2,7 +2,10 @@ path:
   get:
     summary: 1件取得する
     operationId: getStation
-    description: Station (駅) の情報を1件取得する
+    description: |
+      Station (駅) の情報を1件取得する
+
+      このデータが属するWorkGroupへのREAD権限が必要です。
     tags:
       - station
     security:
@@ -26,7 +29,10 @@ path:
   put:
     summary: 更新する
     operationId: updateStation
-    description: 既存のStationの情報を更新する
+    description: |
+      既存のStationの情報を更新する
+
+      このデータが属するWorkGroupへのWRITE権限が必要です。
     tags:
       - station
     security:
@@ -60,7 +66,7 @@ path:
     description: |
       既存のStationを削除する
 
-      なお、この操作はこのStationのOwner、またはこのStationが属するWorkGroupのOwnerのみが実行可能である。
+      このデータが属するWorkGroupへのWRITE権限が必要です。
     tags:
       - station
     security:

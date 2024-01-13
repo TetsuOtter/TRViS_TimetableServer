@@ -2,7 +2,10 @@ path:
   get:
     summary: 1件取得する
     operationId: getWorkGroup
-    description: Workのまとまり (WorkGroup) の情報を1件取得する
+    description: |
+      Workのまとまり (WorkGroup) の情報を1件取得する
+
+      このデータが属するWorkGroupへのREAD権限が必要です。
     tags:
       - work_group
     security:
@@ -26,7 +29,10 @@ path:
   put:
     summary: 更新する
     operationId: updateWorkGroup
-    description: 既存の「Workのまとまり (WorkGroup)」を更新する
+    description: |
+      既存の「Workのまとまり (WorkGroup)」を更新する
+
+      このデータが属するWorkGroupへのWRITE権限が必要です。
     tags:
       - work_group
     security:
@@ -60,7 +66,7 @@ path:
     description: |
       既存の「Workのまとまり (WorkGroup)」を削除する
 
-      なお、この操作はOwnerのみが実行可能である。
+      このデータが属するWorkGroupへのADMIN権限が必要です。
     tags:
       - work_group
     security:

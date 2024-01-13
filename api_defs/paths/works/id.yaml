@@ -2,7 +2,10 @@ path:
   get:
     summary: 1件取得する
     operationId: getWork
-    description: Work (仕業) の情報を1件取得する
+    description: |
+      Work (仕業) の情報を1件取得する
+
+      このデータが属するWorkGroupへのREAD権限が必要です。
     tags:
       - work
     security:
@@ -26,7 +29,10 @@ path:
   put:
     summary: 更新する
     operationId: updateWork
-    description: 既存のWorkの情報を更新する
+    description: |
+      既存のWorkの情報を更新する
+
+      このデータが属するWorkGroupへのWRITE権限が必要です。
     tags:
       - work
     security:
@@ -60,7 +66,7 @@ path:
     description: |
       既存のWorkを削除する
 
-      なお、この操作はこのWorkのOwner、またはこのWorkが属するWorkGroupのOwnerのみが実行可能である。
+      このデータが属するWorkGroupへのWRITE権限が必要です。
     tags:
       - work
     security:

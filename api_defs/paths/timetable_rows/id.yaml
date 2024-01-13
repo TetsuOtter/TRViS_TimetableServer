@@ -2,7 +2,10 @@ path:
   get:
     summary: 1件取得する
     operationId: getTimetableRow
-    description: TimetableRowを1件取得する
+    description: |
+      TimetableRowを1件取得する
+
+      属するWorkGroupへのREAD権限が必要です。
     tags:
       - timetable_row
     security:
@@ -26,7 +29,10 @@ path:
   put:
     summary: 更新する
     operationId: updateTimetableRow
-    description: 既存のTimetableRowの情報を更新する
+    description: |
+      既存のTimetableRowの情報を更新する
+
+      属するWorkGroupへのWRITE権限が必要です。
     tags:
       - timetable_row
     security:
@@ -60,7 +66,7 @@ path:
     description: |
       既存のTimetableRowを削除する
 
-      この操作は (認証済みの) 誰もが実行可能です。
+      属するWorkGroupへのWRITE権限が必要です。
     tags:
       - timetable_row
     security:

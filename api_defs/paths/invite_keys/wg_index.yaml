@@ -2,7 +2,10 @@ path:
   get:
     summary: 一覧を取得する
     operationId: getInviteKeyList
-    description: 指定のWorkGroupに属する招待キーの一覧を取得する (admin権限が必要)
+    description: |
+      指定のWorkGroupに属する招待キーの一覧を取得する
+
+      指定のWorkGroupへのADMIN権限が必要です。
     tags:
       - invite_key
     security:
@@ -28,7 +31,10 @@ path:
   post:
     summary: 作成する
     operationId: createInviteKey
-    description: 指定のWorkGroupに属する招待キーを新規に作成する (admin権限が必要)
+    description: |
+      指定のWorkGroupに属する招待キーを新規に作成する
+
+      指定のWorkGroupへのADMIN権限が必要です。
     tags:
       - invite_key
     security:
