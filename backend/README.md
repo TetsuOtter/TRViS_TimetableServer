@@ -153,7 +153,7 @@ For instance, when abstract class located at `./lib/Api/AbstractPetApi.php` you 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *AbstractApiInfoApi* | **getApiInfo** | **GET** / | APIの情報を取得する
-*AbstractAuthApi* | **issueToken** | **POST** /auths | 認証トークンを発行
+*AbstractAuthApi* | **issueToken** | **POST** /auths | (未実装) 認証トークンを発行
 *AbstractColorApi* | **createColor** | **POST** /work_groups/{workGroupId}/colors | 作成する
 *AbstractColorApi* | **deleteColor** | **DELETE** /colors/{colorId} | 削除する
 *AbstractColorApi* | **getColor** | **GET** /colors/{colorId} | 1件取得する
@@ -165,7 +165,7 @@ Class | Method | HTTP request | Description
 *AbstractInviteKeyApi* | **deleteInviteKey** | **DELETE** /invite_keys/{inviteKeyId} | 無効化する
 *AbstractInviteKeyApi* | **getInviteKey** | **GET** /invite_keys/{inviteKeyId} | 1件取得する
 *AbstractInviteKeyApi* | **getInviteKeyList** | **GET** /work_groups/{workGroupId}/invite_keys | 一覧を取得する
-*AbstractInviteKeyApi* | **updateInviteKey** | **PUT** /invite_keys/{inviteKeyId} | 更新する
+*AbstractInviteKeyApi* | **updateInviteKey** | **PUT** /invite_keys/{inviteKeyId} | (未実装) 更新する
 *AbstractInviteKeyApi* | **useInviteKey** | **POST** /invite_keys/{inviteKeyId} | 使用する
 *AbstractStationApi* | **createStation** | **POST** /work_groups/{workGroupId}/stations | 作成する
 *AbstractStationApi* | **deleteStation** | **DELETE** /stations/{stationId} | 削除する

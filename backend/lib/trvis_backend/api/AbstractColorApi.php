@@ -40,7 +40,7 @@ abstract class AbstractColorApi
     /**
      * POST createColor
      * Summary: 作成する
-     * Notes: 指定のWorkGroupに属する Color (色) を新しく作成する
+     * Notes: 指定のWorkGroupに属する Color (色) を新しく作成する  指定のWorkGroupへのWRITE権限が必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request
@@ -63,7 +63,7 @@ abstract class AbstractColorApi
     /**
      * DELETE deleteColor
      * Summary: 削除する
-     * Notes: 既存のColorを削除する  なお、この操作はこのColorのOwner、またはこのColorが属するWorkGroupのOwnerのみが実行可能である。
+     * Notes: 既存のColorを削除する  指定のWorkGroupへのWRITE権限が必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request
@@ -85,7 +85,7 @@ abstract class AbstractColorApi
     /**
      * GET getColor
      * Summary: 1件取得する
-     * Notes: Color (色) の情報を1件取得する
+     * Notes: Color (色) の情報を1件取得する  指定のWorkGroupへのREAD権限が必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request
@@ -107,7 +107,7 @@ abstract class AbstractColorApi
     /**
      * GET getColorList
      * Summary: 複数件取得する
-     * Notes: 指定のWorkGroupに属するColor (色) の情報を複数件取得する
+     * Notes: 指定のWorkGroupに属するColor (色) の情報を複数件取得する  指定のWorkGroupへのREAD権限が必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request
@@ -133,7 +133,7 @@ abstract class AbstractColorApi
     /**
      * PUT updateColor
      * Summary: 更新する
-     * Notes: 既存のColorの情報を更新する
+     * Notes: 既存のColorの情報を更新する  指定のWorkGroupへのWRITE権限が必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request

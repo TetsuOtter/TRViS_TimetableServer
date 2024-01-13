@@ -1153,14 +1153,6 @@ class RegisterRoutes
                 ],
             ],
             'authMethods' => [
-                // http security schema named 'bearerAuth'
-                [
-                    'type' => 'http',
-                    'isBasic' => true,
-                    'isBearer' => true,
-                    'isApiKey' => false,
-                    'isOAuth' => false,
-                ],
             ],
         ],
         [

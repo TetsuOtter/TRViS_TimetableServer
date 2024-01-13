@@ -40,7 +40,7 @@ abstract class AbstractStationTrackApi
     /**
      * POST createStationTrack
      * Summary: 作成する
-     * Notes: 指定のWorkGroupに属する Station (駅) を新しく作成する
+     * Notes: 指定のStationに属する StationTrack を新しく作成する  属するWorkGroupへのWRITE権限が必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request
@@ -63,7 +63,7 @@ abstract class AbstractStationTrackApi
     /**
      * DELETE deleteStationTrack
      * Summary: 削除する
-     * Notes: 既存のStationを削除する  なお、この操作はこのStationのOwner、またはこのStationが属するWorkGroupのOwnerのみが実行可能である。
+     * Notes: 既存のStationTrackを削除する  このデータが属するWorkGroupへのREAD権限が必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request
@@ -85,7 +85,7 @@ abstract class AbstractStationTrackApi
     /**
      * GET getStationTrack
      * Summary: 1件取得する
-     * Notes: Station (駅) の情報を1件取得する
+     * Notes: StationTrack (駅の番線) の情報を1件取得する  このデータが属するWorkGroupへのREAD権限が必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request
@@ -107,7 +107,7 @@ abstract class AbstractStationTrackApi
     /**
      * GET getStationTrackList
      * Summary: 複数件取得する
-     * Notes: 指定のWorkGroupに属するStation (駅) の情報を複数件取得する
+     * Notes: 指定のStationに属するStationTrackの情報を複数件取得する  属するWorkGroupへのREAD権限が必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request
@@ -133,7 +133,7 @@ abstract class AbstractStationTrackApi
     /**
      * PUT updateStationTrack
      * Summary: 更新する
-     * Notes: 既存のStationの情報を更新する
+     * Notes: 既存のStationTrackの情報を更新する  このデータが属するWorkGroupへのWRITE権限が必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request

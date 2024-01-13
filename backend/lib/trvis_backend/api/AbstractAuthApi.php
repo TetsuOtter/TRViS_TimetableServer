@@ -39,7 +39,7 @@ abstract class AbstractAuthApi
 {
     /**
      * POST issueToken
-     * Summary: 認証トークンを発行
+     * Summary: (未実装) 認証トークンを発行
      * Notes: APIへのアクセスで使用するJWTを発行する
      * Output-Formats: [application/json]
      *

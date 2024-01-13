@@ -40,7 +40,7 @@ abstract class AbstractTimetableRowApi
     /**
      * POST createTimetableRow
      * Summary: 作成する
-     * Notes: 指定のTrainに属する TimetableRow を新しく作成する
+     * Notes: 指定のTrainに属する TimetableRow を新しく作成する  属するWorkGroupへのWRITE権限が必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request
@@ -63,7 +63,7 @@ abstract class AbstractTimetableRowApi
     /**
      * DELETE deleteTimetableRow
      * Summary: 削除する
-     * Notes: 既存のTimetableRowを削除する  この操作は (認証済みの) 誰もが実行可能です。
+     * Notes: 既存のTimetableRowを削除する  属するWorkGroupへのWRITE権限が必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request
@@ -85,7 +85,7 @@ abstract class AbstractTimetableRowApi
     /**
      * GET getTimetableRow
      * Summary: 1件取得する
-     * Notes: TimetableRowを1件取得する
+     * Notes: TimetableRowを1件取得する  属するWorkGroupへのREAD権限が必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request
@@ -107,7 +107,7 @@ abstract class AbstractTimetableRowApi
     /**
      * GET getTimetableRowList
      * Summary: 複数件取得する
-     * Notes: 指定のTrainに属するTimetableRowの情報を複数件取得する
+     * Notes: 指定のTrainに属するTimetableRowの情報を複数件取得する  属するWorkGroupへのREAD権限が必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request
@@ -133,7 +133,7 @@ abstract class AbstractTimetableRowApi
     /**
      * PUT updateTimetableRow
      * Summary: 更新する
-     * Notes: 既存のTimetableRowの情報を更新する
+     * Notes: 既存のTimetableRowの情報を更新する  属するWorkGroupへのWRITE権限が必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request

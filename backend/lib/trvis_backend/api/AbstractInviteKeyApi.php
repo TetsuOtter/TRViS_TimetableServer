@@ -40,7 +40,7 @@ abstract class AbstractInviteKeyApi
     /**
      * POST createInviteKey
      * Summary: 作成する
-     * Notes: 指定のWorkGroupに属する招待キーを新規に作成する (admin権限が必要)
+     * Notes: 指定のWorkGroupに属する招待キーを新規に作成する  指定のWorkGroupへのADMIN権限が必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request
@@ -63,7 +63,7 @@ abstract class AbstractInviteKeyApi
     /**
      * DELETE deleteInviteKey
      * Summary: 無効化する
-     * Notes: 指定の招待キーを無効化する。  なお、この操作はキーが有効な間だけ行える。
+     * Notes: 指定の招待キーを無効化する。  なお、この操作はキーが有効な間だけ行える。  指定のWorkGroupへのADMIN権限が必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request
@@ -85,7 +85,7 @@ abstract class AbstractInviteKeyApi
     /**
      * GET getInviteKey
      * Summary: 1件取得する
-     * Notes: 招待キーの情報を1件取得する
+     * Notes: 招待キーの情報を1件取得する  削除された招待キーは取得できませんが、無効化された招待キーは取得できます。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request
@@ -107,7 +107,7 @@ abstract class AbstractInviteKeyApi
     /**
      * GET getInviteKeyList
      * Summary: 一覧を取得する
-     * Notes: 指定のWorkGroupに属する招待キーの一覧を取得する (admin権限が必要)
+     * Notes: 指定のWorkGroupに属する招待キーの一覧を取得する  指定のWorkGroupへのADMIN権限が必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request
@@ -134,7 +134,7 @@ abstract class AbstractInviteKeyApi
     /**
      * GET getMyInviteKeyList
      * Summary: 一覧を取得する
-     * Notes: 自身が作成した (オーナーな) 招待キーの一覧を取得する
+     * Notes: 自身が作成した (オーナーな) 招待キーの一覧を取得する  実行にはサインインが必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request
@@ -158,8 +158,8 @@ abstract class AbstractInviteKeyApi
 
     /**
      * PUT updateInviteKey
-     * Summary: 更新する
-     * Notes: 既存の招待キーを更新する
+     * Summary: (未実装) 更新する
+     * Notes: 既存の招待キーを更新する  指定のWorkGroupへのADMIN権限が必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request
@@ -182,7 +182,7 @@ abstract class AbstractInviteKeyApi
     /**
      * POST useInviteKey
      * Summary: 使用する
-     * Notes: 招待キーを使用する
+     * Notes: 招待キーを使用する  サインインが必須です。サインインしたユーザに対して、この招待キーに割り当てられた権限が付与されます。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request

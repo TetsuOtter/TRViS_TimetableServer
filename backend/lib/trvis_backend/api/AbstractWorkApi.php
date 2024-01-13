@@ -40,7 +40,7 @@ abstract class AbstractWorkApi
     /**
      * POST createWork
      * Summary: 作成する
-     * Notes: 指定のWorkGroupに属する Work (仕業) を新しく作成する
+     * Notes: 指定のWorkGroupに属する Work (仕業) を新しく作成する  このデータが属するWorkGroupへのWRITE権限が必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request
@@ -63,7 +63,7 @@ abstract class AbstractWorkApi
     /**
      * DELETE deleteWork
      * Summary: 削除する
-     * Notes: 既存のWorkを削除する  なお、この操作はこのWorkのOwner、またはこのWorkが属するWorkGroupのOwnerのみが実行可能である。
+     * Notes: 既存のWorkを削除する  このデータが属するWorkGroupへのWRITE権限が必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request
@@ -85,7 +85,7 @@ abstract class AbstractWorkApi
     /**
      * GET getWork
      * Summary: 1件取得する
-     * Notes: Work (仕業) の情報を1件取得する
+     * Notes: Work (仕業) の情報を1件取得する  このデータが属するWorkGroupへのREAD権限が必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request
@@ -107,7 +107,7 @@ abstract class AbstractWorkApi
     /**
      * GET getWorkList
      * Summary: 複数件取得する
-     * Notes: 指定のWorkGroupに属するWork (仕業) の情報を複数件取得する
+     * Notes: 指定のWorkGroupに属するWork (仕業) の情報を複数件取得する  このデータが属するWorkGroupへのREAD権限が必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request
@@ -133,7 +133,7 @@ abstract class AbstractWorkApi
     /**
      * PUT updateWork
      * Summary: 更新する
-     * Notes: 既存のWorkの情報を更新する
+     * Notes: 既存のWorkの情報を更新する  このデータが属するWorkGroupへのWRITE権限が必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request

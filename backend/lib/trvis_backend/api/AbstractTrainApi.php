@@ -40,7 +40,7 @@ abstract class AbstractTrainApi
     /**
      * POST createTrain
      * Summary: 作成する
-     * Notes: 指定のWorkに属する Train (列車) を新しく作成する
+     * Notes: 指定のWorkに属する Train (列車) を新しく作成する  属するWorkGroupへのWRITE権限が必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request
@@ -63,7 +63,7 @@ abstract class AbstractTrainApi
     /**
      * DELETE deleteTrain
      * Summary: 削除する
-     * Notes: 既存のTrainを削除する  なお、この操作はこのTrainのOwner、またはこのTrainが属するWorkまたはWorkGroupのOwnerのみが実行可能である。
+     * Notes: 既存のTrainを削除する  このデータが属するWorkGroupへのWRITE権限が必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request
@@ -85,7 +85,7 @@ abstract class AbstractTrainApi
     /**
      * GET getTrain
      * Summary: 1件取得する
-     * Notes: Train (列車) の情報を1件取得する
+     * Notes: Train (列車) の情報を1件取得する  このデータが属するWorkGroupへのREAD権限が必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request
@@ -107,7 +107,7 @@ abstract class AbstractTrainApi
     /**
      * GET getTrainList
      * Summary: 複数件取得する
-     * Notes: 指定のWorkに属するTrain (列車) の情報を複数件取得する
+     * Notes: 指定のWorkに属するTrain (列車) の情報を複数件取得する  属するWorkGroupへのREAD権限が必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request
@@ -133,7 +133,7 @@ abstract class AbstractTrainApi
     /**
      * PUT updateTrain
      * Summary: 更新する
-     * Notes: 既存のTrainの情報を更新する
+     * Notes: 既存のTrainの情報を更新する  このデータが属するWorkGroupへのWRITE権限が必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request

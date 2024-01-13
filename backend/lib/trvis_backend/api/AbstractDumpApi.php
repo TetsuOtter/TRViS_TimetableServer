@@ -40,7 +40,7 @@ abstract class AbstractDumpApi
     /**
      * GET dumpTimetable
      * Summary: まとめて出力する
-     * Notes: WorkGroupに属するデータをまとめて出力する
+     * Notes: WorkGroupに属するデータをまとめて出力する  指定のWorkGroupへのREAD権限、およびサインインが必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request

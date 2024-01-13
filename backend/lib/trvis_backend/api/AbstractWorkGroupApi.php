@@ -40,7 +40,7 @@ abstract class AbstractWorkGroupApi
     /**
      * POST createWorkGroup
      * Summary: 作成する
-     * Notes: Workのまとまり (WorkGroup) を新しく作成する
+     * Notes: Workのまとまり (WorkGroup) を新しく作成する  この操作にはサインインが必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request
@@ -61,7 +61,7 @@ abstract class AbstractWorkGroupApi
     /**
      * DELETE deleteWorkGroup
      * Summary: 削除する
-     * Notes: 既存の「Workのまとまり (WorkGroup)」を削除する  なお、この操作はOwnerのみが実行可能である。
+     * Notes: 既存の「Workのまとまり (WorkGroup)」を削除する  このデータが属するWorkGroupへのADMIN権限が必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request
@@ -108,7 +108,7 @@ abstract class AbstractWorkGroupApi
     /**
      * GET getWorkGroup
      * Summary: 1件取得する
-     * Notes: Workのまとまり (WorkGroup) の情報を1件取得する
+     * Notes: Workのまとまり (WorkGroup) の情報を1件取得する  このデータが属するWorkGroupへのREAD権限が必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request
@@ -130,7 +130,7 @@ abstract class AbstractWorkGroupApi
     /**
      * GET getWorkGroupList
      * Summary: 複数件取得する
-     * Notes: Workのまとまり (WorkGroup) の情報を複数件取得する
+     * Notes: 自身が取得できるWorkのまとまり (WorkGroup) の情報を複数件取得する
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request
@@ -180,7 +180,7 @@ abstract class AbstractWorkGroupApi
     /**
      * PUT updateWorkGroup
      * Summary: 更新する
-     * Notes: 既存の「Workのまとまり (WorkGroup)」を更新する
+     * Notes: 既存の「Workのまとまり (WorkGroup)」を更新する  このデータが属するWorkGroupへのWRITE権限が必要です。
      * Output-Formats: [application/json]
      *
      * @param ServerRequestInterface $request  Request
