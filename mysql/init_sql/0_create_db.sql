@@ -15,6 +15,8 @@ CREATE TABLE
 
   owner
     VARCHAR(255)
+    CHARACTER SET ascii
+    COLLATE ascii_bin
     NOT NULL
   ,
 
@@ -25,7 +27,6 @@ CREATE TABLE
 
   api_key
     VARCHAR(255)
-    UNIQUE
     NOT NULL
   ,
 
@@ -60,6 +61,8 @@ CREATE TABLE
 
   owner
     VARCHAR(255)
+    CHARACTER SET ascii
+    COLLATE ascii_bin
     NOT NULL
   ,
 
@@ -70,6 +73,10 @@ CREATE TABLE
     ON UPDATE CURRENT_TIMESTAMP
   ,
 
+  deleted_at
+    DATETIME
+  ,
+
   description
     VARCHAR(255)
     NOT NULL
@@ -77,7 +84,6 @@ CREATE TABLE
 
   name
     VARCHAR(255)
-    UNIQUE
     NOT NULL
   ,
 
@@ -114,8 +120,14 @@ CREATE TABLE
     ON UPDATE CURRENT_TIMESTAMP
   ,
 
+  deleted_at
+    DATETIME
+  ,
+
   owner
     VARCHAR(255)
+    CHARACTER SET ascii
+    COLLATE ascii_bin
     NOT NULL
   ,
 
@@ -126,7 +138,6 @@ CREATE TABLE
 
   name
     VARCHAR(255)
-    UNIQUE
     NOT NULL
   ,
 
@@ -194,6 +205,8 @@ CREATE TABLE
 
   owner
     VARCHAR(255)
+    CHARACTER SET ascii
+    COLLATE ascii_bin
     NOT NULL
   ,
 
@@ -208,6 +221,10 @@ CREATE TABLE
     NOT NULL
     DEFAULT CURRENT_TIMESTAMP
     ON UPDATE CURRENT_TIMESTAMP
+  ,
+
+  deleted_at
+    DATETIME
   ,
 
   name
@@ -280,6 +297,8 @@ CREATE TABLE
 
   owner
     VARCHAR(255)
+    CHARACTER SET ascii
+    COLLATE ascii_bin
     NOT NULL
   ,
 
@@ -294,6 +313,10 @@ CREATE TABLE
     NOT NULL
     DEFAULT CURRENT_TIMESTAMP
     ON UPDATE CURRENT_TIMESTAMP
+  ,
+
+  deleted_at
+    DATETIME
   ,
 
   train_number
@@ -395,6 +418,8 @@ CREATE TABLE
 
   owner
     VARCHAR(255)
+    CHARACTER SET ascii
+    COLLATE ascii_bin
     NOT NULL
   ,
 
@@ -409,6 +434,10 @@ CREATE TABLE
     NOT NULL
     DEFAULT CURRENT_TIMESTAMP
     ON UPDATE CURRENT_TIMESTAMP
+  ,
+
+  deleted_at
+    DATETIME
   ,
 
   name
@@ -427,6 +456,11 @@ CREATE TABLE
 
   on_station_detect_radius_m
     DOUBLE PRECISION
+    NOT NULL
+  ,
+
+  record_type
+    TINYINT
     NOT NULL
   ,
 
@@ -464,6 +498,8 @@ CREATE TABLE
 
   owner
     VARCHAR(255)
+    CHARACTER SET ascii
+    COLLATE ascii_bin
     NOT NULL
   ,
 
@@ -478,6 +514,10 @@ CREATE TABLE
     NOT NULL
     DEFAULT CURRENT_TIMESTAMP
     ON UPDATE CURRENT_TIMESTAMP
+  ,
+
+  deleted_at
+    DATETIME
   ,
 
   name
@@ -543,6 +583,8 @@ CREATE TABLE
 
   owner
     VARCHAR(255)
+    CHARACTER SET ascii
+    COLLATE ascii_bin
     NOT NULL
   ,
 
@@ -557,6 +599,10 @@ CREATE TABLE
     NOT NULL
     DEFAULT CURRENT_TIMESTAMP
     ON UPDATE CURRENT_TIMESTAMP
+  ,
+
+  deleted_at
+    DATETIME
   ,
 
   drive_time_mm
@@ -591,27 +637,27 @@ CREATE TABLE
     DEFAULT FALSE
   ,
 
-  arrive_hh
+  arrive_time_hh
     TINYINT(2) UNSIGNED
   ,
 
-  arrive_mm
+  arrive_time_mm
     TINYINT(2) UNSIGNED
   ,
 
-  arrive_ss
+  arrive_time_ss
     TINYINT(2) UNSIGNED
   ,
 
-  departure_hh
+  departure_time_hh
     TINYINT(2) UNSIGNED
   ,
 
-  departure_mm
+  departure_time_mm
     TINYINT(2) UNSIGNED
   ,
 
-  departure_ss
+  departure_time_ss
     TINYINT(2) UNSIGNED
   ,
 
@@ -673,5 +719,147 @@ CREATE TABLE
   ) REFERENCES
   colors (
     colors_id
+  )
+);
+
+CREATE TABLE
+  invite_keys
+(
+  invite_keys_id
+    BINARY(16)
+    NOT NULL
+    COMMENT 'UUID v4'
+  ,
+
+  work_groups_id
+    BINARY(16)
+    NOT NULL
+    COMMENT 'UUID v4'
+  ,
+
+  created_at
+    DATETIME
+    NOT NULL
+    DEFAULT CURRENT_TIMESTAMP
+  ,
+
+  deleted_at
+    DATETIME
+  ,
+
+  owner
+    VARCHAR(255)
+    CHARACTER SET ascii
+    COLLATE ascii_bin
+    NOT NULL
+  ,
+
+  updated_at
+    DATETIME
+    NOT NULL
+    DEFAULT CURRENT_TIMESTAMP
+    ON UPDATE CURRENT_TIMESTAMP
+  ,
+
+  description
+    VARCHAR(255)
+    NOT NULL
+  ,
+
+  valid_from
+    DATETIME
+    NOT NULL
+    DEFAULT CURRENT_TIMESTAMP
+  ,
+
+  expires_at
+    DATETIME
+  ,
+
+  use_limit
+    INTEGER
+  ,
+
+  disabled_at
+    DATETIME
+  ,
+
+  privilege_type
+    TINYINT
+    NOT NULL
+  ,
+
+  PRIMARY KEY (
+    invite_keys_id
+  ),
+
+  FOREIGN KEY (
+    work_groups_id
+  ) REFERENCES
+  work_groups (
+    work_groups_id
+  )
+);
+
+CREATE TABLE
+  work_groups_privileges
+(
+  uid
+    VARCHAR(255)
+    CHARACTER SET ascii
+    COLLATE ascii_bin
+    NOT NULL
+  ,
+
+  work_groups_id
+    BINARY(16)
+    NOT NULL
+    COMMENT 'UUID v4'
+  ,
+
+  invite_keys_id
+    BINARY(16)
+    COMMENT 'UUID v4'
+  ,
+
+  created_at
+    DATETIME
+    NOT NULL
+    DEFAULT CURRENT_TIMESTAMP
+  ,
+
+  updated_at
+    DATETIME
+    NOT NULL
+    DEFAULT CURRENT_TIMESTAMP
+    ON UPDATE CURRENT_TIMESTAMP
+  ,
+
+  deleted_at
+    DATETIME
+  ,
+
+  privilege_type
+    TINYINT
+    NOT NULL
+  ,
+
+  PRIMARY KEY (
+    uid,
+    work_groups_id
+  ),
+
+  FOREIGN KEY (
+    work_groups_id
+  ) REFERENCES
+  work_groups (
+    work_groups_id
+  ),
+
+  FOREIGN KEY (
+    invite_keys_id
+  ) REFERENCES
+  invite_keys (
+    invite_keys_id
   )
 );

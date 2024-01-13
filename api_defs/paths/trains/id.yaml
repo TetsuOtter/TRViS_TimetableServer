@@ -1,14 +1,16 @@
 path:
   get:
     summary: 1件取得する
-    description: Train (列車) の情報を1件取得する
+    operationId: getTrain
+    description: |
+      Train (列車) の情報を1件取得する
+
+      このデータが属するWorkGroupへのREAD権限が必要です。
     tags:
       - train
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '#/components/parameters/WorkGroupId'
-      - $ref: '#/components/parameters/WorkId'
       - $ref: '#/components/parameters/TrainId'
     responses:
       '200':
@@ -26,14 +28,16 @@ path:
 
   put:
     summary: 更新する
-    description: 既存のTrainの情報を更新する
+    operationId: updateTrain
+    description: |
+      既存のTrainの情報を更新する
+
+      このデータが属するWorkGroupへのWRITE権限が必要です。
     tags:
       - train
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '#/components/parameters/WorkGroupId'
-      - $ref: '#/components/parameters/WorkId'
       - $ref: '#/components/parameters/TrainId'
     requestBody:
       description: 更新後のWorkの情報
@@ -58,17 +62,16 @@ path:
 
   delete:
     summary: 削除する
+    operationId: deleteTrain
     description: |
       既存のTrainを削除する
 
-      なお、この操作はこのTrainのOwner、またはこのTrainが属するWorkまたはWorkGroupのOwnerのみが実行可能である。
+      このデータが属するWorkGroupへのWRITE権限が必要です。
     tags:
       - train
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '#/components/parameters/WorkGroupId'
-      - $ref: '#/components/parameters/WorkId'
       - $ref: '#/components/parameters/TrainId'
     responses:
       '200':

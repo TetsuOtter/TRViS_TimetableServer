@@ -5,12 +5,18 @@ Station:
     - description
     - name
     - location_km
+    - record_type
   properties:
     stations_id:
       type: string
       format: uuid
       readOnly: true
       description: StationのID (UUID)
+    work_groups_id:
+      type: string
+      format: uuid
+      readOnly: true
+      description: WorkGroupのID (UUID)
     created_at:
       type: string
       format: date-time

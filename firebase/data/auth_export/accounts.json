@@ -1,0 +1,55 @@
+{
+  "kind": "identitytoolkit#DownloadAccountResponse",
+  "users": [
+    {
+      "localId": "6WW57BtPbIqrwcyc9tT4Grld2ceD",
+      "lastLoginAt": "0",
+      "displayName": "TestUser",
+      "photoUrl": "",
+      "emailVerified": false,
+      "email": "a@a.test",
+      "salt": "fakeSaltp5WAGy0UYesyDZ4KYv2D",
+      "passwordHash": "fakeHash:salt=fakeSaltp5WAGy0UYesyDZ4KYv2D:password=0000",
+      "passwordUpdatedAt": 1704103695956,
+      "validSince": "0",
+      "mfaInfo": [],
+      "createdAt": "0",
+      "providerUserInfo": [
+        {
+          "providerId": "password",
+          "email": "a@a.test",
+          "federatedId": "a@a.test",
+          "rawId": "a@a.test",
+          "displayName": "TestUser",
+          "photoUrl": ""
+        }
+      ],
+      "lastRefreshAt": "1970-01-01T00:00:00.000Z"
+    },
+    {
+      "localId": "Poxuny3AdmdE59DYaT3DwoiTbrVe",
+      "lastLoginAt": "0",
+      "displayName": "TestUser 2",
+      "photoUrl": "",
+      "emailVerified": false,
+      "email": "b@a.test",
+      "salt": "fakeSaltp5WAGy0UYesyDZ4KYv2D",
+      "passwordHash": "fakeHash:salt=fakeSaltp5WAGy0UYesyDZ4KYv2D:password=0000",
+      "passwordUpdatedAt": 1704103695956,
+      "validSince": "0",
+      "mfaInfo": [],
+      "createdAt": "0",
+      "providerUserInfo": [
+        {
+          "providerId": "password",
+          "email": "b@a.test",
+          "federatedId": "b@a.test",
+          "rawId": "b@a.test",
+          "displayName": "TestUser 2",
+          "photoUrl": ""
+        }
+      ],
+      "lastRefreshAt": "1970-01-01T00:00:00.000Z"
+    }
+  ]
+}

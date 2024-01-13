@@ -1,7 +1,9 @@
 path:
   get:
     summary: 複数件取得する
-    description: Workのまとまり (WorkGroup) の情報を複数件取得する
+    operationId: getWorkGroupList
+    description: |
+      自身が取得できるWorkのまとまり (WorkGroup) の情報を複数件取得する
     tags:
       - work_group
     security:
@@ -9,6 +11,7 @@ path:
     parameters:
       - $ref: '#/components/parameters/PageNumber'
       - $ref: '#/components/parameters/PageSize'
+      - $ref: '#/components/parameters/PageTopId'
     responses:
       '200':
         description: 取得成功
@@ -16,8 +19,6 @@ path:
           application/json:
             schema:
               $ref: '#/components/schemas/WorkGroupArray'
-      '204':
-        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/204_NoContentInThisPage'
       '400':
         $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
       '401':
@@ -25,7 +26,11 @@ path:
 
   post:
     summary: 作成する
-    description: Workのまとまり (WorkGroup) を新しく作成する
+    operationId: createWorkGroup
+    description: |
+      Workのまとまり (WorkGroup) を新しく作成する
+
+      この操作にはサインインが必要です。
     tags:
       - work_group
     security:

@@ -1,0 +1,8 @@
+.github/
+composer.json
+/.gitignore
+public/index.php
+config/
+lib/App/RegisterDependencies.php
+lib/App/RegisterMiddlewares.php
+lib/Auth/AbstractAuthenticator.php

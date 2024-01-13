@@ -1,13 +1,16 @@
 path:
   get:
     summary: 1件取得する
-    description: Work (仕業) の情報を1件取得する
+    operationId: getWork
+    description: |
+      Work (仕業) の情報を1件取得する
+
+      このデータが属するWorkGroupへのREAD権限が必要です。
     tags:
       - work
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '#/components/parameters/WorkGroupId'
       - $ref: '#/components/parameters/WorkId'
     responses:
       '200':
@@ -25,13 +28,16 @@ path:
 
   put:
     summary: 更新する
-    description: 既存のWorkの情報を更新する
+    operationId: updateWork
+    description: |
+      既存のWorkの情報を更新する
+
+      このデータが属するWorkGroupへのWRITE権限が必要です。
     tags:
       - work
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '#/components/parameters/WorkGroupId'
       - $ref: '#/components/parameters/WorkId'
     requestBody:
       description: 更新後のWorkの情報
@@ -56,16 +62,16 @@ path:
 
   delete:
     summary: 削除する
+    operationId: deleteWork
     description: |
       既存のWorkを削除する
 
-      なお、この操作はこのWorkのOwner、またはこのWorkが属するWorkGroupのOwnerのみが実行可能である。
+      このデータが属するWorkGroupへのWRITE権限が必要です。
     tags:
       - work
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '#/components/parameters/WorkGroupId'
       - $ref: '#/components/parameters/WorkId'
     responses:
       '200':

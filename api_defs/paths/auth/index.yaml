@@ -1,6 +1,7 @@
 path:
   post:
-    summary: 認証トークンを発行
+    summary: (未実装) 認証トークンを発行
+    operationId: issueToken
     description: APIへのアクセスで使用するJWTを発行する
     tags:
       - auth

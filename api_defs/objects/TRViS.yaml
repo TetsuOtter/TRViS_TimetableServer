@@ -116,7 +116,7 @@ TRViS_json_Train:
       nullable: true
       description: 行先
       example: '東  京'
-    BegionRemarks:
+    BeginRemarks:
       type: string
       nullable: true
       description: 乗車前の注意事項 (「乗継」など)
@@ -291,7 +291,7 @@ TRViS_json_TimetableRow:
       pattern: '^[0-9a-fA-F]{6}$'
       description: マーカーの色
       example: 'ff0000'
-    marker_text:
+    MarkerText:
       type: string
       description: マーカー部分に表示する文字列
       example: '合図'

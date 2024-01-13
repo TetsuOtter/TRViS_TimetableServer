@@ -1,15 +1,24 @@
 WorkGroupId:
   in: path
-  name: work_group_id
+  name: workGroupId
   required: true
   schema:
     type: string
     format: uuid
   description: WorkGroupのID
 
+InviteKeyId:
+  in: path
+  name: inviteKeyId
+  required: true
+  schema:
+    type: string
+    format: uuid
+  description: InviteKeyのID
+
 WorkId:
   in: path
-  name: work_id
+  name: workId
   required: true
   schema:
     type: string
@@ -18,7 +27,7 @@ WorkId:
 
 TrainId:
   in: path
-  name: train_id
+  name: trainId
   required: true
   schema:
     type: string
@@ -27,7 +36,7 @@ TrainId:
 
 TimetableRowId:
   in: path
-  name: timetable_row_id
+  name: timetableRowId
   required: true
   schema:
     type: string
@@ -36,7 +45,7 @@ TimetableRowId:
 
 StationId:
   in: path
-  name: station_id
+  name: stationId
   required: true
   schema:
     type: string
@@ -45,7 +54,7 @@ StationId:
 
 StationTrackId:
   in: path
-  name: station_track_id
+  name: stationTrackId
   required: true
   schema:
     type: string
@@ -54,9 +63,28 @@ StationTrackId:
 
 ColorId:
   in: path
-  name: color_id
+  name: colorId
   required: true
   schema:
     type: string
     format: uuid
   description: ColorのID
+
+UidQuery:
+  in: query
+  name: uid
+  required: false
+  schema:
+    type: string
+  description: ユーザのID
+
+UidAnonymousQuery:
+  in: query
+  name: uid-anonymous
+  required: false
+  schema:
+    type: boolean
+  description: |
+    匿名ユーザ・すべてのユーザに対する操作か
+
+    `uid` が指定された場合、そちらが優先される

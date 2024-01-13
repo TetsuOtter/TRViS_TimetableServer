@@ -1,17 +1,20 @@
 path:
   get:
     summary: 複数件取得する
-    description: 指定のTrainに属するTimetableRowの情報を複数件取得する
+    operationId: getTimetableRowList
+    description: |
+      指定のTrainに属するTimetableRowの情報を複数件取得する
+
+      属するWorkGroupへのREAD権限が必要です。
     tags:
       - timetable_row
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '#/components/parameters/WorkGroupId'
-      - $ref: '#/components/parameters/WorkId'
       - $ref: '#/components/parameters/TrainId'
       - $ref: '#/components/parameters/PageNumber'
       - $ref: '#/components/parameters/PageSize'
+      - $ref: '#/components/parameters/PageTopId'
     responses:
       '200':
         description: 取得成功
@@ -19,8 +22,6 @@ path:
           application/json:
             schema:
               $ref: '#/components/schemas/TimetableRowArray'
-      '204':
-        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/204_NoContentInThisPage'
       '400':
         $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
       '401':
@@ -30,14 +31,16 @@ path:
 
   post:
     summary: 作成する
-    description: 指定のTrainに属する TimetableRow を新しく作成する
+    operationId: createTimetableRow
+    description: |
+      指定のTrainに属する TimetableRow を新しく作成する
+
+      属するWorkGroupへのWRITE権限が必要です。
     tags:
       - timetable_row
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '#/components/parameters/WorkGroupId'
-      - $ref: '#/components/parameters/WorkId'
       - $ref: '#/components/parameters/TrainId'
     requestBody:
       description: 作成するTrainの情報

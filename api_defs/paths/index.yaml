@@ -1,6 +1,7 @@
 path:
   get:
     summary: APIの情報を取得する
+    operationId: getApiInfo
     description: APIのバージョン等、APIの情報を取得する
     tags:
       - api_info

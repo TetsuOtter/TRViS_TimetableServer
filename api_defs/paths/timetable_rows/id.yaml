@@ -1,15 +1,16 @@
 path:
   get:
     summary: 1件取得する
-    description: TimetableRowを1件取得する
+    operationId: getTimetableRow
+    description: |
+      TimetableRowを1件取得する
+
+      属するWorkGroupへのREAD権限が必要です。
     tags:
       - timetable_row
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '#/components/parameters/WorkGroupId'
-      - $ref: '#/components/parameters/WorkId'
-      - $ref: '#/components/parameters/TrainId'
       - $ref: '#/components/parameters/TimetableRowId'
     responses:
       '200':
@@ -27,15 +28,16 @@ path:
 
   put:
     summary: 更新する
-    description: 既存のTimetableRowの情報を更新する
+    operationId: updateTimetableRow
+    description: |
+      既存のTimetableRowの情報を更新する
+
+      属するWorkGroupへのWRITE権限が必要です。
     tags:
       - timetable_row
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '#/components/parameters/WorkGroupId'
-      - $ref: '#/components/parameters/WorkId'
-      - $ref: '#/components/parameters/TrainId'
       - $ref: '#/components/parameters/TimetableRowId'
     requestBody:
       description: 更新後のTimetableRowの情報
@@ -60,18 +62,16 @@ path:
 
   delete:
     summary: 削除する
+    operationId: deleteTimetableRow
     description: |
       既存のTimetableRowを削除する
 
-      この操作は (認証済みの) 誰もが実行可能です。
+      属するWorkGroupへのWRITE権限が必要です。
     tags:
       - timetable_row
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '#/components/parameters/WorkGroupId'
-      - $ref: '#/components/parameters/WorkId'
-      - $ref: '#/components/parameters/TrainId'
       - $ref: '#/components/parameters/TimetableRowId'
     responses:
       '200':

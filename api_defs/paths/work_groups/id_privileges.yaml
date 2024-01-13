@@ -1,0 +1,70 @@
+path:
+  get:
+    summary: 権限情報を取得する
+    operationId: getPrivilege
+    description: |
+      このWorkGroupに関する自身の権限を取得する。
+      
+      管理者の場合は、指定のユーザの権限を取得することも可能。
+    tags:
+      - work_group
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '#/components/parameters/WorkGroupId'
+      - $ref: '#/components/parameters/UidQuery'
+      - $ref: '#/components/parameters/UidAnonymousQuery'
+    responses:
+      '200':
+        description: 取得成功
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkGroupsPrivilege'
+      '400':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
+      '401':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/401_TokenError'
+      '404':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/404_ContentNotFound'
+
+  put:
+    summary: 権限を更新する
+    operationId: updatePrivilege
+    description: |
+      このWorkGroupに対する自身の権限を更新する。(現在の権限以下の権限のみ設定可能)
+
+      管理者の場合は、指定のユーザの権限を追加・更新することも可能。(invite_key_idはNULLになります)
+    tags:
+      - work_group
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '#/components/parameters/WorkGroupId'
+      - $ref: '#/components/parameters/UidQuery'
+      - $ref: '#/components/parameters/UidAnonymousQuery'
+    requestBody:
+      description: 更新後の権限情報
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/WorkGroupsPrivilege'
+    responses:
+      '200':
+        description: 更新成功
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkGroupsPrivilege'
+      '400':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
+      '401':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/401_TokenError'
+      '403':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/403_NotAllowedCommand'
+      '404':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/404_ContentNotFound'
+
+components:
+  $ref: '../../api_root.yaml#/components'

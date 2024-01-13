@@ -10,6 +10,11 @@ StationTrack:
       format: uuid
       readOnly: true
       description: Station TrackのID (UUID)
+    stations_id:
+      type: string
+      format: uuid
+      readOnly: true
+      description: StationのID (UUID)
     created_at:
       type: string
       format: date-time

@@ -16,7 +16,16 @@ PageSize:
   description: ページングを行う場合の1ページあたりの件数
   schema:
     type: integer
-    minimum: 1
+    minimum: 5
     maximum: 100
     default: 10
     example: 20
+
+PageTopId:
+  in: query
+  name: top
+  required: false
+  description: ページングを行う場合の一番上に表示するID
+  schema:
+    type: string
+    format: uuid

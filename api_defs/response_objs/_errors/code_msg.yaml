@@ -11,17 +11,6 @@ json:
         type: string
         description: エラーメッセージ
 json_responses:
-  204_NoContentInThisPage:
-    description: ページングの結果、取得件数が0件であった
-    content:
-      application/json:
-        schema:
-          $ref: '#/json/schema'
-        examples:
-          example:
-            value:
-              code: 204
-              message: "No Content in this page"
   BadRequest:
     description: リクエストが不正
     content:

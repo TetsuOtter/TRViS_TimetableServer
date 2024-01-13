@@ -12,12 +12,43 @@
     - description
   - api_key
   - expires_at
+- work_groups_privileges
+  - uid
+  - work_groups_id
+  - invite_keys_id
+  - created_at
+  - updated_at
+  - deleted_at
+  - privilege_type
+    - none = 0
+    - read = 1
+    - write = 2
+    - admin = 3
+- invite_keys
+  - invite_keys_id
+  - work_groups_id
+  - created_at
+  - owner
+  - updated_at
+  - deleted_at
+  - description
+  - valid_from
+  - expires_at
+  - use_limit
+  - disabled_at
+  - privilege_type
+    - none = 0
+    - read = 1
+    - write = 2
+    - admin = 3
+
 - work_groups
   - (common)
     - work_groups_id
     - created_at
     - owner
     - updated_at
+    - deleted_at
     - description
   - name
 - works
@@ -28,6 +59,7 @@
     - created_at
     - owner
     - updated_at
+    - deleted_at
   - name
   - affect_date
   - affix_content_type
@@ -44,6 +76,7 @@
     - created_at
     - owner
     - updated_at
+    - deleted_at
   - train_number
   - max_speed
   - speed_type
@@ -67,6 +100,7 @@
     - created_at
     - owner
     - updated_at
+    - deleted_at
   - name
   - location_km
   - location_lonlat
@@ -80,6 +114,7 @@
     - created_at
     - owner
     - updated_at
+    - deleted_at
   - name
   - run_in_limit
   - run_out_limit
@@ -94,6 +129,7 @@
     - created_at
     - owner
     - updated_at
+    - deleted_at
   - drive_time_mm
   - drive_time_ss
   - is_operation_only_stop
@@ -121,6 +157,7 @@
     - created_at
     - owner
     - updated_at
+    - deleted_at
   - name
   - red_8bit
   - green_8bit
@@ -130,3 +167,8 @@
   - blue_real
 
 trainsの `before_departure_on_station_track_col` 等は、deprecatedとするため含めない。
+
+削除操作は論理削除とし、操作量の都合で以下のテーブル以外への `deleted_at` 設定はバッチ処理にする。
+- work_groups_privileges
+- invite_keys
+- work_groups

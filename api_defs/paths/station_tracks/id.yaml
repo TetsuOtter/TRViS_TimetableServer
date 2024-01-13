@@ -1,14 +1,16 @@
 path:
   get:
     summary: 1件取得する
-    description: Station (駅) の情報を1件取得する
+    operationId: getStationTrack
+    description: |
+      StationTrack (駅の番線) の情報を1件取得する
+
+      このデータが属するWorkGroupへのREAD権限が必要です。
     tags:
       - station_track
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '#/components/parameters/WorkGroupId'
-      - $ref: '#/components/parameters/StationId'
       - $ref: '#/components/parameters/StationTrackId'
     responses:
       '200':
@@ -26,14 +28,16 @@ path:
 
   put:
     summary: 更新する
-    description: 既存のStationの情報を更新する
+    operationId: updateStationTrack
+    description: |
+      既存のStationTrackの情報を更新する
+
+      このデータが属するWorkGroupへのWRITE権限が必要です。
     tags:
       - station_track
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '#/components/parameters/WorkGroupId'
-      - $ref: '#/components/parameters/StationId'
       - $ref: '#/components/parameters/StationTrackId'
     requestBody:
       description: 更新後のStationの情報
@@ -58,17 +62,16 @@ path:
 
   delete:
     summary: 削除する
+    operationId: deleteStationTrack
     description: |
-      既存のStationを削除する
+      既存のStationTrackを削除する
 
-      なお、この操作はこのStationのOwner、またはこのStationが属するWorkGroupのOwnerのみが実行可能である。
+      このデータが属するWorkGroupへのREAD権限が必要です。
     tags:
       - station_track
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '#/components/parameters/WorkGroupId'
-      - $ref: '#/components/parameters/StationId'
       - $ref: '#/components/parameters/StationTrackId'
     responses:
       '200':

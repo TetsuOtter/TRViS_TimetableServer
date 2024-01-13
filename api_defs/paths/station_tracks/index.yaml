@@ -1,16 +1,20 @@
 path:
   get:
     summary: 複数件取得する
-    description: 指定のWorkGroupに属するStation (駅) の情報を複数件取得する
+    operationId: getStationTrackList
+    description: |
+      指定のStationに属するStationTrackの情報を複数件取得する
+
+      属するWorkGroupへのREAD権限が必要です。
     tags:
       - station_track
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '#/components/parameters/WorkGroupId'
       - $ref: '#/components/parameters/StationId'
       - $ref: '#/components/parameters/PageNumber'
       - $ref: '#/components/parameters/PageSize'
+      - $ref: '#/components/parameters/PageTopId'
     responses:
       '200':
         description: 取得成功
@@ -18,8 +22,6 @@ path:
           application/json:
             schema:
               $ref: '#/components/schemas/StationTrackArray'
-      '204':
-        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/204_NoContentInThisPage'
       '400':
         $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
       '401':
@@ -29,13 +31,16 @@ path:
 
   post:
     summary: 作成する
-    description: 指定のWorkGroupに属する Station (駅) を新しく作成する
+    operationId: createStationTrack
+    description: |
+      指定のStationに属する StationTrack を新しく作成する
+
+      属するWorkGroupへのWRITE権限が必要です。
     tags:
       - station_track
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '#/components/parameters/WorkGroupId'
       - $ref: '#/components/parameters/StationId'
     requestBody:
       description: 作成するStationの情報

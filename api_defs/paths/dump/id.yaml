@@ -1,7 +1,11 @@
 path:
   get:
     summary: まとめて出力する
-    description: WorkGroupに属するデータをまとめて出力する
+    operationId: dumpTimetable
+    description: |
+      WorkGroupに属するデータをまとめて出力する
+
+      指定のWorkGroupへのREAD権限、およびサインインが必要です。
     tags:
       - dump
     security:

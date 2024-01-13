@@ -1,13 +1,16 @@
 path:
   get:
     summary: 1件取得する
-    description: Color (色) の情報を1件取得する
+    operationId: getColor
+    description: |
+      Color (色) の情報を1件取得する
+
+      指定のWorkGroupへのREAD権限が必要です。
     tags:
       - color
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '#/components/parameters/WorkGroupId'
       - $ref: '#/components/parameters/ColorId'
     responses:
       '200':
@@ -25,13 +28,16 @@ path:
 
   put:
     summary: 更新する
-    description: 既存のColorの情報を更新する
+    operationId: updateColor
+    description: |
+      既存のColorの情報を更新する
+
+      指定のWorkGroupへのWRITE権限が必要です。
     tags:
       - color
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '#/components/parameters/WorkGroupId'
       - $ref: '#/components/parameters/ColorId'
     requestBody:
       description: 更新後のColorの情報
@@ -56,16 +62,16 @@ path:
 
   delete:
     summary: 削除する
+    operationId: deleteColor
     description: |
       既存のColorを削除する
 
-      なお、この操作はこのColorのOwner、またはこのColorが属するWorkGroupのOwnerのみが実行可能である。
+      指定のWorkGroupへのWRITE権限が必要です。
     tags:
       - color
     security:
       - bearerAuth: []
     parameters:
-      - $ref: '#/components/parameters/WorkGroupId'
       - $ref: '#/components/parameters/ColorId'
     responses:
       '200':

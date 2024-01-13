@@ -6,7 +6,9 @@ info:
 
 servers:
   - url: http://localhost:8080/api/v1
-    description: ローカル開発環境
+    description: ローカル開発環境(Docker)
+  - url: http://localhost:8888/api/v1
+    description: ローカル開発環境(ホストマシン)
   - url: https://trvis.t0r.dev/api/v1
     description: 本番環境
 
@@ -15,6 +17,8 @@ tags:
     description: APIの情報を取得する
   - name: auth
     description: 認証/認可関連のAPI (トークン発行など)
+  - name: invite_key
+    description: 招待キー関係の操作を行う
   - name: work_group
     description: Work Groupの操作を行う
   - name: station
@@ -41,49 +45,49 @@ paths:
 
   /work_groups:
     $ref: "./paths/work_groups/index.yaml#/path"
-  /work_groups/{work_group_id}:
+  /work_groups/{workGroupId}:
     $ref: "./paths/work_groups/id.yaml#/path"
+  /work_groups/{workGroupId}/privileges:
+    $ref: "./paths/work_groups/id_privileges.yaml#/path"
 
-  /work_groups/{work_group_id}/stations:
+  /work_groups/{workGroupId}/invite_keys:
+    $ref: "./paths/invite_keys/wg_index.yaml#/path"
+  /invite_keys:
+    $ref: "./paths/invite_keys/index.yaml#/path"
+  /invite_keys/{inviteKeyId}:
+    $ref: "./paths/invite_keys/id.yaml#/path"
+
+  /work_groups/{workGroupId}/stations:
     $ref: "./paths/stations/index.yaml#/path"
-  /work_groups/{work_group_id}/stations/{station_id}:
+  /stations/{stationId}:
     $ref: "./paths/stations/id.yaml#/path"
 
-  /work_groups/{work_group_id}/stations/{station_id}/tracks:
+  /stations/{stationId}/tracks:
     $ref: "./paths/station_tracks/index.yaml#/path"
-  /work_groups/{work_group_id}/stations/{station_id}/tracks/{station_track_id}:
+  /tracks/{stationTrackId}:
     $ref: "./paths/station_tracks/id.yaml#/path"
 
-  /work_groups/{work_group_id}/works:
+  /work_groups/{workGroupId}/works:
     $ref: "./paths/works/index.yaml#/path"
-  /work_groups/{work_group_id}/works/{work_id}:
+  /works/{workId}:
     $ref: "./paths/works/id.yaml#/path"
-  # 将来的には対応させたい
-  # /works/{id}:
-  #   $ref: "./paths/works/id.yaml#/path"
 
-  /work_groups/{work_group_id}/works/{work_id}/trains:
+  /works/{workId}/trains:
     $ref: "./paths/trains/index.yaml#/path"
-  /work_groups/{work_group_id}/works/{work_id}/trains/{train_id}:
+  /trains/{trainId}:
     $ref: "./paths/trains/id.yaml#/path"
-  # 将来的には対応させたい
-  # /trains/{id}:
-  #   $ref: "./paths/trains/id.yaml#/path"
 
-  /work_groups/{work_group_id}/works/{work_id}/trains/{train_id}/timetable_rows:
+  /trains/{trainId}/timetable_rows:
     $ref: "./paths/timetable_rows/index.yaml#/path"
-  /work_groups/{work_group_id}/works/{work_id}/trains/{train_id}/timetable_rows/{timetable_row_id}:
+  /timetable_rows/{timetableRowId}:
     $ref: "./paths/timetable_rows/id.yaml#/path"
-  # 将来的には対応させたい
-  # /trains/{train_id}/timetable_rows:
-  #   $ref: "./paths/timetable_rows/index.yaml#/path"
 
-  /colors:
+  /work_groups/{workGroupId}/colors:
     $ref: "./paths/colors/index.yaml#/path"
-  /colors/{color_id}:
+  /colors/{colorId}:
     $ref: "./paths/colors/id.yaml#/path"
 
-  /dump/{work_group_id}:
+  /dump/{workGroupId}:
     $ref: "./paths/dump/id.yaml#/path"
 
 components:
@@ -100,6 +104,11 @@ components:
       $ref: "./objects/TokenRequest.yaml#/TokenRequest"
     TokenResponse:
       $ref: "./objects/TokenResponse.yaml#/TokenResponse"
+
+    InviteKey:
+      $ref: "./objects/InviteKey.yaml#/InviteKey"
+    InviteKeyArray:
+      $ref: "./objects/InviteKey.yaml#/InviteKeyArray"
 
     Station:
       $ref: "./objects/Station.yaml#/Station"
@@ -139,9 +148,14 @@ components:
     TRViS_json:
       $ref: "./objects/TRViS.yaml#/TRViS_json_root"
 
+    WorkGroupsPrivilege:
+      $ref: "./objects/WorkGroupsPrivilege.yaml#/WorkGroupsPrivilege"
+
   parameters:
     WorkGroupId:
       $ref: "./parameters/id.yaml#/WorkGroupId"
+    InviteKeyId:
+      $ref: "./parameters/id.yaml#/InviteKeyId"
     WorkId:
       $ref: "./parameters/id.yaml#/WorkId"
     TrainId:
@@ -154,8 +168,17 @@ components:
       $ref: "./parameters/id.yaml#/StationTrackId"
     ColorId:
       $ref: "./parameters/id.yaml#/ColorId"
+    UidQuery:
+      $ref: "./parameters/id.yaml#/UidQuery"
+    UidAnonymousQuery:
+      $ref: "./parameters/id.yaml#/UidAnonymousQuery"
     
     PageNumber:
       $ref: "./parameters/paging.yaml#/PageNumber"
     PageSize:
       $ref: "./parameters/paging.yaml#/PageSize"
+    PageTopId:
+      $ref: "./parameters/paging.yaml#/PageTopId"
+
+    Expired:
+      $ref: "./parameters/expired.yaml#/Expired"

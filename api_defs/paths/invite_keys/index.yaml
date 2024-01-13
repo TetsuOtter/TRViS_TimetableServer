@@ -1,0 +1,31 @@
+path:
+  get:
+    summary: 一覧を取得する
+    operationId: getMyInviteKeyList
+    description: |
+      自身が作成した (オーナーな) 招待キーの一覧を取得する
+
+      実行にはサインインが必要です。
+    tags:
+      - invite_key
+    security:
+      - bearerAuth: []
+    parameters:
+      - $ref: '#/components/parameters/PageNumber'
+      - $ref: '#/components/parameters/PageSize'
+      - $ref: '#/components/parameters/PageTopId'
+      - $ref: '#/components/parameters/Expired'
+    responses:
+      '200':
+        description: 取得成功
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InviteKeyArray'
+      '400':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
+      '401':
+        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/401_TokenError'
+
+components:
+  $ref: '../../api_root.yaml#/components'

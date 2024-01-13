@@ -1,7 +1,11 @@
 path:
   get:
     summary: 複数件取得する
-    description: 指定のWorkGroupに属するColor (色) の情報を複数件取得する
+    operationId: getColorList
+    description: |
+      指定のWorkGroupに属するColor (色) の情報を複数件取得する
+
+      指定のWorkGroupへのREAD権限が必要です。
     tags:
       - color
     security:
@@ -10,6 +14,7 @@ path:
       - $ref: '#/components/parameters/WorkGroupId'
       - $ref: '#/components/parameters/PageNumber'
       - $ref: '#/components/parameters/PageSize'
+      - $ref: '#/components/parameters/PageTopId'
     responses:
       '200':
         description: 取得成功
@@ -17,8 +22,6 @@ path:
           application/json:
             schema:
               $ref: '#/components/schemas/ColorArray'
-      '204':
-        $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/204_NoContentInThisPage'
       '400':
         $ref: '../../response_objs/_errors/code_msg.yaml#/json_responses/BadRequest'
       '401':
@@ -28,7 +31,11 @@ path:
 
   post:
     summary: 作成する
-    description: 指定のWorkGroupに属する Color (色) を新しく作成する
+    operationId: createColor
+    description: |
+      指定のWorkGroupに属する Color (色) を新しく作成する
+
+      指定のWorkGroupへのWRITE権限が必要です。
     tags:
       - color
     security:
