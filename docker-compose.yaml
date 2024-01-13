@@ -1,11 +1,31 @@
 version: "3.8"
 services:
+  proxy:
+    image: nginx:1.25.3-alpine-slim
+    container_name: webmon-proxy
+    hostname: webmon-proxy
+    ports:
+      - "80:80"
+    networks:
+      - proxy-front
+      - proxy-back
+    volumes:
+      - type: bind
+        read_only: true
+        source: ./proxy/conf.d
+        target: /etc/nginx/conf.d
+      - type: bind
+        source: ./proxy/logs
+        target: /var/log/nginx
   php:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: webmon-php
     hostname: webmon-php
+    networks:
+      - back-db
+      - proxy-back
     ports:
       - "8080:80"
     volumes:
@@ -38,6 +58,8 @@ services:
     platform: linux/amd64
     container_name: webmon-db
     hostname: webmon-db
+    networks:
+      - back-db
     volumes:
       - type: bind
         read_only: true
@@ -55,8 +77,9 @@ services:
         target: /var/lib/mysql
     env_file:
       - mysql/.env
-    ports:
-      - "3306:3306"
 volumes:
   webmon-db:
-
+networks:
+  proxy-front:
+  proxy-back:
+  back-db:
