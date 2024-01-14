@@ -1,0 +1,15 @@
+Options All -Indexes
+
+<Files .htaccess>
+order allow,deny
+deny from all
+</Files>
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  RewriteBase /
+  RewriteCond %{REQUEST_URI} !(^/api/)
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteRule ^(.*)$ /index.html [QSA,L]
+</IfModule>
