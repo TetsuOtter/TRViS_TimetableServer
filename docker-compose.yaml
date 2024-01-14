@@ -25,6 +25,11 @@ services:
     hostname: webmon-front
     networks:
       - proxy-front
+    volumes:
+      - type: bind
+        read_only: true
+        source: ./frontend/docker_conf/httpd.conf
+        target: /usr/local/apache2/conf/httpd.conf
   php:
     build:
       context: ./backend
