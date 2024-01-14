@@ -26,5 +26,19 @@
 			"strings": true
 		}
 	},
-	"editor.defaultFormatter": "EditorConfig.EditorConfig"
+	"editor.defaultFormatter": "EditorConfig.EditorConfig",
+	"cSpell.words": [
+		"appspot",
+		"Classname",
+		"firebaseapp",
+		"fontawesome",
+		"trvis",
+		"webmon"
+	],
+	"cSpell.enableFiletypes": [
+		"dockercompose",
+		"dockerfile",
+		"editorconfig",
+		"sql"
+	]
 }
