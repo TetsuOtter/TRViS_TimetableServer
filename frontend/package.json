@@ -10,6 +10,9 @@
 		"preview": "vite preview"
 	},
 	"dependencies": {
+		"@yamada-ui/fontawesome": "^1.0.4",
+		"@yamada-ui/react": "^1.1.5",
+		"@yamada-ui/table": "^1.0.8",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0"
 	},

@@ -1,5 +1,7 @@
+import { Text } from "@yamada-ui/react";
+
 function App() {
-	return <>Hello World!</>;
+	return <Text>Hello World!</Text>;
 }
 
 export default App;
