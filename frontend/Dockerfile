@@ -4,7 +4,6 @@ WORKDIR /app
 COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile
 COPY \
-  ./.eslintrc.cjs \
   ./index.html \
   ./tsconfig.json \
   ./tsconfig.node.json \
