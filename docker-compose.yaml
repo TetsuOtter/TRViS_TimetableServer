@@ -17,6 +17,9 @@ services:
       - type: bind
         source: ./proxy/logs
         target: /var/log/nginx
+    depends_on:
+      - front
+      - php
   front:
     build:
       context: ./frontend
@@ -53,6 +56,8 @@ services:
         read_only: true
         source: ./my_apache2.conf
         target: /etc/apache2/mods-enabled/my_apache2.conf
+    depends_on:
+      - mysql
   firebase:
     build:
       context: ./firebase
