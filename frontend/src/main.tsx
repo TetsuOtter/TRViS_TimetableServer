@@ -10,6 +10,7 @@ import "@fontsource/roboto/700.css";
 import ErrorPage from "./pages/ErrorPage.tsx";
 import { Provider } from "react-redux";
 import { store } from "./redux/store.ts";
+import MyAppBar from "./components/MyAppBar.tsx";
 import { ThemeProvider } from "@emotion/react";
 import { createTheme, CssBaseline } from "@mui/material";
 import { useAppThemeMode } from "./hooks/appThemeModeHook.ts";
@@ -38,6 +39,7 @@ const RootComponentWithRedux = () => {
 	return (
 		<ThemeProvider theme={theme}>
 			<CssBaseline />
+			<MyAppBar />
 			<RouterProvider router={router} />
 		</ThemeProvider>
 	);
