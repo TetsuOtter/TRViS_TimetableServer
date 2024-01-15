@@ -34,6 +34,7 @@
 		"fontawesome",
 		"fontsource",
 		"reduxjs",
+		"svgr",
 		"trvis",
 		"webmon"
 	],
