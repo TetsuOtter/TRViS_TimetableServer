@@ -1,4 +1,4 @@
-import { AppSelector } from "../store";
+import type { AppSelector } from "../store";
 
 export const userIdSelector: AppSelector<string> = (state) =>
 	state.authInfo.userId;

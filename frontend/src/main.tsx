@@ -1,19 +1,21 @@
 import React, { useMemo } from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App.tsx";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+
+import { ThemeProvider } from "@emotion/react";
+import { createTheme, CssBaseline } from "@mui/material";
+import { Provider } from "react-redux";
+
+import App from "./App.tsx";
+import MyAppBar from "./components/MyAppBar.tsx";
+import { useAppThemeMode } from "./hooks/appThemeModeHook.ts";
+import ErrorPage from "./pages/ErrorPage.tsx";
+import { store } from "./redux/store.ts";
 
 import "@fontsource/roboto/300.css";
 import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
-import ErrorPage from "./pages/ErrorPage.tsx";
-import { Provider } from "react-redux";
-import { store } from "./redux/store.ts";
-import MyAppBar from "./components/MyAppBar.tsx";
-import { ThemeProvider } from "@emotion/react";
-import { createTheme, CssBaseline } from "@mui/material";
-import { useAppThemeMode } from "./hooks/appThemeModeHook.ts";
 
 const router = createBrowserRouter([
 	{

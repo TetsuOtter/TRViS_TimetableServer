@@ -1,6 +1,7 @@
-import { oasConfig } from "./oas-config";
 import { useEffect } from "react";
+
 import { ApiInfoApi } from "./oas";
+import { oasConfig } from "./oas-config";
 
 function App() {
 	useEffect(() => {

@@ -1,4 +1,5 @@
 import { useMediaQuery } from "@mui/material";
+
 import { useAppSelector } from "../redux/hooks";
 import { paletteModeSelector } from "../redux/selectors/systemSelector";
 

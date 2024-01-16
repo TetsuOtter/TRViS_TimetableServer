@@ -1,5 +1,7 @@
-import { PaletteMode } from "@mui/material";
-import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import { createSlice } from "@reduxjs/toolkit";
+
+import type { PaletteMode } from "@mui/material";
+import type { PayloadAction } from "@reduxjs/toolkit";
 
 export interface SystemState {
 	themeMode: PaletteMode | undefined;

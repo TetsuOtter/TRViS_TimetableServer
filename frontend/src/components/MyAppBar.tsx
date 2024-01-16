@@ -1,3 +1,6 @@
+import { memo, useCallback } from "react";
+
+import { Brightness4, Brightness7 } from "@mui/icons-material";
 import {
 	AppBar,
 	Box,
@@ -7,13 +10,14 @@ import {
 	Toolbar,
 	Typography,
 } from "@mui/material";
-import { Brightness4, Brightness7 } from "@mui/icons-material";
-import { memo, useCallback } from "react";
+
+// eslint-plugin-importがクエリパラメータに対応していないため
+// eslint-disable-next-line import/no-unresolved
+import TRViS_AppIcon2 from "../assets/TRViS_AppIcon2.svg?react";
+import { useAppThemeMode } from "../hooks/appThemeModeHook";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { isLoggedInSelector } from "../redux/selectors/authInfoSelector";
-import { useAppThemeMode } from "../hooks/appThemeModeHook";
 import { setAppThemeMode } from "../redux/slices/systemSlice";
-import TRViS_AppIcon2 from "../assets/TRViS_AppIcon2.svg?react";
 
 const MyAppBar = () => {
 	const dispatch = useAppDispatch();
