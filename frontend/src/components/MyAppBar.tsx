@@ -6,20 +6,28 @@ import {
 	Box,
 	Button,
 	IconButton,
+	MenuItem,
+	Select,
 	SvgIcon,
 	Toolbar,
 	Typography,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 // eslint-plugin-importがクエリパラメータに対応していないため
 // eslint-disable-next-line import/no-unresolved
 import TRViS_AppIcon2 from "../assets/TRViS_AppIcon2.svg?react";
 import { useAppThemeMode } from "../hooks/appThemeModeHook";
+import { LANGUAGE_NAMES } from "../i18n";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { isLoggedInSelector } from "../redux/selectors/authInfoSelector";
 import { setAppThemeMode } from "../redux/slices/systemSlice";
 
+import type { I18N_LANGUAGE_TYPE } from "../i18n";
+import type { SelectChangeEvent } from "@mui/material";
+
 const MyAppBar = () => {
+	const { t, i18n } = useTranslation();
 	const dispatch = useAppDispatch();
 	const isLoggedIn = useAppSelector(isLoggedInSelector);
 	const appThemeMode = useAppThemeMode();
@@ -27,6 +35,14 @@ const MyAppBar = () => {
 	const handleAppThemeModeChange = useCallback(() => {
 		dispatch(setAppThemeMode(appThemeMode === "dark" ? "light" : "dark"));
 	}, [appThemeMode, dispatch]);
+	const changeLanguage = useCallback(
+		(event: SelectChangeEvent<I18N_LANGUAGE_TYPE>) => {
+			i18n.changeLanguage(event.target.value);
+		},
+		[i18n]
+	);
+
+	const currentLanguage = i18n.language as I18N_LANGUAGE_TYPE;
 
 	return (
 		<Box sx={{ flexGrow: 1 }}>
@@ -46,13 +62,29 @@ const MyAppBar = () => {
 						sx={{ flexGrow: 1 }}>
 						TRViS Data Editor
 					</Typography>
+					<Select
+						value={currentLanguage}
+						size="small"
+						onChange={changeLanguage}>
+						{Object.keys(LANGUAGE_NAMES).map((languageKey) => (
+							<MenuItem
+								key={languageKey}
+								value={languageKey}>
+								{LANGUAGE_NAMES[languageKey as I18N_LANGUAGE_TYPE]}
+							</MenuItem>
+						))}
+					</Select>
 					<IconButton
 						sx={{ mx: 1 }}
 						onClick={handleAppThemeModeChange}
 						color="inherit">
 						{appThemeMode === "dark" ? <Brightness7 /> : <Brightness4 />}
 					</IconButton>
-					{isLoggedIn ? <>abc</> : <Button color="inherit">Login</Button>}
+					{isLoggedIn ? (
+						<>abc</>
+					) : (
+						<Button color="inherit">{t("Sign In")}</Button>
+					)}
 				</Toolbar>
 			</AppBar>
 		</Box>

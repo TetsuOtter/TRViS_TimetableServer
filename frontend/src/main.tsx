@@ -4,6 +4,10 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import { ThemeProvider } from "@emotion/react";
 import { createTheme, CssBaseline } from "@mui/material";
+import i18n from "i18next";
+import I18nextBrowserLanguageDetector from "i18next-browser-languagedetector";
+import I18NextHttpBackend from "i18next-http-backend";
+import { initReactI18next } from "react-i18next";
 import { Provider } from "react-redux";
 
 import App from "./App.tsx";
@@ -24,6 +28,21 @@ const router = createBrowserRouter([
 		errorElement: <ErrorPage />,
 	},
 ]);
+
+i18n
+	.use(I18nextBrowserLanguageDetector)
+	.use(I18NextHttpBackend)
+	.use(initReactI18next)
+	.init({
+		fallbackLng: "ja",
+		debug: true,
+		interpolation: {
+			escapeValue: false,
+		},
+		backend: {
+			loadPath: `${window.location.origin}/i18n/{{lng}}.json`,
+		},
+	});
 
 const RootComponentWithRedux = () => {
 	const appThemeMode = useAppThemeMode();
