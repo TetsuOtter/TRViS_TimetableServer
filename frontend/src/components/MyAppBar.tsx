@@ -5,6 +5,7 @@ import {
 	AppBar,
 	Box,
 	Button,
+	Dialog,
 	IconButton,
 	MenuItem,
 	Select,
@@ -20,8 +21,14 @@ import TRViS_AppIcon2 from "../assets/TRViS_AppIcon2.svg?react";
 import { useAppThemeMode } from "../hooks/appThemeModeHook";
 import { LANGUAGE_NAMES } from "../i18n";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { isLoggedInSelector } from "../redux/selectors/authInfoSelector";
+import {
+	isLoggedInSelector,
+	isSignInUpDialogOpenSelector,
+} from "../redux/selectors/authInfoSelector";
+import { setSignInUpDialogOpen } from "../redux/slices/authInfoSlice";
 import { setAppThemeMode } from "../redux/slices/systemSlice";
+
+import SignInUpForm from "./SignInUpForm";
 
 import type { I18N_LANGUAGE_TYPE } from "../i18n";
 import type { SelectChangeEvent } from "@mui/material";
@@ -30,6 +37,7 @@ const MyAppBar = () => {
 	const { t, i18n } = useTranslation();
 	const dispatch = useAppDispatch();
 	const isLoggedIn = useAppSelector(isLoggedInSelector);
+	const isSignInUpDialogOpen = useAppSelector(isSignInUpDialogOpenSelector);
 	const appThemeMode = useAppThemeMode();
 
 	const handleAppThemeModeChange = useCallback(() => {
@@ -41,6 +49,12 @@ const MyAppBar = () => {
 		},
 		[i18n]
 	);
+	const handleOpenSignInUpForm = useCallback(() => {
+		dispatch(setSignInUpDialogOpen(true));
+	}, [dispatch]);
+	const handleCloseSignInUpForm = useCallback(() => {
+		dispatch(setSignInUpDialogOpen(false));
+	}, [dispatch]);
 
 	const currentLanguage = i18n.language as I18N_LANGUAGE_TYPE;
 
@@ -83,10 +97,19 @@ const MyAppBar = () => {
 					{isLoggedIn ? (
 						<>abc</>
 					) : (
-						<Button color="inherit">{t("Sign In")}</Button>
+						<Button
+							color="inherit"
+							onClick={handleOpenSignInUpForm}>
+							{t("Sign In")}
+						</Button>
 					)}
 				</Toolbar>
 			</AppBar>
+			<Dialog
+				open={isSignInUpDialogOpen}
+				onClose={handleCloseSignInUpForm}>
+				<SignInUpForm />
+			</Dialog>
 		</Box>
 	);
 };

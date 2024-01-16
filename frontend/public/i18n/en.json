@@ -1,3 +1,17 @@
 {
-  "Sign In": "Sign In"
+  "(only ascii printable characters except space are allowed)": "(only ascii printable characters except space are allowed)",
+  "8 ~ 32 characters contains at least 1 uppercase, 1 lowercase, 1 number, 1 symbol": "8 ~ 32 characters contains at least 1 uppercase, 1 lowercase, 1 number, 1 symbol",
+  "containsLowercase": "at least 1 lowercase",
+  "containsNumber": "at least 1 number",
+  "containsOnlyAsciiPrintableCharactersExceptSpace": "only contains ascii printable characters except space",
+  "containsSymbolCharacter": "at least 1 symbol",
+  "containsUppercase": "at least 1 uppercase",
+  "Email": "Email",
+  "Forgot Password?": "Forgot Password?",
+  "maxLength": "at least 8 characters",
+  "minLength": "at most 32 characters",
+  "Password": "Password",
+  "Sign In": "Sign In",
+  "Sign In/Up": "Sign In/Up",
+  "Sign Up": "Sign Up"
 }
