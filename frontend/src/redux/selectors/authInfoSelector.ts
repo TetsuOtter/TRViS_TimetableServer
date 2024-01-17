@@ -8,3 +8,9 @@ export const isLoggedInSelector: AppSelector<boolean> = (state) =>
 
 export const isSignInUpDialogOpenSelector: AppSelector<boolean> = (state) =>
 	state.authInfo.isSignInUpDialogOpen;
+
+export const isProcessingSelector: AppSelector<boolean> = (state) =>
+	state.authInfo.isProcessing;
+
+export const errorMessageSelector: AppSelector<string | undefined> = (state) =>
+	state.authInfo.errorMessage;

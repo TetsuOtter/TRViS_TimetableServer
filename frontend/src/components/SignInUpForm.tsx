@@ -3,12 +3,12 @@ import { memo, useCallback, useState } from "react";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import {
 	Button,
-	Divider,
 	FormControl,
 	FormHelperText,
 	IconButton,
 	InputAdornment,
 	InputLabel,
+	LinearProgress,
 	OutlinedInput,
 	Paper,
 	TextField,
@@ -17,6 +17,16 @@ import {
 } from "@mui/material";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
+import {
+	errorMessageSelector,
+	isProcessingSelector,
+} from "../redux/selectors/authInfoSelector";
+import {
+	createAccountWithEmailAndPasswordThunk,
+	signInWithEmailAndPasswordThunk,
+} from "../redux/slices/authInfoSlice";
 
 const StyledButton = styled(Button)(() => ({
 	display: "block",
@@ -35,22 +45,37 @@ type SignInUpFormFields = {
 
 const SignInUpForm = () => {
 	const { t } = useTranslation();
+	const dispatch = useAppDispatch();
+	const isProcessing = useAppSelector(isProcessingSelector);
+	const errorMessage = useAppSelector(errorMessageSelector);
 	const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 	const { control, handleSubmit } = useForm<SignInUpFormFields>({
 		mode: "all",
 	});
 
-	const handleSignIn = useCallback((v: SignInUpFormFields) => {
-		console.log("handleSignIn", v);
+	const handleSignIn = useCallback(
+		(v: SignInUpFormFields) => {
+			console.log("handleSignIn", v);
+			dispatch(signInWithEmailAndPasswordThunk(v));
+		},
+		[dispatch]
+	);
+	const handleSignUp = useCallback(
+		(v: SignInUpFormFields) => {
+			console.log("handleSignUp", v);
+			dispatch(createAccountWithEmailAndPasswordThunk(v));
+		},
+		[dispatch]
+	);
+	const handleForgotPassword = useCallback(() => {
+		console.log("handleForgotPassword");
 	}, []);
-	const handleSignUp = useCallback((v: SignInUpFormFields) => {
-		console.log("handleSignUp", v);
-	}, []);
-	const handleForgotPassword = useCallback(() => {}, []);
 
 	const handleShowHidePassword = useCallback(() => {
 		setIsPasswordVisible((v) => !v);
 	}, []);
+
+	console.log("SignInUpForm", { isProcessing, errorMessage });
 
 	return (
 		<Paper
@@ -81,6 +106,7 @@ const SignInUpForm = () => {
 				render={({ field, formState: { errors } }) => (
 					<TextField
 						{...field}
+						disabled={isProcessing}
 						label={t("Email")}
 						type="email"
 						autoComplete="email"
@@ -126,6 +152,7 @@ const SignInUpForm = () => {
 						<OutlinedInput
 							{...field}
 							id="password"
+							disabled={isProcessing}
 							type={isPasswordVisible ? "text" : "password"}
 							error={!!errors.password?.message}
 							autoComplete="current-password"
@@ -162,21 +189,37 @@ const SignInUpForm = () => {
 				)}
 			/>
 
-			<Divider />
+			<LinearProgress
+				sx={{ width: "100%", margin: "1em 0" }}
+				variant={isProcessing ? "indeterminate" : "determinate"}
+				value={isProcessing ? undefined : 0}
+			/>
+
+			{errorMessage && (
+				<Typography
+					variant="body2"
+					color="error"
+					sx={{ textAlign: "center" }}>
+					{errorMessage}
+				</Typography>
+			)}
 
 			<StyledButton
 				variant="contained"
+				disabled={isProcessing}
 				type="submit"
 				onClick={handleSubmit(handleSignIn)}>
 				{t("Sign In")}
 			</StyledButton>
 			<StyledButton
 				variant="outlined"
+				disabled={isProcessing}
 				onClick={handleSubmit(handleSignUp)}>
 				{t("Sign Up")}
 			</StyledButton>
 			<StyledButton
 				variant="text"
+				disabled={isProcessing}
 				onClick={handleForgotPassword}>
 				{t("Forgot Password?")}
 			</StyledButton>
