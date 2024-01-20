@@ -25,8 +25,12 @@ import {
 } from "../../redux/selectors/authInfoSelector";
 import {
 	createAccountWithEmailAndPasswordThunk,
+	sendPasswordResetMailThunk,
 	signInWithEmailAndPasswordThunk,
 } from "../../redux/slices/authInfoSlice";
+import { openMessageDialog } from "../../redux/slices/messageDialogSlice";
+
+import type { SubmitErrorHandler } from "react-hook-form";
 
 const StyledButton = styled(Button)(() => ({
 	display: "block",
@@ -49,7 +53,7 @@ const SignInUpForm = () => {
 	const isProcessing = useAppSelector(isProcessingSelector);
 	const errorMessage = useAppSelector(errorMessageSelector);
 	const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-	const { control, handleSubmit } = useForm<SignInUpFormFields>({
+	const { control, handleSubmit, watch } = useForm<SignInUpFormFields>({
 		mode: "all",
 	});
 
@@ -67,9 +71,29 @@ const SignInUpForm = () => {
 		},
 		[dispatch]
 	);
-	const handleForgotPassword = useCallback(() => {
-		console.log("handleForgotPassword");
-	}, []);
+	const handleForgotPassword = useCallback(
+		(v: SignInUpFormFields) => {
+			console.log("handleForgotPassword", v);
+			dispatch(sendPasswordResetMailThunk(v));
+		},
+		[dispatch]
+	);
+	const handleForgotPasswordOnInvalid: SubmitErrorHandler<SignInUpFormFields> =
+		useCallback(
+			(errors) => {
+				console.log("handleForgotPasswordOnInvalid", errors);
+				if (errors.email == null) {
+					handleForgotPassword({ email: watch("email"), password: "" });
+				} else {
+					dispatch(
+						openMessageDialog({
+							message: t("Please enter your email address."),
+						})
+					);
+				}
+			},
+			[dispatch, handleForgotPassword, t, watch]
+		);
 
 	const handleShowHidePassword = useCallback(() => {
 		setIsPasswordVisible((v) => !v);
@@ -218,7 +242,10 @@ const SignInUpForm = () => {
 			<StyledButton
 				variant="text"
 				disabled={isProcessing}
-				onClick={handleForgotPassword}>
+				onClick={handleSubmit(
+					handleForgotPassword,
+					handleForgotPasswordOnInvalid
+				)}>
 				{t("Forgot Password?")}
 			</StyledButton>
 		</Paper>
