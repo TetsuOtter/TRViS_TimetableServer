@@ -18,15 +18,15 @@ import {
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
-import { useAppDispatch, useAppSelector } from "../redux/hooks";
+import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import {
 	errorMessageSelector,
 	isProcessingSelector,
-} from "../redux/selectors/authInfoSelector";
+} from "../../redux/selectors/authInfoSelector";
 import {
 	createAccountWithEmailAndPasswordThunk,
 	signInWithEmailAndPasswordThunk,
-} from "../redux/slices/authInfoSlice";
+} from "../../redux/slices/authInfoSlice";
 
 const StyledButton = styled(Button)(() => ({
 	display: "block",
