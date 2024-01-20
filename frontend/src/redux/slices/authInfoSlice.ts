@@ -24,6 +24,7 @@ const initialState: AuthInfoState = {
 };
 
 function onAuthPending(state: Draft<AuthInfoState>) {
+	console.log("onAuthPending");
 	state.isProcessing = true;
 	state.errorMessage = "";
 }
@@ -31,6 +32,7 @@ function onAuthRejected(
 	state: Draft<AuthInfoState>,
 	action: { error: SerializedError }
 ) {
+	console.log("onAuthRejected", action.error);
 	state.isProcessing = false;
 	state.errorMessage = getAuthErrorMessage(action.error);
 }
@@ -38,6 +40,7 @@ function onAuthFulfilled(
 	state: Draft<AuthInfoState>,
 	action: PayloadAction<OnAuthFulfilledPayload>
 ) {
+	console.log("onAuthFulfilled", action.payload);
 	state.userId = action.payload.uid;
 	state.isSignInUpDialogOpen = false;
 	state.isProcessing = false;
