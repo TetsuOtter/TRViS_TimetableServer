@@ -5,9 +5,9 @@ import {
 } from "firebase/auth";
 
 import { auth } from "../../firebase/configure";
+import { getAuthErrorMessage } from "../../firebase/getAuthErrorMessage";
 
 import type { Draft, PayloadAction, SerializedError } from "@reduxjs/toolkit";
-import type { UserCredential } from "firebase/auth";
 
 export interface AuthInfoState {
 	isSignInUpDialogOpen: boolean;
@@ -32,16 +32,19 @@ function onAuthRejected(
 	action: { error: SerializedError }
 ) {
 	state.isProcessing = false;
-	state.errorMessage = action.error.message;
+	state.errorMessage = getAuthErrorMessage(action.error);
 }
 function onAuthFulfilled(
 	state: Draft<AuthInfoState>,
-	action: PayloadAction<UserCredential>
+	action: PayloadAction<OnAuthFulfilledPayload>
 ) {
-	state.userId = action.payload.user.uid;
+	state.userId = action.payload.uid;
 	state.isSignInUpDialogOpen = false;
 	state.isProcessing = false;
 }
+type OnAuthFulfilledPayload = {
+	uid: string;
+};
 
 export const authInfoSlice = createSlice({
 	name: "authInfo",
@@ -72,10 +75,14 @@ export const authInfoSlice = createSlice({
 
 export const createAccountWithEmailAndPasswordThunk = createAsyncThunk(
 	"authInfo/createAccountWithEmailAndPassword",
-	(payload: { email: string; password: string }) => {
+	async (payload: { email: string; password: string }) => {
 		const { email, password } = payload;
 		console.log("createAccountWithEmailAndPasswordThunk", email, password);
-		return createUserWithEmailAndPassword(auth, email, password);
+		const result = await createUserWithEmailAndPassword(auth, email, password);
+		const retVal: OnAuthFulfilledPayload = {
+			uid: result.user.uid,
+		};
+		return retVal;
 	}
 );
 export const signInWithEmailAndPasswordThunk = createAsyncThunk(
@@ -83,7 +90,11 @@ export const signInWithEmailAndPasswordThunk = createAsyncThunk(
 	async (payload: { email: string; password: string }) => {
 		const { email, password } = payload;
 		console.log("signInWithEmailAndPasswordThunk", email, password);
-		return signInWithEmailAndPassword(auth, email, password);
+		const result = await signInWithEmailAndPassword(auth, email, password);
+		const retVal: OnAuthFulfilledPayload = {
+			uid: result.user.uid,
+		};
+		return retVal;
 	}
 );
 
