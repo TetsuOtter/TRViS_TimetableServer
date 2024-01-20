@@ -1,6 +1,6 @@
 import { memo, useCallback } from "react";
 
-import { Brightness4, Brightness7 } from "@mui/icons-material";
+import { AccountCircle, Brightness4, Brightness7 } from "@mui/icons-material";
 import {
 	AppBar,
 	Box,
@@ -22,9 +22,13 @@ import { useAppThemeMode } from "../hooks/appThemeModeHook";
 import { LANGUAGE_NAMES } from "../i18n";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { isLoggedInSelector } from "../redux/selectors/authInfoSelector";
-import { setSignInUpDialogOpen } from "../redux/slices/authInfoSlice";
+import {
+	setAccountSettingDialogOpen,
+	setSignInUpDialogOpen,
+} from "../redux/slices/authInfoSlice";
 import { setAppThemeMode } from "../redux/slices/systemSlice";
 
+import AccountSettingDialog from "./auth/AccountSettingDialog";
 import EMailVerifyDialog from "./auth/EMailVerifyDialog";
 import SignInUpDialog from "./auth/SignInUpDialog";
 
@@ -49,6 +53,9 @@ const MyAppBar = () => {
 	);
 	const handleOpenSignInUpForm = useCallback(() => {
 		dispatch(setSignInUpDialogOpen(true));
+	}, [dispatch]);
+	const handleOpenAccountSettingDialog = useCallback(() => {
+		dispatch(setAccountSettingDialogOpen(true));
 	}, [dispatch]);
 
 	const currentLanguage = i18n.language as I18N_LANGUAGE_TYPE;
@@ -90,7 +97,11 @@ const MyAppBar = () => {
 						{appThemeMode === "dark" ? <Brightness7 /> : <Brightness4 />}
 					</IconButton>
 					{isLoggedIn ? (
-						<>abc</>
+						<IconButton
+							color="inherit"
+							onClick={handleOpenAccountSettingDialog}>
+							<AccountCircle />
+						</IconButton>
 					) : (
 						<Button
 							color="inherit"
@@ -102,6 +113,7 @@ const MyAppBar = () => {
 			</AppBar>
 			<SignInUpDialog />
 			<EMailVerifyDialog />
+			<AccountSettingDialog />
 		</Box>
 	);
 };

@@ -19,3 +19,7 @@ export const isProcessingSelector: AppSelector<boolean> = (state) =>
 
 export const errorMessageSelector: AppSelector<string | undefined> = (state) =>
 	state.authInfo.errorMessage;
+
+export const isAccountSettingDialogOpenSelector: AppSelector<boolean> = (
+	state
+) => state.authInfo.isAccountSettingDialogOpen;

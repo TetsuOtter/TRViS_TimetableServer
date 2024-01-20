@@ -4,6 +4,7 @@ import {
 	sendEmailVerification,
 	sendPasswordResetEmail,
 	signInWithEmailAndPassword,
+	signOut,
 } from "firebase/auth";
 import { t } from "i18next";
 
@@ -20,6 +21,8 @@ export interface AuthInfoState {
 	isEMailVerifyDialogForNewUser: boolean;
 	isPasswordResetMailSentDialogOpen: boolean;
 
+	isAccountSettingDialogOpen: boolean;
+
 	userId: string;
 	isProcessing: boolean;
 	errorMessage?: string;
@@ -31,6 +34,8 @@ const initialState: AuthInfoState = {
 	isEMailVerifyDialogOpen: false,
 	isEMailVerifyDialogForNewUser: false,
 	isPasswordResetMailSentDialogOpen: false,
+
+	isAccountSettingDialogOpen: false,
 
 	userId: auth.currentUser?.uid ?? "",
 	isProcessing: false,
@@ -85,6 +90,14 @@ export const authInfoSlice = createSlice({
 		closeEMailVerifyDialog: (state) => {
 			state.isEMailVerifyDialogOpen = false;
 		},
+
+		setAccountSettingDialogOpen: (state, action: PayloadAction<boolean>) => {
+			state.isAccountSettingDialogOpen = action.payload;
+		},
+
+		setIsProcessing: (state, action: PayloadAction<boolean>) => {
+			state.isProcessing = action.payload;
+		},
 	},
 	extraReducers: (builder) => {
 		builder
@@ -98,18 +111,37 @@ export const authInfoSlice = createSlice({
 			.addCase(signInWithEmailAndPasswordThunk.pending, onAuthPending)
 			.addCase(signInWithEmailAndPasswordThunk.rejected, onAuthRejected)
 			.addCase(signInWithEmailAndPasswordThunk.fulfilled, onAuthFulfilled);
+		builder
+			.addCase(signOutThunk.pending, (state) => {
+				state.isProcessing = true;
+				console.log("signOutThunk.pending");
+			})
+			.addCase(signOutThunk.rejected, (state, action) => {
+				console.log("signOutThunk.rejected", action.error);
+				state.isProcessing = false;
+			})
+			.addCase(signOutThunk.fulfilled, (state) => {
+				console.log("signOutThunk.fulfilled");
+				state.userId = "";
+				state.isEMailVerified = false;
+				state.isAccountSettingDialogOpen = false;
+				state.isProcessing = false;
+			});
 
 		builder
-			.addCase(sendPasswordResetMailThunk.pending, () => {
+			.addCase(sendPasswordResetMailThunk.pending, (state) => {
 				console.log("sendPasswordResetMailThunk.pending");
+				state.isProcessing = true;
 			})
 			.addCase(sendPasswordResetMailThunk.rejected, (state, action) => {
 				console.log("sendPasswordResetMailThunk.rejected", action.error);
 				state.errorMessage = getAuthErrorMessage(action.error);
+				state.isProcessing = false;
 			})
 			.addCase(sendPasswordResetMailThunk.fulfilled, (state, action) => {
 				console.log("sendPasswordResetMailThunk.fulfilled", action.payload);
 				state.isPasswordResetMailSentDialogOpen = true;
+				state.isProcessing = false;
 			});
 	},
 });
@@ -147,6 +179,27 @@ export const signInWithEmailAndPasswordThunk = createAsyncThunk(
 		return retVal;
 	}
 );
+export const signOutThunk = createAsyncThunk(
+	"authInfo/signOut",
+	async (_: void, { dispatch }) => {
+		console.log("signOutThunk");
+		try {
+			await signOut(auth);
+		} catch (error) {
+			console.log("signOutThunk failed", error);
+			if (error instanceof Error) {
+				dispatch(
+					openMessageDialog({
+						title: t("Error"),
+						message: getAuthErrorMessage(error),
+					})
+				);
+			}
+			throw error;
+		}
+	}
+);
+
 export const sendPasswordResetMailThunk = createAsyncThunk(
 	"authInfo/sendPasswordResetMail",
 	async (
@@ -179,7 +232,11 @@ export const sendPasswordResetMailThunk = createAsyncThunk(
 	}
 );
 
-export const { setUserId, setSignInUpDialogOpen, closeEMailVerifyDialog } =
-	authInfoSlice.actions;
+export const {
+	setUserId,
+	setSignInUpDialogOpen,
+	closeEMailVerifyDialog,
+	setAccountSettingDialogOpen,
+} = authInfoSlice.actions;
 
 export default authInfoSlice.reducer;
