@@ -8,6 +8,11 @@ export const isLoggedInSelector: AppSelector<boolean> = (state) =>
 
 export const isSignInUpDialogOpenSelector: AppSelector<boolean> = (state) =>
 	state.authInfo.isSignInUpDialogOpen;
+export const isEMailVerifyDialogOpenSelector: AppSelector<boolean> = (state) =>
+	state.authInfo.isEMailVerifyDialogOpen;
+export const isEMailVerifyDialogForNewUserSelector: AppSelector<boolean> = (
+	state
+) => state.authInfo.isEMailVerifyDialogForNewUser;
 
 export const isProcessingSelector: AppSelector<boolean> = (state) =>
 	state.authInfo.isProcessing;

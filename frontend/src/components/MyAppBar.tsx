@@ -8,6 +8,7 @@ import {
 	Dialog,
 	IconButton,
 	MenuItem,
+	Paper,
 	Select,
 	SvgIcon,
 	Toolbar,
@@ -23,10 +24,15 @@ import { useAppThemeMode } from "../hooks/appThemeModeHook";
 import { LANGUAGE_NAMES } from "../i18n";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import {
+	isEMailVerifyDialogForNewUserSelector,
+	isEMailVerifyDialogOpenSelector,
 	isLoggedInSelector,
 	isSignInUpDialogOpenSelector,
 } from "../redux/selectors/authInfoSelector";
-import { setSignInUpDialogOpen } from "../redux/slices/authInfoSlice";
+import {
+	closeEMailVerifyDialog,
+	setSignInUpDialogOpen,
+} from "../redux/slices/authInfoSlice";
 import { setAppThemeMode } from "../redux/slices/systemSlice";
 
 import SignInUpForm from "./SignInUpForm";
@@ -39,6 +45,12 @@ const MyAppBar = () => {
 	const dispatch = useAppDispatch();
 	const isLoggedIn = useAppSelector(isLoggedInSelector);
 	const isSignInUpDialogOpen = useAppSelector(isSignInUpDialogOpenSelector);
+	const isEmailVerifyDialogOpen = useAppSelector(
+		isEMailVerifyDialogOpenSelector
+	);
+	const isEmailVerifyDialogForNewUser = useAppSelector(
+		isEMailVerifyDialogForNewUserSelector
+	);
 	const appThemeMode = useAppThemeMode();
 
 	const handleAppThemeModeChange = useCallback(() => {
@@ -56,6 +68,9 @@ const MyAppBar = () => {
 	}, [dispatch]);
 	const handleCloseSignInUpForm = useCallback(() => {
 		dispatch(setSignInUpDialogOpen(false));
+	}, [dispatch]);
+	const handleCloseEmailVerifyDialog = useCallback(() => {
+		dispatch(closeEMailVerifyDialog());
 	}, [dispatch]);
 
 	const currentLanguage = i18n.language as I18N_LANGUAGE_TYPE;
@@ -111,6 +126,40 @@ const MyAppBar = () => {
 				open={isSignInUpDialogOpen}
 				onClose={handleCloseSignInUpForm}>
 				<SignInUpForm />
+			</Dialog>
+			<Dialog
+				open={isEmailVerifyDialogOpen}
+				onClose={handleCloseEmailVerifyDialog}>
+				<Paper sx={{ p: "1.5em" }}>
+					<Typography
+						variant="h5"
+						sx={{ m: "0.5em 0" }}>
+						{isEmailVerifyDialogForNewUser
+							? t("Welcome to TRViS Data Editor! 🎉")
+							: t("Email verification")}
+					</Typography>
+					<Typography>
+						{isEmailVerifyDialogForNewUser
+							? t(
+									"Before you can use TRViS Data Editor, you need to verify your email address."
+								)
+							: t("Verify link was sent to your email address.")}
+					</Typography>
+					<Typography>
+						{t(
+							"Please check your inbox and follow the instructions to verify your email address."
+						)}
+					</Typography>
+					<Box sx={{ display: "flex", justifyContent: "center" }}>
+						<Button
+							variant="contained"
+							sx={{ mt: "1em" }}
+							onClick={handleCloseEmailVerifyDialog}
+							autoFocus>
+							{t("OK")}
+						</Button>
+					</Box>
+				</Paper>
 			</Dialog>
 		</Box>
 	);

@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import {
 	createUserWithEmailAndPassword,
+	sendEmailVerification,
 	signInWithEmailAndPassword,
 } from "firebase/auth";
 
@@ -11,16 +12,23 @@ import type { Draft, PayloadAction, SerializedError } from "@reduxjs/toolkit";
 
 export interface AuthInfoState {
 	isSignInUpDialogOpen: boolean;
+	isEMailVerifyDialogOpen: boolean;
+	isEMailVerifyDialogForNewUser: boolean;
+
 	userId: string;
 	isProcessing: boolean;
 	errorMessage?: string;
+	isEMailVerified?: boolean;
 }
 
 const initialState: AuthInfoState = {
 	isSignInUpDialogOpen: false,
-	userId: "",
+	isEMailVerifyDialogOpen: false,
+	isEMailVerifyDialogForNewUser: false,
+	userId: auth.currentUser?.uid ?? "",
 	isProcessing: false,
 	errorMessage: undefined,
+	isEMailVerified: auth.currentUser?.emailVerified,
 };
 
 function onAuthPending(state: Draft<AuthInfoState>) {
@@ -42,11 +50,18 @@ function onAuthFulfilled(
 ) {
 	console.log("onAuthFulfilled", action.payload);
 	state.userId = action.payload.uid;
+	state.isEMailVerified = action.payload.isEMailVerified;
 	state.isSignInUpDialogOpen = false;
+	if (action.payload.isEMailVerifyDialogOpen) {
+		state.isEMailVerifyDialogOpen = true;
+		state.isEMailVerifyDialogForNewUser = true;
+	}
 	state.isProcessing = false;
 }
 type OnAuthFulfilledPayload = {
 	uid: string;
+	isEMailVerified: boolean;
+	isEMailVerifyDialogOpen?: boolean;
 };
 
 export const authInfoSlice = createSlice({
@@ -59,6 +74,9 @@ export const authInfoSlice = createSlice({
 		setSignInUpDialogOpen: (state, action: PayloadAction<boolean>) => {
 			state.isSignInUpDialogOpen = action.payload;
 			state.errorMessage = undefined;
+		},
+		closeEMailVerifyDialog: (state) => {
+			state.isEMailVerifyDialogOpen = false;
 		},
 	},
 	extraReducers: (builder) => {
@@ -84,7 +102,15 @@ export const createAccountWithEmailAndPasswordThunk = createAsyncThunk(
 		const result = await createUserWithEmailAndPassword(auth, email, password);
 		const retVal: OnAuthFulfilledPayload = {
 			uid: result.user.uid,
+			isEMailVerified: result.user.emailVerified,
 		};
+		if (!retVal.isEMailVerified) {
+			console.log("SignUp -> sendEmailVerification", window.location.href);
+			await sendEmailVerification(result.user, {
+				url: window.location.href,
+			});
+			retVal.isEMailVerifyDialogOpen = true;
+		}
 		return retVal;
 	}
 );
@@ -96,11 +122,13 @@ export const signInWithEmailAndPasswordThunk = createAsyncThunk(
 		const result = await signInWithEmailAndPassword(auth, email, password);
 		const retVal: OnAuthFulfilledPayload = {
 			uid: result.user.uid,
+			isEMailVerified: result.user.emailVerified,
 		};
 		return retVal;
 	}
 );
 
-export const { setUserId, setSignInUpDialogOpen } = authInfoSlice.actions;
+export const { setUserId, setSignInUpDialogOpen, closeEMailVerifyDialog } =
+	authInfoSlice.actions;
 
 export default authInfoSlice.reducer;
