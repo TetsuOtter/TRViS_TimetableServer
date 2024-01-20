@@ -18,6 +18,7 @@ import { useTranslation } from "react-i18next";
 // eslint-plugin-importがクエリパラメータに対応していないため
 // eslint-disable-next-line import/no-unresolved
 import TRViS_AppIcon2 from "../assets/TRViS_AppIcon2.svg?react";
+import { auth } from "../firebase/configure";
 import { useAppThemeMode } from "../hooks/appThemeModeHook";
 import { LANGUAGE_NAMES } from "../i18n";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
@@ -46,6 +47,7 @@ const MyAppBar = () => {
 	const changeLanguage = useCallback(
 		(event: SelectChangeEvent<I18N_LANGUAGE_TYPE>) => {
 			i18n.changeLanguage(event.target.value);
+			auth.languageCode = event.target.value;
 		},
 		[i18n]
 	);
