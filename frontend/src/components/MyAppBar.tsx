@@ -95,7 +95,7 @@ const MyAppBar = () => {
 						<Button
 							color="inherit"
 							onClick={handleOpenSignInUpForm}>
-							{t("Sign In")}
+							{t("Sign In/Up")}
 						</Button>
 					)}
 				</Toolbar>
