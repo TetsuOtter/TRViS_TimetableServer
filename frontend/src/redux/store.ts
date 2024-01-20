@@ -1,12 +1,14 @@
 import { configureStore } from "@reduxjs/toolkit";
 
 import authInfoReducer from "./slices/authInfoSlice";
+import messageDialogReducer from "./slices/messageDialogSlice";
 import systemReducer from "./slices/systemSlice";
 
 export const store = configureStore({
 	reducer: {
 		authInfo: authInfoReducer,
 		system: systemReducer,
+		messageDialog: messageDialogReducer,
 	},
 });
 

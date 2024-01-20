@@ -11,6 +11,7 @@ import { initReactI18next } from "react-i18next";
 import { Provider } from "react-redux";
 
 import App from "./App.tsx";
+import MessageDialog from "./components/MessageDialog.tsx";
 import MyAppBar from "./components/MyAppBar.tsx";
 import { auth } from "./firebase/configure.ts";
 import { useAppThemeMode } from "./hooks/appThemeModeHook.ts";
@@ -92,6 +93,7 @@ const RootComponentWithRedux = () => {
 			<CssBaseline />
 			<MyAppBar />
 			<RouterProvider router={router} />
+			<MessageDialog />
 		</ThemeProvider>
 	);
 };
