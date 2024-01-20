@@ -3,6 +3,7 @@ import { memo, useCallback } from "react";
 import { AccountCircle, Brightness4, Brightness7 } from "@mui/icons-material";
 import {
 	AppBar,
+	Badge,
 	Box,
 	Button,
 	IconButton,
@@ -21,7 +22,10 @@ import { auth } from "../firebase/configure";
 import { useAppThemeMode } from "../hooks/appThemeModeHook";
 import { LANGUAGE_NAMES } from "../i18n";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { isLoggedInSelector } from "../redux/selectors/authInfoSelector";
+import {
+	isEMailVerifiedSelector,
+	isLoggedInSelector,
+} from "../redux/selectors/authInfoSelector";
 import {
 	setAccountSettingDialogOpen,
 	setSignInUpDialogOpen,
@@ -39,6 +43,7 @@ const MyAppBar = () => {
 	const { t, i18n } = useTranslation();
 	const dispatch = useAppDispatch();
 	const isLoggedIn = useAppSelector(isLoggedInSelector);
+	const isEmailVerified = useAppSelector(isEMailVerifiedSelector);
 	const appThemeMode = useAppThemeMode();
 
 	const handleAppThemeModeChange = useCallback(() => {
@@ -100,7 +105,13 @@ const MyAppBar = () => {
 						<IconButton
 							color="inherit"
 							onClick={handleOpenAccountSettingDialog}>
-							<AccountCircle />
+							<Badge
+								color="warning"
+								variant="dot"
+								overlap="circular"
+								invisible={isEmailVerified}>
+								<AccountCircle />
+							</Badge>
 						</IconButton>
 					) : (
 						<Button

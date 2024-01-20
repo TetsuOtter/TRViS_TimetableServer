@@ -2,6 +2,9 @@ import type { AppSelector } from "../store";
 
 export const userIdSelector: AppSelector<string> = (state) =>
 	state.authInfo.userId;
+export const isEMailVerifiedSelector: AppSelector<boolean | undefined> = (
+	state
+) => state.authInfo.isEMailVerified;
 
 export const isLoggedInSelector: AppSelector<boolean> = (state) =>
 	userIdSelector(state) !== "";
