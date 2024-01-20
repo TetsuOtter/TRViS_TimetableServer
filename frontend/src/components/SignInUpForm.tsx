@@ -75,8 +75,6 @@ const SignInUpForm = () => {
 		setIsPasswordVisible((v) => !v);
 	}, []);
 
-	console.log("SignInUpForm", { isProcessing, errorMessage });
-
 	return (
 		<Paper
 			component="form"
