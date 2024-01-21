@@ -96,7 +96,7 @@ const WorkGroupsPage = () => {
 
 	useEffect(() => {
 		dispatch(reloadWorkGroups());
-	}, [dispatch]);
+	}, [dispatch, isSignedIn]);
 
 	const handlePageChange = useCallback(
 		(model: GridPaginationModel) => {
