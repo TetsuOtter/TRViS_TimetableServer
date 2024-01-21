@@ -4,10 +4,15 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import { ThemeProvider } from "@emotion/react";
 import { createTheme, CssBaseline } from "@mui/material";
+import { enUS as muiCoreEnUs, jaJP as muiCoreJaJp } from "@mui/material/locale";
+import {
+	enUS as muiDataGridEnUs,
+	jaJP as muiDataGridJaJp,
+} from "@mui/x-data-grid";
 import i18n, { changeLanguage } from "i18next";
 import I18nextBrowserLanguageDetector from "i18next-browser-languagedetector";
 import I18NextHttpBackend from "i18next-http-backend";
-import { initReactI18next } from "react-i18next";
+import { initReactI18next, useTranslation } from "react-i18next";
 import { Provider } from "react-redux";
 
 import App from "./App.tsx";
@@ -17,6 +22,7 @@ import { auth } from "./firebase/configure.ts";
 import { useAppThemeMode } from "./hooks/appThemeModeHook.ts";
 import { I18N_LANGUAGES, I18N_LANGUAGES_ARRAY } from "./i18n.ts";
 import ErrorPage from "./pages/ErrorPage.tsx";
+import WorkGroupsPage from "./pages/WorkGroupsPage.tsx";
 import { store } from "./redux/store.ts";
 
 import type { I18N_LANGUAGE_TYPE } from "./i18n.ts";
@@ -77,15 +83,31 @@ i18n
 
 const RootComponentWithRedux = () => {
 	const appThemeMode = useAppThemeMode();
+	const {
+		i18n: { language },
+	} = useTranslation();
+
+	const muiTranslations = useMemo(() => {
+		switch (language) {
+			case I18N_LANGUAGES.Japanese:
+				return [muiCoreJaJp, muiDataGridJaJp];
+			case I18N_LANGUAGES.English:
+			default:
+				return [muiCoreEnUs, muiDataGridEnUs];
+		}
+	}, [language]);
 
 	const theme = useMemo(
 		() =>
-			createTheme({
-				palette: {
-					mode: appThemeMode,
+			createTheme(
+				{
+					palette: {
+						mode: appThemeMode,
+					},
 				},
-			}),
-		[appThemeMode]
+				...muiTranslations
+			),
+		[appThemeMode, muiTranslations]
 	);
 
 	return (
