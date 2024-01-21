@@ -13,7 +13,17 @@ import { getAuthErrorMessage } from "../../firebase/getAuthErrorMessage";
 
 import { openMessageDialog } from "./messageDialogSlice";
 
+import type { RootState } from "../store";
 import type { Draft, PayloadAction, SerializedError } from "@reduxjs/toolkit";
+
+export const ACTION_STATES = {
+	INITIAL: 0,
+	PENDING: 1,
+	REJECTED: 2,
+	FULFILLED: 3,
+} as const;
+export type ActionStateType =
+	(typeof ACTION_STATES)[keyof typeof ACTION_STATES];
 
 export interface AuthInfoState {
 	isSignInUpDialogOpen: boolean;
@@ -23,7 +33,11 @@ export interface AuthInfoState {
 
 	isAccountSettingDialogOpen: boolean;
 
+	copyUserIdToClipboardState: ActionStateType;
+
 	userId: string;
+	email: string;
+
 	isProcessing: boolean;
 	errorMessage?: string;
 	isEMailVerified?: boolean;
@@ -37,7 +51,11 @@ const initialState: AuthInfoState = {
 
 	isAccountSettingDialogOpen: false,
 
+	copyUserIdToClipboardState: ACTION_STATES.INITIAL,
+
 	userId: auth.currentUser?.uid ?? "",
+	email: auth.currentUser?.email ?? "",
+
 	isProcessing: false,
 	errorMessage: undefined,
 	isEMailVerified: auth.currentUser?.emailVerified,
@@ -62,6 +80,8 @@ function onAuthFulfilled(
 ) {
 	console.log("onAuthFulfilled", action.payload);
 	state.userId = action.payload.uid;
+	state.email = action.payload.email;
+
 	state.isEMailVerified = action.payload.isEMailVerified;
 	state.isSignInUpDialogOpen = false;
 	if (action.payload.isEMailVerifyDialogOpen) {
@@ -72,6 +92,8 @@ function onAuthFulfilled(
 }
 type OnAuthFulfilledPayload = {
 	uid: string;
+	email: string;
+
 	isEMailVerified: boolean;
 	isEMailVerifyDialogOpen?: boolean;
 };
@@ -97,6 +119,13 @@ export const authInfoSlice = createSlice({
 
 		setIsProcessing: (state, action: PayloadAction<boolean>) => {
 			state.isProcessing = action.payload;
+		},
+
+		setCopyUserIdToClipboardState: (
+			state,
+			action: PayloadAction<ActionStateType>
+		) => {
+			state.copyUserIdToClipboardState = action.payload;
 		},
 	},
 	extraReducers: (builder) => {
@@ -143,6 +172,36 @@ export const authInfoSlice = createSlice({
 				state.isPasswordResetMailSentDialogOpen = true;
 				state.isProcessing = false;
 			});
+
+		builder
+			.addCase(reloadUserThunk.pending, (state) => {
+				console.log("reloadUserThunk.pending");
+				state.isProcessing = true;
+			})
+			.addCase(reloadUserThunk.rejected, (state, action) => {
+				console.log("reloadUserThunk.rejected", action.error);
+				state.isProcessing = false;
+			})
+			.addCase(reloadUserThunk.fulfilled, (state, action) => {
+				console.log("reloadUserThunk.fulfilled", action.payload);
+				state.isProcessing = false;
+				state.email = action.payload.email;
+				state.isEMailVerified = action.payload.isEMailVerified;
+			});
+
+		builder
+			.addCase(copyUserIdToClipboardThunk.pending, (state) => {
+				console.log("copyUserIdToClipboardThunk.pending");
+				state.copyUserIdToClipboardState = ACTION_STATES.PENDING;
+			})
+			.addCase(copyUserIdToClipboardThunk.rejected, (state) => {
+				console.log("copyUserIdToClipboardThunk.rejected");
+				state.copyUserIdToClipboardState = ACTION_STATES.REJECTED;
+			})
+			.addCase(copyUserIdToClipboardThunk.fulfilled, (state) => {
+				console.log("copyUserIdToClipboardThunk.fulfilled");
+				state.copyUserIdToClipboardState = ACTION_STATES.INITIAL;
+			});
 	},
 });
 
@@ -154,6 +213,8 @@ export const createAccountWithEmailAndPasswordThunk = createAsyncThunk(
 		const result = await createUserWithEmailAndPassword(auth, email, password);
 		const retVal: OnAuthFulfilledPayload = {
 			uid: result.user.uid,
+			email: result.user.email ?? "",
+
 			isEMailVerified: result.user.emailVerified,
 		};
 		if (!retVal.isEMailVerified) {
@@ -174,6 +235,8 @@ export const signInWithEmailAndPasswordThunk = createAsyncThunk(
 		const result = await signInWithEmailAndPassword(auth, email, password);
 		const retVal: OnAuthFulfilledPayload = {
 			uid: result.user.uid,
+			email: result.user.email ?? "",
+
 			isEMailVerified: result.user.emailVerified,
 		};
 		return retVal;
@@ -232,11 +295,58 @@ export const sendPasswordResetMailThunk = createAsyncThunk(
 	}
 );
 
+export const reloadUserThunk = createAsyncThunk(
+	"authInfo/reloadUser",
+	async (_, { dispatch }) => {
+		try {
+			await auth.currentUser?.reload();
+			return {
+				email: auth.currentUser?.email ?? "",
+				isEMailVerified: auth.currentUser?.emailVerified ?? false,
+			};
+		} catch (error) {
+			if (error instanceof Error) {
+				dispatch(
+					openMessageDialog({
+						title: t("Error"),
+						message: getAuthErrorMessage(error),
+					})
+				);
+			}
+			throw error;
+		}
+	}
+);
+
+export const copyUserIdToClipboardThunk = createAsyncThunk<
+	void,
+	void,
+	{ state: RootState }
+>("authInfo/copyUserIdToClipboard", async (_, { dispatch, getState }) => {
+	const userId = getState().authInfo.userId;
+	console.log("copyUserIdToClipboardThunk", userId);
+	try {
+		await new Promise((resolve) => {
+			setTimeout(resolve, 250);
+		});
+		await navigator.clipboard.writeText(userId);
+		dispatch(setCopyUserIdToClipboardState(ACTION_STATES.FULFILLED));
+	} catch (error) {
+		console.log("copyUserIdToClipboardThunk failed", error);
+		dispatch(setCopyUserIdToClipboardState(ACTION_STATES.REJECTED));
+	} finally {
+		await new Promise((resolve) => {
+			setTimeout(resolve, 3000);
+		});
+	}
+});
+
 export const {
 	setUserId,
 	setSignInUpDialogOpen,
 	closeEMailVerifyDialog,
 	setAccountSettingDialogOpen,
+	setCopyUserIdToClipboardState,
 } = authInfoSlice.actions;
 
 export default authInfoSlice.reducer;
