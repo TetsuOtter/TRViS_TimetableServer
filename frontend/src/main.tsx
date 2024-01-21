@@ -38,6 +38,11 @@ const router = createBrowserRouter([
 		element: <App />,
 		errorElement: <ErrorPage />,
 	},
+	{
+		path: "/work-groups",
+		element: <WorkGroupsPage />,
+		errorElement: <ErrorPage />,
+	},
 ]);
 
 // eslint-disable-next-line import/no-named-as-default-member

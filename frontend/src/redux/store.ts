@@ -3,12 +3,15 @@ import { configureStore } from "@reduxjs/toolkit";
 import authInfoReducer from "./slices/authInfoSlice";
 import messageDialogReducer from "./slices/messageDialogSlice";
 import systemReducer from "./slices/systemSlice";
+import workGroupsReducer from "./slices/workGroupsSlice";
 
 export const store = configureStore({
 	reducer: {
 		authInfo: authInfoReducer,
 		system: systemReducer,
 		messageDialog: messageDialogReducer,
+
+		workGroups: workGroupsReducer,
 	},
 });
 
