@@ -37,6 +37,7 @@ export interface AuthInfoState {
 
 	userId: string;
 	email: string;
+	jwt: string | undefined;
 
 	isProcessing: boolean;
 	errorMessage?: string;
@@ -55,6 +56,7 @@ const initialState: AuthInfoState = {
 
 	userId: auth.currentUser?.uid ?? "",
 	email: auth.currentUser?.email ?? "",
+	jwt: undefined,
 
 	isProcessing: false,
 	errorMessage: undefined,
@@ -81,6 +83,7 @@ function onAuthFulfilled(
 	console.log("onAuthFulfilled", action.payload);
 	state.userId = action.payload.uid;
 	state.email = action.payload.email;
+	state.jwt = action.payload.jwt;
 
 	state.isEMailVerified = action.payload.isEMailVerified;
 	state.isSignInUpDialogOpen = false;
@@ -93,6 +96,7 @@ function onAuthFulfilled(
 type OnAuthFulfilledPayload = {
 	uid: string;
 	email: string;
+	jwt: string;
 
 	isEMailVerified: boolean;
 	isEMailVerifyDialogOpen?: boolean;
@@ -152,6 +156,8 @@ export const authInfoSlice = createSlice({
 			.addCase(signOutThunk.fulfilled, (state) => {
 				console.log("signOutThunk.fulfilled");
 				state.userId = "";
+				state.email = "";
+				state.jwt = undefined;
 				state.isEMailVerified = false;
 				state.isAccountSettingDialogOpen = false;
 				state.isProcessing = false;
@@ -187,6 +193,7 @@ export const authInfoSlice = createSlice({
 				state.isProcessing = false;
 				state.email = action.payload.email;
 				state.isEMailVerified = action.payload.isEMailVerified;
+				state.jwt = action.payload.jwt;
 			});
 
 		builder
@@ -214,6 +221,7 @@ export const createAccountWithEmailAndPasswordThunk = createAsyncThunk(
 		const retVal: OnAuthFulfilledPayload = {
 			uid: result.user.uid,
 			email: result.user.email ?? "",
+			jwt: await result.user.getIdToken(),
 
 			isEMailVerified: result.user.emailVerified,
 		};
@@ -236,6 +244,7 @@ export const signInWithEmailAndPasswordThunk = createAsyncThunk(
 		const retVal: OnAuthFulfilledPayload = {
 			uid: result.user.uid,
 			email: result.user.email ?? "",
+			jwt: await result.user.getIdToken(),
 
 			isEMailVerified: result.user.emailVerified,
 		};
@@ -302,6 +311,7 @@ export const reloadUserThunk = createAsyncThunk(
 			await auth.currentUser?.reload();
 			return {
 				email: auth.currentUser?.email ?? "",
+				jwt: await auth.currentUser?.getIdToken(),
 				isEMailVerified: auth.currentUser?.emailVerified ?? false,
 			};
 		} catch (error) {

@@ -1,13 +1,14 @@
 import { useEffect } from "react";
 
-import { ApiInfoApi } from "./oas";
-import { oasConfig } from "./oas-config";
+import { useSelector } from "react-redux";
+
+import { apiInfoApiSelector } from "./redux/selectors/apiSelector";
 
 function App() {
+	const api = useSelector(apiInfoApiSelector);
 	useEffect(() => {
-		const api = new ApiInfoApi(oasConfig);
 		api.getApiInfo().then(console.log).catch(console.error);
-	}, []);
+	}, [api]);
 	return <>Hello World!</>;
 }
 
