@@ -22,8 +22,6 @@ export const totalItemsCountSelector: AppSelector<number> = (state) =>
 
 export const isEditingSelector: AppSelector<boolean> = (state) =>
 	state.workGroups.isEditing;
-export const isProcessingSelector: AppSelector<boolean> = (state) =>
-	state.workGroups.isProcessing;
 export const editErrorMessageSelector: AppSelector<string | undefined> = (
 	state
 ) => state.workGroups.editErrorMessage;

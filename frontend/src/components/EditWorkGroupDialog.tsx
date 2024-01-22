@@ -14,13 +14,13 @@ import {
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
+import { useActionWithProcessing } from "../redux/actionWithProcessingHook";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import {
 	editErrorMessageSelector,
 	editTargetWorkGroupSelector,
 	isEditExistingWorkGroupSelector,
 	isEditingSelector,
-	isProcessingSelector,
 } from "../redux/selectors/workGroupsSelector";
 import { createWorkGroup, setIsEditing } from "../redux/slices/workGroupsSlice";
 import {
@@ -43,7 +43,6 @@ export const EditWorkGroupDialog = () => {
 	const dispatch = useAppDispatch();
 
 	const isOpen = useAppSelector(isEditingSelector);
-	const isProcessing = useAppSelector(isProcessingSelector);
 	const isEditExistingWorkGroup = useAppSelector(
 		isEditExistingWorkGroupSelector
 	);
@@ -52,17 +51,19 @@ export const EditWorkGroupDialog = () => {
 		editTargetWorkGroupSelector
 	) ?? { name: "", description: "" };
 
+	const [dispatchCreateWorkGroup, isProcessing] =
+		useActionWithProcessing(createWorkGroup);
+
 	const { control, handleSubmit, reset } = useForm<WorkGroupFormFields>({
 		mode: "all",
 	});
 
 	const handleUpdateOrAdd = useCallback(
-		(v: WorkGroupFormFields) => {
-			dispatch(createWorkGroup(v)).then(() => {
-				reset();
-			});
+		async (v: WorkGroupFormFields) => {
+			await dispatchCreateWorkGroup(v);
+			reset();
 		},
-		[dispatch, reset]
+		[dispatchCreateWorkGroup, reset]
 	);
 	const handleCancel = useCallback(() => {
 		dispatch(setIsEditing({ isEditing: false }));

@@ -18,7 +18,6 @@ export interface WorkGroupsState {
 	topId: string | undefined;
 
 	isEditing: boolean;
-	isProcessing: boolean;
 	editErrorMessage: string | undefined;
 	editTargetWorkGroupId: string | undefined;
 }
@@ -34,7 +33,6 @@ const initialState: WorkGroupsState = {
 	topId: undefined,
 
 	isEditing: false,
-	isProcessing: false,
 	editErrorMessage: undefined,
 	editTargetWorkGroupId: undefined,
 };
@@ -51,7 +49,6 @@ export const workGroupsSlice = createSlice({
 			action: PayloadAction<{ isEditing: boolean; targetId?: string }>
 		) => {
 			state.isEditing = action.payload.isEditing;
-			state.isProcessing = false;
 			state.editErrorMessage = undefined;
 			state.editTargetWorkGroupId = action.payload.targetId;
 		},
@@ -74,12 +71,10 @@ export const workGroupsSlice = createSlice({
 
 		builder
 			.addCase(createWorkGroup.pending, (state) => {
-				state.isProcessing = true;
 				state.editErrorMessage = undefined;
 			})
 			.addCase(createWorkGroup.rejected, (state, { payload, error }) => {
 				console.log("createWorkGroup.rejected", payload, error);
-				state.isProcessing = false;
 				if (typeof payload === "string") {
 					state.editErrorMessage = payload;
 				} else {
@@ -87,7 +82,6 @@ export const workGroupsSlice = createSlice({
 				}
 			})
 			.addCase(createWorkGroup.fulfilled, (state) => {
-				state.isProcessing = false;
 				state.isEditing = false;
 				state.editTargetWorkGroupId = undefined;
 			});
