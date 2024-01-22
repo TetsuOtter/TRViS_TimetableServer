@@ -51,7 +51,14 @@
   "Please check your inbox and follow the instructions": "受信箱を確認し、メールに記載されている手順に従って操作を行って下さい",
   "Please check your inbox and follow the instructions to verify your email address": "受信箱を確認し、メールに記載されている手順に従って操作を行って下さい",
   "Please enter your email address": "メールアドレスを入力して下さい",
+  "PrivilegeType": {
+    "Admin": "管理者",
+    "Read": "読み取り",
+    "Unknown": "不明",
+    "Write": "書き込み"
+  },
   "required": "必須項目",
+  "Role": "権限",
   "Sign In": "サインイン",
   "Sign In/Up": "サインイン / 新規登録",
   "Sign Out": "サインアウト",

@@ -6,6 +6,7 @@ import { DataGrid } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
 
 import { EditWorkGroupDialog } from "../components/EditWorkGroupDialog";
+import PrivilegeTypeChip from "../components/PrivilegeTypeChip";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { isLoggedInSelector } from "../redux/selectors/authInfoSelector";
 import {
@@ -50,6 +51,17 @@ const useGridColDefList = (): GridColDef[] => {
 				field: "description",
 				headerName: t("Description"),
 				width: 280,
+				sortable: false,
+			},
+			{
+				field: "privilegeType",
+				headerName: t("Role"),
+				renderCell: (params) => (
+					<PrivilegeTypeChip
+						privilegeType={params.value as WorkGroup["privilegeType"]}
+					/>
+				),
+				width: 120,
 				sortable: false,
 			},
 			{
