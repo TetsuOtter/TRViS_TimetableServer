@@ -510,11 +510,19 @@ abstract class MyServiceBase implements IMyServiceBase
 			return $senderPrivilegeCheckResult;
 		}
 
-		return $this->targetRepo->selectPage(
+		$totalCountResult = $this->targetRepo->selectPageTotalCount(
+			parentId: $parentId,
+			topId: $topId,
+		);
+		$selectPageResult = $this->targetRepo->selectPage(
 			parentId: $parentId,
 			pageFrom1: $pageFrom1,
 			perPage: $perPage,
 			topId: $topId,
+		);
+		return RetValueOrError::withTotalCount(
+			value: $selectPageResult,
+			totalCount: $totalCountResult,
 		);
 	}
 

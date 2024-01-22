@@ -33,6 +33,14 @@ interface IMyRepoBase extends IMyRepoSelectPrivilegeType
 		int $perPage,
 		?UuidInterface $topId,
 	): RetValueOrError;
+	/**
+	 * (親テーブルが存在しない場合はこのメソッドを使用できないので注意)
+	 * @return RetValueOrError<number>
+	 */
+	public function selectPageTotalCount(
+		UuidInterface $parentId,
+		?UuidInterface $topId,
+	): RetValueOrError;
 
 	/**
 	 * @return RetValueOrError<array<T>>

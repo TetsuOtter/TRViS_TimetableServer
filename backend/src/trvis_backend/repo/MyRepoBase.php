@@ -11,7 +11,6 @@ use InvalidArgumentException;
 use PDO;
 use PDOStatement;
 use Psr\Log\LoggerInterface;
-use Ramsey\Uuid\Type\Hexadecimal;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
@@ -310,6 +309,73 @@ abstract class MyRepoBase implements IMyRepoBase
 			);
 
 			return RetValueOrError::withValue($objList);
+		}
+		catch (\PDOException $ex)
+		{
+			$errCode = $ex->getCode();
+
+			$this->logger->error(
+				"Failed to execute SQL ({errorCode} -> {errorInfo})",
+				[
+					"errorCode" => $errCode,
+					"errorInfo" => $ex->getMessage(),
+				],
+			);
+			return RetValueOrError::withError(
+				Constants::HTTP_INTERNAL_SERVER_ERROR,
+				"Failed to execute SQL - " . $errCode,
+			);
+		}
+	}
+
+	/**
+	 * (親テーブルが存在しない場合はこのメソッドを使用できないので注意)
+	 * @return RetValueOrError<number>
+	 */
+	public function selectPageTotalCount(
+		UuidInterface $parentId,
+		?UuidInterface $topId,
+	): RetValueOrError {
+		$this->logger->debug(
+			'selectPageTotalCount parentId: {parentId}, topId: {topId}',
+			[
+				'parentsId' => $parentId,
+				'topId' => $topId,
+			],
+		);
+
+		$hasTopId = !is_null($topId);
+		try
+		{
+			$query = $this->db->prepare(<<<SQL
+				SELECT
+					COUNT(*) AS count
+				FROM
+					{$this->TABLE_NAME}
+				WHERE
+					{$this->parentTableName}_id = :parent_id
+				AND
+					deleted_at IS NULL
+				SQL
+				.
+				(!$hasTopId ? ' ' : " AND {$this->TABLE_NAME}_id <= :top_id ")
+			);
+
+			$query->bindValue(':parent_id', $parentId->getBytes(), PDO::PARAM_STR);
+			if ($hasTopId) {
+				$query->bindValue(':top_id', $topId);
+			}
+
+			$query->execute();
+			$this->logger->debug(
+				'rorCount: {rowCount}',
+				[
+					'rowCount' => $query->rowCount(),
+				],
+			);
+			$totalCount = $query->fetch(PDO::FETCH_ASSOC)['count'];
+
+			return RetValueOrError::withValue($totalCount);
 		}
 		catch (\PDOException $ex)
 		{
