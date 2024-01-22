@@ -115,36 +115,37 @@ final class WorkGroupsRepo
 		return RetValueOrError::withValue($workGroup);
 	}
 
-	/**
-	 * @return RetValueOrError<array<WorkGroup>>
-	 */
-	public function selectWorkGroupPage(
+	private static function getSelectPageQuery(
 		string $userId,
-		int $pageFrom1,
-		int $perPage,
-		?UuidInterface $topId,
-	): RetValueOrError {
-		$this->logger->debug("selectPage(userId:{userId}, pageFrom1:{page}, perPage:{perPage}, topId:{topId})", [
-			'userId' => $userId,
-			'page' => $pageFrom1,
-			'perPage' => $perPage,
-			'topId' => $topId,
-		]);
-		$hasTopId = !is_null($topId);
+		bool $hasTopId,
+		bool $countOnly,
+	): string {
 		$WHERE_USER_ID =
 			$userId === Constants::UID_ANONYMOUS
 				? ' uid = :userId '
 				: ' uid IN (:userId, \'\') ';
 		$WHERE_PRIVILEGE_TYPE = ' privilege_type >= ' . InviteKeyPrivilegeType::read->value . ' ';
 		$WHERE_TOP_ID = $hasTopId ? ' work_groups.work_groups_id <= :top_id AND ' : ' ';
-		$query = $this->db->prepare(
-			<<<SQL
+		$COLUMNS = $countOnly ? ' COUNT(*) AS count ' : <<<SQL
+			work_groups_id,
+			work_groups.created_at AS created_at,
+			work_groups.description AS description,
+			name,
+			work_groups_privileges.privilege_type
+
+			SQL;
+		$PAGING_QUERY = $countOnly ? '' : <<<SQL
+
+			ORDER BY
+				work_groups_id DESC
+			LIMIT
+				:perPage
+			OFFSET
+				:offset
+			SQL;
+		return <<<SQL
 			SELECT
-				work_groups_id,
-				work_groups.created_at AS created_at,
-				work_groups.description AS description,
-				name,
-				work_groups_privileges.privilege_type
+				$COLUMNS
 			FROM
 				work_groups
 			JOIN
@@ -167,15 +168,27 @@ final class WorkGroupsRepo
 			WHERE
 				$WHERE_TOP_ID
 				work_groups.deleted_at IS NULL
-			ORDER BY
-				work_groups_id DESC
-			LIMIT
-				:perPage
-			OFFSET
-				:offset
-			;
-			SQL
-		);
+			$PAGING_QUERY
+			SQL;
+	}
+
+	/**
+	 * @return RetValueOrError<array<WorkGroup>>
+	 */
+	public function selectWorkGroupPage(
+		string $userId,
+		int $pageFrom1,
+		int $perPage,
+		?UuidInterface $topId,
+	): RetValueOrError {
+		$this->logger->debug("selectPage(userId:{userId}, pageFrom1:{page}, perPage:{perPage}, topId:{topId})", [
+			'userId' => $userId,
+			'page' => $pageFrom1,
+			'perPage' => $perPage,
+			'topId' => $topId,
+		]);
+		$hasTopId = !is_null($topId);
+		$query = $this->db->prepare(self::getSelectPageQuery($userId, $hasTopId, false));
 		if ($hasTopId) {
 			$query->bindValue(':top_id', $topId->getBytes(), PDO::PARAM_STR);
 		}
@@ -205,6 +218,44 @@ final class WorkGroupsRepo
 
 		$this->logger->debug("select result - workGroup: {workGroups}", ['workGroups' => $workGroups]);
 		return RetValueOrError::withValue($workGroups);
+	}
+
+	/**
+	 * @return RetValueOrError<number>
+	 */
+	public function selectWorkGroupPageTotalCount(
+		string $userId,
+		?UuidInterface $topId,
+	): RetValueOrError {
+		$this->logger->debug("selectPageTotalCount(userId:{userId}, topId:{topId})", [
+			'userId' => $userId,
+			'topId' => $topId,
+		]);
+		$hasTopId = !is_null($topId);
+		$query = $this->db->prepare(self::getSelectPageQuery($userId, $hasTopId, true));
+		if ($hasTopId) {
+			$query->bindValue(':top_id', $topId->getBytes(), PDO::PARAM_STR);
+		}
+		$query->bindValue(':userId', $userId, PDO::PARAM_STR);
+
+		$isSuccess = $query->execute();
+		if (!$isSuccess) {
+			$errCode = $query->errorCode();
+			$this->logger->error(
+				"Failed to execute SQL ({errorCode} -> {errorInfo})",
+				[
+					"errorCode" => $errCode,
+					"errorInfo" => implode('\n\t', $query->errorInfo()),
+				],
+			);
+			return RetValueOrError::withError(500, "Failed to execute SQL - " . $errCode);
+		}
+
+		$this->logger->debug("select success - rowCount: {rowCount}", ['rowCount' => $query->rowCount()]);
+		$totalCount = $query->fetch(PDO::FETCH_ASSOC)['count'];
+
+		$this->logger->debug("select result - totalCount: {totalCount}", ['totalCount' => $totalCount]);
+		return RetValueOrError::withValue($totalCount);
 	}
 
 	/**

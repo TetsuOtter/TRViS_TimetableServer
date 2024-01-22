@@ -59,4 +59,6 @@ final class Constants
 	const NAME_MAX_LENGTH = 255;
 
 	const BULK_INSERT_MAX_COUNT = 100;
+
+	const HEADER_TOTAL_COUNT = 'X-Total-Count';
 }

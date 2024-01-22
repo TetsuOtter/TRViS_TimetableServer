@@ -59,11 +59,20 @@ final class WorkGroupsService
 			],
 		);
 
-		return $this->workGroupsRepo->selectWorkGroupPage(
+		$totalCountResult = $this->workGroupsRepo->selectWorkGroupPageTotalCount(
+			userId: $userId,
+			topId: $topId,
+		);
+		$selectResult = $this->workGroupsRepo->selectWorkGroupPage(
 			userId: $userId,
 			pageFrom1: $pageFrom1,
 			perPage: $perPage,
 			topId: $topId,
+		);
+
+		return RetValueOrError::withTotalCount(
+			value: $selectResult,
+			totalCount: $totalCountResult,
 		);
 	}
 
