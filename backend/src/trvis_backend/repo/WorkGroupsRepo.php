@@ -29,7 +29,8 @@ final class WorkGroupsRepo
 			'work_groups_id' => Uuid::fromBytes($data['work_groups_id']),
 			'created_at' => $data['created_at'],
 			'description' => $data['description'],
-			'name' => $data['name']
+			'name' => $data['name'],
+			'privilege_type' => InviteKeyPrivilegeType::fromInt($data['privilege_type']),
 		]);
 		return $workGroup;
 	}
@@ -38,24 +39,49 @@ final class WorkGroupsRepo
 	 * @return RetValueOrError<WorkGroup>
 	 */
 	public function selectWorkGroupOne(
+		string $userId,
 		UuidInterface $workGroupId
 	): RetValueOrError {
 		$this->logger->debug("selectOne workGroupId: {workGroupId}", ['workGroupId' => $workGroupId]);
+		$WHERE_USER_ID =
+			$userId === Constants::UID_ANONYMOUS
+				? ' uid = :userId '
+				: ' uid IN (:userId, \'\') ';
+		$WHERE_PRIVILEGE_TYPE = ' privilege_type >= ' . InviteKeyPrivilegeType::read->value . ' ';
 		$query = $this->db->prepare(<<<SQL
 			SELECT
-				work_groups_id,
-				created_at,
-				description,
-				name
+				work_groups.work_groups_id,
+				work_groups.created_at,
+				work_groups.description,
+				work_groups.name,
+				work_groups_privileges.privilege_type
 			FROM
 				work_groups
+			JOIN
+				(SELECT
+					work_groups_id,
+					MAX(privilege_type) AS privilege_type
+				FROM
+					work_groups_privileges
+				WHERE
+					work_groups_id = :work_groups_id
+				AND
+					deleted_at IS NULL
+				AND
+					$WHERE_USER_ID
+				AND
+					$WHERE_PRIVILEGE_TYPE
+				) AS work_groups_privileges
+			USING
+				(work_groups_id)
 			WHERE
-				work_groups_id = :work_groups_id
+				work_groups.work_groups_id = :work_groups_id
 			AND
-				deleted_at IS NULL
+				work_groups.deleted_at IS NULL
 			;
 			SQL
 		);
+		$query->bindValue(':userId', $userId, PDO::PARAM_STR);
 		$query->bindValue(':work_groups_id', $workGroupId->getBytes(), PDO::PARAM_STR);
 
 		$isSuccess = $query->execute();
@@ -105,37 +131,42 @@ final class WorkGroupsRepo
 			'topId' => $topId,
 		]);
 		$hasTopId = !is_null($topId);
+		$WHERE_USER_ID =
+			$userId === Constants::UID_ANONYMOUS
+				? ' uid = :userId '
+				: ' uid IN (:userId, \'\') ';
+		$WHERE_PRIVILEGE_TYPE = ' privilege_type >= ' . InviteKeyPrivilegeType::read->value . ' ';
+		$WHERE_TOP_ID = $hasTopId ? ' work_groups.work_groups_id <= :top_id AND ' : ' ';
 		$query = $this->db->prepare(
 			<<<SQL
 			SELECT
 				work_groups_id,
 				work_groups.created_at AS created_at,
 				work_groups.description AS description,
-				name
+				name,
+				work_groups_privileges.privilege_type
 			FROM
 				work_groups
 			JOIN
-				work_groups_privileges
+				(SELECT
+					work_groups_id,
+					MAX(privilege_type) AS privilege_type
+				FROM
+					work_groups_privileges
+				WHERE
+					$WHERE_PRIVILEGE_TYPE
+				AND
+					deleted_at IS NULL
+				AND
+					$WHERE_USER_ID
+				GROUP BY
+					work_groups_id
+				) AS work_groups_privileges
 			USING
 				(work_groups_id)
 			WHERE
-			SQL
-			.
-			($hasTopId ? ' work_groups_id <= :top_id AND ' : '')
-			.
-			(
-				$userId === Constants::UID_ANONYMOUS
-					? ' uid = :userId '
-					: ' uid IN (:userId, \'\') '
-			)
-			.
-			' AND work_groups.deleted_at IS NULL '
-			.
-			' AND work_groups_privileges.deleted_at IS NULL '
-			.
-			'AND privilege_type >= ' . InviteKeyPrivilegeType::read->value . ' '
-			.
-			<<<SQL
+				$WHERE_TOP_ID
+				work_groups.deleted_at IS NULL
 			ORDER BY
 				work_groups_id DESC
 			LIMIT

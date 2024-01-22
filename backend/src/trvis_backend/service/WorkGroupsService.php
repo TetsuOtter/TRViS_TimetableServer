@@ -40,28 +40,7 @@ final class WorkGroupsService
 			],
 		);
 
-		// 本当は権限チェックはJOINを使ってやるべきだが、面倒なので別クエリでやる
-		// (頻繁に使われるAPIじゃないし、そこまでパフォーマンスに影響はないはず)
-		$selectPrivilegeTypeResult = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
-			id: $workGroupsId,
-			userId: $currentUserId ?? Constants::UID_ANONYMOUS,
-			includeAnonymous: true,
-		);
-		if ($selectPrivilegeTypeResult->isError) {
-			return $selectPrivilegeTypeResult;
-		}
-
-		$privilegeType = $selectPrivilegeTypeResult->value;
-		$this->logger->debug("selectOne privilegeType: {privilegeType}", [
-			'workGroupsId' => $workGroupsId,
-			'privilegeType' => $privilegeType,
-		]);
-		if (!$privilegeType->hasPrivilege(InviteKeyPrivilegeType::read)) {
-			// 権限不足の場合は、404を返す
-			return Utils::errWorkGroupNotFound();
-		}
-
-		return $this->workGroupsRepo->selectWorkGroupOne($workGroupsId);
+		return $this->workGroupsRepo->selectWorkGroupOne($currentUserId, $workGroupsId);
 	}
 
 	public function selectWorkGroupPage(
@@ -128,7 +107,7 @@ final class WorkGroupsService
 			}
 
 			$this->db->commit();
-			$selectWorkGroupOneResult = $this->workGroupsRepo->selectWorkGroupOne($workGroupsId);
+			$selectWorkGroupOneResult = $this->workGroupsRepo->selectWorkGroupOne($userId, $workGroupsId);
 			if ($selectWorkGroupOneResult->isError) {
 				return $selectWorkGroupOneResult;
 			} else {
@@ -205,7 +184,7 @@ final class WorkGroupsService
 			return $updateWorkGroupResult;
 		}
 
-		return $this->workGroupsRepo->selectWorkGroupOne($workGroupsId);
+		return $this->workGroupsRepo->selectWorkGroupOne($userId, $workGroupsId);
 	}
 
 	public function deleteWorkGroup(
