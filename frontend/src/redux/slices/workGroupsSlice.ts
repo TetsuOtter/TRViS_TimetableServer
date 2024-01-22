@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
 import { ResponseError, type WorkGroup } from "../../oas";
+import { API_RES_HEADER_X_TOTAL_COUNT } from "../../utils/Constants";
 import { workGroupApiSelector } from "../selectors/apiSelector";
 
 import type { DateToNumberObjectType } from "../../utils/DateToNumberType";
@@ -52,6 +53,9 @@ export const workGroupsSlice = createSlice({
 			state.editErrorMessage = undefined;
 			state.editTargetWorkGroupId = action.payload.targetId;
 		},
+		setTotalItemsCount: (state, action: PayloadAction<number>) => {
+			state.totalItemsCount = action.payload;
+		},
 	},
 	extraReducers: (builder) => {
 		builder
@@ -97,16 +101,22 @@ export const reloadWorkGroups = createAsyncThunk<
 	DateToNumberObjectType<WorkGroup>[],
 	ReloadWorkGroupsPayloadType | undefined,
 	{ state: RootState }
->("workGroups/reloadWorkGroups", async (payload, { getState }) => {
+>("workGroups/reloadWorkGroups", async (payload, { dispatch, getState }) => {
 	const state = getState();
 	const workGroupsState = payload ?? state.workGroups;
 	const api = workGroupApiSelector(state);
 
-	const result: WorkGroup[] = await api.getWorkGroupList({
+	const resultRaw = await api.getWorkGroupListRaw({
 		top: workGroupsState.topId ?? state.workGroups.topId,
 		p: workGroupsState.currentPageFrom1,
 		limit: workGroupsState.perPage,
 	});
+
+	const totalCountStr = resultRaw.raw.headers.get(API_RES_HEADER_X_TOTAL_COUNT);
+	const totalCount = totalCountStr ? Number(totalCountStr) : undefined;
+	dispatch(workGroupsSlice.actions.setTotalItemsCount(totalCount ?? 0));
+
+	const result = await resultRaw.value();
 	return result.map((workGroup) => ({
 		...workGroup,
 		createdAt: workGroup.createdAt?.getTime(),

@@ -5,3 +5,5 @@ export const NAME_MIN_LENGTH = 1;
 export const NAME_MAX_LENGTH = 255;
 export const DESCRIPTION_MIN_LENGTH = 0;
 export const DESCRIPTION_MAX_LENGTH = 255;
+
+export const API_RES_HEADER_X_TOTAL_COUNT = "x-total-count";
