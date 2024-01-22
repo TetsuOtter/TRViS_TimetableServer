@@ -29,3 +29,9 @@ PageTopId:
   schema:
     type: string
     format: uuid
+
+X-Total-Count:
+  schema:
+    type: integer
+    minimum: 0
+  description: 取得できるレコードの総件数
