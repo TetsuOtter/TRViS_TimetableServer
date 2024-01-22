@@ -69,6 +69,13 @@ class WorkGroup extends BaseModel
       "type" : "string",
       "description" : "WorkGroupの名前",
       "example" : "AAA乗務員区"
+    },
+    "privilege_type" : {
+      "type" : "string",
+      "description" : "権限の種類",
+      "readOnly" : true,
+      "example" : "admin",
+      "enum" : [ "read", "write", "admin" ]
     }
   }
 }
