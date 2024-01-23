@@ -1,5 +1,7 @@
 import { createSelector } from "@reduxjs/toolkit";
 
+import { WorkGroupPrivilegeTypeEnum } from "../../oas";
+
 import type { WorkGroup } from "../../oas";
 import type { DateToNumberObjectType } from "../../utils/DateToNumberType";
 import type { AppSelector } from "../store";
@@ -39,3 +41,26 @@ export const editTargetWorkGroupSelector = createSelector(
 );
 export const isEditExistingWorkGroupSelector: AppSelector<boolean> = (state) =>
 	state.workGroups.editTargetWorkGroupId !== undefined;
+
+export const currentShowingWorkGroupSelector: AppSelector<
+	DateToNumberObjectType<WorkGroup> | undefined
+> = (state) => state.workGroups.currentShowingWorkGroup;
+export const currentShowingWorkGroupIdSelector: AppSelector<
+	string | undefined
+> = (state) => currentShowingWorkGroupSelector(state)?.workGroupsId;
+export const currentShowingWorkGroupPrivilegeSelector: AppSelector<
+	WorkGroupPrivilegeTypeEnum | undefined
+> = (state) => currentShowingWorkGroupSelector(state)?.privilegeType;
+export const canWriteToCurrentShowingWorkGroupSelector: AppSelector<boolean> = (
+	state
+) => {
+	const privilegeType = currentShowingWorkGroupPrivilegeSelector(state);
+	if (privilegeType == null) return false;
+	switch (privilegeType) {
+		case WorkGroupPrivilegeTypeEnum.Write:
+		case WorkGroupPrivilegeTypeEnum.Admin:
+			return true;
+		case WorkGroupPrivilegeTypeEnum.Read:
+			return false;
+	}
+};

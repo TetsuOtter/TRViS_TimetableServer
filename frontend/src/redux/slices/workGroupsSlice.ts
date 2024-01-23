@@ -3,6 +3,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { ResponseError, type WorkGroup } from "../../oas";
 import { API_RES_HEADER_X_TOTAL_COUNT } from "../../utils/Constants";
 import { workGroupApiSelector } from "../selectors/apiSelector";
+import { workGroupListSelector } from "../selectors/workGroupsSelector";
 
 import type { DateToNumberObjectType } from "../../utils/DateToNumberType";
 import type { RootState } from "../store";
@@ -21,6 +22,8 @@ export interface WorkGroupsState {
 	isEditing: boolean;
 	editErrorMessage: string | undefined;
 	editTargetWorkGroupId: string | undefined;
+
+	currentShowingWorkGroup: DateToNumberObjectType<WorkGroup> | undefined;
 }
 
 const initialState: WorkGroupsState = {
@@ -36,6 +39,8 @@ const initialState: WorkGroupsState = {
 	isEditing: false,
 	editErrorMessage: undefined,
 	editTargetWorkGroupId: undefined,
+
+	currentShowingWorkGroup: undefined,
 };
 
 export const workGroupsSlice = createSlice({
@@ -55,6 +60,18 @@ export const workGroupsSlice = createSlice({
 		},
 		setTotalItemsCount: (state, action: PayloadAction<number>) => {
 			state.totalItemsCount = action.payload;
+		},
+		setCurrentShowingWorkGroup: (
+			state,
+			action: PayloadAction<DateToNumberObjectType<WorkGroup> | undefined>
+		) => {
+			state.currentShowingWorkGroup = action.payload;
+		},
+		setWorkGroupList: (
+			state,
+			action: PayloadAction<DateToNumberObjectType<WorkGroup>[]>
+		) => {
+			state.workGroupList = action.payload;
 		},
 	},
 	extraReducers: (builder) => {
@@ -198,6 +215,49 @@ export const deleteWorkGroup = createAsyncThunk<
 			})
 		);
 		return;
+	}
+);
+
+export const setCurrentShowingWorkGroup = createAsyncThunk<
+	void,
+	{ workGroupId: string },
+	{ state: RootState }
+>(
+	"workGroups/setCurrentShowingWorkGroup",
+	async ({ workGroupId }, { dispatch, getState, rejectWithValue }) => {
+		const state = getState();
+		const api = workGroupApiSelector(state);
+
+		const workGroupsList = workGroupListSelector(state);
+		const workGroup = workGroupsList.find(
+			(workGroup) => workGroup.workGroupsId === workGroupId
+		);
+		if (workGroup !== undefined) {
+			dispatch(workGroupsSlice.actions.setCurrentShowingWorkGroup(workGroup));
+			return;
+		}
+
+		try {
+			dispatch(workGroupsSlice.actions.setCurrentShowingWorkGroup(undefined));
+			const getWorkGroupResult = await api.getWorkGroup({
+				workGroupId: workGroupId,
+			});
+			const workGroupToStore = {
+				...getWorkGroupResult,
+				createdAt: getWorkGroupResult.createdAt?.getTime(),
+			};
+			dispatch(workGroupsSlice.actions.setWorkGroupList([workGroupToStore]));
+			dispatch(
+				workGroupsSlice.actions.setCurrentShowingWorkGroup(workGroupToStore)
+			);
+			return;
+		} catch (e) {
+			if (e instanceof ResponseError) {
+				const errorObj = await e.response.json();
+				return rejectWithValue(errorObj);
+			}
+			throw e;
+		}
 	}
 );
 
