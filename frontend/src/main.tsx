@@ -39,7 +39,7 @@ const router = createBrowserRouter([
 		errorElement: <ErrorPage />,
 	},
 	{
-		path: "/work-groups",
+		path: "/work_groups",
 		element: <WorkGroupsPage />,
 		errorElement: <ErrorPage />,
 	},
