@@ -17,7 +17,6 @@ import { useTranslation } from "react-i18next";
 import { useActionWithProcessing } from "../redux/actionWithProcessingHook";
 
 import type { RootState } from "../redux/store";
-import type { GridColDef, GridValidRowModel } from "@mui/x-data-grid";
 import type { AsyncThunk } from "@reduxjs/toolkit";
 
 type DeleteButtonProps<Returned, ThunkArg> = {
@@ -119,21 +118,3 @@ const DeleteButton = <Returned, ThunkArg>(
 };
 
 export default DeleteButton;
-
-export const getDeleteButtonGridColDef = <R extends GridValidRowModel>(
-	renderCell: GridColDef<R>["renderCell"]
-): GridColDef<R> => {
-	return {
-		field: "deleteButton",
-		headerName: "",
-		sortable: false,
-		disableColumnMenu: true,
-		disableReorder: true,
-		disableExport: true,
-		width: 40,
-		align: "center",
-		editable: false,
-		type: "actions",
-		renderCell,
-	};
-};

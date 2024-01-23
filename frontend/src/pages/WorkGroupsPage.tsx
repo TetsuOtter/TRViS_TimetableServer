@@ -8,9 +8,7 @@ import { useTranslation } from "react-i18next";
 import { EditWorkGroupDialog } from "../components/EditWorkGroupDialog";
 import PrivilegeTypeChip from "../components/PrivilegeTypeChip";
 import { WorkGroupPrivilegeTypeEnum } from "../oas";
-import DeleteButtonInDataGrid, {
-	getDeleteButtonGridColDef,
-} from "../parts/DeleteButtonInDataGrid";
+import DeleteButtonInDataGrid from "../parts/DeleteButtonInDataGrid";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { isLoggedInSelector } from "../redux/selectors/authInfoSelector";
 import {
@@ -26,6 +24,7 @@ import {
 	setIsEditing,
 } from "../redux/slices/workGroupsSlice";
 import { PAGE_SIZE_OPTIONS, UUID_NULL } from "../utils/Constants";
+import { getGridColDefForAction } from "../utils/getGridColDefForAction";
 
 import type { WorkGroup } from "../oas";
 import type { DateToNumberObjectType } from "../utils/DateToNumberType";
@@ -48,7 +47,8 @@ const useGridColDefList = (): GridColDef<
 
 	return useMemo(
 		(): GridColDef<DateToNumberObjectType<WorkGroup>>[] => [
-			getDeleteButtonGridColDef(
+			getGridColDefForAction(
+				"deleteData",
 				(params) =>
 					params.row.workGroupsId && (
 						<DeleteButtonInDataGrid<void, { workGroupId: string }>
