@@ -1,12 +1,16 @@
 import { memo, useCallback, useEffect, useMemo } from "react";
 
-import { Add, Delete } from "@mui/icons-material";
+import { Add } from "@mui/icons-material";
 import { Box, Button, Stack, Typography } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
 
 import { EditWorkGroupDialog } from "../components/EditWorkGroupDialog";
 import PrivilegeTypeChip from "../components/PrivilegeTypeChip";
+import { WorkGroupPrivilegeTypeEnum } from "../oas";
+import DeleteButtonInDataGrid, {
+	getDeleteButtonGridColDef,
+} from "../parts/DeleteButtonInDataGrid";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { isLoggedInSelector } from "../redux/selectors/authInfoSelector";
 import {
@@ -17,6 +21,7 @@ import {
 	workGroupListSelector,
 } from "../redux/selectors/workGroupsSelector";
 import {
+	deleteWorkGroup,
 	reloadWorkGroups,
 	setIsEditing,
 } from "../redux/slices/workGroupsSlice";
@@ -33,14 +38,28 @@ import type {
 const getRowId = (row: DateToNumberObjectType<WorkGroup>) =>
 	row.workGroupsId ?? UUID_NULL;
 
-const useGridColDefList = (): GridColDef[] => {
+const useGridColDefList = (): GridColDef<
+	DateToNumberObjectType<WorkGroup>
+>[] => {
 	const {
 		t,
 		i18n: { language },
 	} = useTranslation();
 
 	return useMemo(
-		() => [
+		(): GridColDef<DateToNumberObjectType<WorkGroup>>[] => [
+			getDeleteButtonGridColDef(
+				(params) =>
+					params.row.workGroupsId && (
+						<DeleteButtonInDataGrid<void, { workGroupId: string }>
+							disabled={
+								params.row.privilegeType !== WorkGroupPrivilegeTypeEnum.Admin
+							}
+							thunk={deleteWorkGroup}
+							thunkArg={{ workGroupId: params.row.workGroupsId }}
+						/>
+					)
+			),
 			{
 				field: "name",
 				headerName: t("Name"),
@@ -143,13 +162,6 @@ const WorkGroupsPage = () => {
 						startIcon={<Add />}
 						variant="outlined">
 						{t("Add")}
-					</Button>
-					<Button
-						startIcon={<Delete />}
-						disabled={true}
-						color="error"
-						variant="outlined">
-						{t("Delete")}
 					</Button>
 				</Stack>
 			</Box>

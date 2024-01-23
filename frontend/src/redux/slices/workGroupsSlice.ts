@@ -168,6 +168,39 @@ export const createWorkGroup = createAsyncThunk<
 	}
 );
 
+export const deleteWorkGroup = createAsyncThunk<
+	void,
+	{ workGroupId: string },
+	{ state: RootState }
+>(
+	"workGroups/deleteWorkGroup",
+	async ({ workGroupId }, { dispatch, getState, rejectWithValue }) => {
+		const state = getState();
+		const api = workGroupApiSelector(state);
+
+		try {
+			await api.deleteWorkGroup({
+				workGroupId: workGroupId,
+			});
+		} catch (e) {
+			if (e instanceof ResponseError) {
+				const errorObj = await e.response.json();
+				return rejectWithValue(errorObj);
+			}
+			throw e;
+		}
+
+		await dispatch(
+			reloadWorkGroups({
+				topId: state.workGroups.topId,
+				currentPageFrom1: state.workGroups.currentPageFrom1,
+				perPage: state.workGroups.perPage,
+			})
+		);
+		return;
+	}
+);
+
 export const { setIsLoading, setIsEditing } = workGroupsSlice.actions;
 
 export default workGroupsSlice.reducer;
