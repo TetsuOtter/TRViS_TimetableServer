@@ -140,7 +140,7 @@ const useGridColDefList = (): GridColDef<
 				sortable: false,
 			},
 		],
-		[language, t]
+		[language, showWorkList, t]
 	);
 };
 
