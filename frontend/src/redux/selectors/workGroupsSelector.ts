@@ -32,12 +32,18 @@ export const editTargetWorkGroupIdSelector: AppSelector<string | undefined> = (
 ) => state.workGroups.editTargetWorkGroupId;
 export const editTargetWorkGroupSelector = createSelector(
 	[workGroupListSelector, editTargetWorkGroupIdSelector],
-	(workGroupList, editTargetWorkGroupId) =>
-		editTargetWorkGroupId === undefined
+	(workGroupList, editTargetWorkGroupId): DateToNumberObjectType<WorkGroup> =>
+		(editTargetWorkGroupId === undefined
 			? undefined
 			: workGroupList.find(
 					(workGroup) => workGroup.workGroupsId === editTargetWorkGroupId
-				)
+				)) ?? {
+			workGroupsId: undefined,
+			name: "",
+			description: "",
+			privilegeType: undefined,
+			createdAt: undefined,
+		}
 );
 export const isEditExistingWorkGroupSelector: AppSelector<boolean> = (state) =>
 	state.workGroups.editTargetWorkGroupId !== undefined;

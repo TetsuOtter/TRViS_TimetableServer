@@ -1,5 +1,7 @@
 import { createSelector } from "@reduxjs/toolkit";
 
+import { currentShowingWorkGroupIdSelector } from "./workGroupsSelector";
+
 import type { Work } from "../../oas";
 import type { DateToNumberObjectType } from "../../utils/DateToNumberType";
 import type { AppSelector } from "../store";
@@ -29,11 +31,35 @@ export const editTargetWorkIdSelector: AppSelector<string | undefined> = (
 	state
 ) => state.works.editTargetWorkId;
 export const editTargetWorkSelector = createSelector(
-	[workListSelector, editTargetWorkIdSelector],
-	(workList, editTargetWorkId) =>
-		editTargetWorkId === undefined
+	[
+		workListSelector,
+		editTargetWorkIdSelector,
+		currentShowingWorkGroupIdSelector,
+	],
+	(
+		workList,
+		editTargetWorkId,
+		currentShowingWorkGroupId
+	): DateToNumberObjectType<Work> =>
+		(editTargetWorkId === undefined
 			? undefined
-			: workList.find((work) => work.worksId === editTargetWorkId)
+			: workList.find((work) => work.worksId === editTargetWorkId)) ?? {
+			worksId: undefined,
+			workGroupsId: currentShowingWorkGroupId,
+			name: "",
+			description: "",
+			affectDate: undefined,
+			remarks: "",
+
+			createdAt: undefined,
+
+			affixContent: undefined,
+			affixContentType: undefined,
+
+			hasETrainTimetable: false,
+			eTrainTimetableContentType: undefined,
+			eTrainTimetableContent: undefined,
+		}
 );
 export const isEditExistingWorkSelector: AppSelector<boolean> = (state) =>
 	state.works.editTargetWorkId !== undefined;
