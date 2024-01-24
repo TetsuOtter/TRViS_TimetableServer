@@ -32,7 +32,7 @@ Work:
       type: string
       format: date
       description: 発効日
-    affix_content_type: 
+    affix_content_type:
       type: string
       enum:
         - text
@@ -44,11 +44,10 @@ Work:
       example: text
     affix_content:
       type: string
-      oneOf:
-        - format: plain-text
-        - format: uri
-        - format: binary
-      description: 「行路添付」に表示させる内容
+      description: |
+        「行路添付」に表示させる内容
+
+        ContentTypeに従って、Plain Text、URI、Binary のいずれかを使用する
       example: 行路添付の内容が入ります
     remarks:
       type: string
@@ -58,7 +57,7 @@ Work:
       type: boolean
       description: 「E電時刻表」を表示させるかどうか
       example: true
-    e_train_timetable_content_type: 
+    e_train_timetable_content_type:
       type: string
       enum:
         - text
@@ -70,11 +69,10 @@ Work:
       example: text
     e_train_timetable_content:
       type: string
-      oneOf:
-        - format: plain-text
-        - format: uri
-        - format: binary
-      description: 「E電時刻表」に表示させる内容
+      description: |
+        「E電時刻表」に表示させる内容
+
+        ContentTypeに従って、Plain Text、URI、Binary のいずれかを使用する
       example: E電時刻表の内容が入ります
 
 WorkArray:
