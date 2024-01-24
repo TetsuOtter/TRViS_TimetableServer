@@ -2,11 +2,10 @@ import { useCallback, useState } from "react";
 
 import { useAppDispatch } from "./hooks";
 
-import type { RootState } from "./store";
-import type { AsyncThunk } from "@reduxjs/toolkit";
+import type { AppAsyncThunk } from "./store";
 
 export const useActionWithProcessing = <Returned, ThunkArg>(
-	action: AsyncThunk<Returned, ThunkArg, { state: RootState }>
+	action: AppAsyncThunk<Returned, ThunkArg>
 ): [(payload: ThunkArg) => Promise<Returned>, boolean] => {
 	const dispatch = useAppDispatch();
 	const [isProcessing, setIsProcessing] = useState(false);

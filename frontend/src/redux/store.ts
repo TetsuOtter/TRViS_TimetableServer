@@ -6,6 +6,8 @@ import systemReducer from "./slices/systemSlice";
 import workGroupsReducer from "./slices/workGroupsSlice";
 import worksReducer from "./slices/worksSlice";
 
+import type { AsyncThunk } from "@reduxjs/toolkit";
+
 export const store = configureStore({
 	reducer: {
 		authInfo: authInfoReducer,
@@ -20,3 +22,8 @@ export const store = configureStore({
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 export type AppSelector<T> = (state: RootState) => T;
+export type AppAsyncThunk<Returned, ThunkArg> = AsyncThunk<
+	Returned,
+	ThunkArg,
+	{ state: RootState }
+>;
