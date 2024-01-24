@@ -1,11 +1,20 @@
 import { memo, useCallback, useEffect, useMemo } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
-import { Add } from "@mui/icons-material";
-import { Box, Button, Stack, Typography } from "@mui/material";
+import { Add, Train } from "@mui/icons-material";
+import {
+	Box,
+	Button,
+	IconButton,
+	Stack,
+	Tooltip,
+	Typography,
+} from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
 
+import { EditDataDialog, FieldTypes } from "../components/EditDataDialog";
+import DeleteButtonInDataGrid from "../parts/DeleteButtonInDataGrid";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { isLoggedInSelector } from "../redux/selectors/authInfoSelector";
 import {
@@ -14,16 +23,38 @@ import {
 } from "../redux/selectors/workGroupsSelector";
 import {
 	currentPageFrom1Selector,
+	editTargetWorkSelector,
+	isEditingSelector,
 	isLoadingSelector,
 	perPageSelector,
 	totalItemsCountSelector,
 	workListSelector,
 } from "../redux/selectors/worksSelector";
-import { setCurrentShowingWorkGroup } from "../redux/slices/workGroupsSlice";
-import { reloadWorks, setIsEditing } from "../redux/slices/worksSlice";
-import { PAGE_SIZE_OPTIONS, UUID_NULL } from "../utils/Constants";
-import { WORK_GROUPS_ID_PLACEHOLDER_KEY } from "../utils/getPathString";
+import {
+	deleteWorkGroup,
+	setCurrentShowingWorkGroup,
+} from "../redux/slices/workGroupsSlice";
+import {
+	createWork,
+	reloadWorks,
+	setIsEditing,
+	updateWork,
+} from "../redux/slices/worksSlice";
+import {
+	DESCRIPTION_MAX_LENGTH,
+	DESCRIPTION_MIN_LENGTH,
+	NAME_MAX_LENGTH,
+	NAME_MIN_LENGTH,
+	PAGE_SIZE_OPTIONS,
+	UUID_NULL,
+} from "../utils/Constants";
+import { getGridColDefForAction } from "../utils/getGridColDefForAction";
+import {
+	WORK_GROUPS_ID_PLACEHOLDER_KEY,
+	getPathToWorkList,
+} from "../utils/getPathString";
 
+import type { EditDataFormSetting } from "../components/EditDataDialog";
 import type { Work } from "../oas";
 import type { DateToNumberObjectType } from "../utils/DateToNumberType";
 import type {
@@ -40,9 +71,45 @@ const useGridColDefList = (): GridColDef[] => {
 		t,
 		i18n: { language },
 	} = useTranslation();
+	const navigate = useNavigate();
 
+	const canWrite = useAppSelector(canWriteToCurrentShowingWorkGroupSelector);
+
+	const showTrainList = useCallback(
+		(workGroupsId?: string) => {
+			console.log(workGroupsId);
+			if (workGroupsId != null) {
+				navigate(getPathToWorkList(workGroupsId));
+				console.log("navigate");
+			}
+		},
+		[navigate]
+	);
 	return useMemo(
 		() => [
+			getGridColDefForAction(
+				"showTrainList",
+				(params) =>
+					params.row.workGroupsId && (
+						<Tooltip title={t("Show Train List")}>
+							<IconButton
+								onClick={() => showTrainList(params.row.workGroupsId)}>
+								<Train />
+							</IconButton>
+						</Tooltip>
+					)
+			),
+			getGridColDefForAction(
+				"deleteData",
+				(params) =>
+					params.row.workGroupsId && (
+						<DeleteButtonInDataGrid<void, { workGroupId: string }>
+							disabled={!canWrite}
+							thunk={deleteWorkGroup}
+							thunkArg={{ workGroupId: params.row.workGroupsId }}
+						/>
+					)
+			),
 			{
 				field: "name",
 				headerName: t("Name"),
@@ -84,10 +151,39 @@ const useGridColDefList = (): GridColDef[] => {
 	);
 };
 
+const useEditFormSetting = (): EditDataFormSetting<
+	DateToNumberObjectType<Work>
+>[] => {
+	const { t } = useTranslation();
+
+	return [
+		{
+			name: "name",
+			label: t("Name"),
+			type: FieldTypes.TEXT,
+			isRequired: true,
+			minLength: NAME_MIN_LENGTH,
+			maxLength: NAME_MAX_LENGTH,
+		},
+		{
+			name: "description",
+			label: t("Description"),
+			type: FieldTypes.TEXT,
+			isRequired: true,
+			isMultiline: true,
+			rows: 4,
+			minLength: DESCRIPTION_MIN_LENGTH,
+			maxLength: DESCRIPTION_MAX_LENGTH,
+		},
+	];
+};
+
 const WorksPage = () => {
 	const urlParams = useParams<{ [WORK_GROUPS_ID_PLACEHOLDER_KEY]: string }>();
 	const urlParamsWorkGroupsId = urlParams[WORK_GROUPS_ID_PLACEHOLDER_KEY];
+
 	const { t } = useTranslation();
+	const editFormSetting = useEditFormSetting();
 
 	const dispatch = useAppDispatch();
 	const currentShowingWorkGroupsId = useAppSelector(
@@ -173,6 +269,17 @@ const WorksPage = () => {
 				pageSizeOptions={PAGE_SIZE_OPTIONS}
 				getRowId={getRowId}
 				columns={columns}></DataGrid>
+			<EditDataDialog<DateToNumberObjectType<Work>>
+				createData={createWork}
+				updateData={updateWork}
+				formSettings={editFormSetting}
+				createModeTitle={t("Add New Work")}
+				editModeTitle={t("Edit Work")}
+				getId={(data) => data.worksId}
+				initialStateSelector={editTargetWorkSelector}
+				isEditingSelector={isEditingSelector}
+				setIsEditing={setIsEditing}
+			/>
 		</Box>
 	);
 };
