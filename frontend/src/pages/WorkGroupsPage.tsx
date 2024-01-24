@@ -13,7 +13,7 @@ import {
 import { DataGrid } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
 
-import { EditWorkGroupDialog } from "../components/EditWorkGroupDialog";
+import { EditDataDialog, FieldTypes } from "../components/EditDataDialog";
 import PrivilegeTypeChip from "../components/PrivilegeTypeChip";
 import { WorkGroupPrivilegeTypeEnum } from "../oas";
 import DeleteButtonInDataGrid from "../parts/DeleteButtonInDataGrid";
@@ -21,20 +21,32 @@ import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { isLoggedInSelector } from "../redux/selectors/authInfoSelector";
 import {
 	currentPageFrom1Selector,
+	editTargetWorkGroupSelector,
+	isEditingSelector,
 	isLoadingSelector,
 	perPageSelector,
 	totalItemsCountSelector,
 	workGroupListSelector,
 } from "../redux/selectors/workGroupsSelector";
 import {
+	createWorkGroup,
 	deleteWorkGroup,
 	reloadWorkGroups,
 	setIsEditing,
+	updateWorkGroup,
 } from "../redux/slices/workGroupsSlice";
-import { PAGE_SIZE_OPTIONS, UUID_NULL } from "../utils/Constants";
+import {
+	DESCRIPTION_MAX_LENGTH,
+	DESCRIPTION_MIN_LENGTH,
+	NAME_MAX_LENGTH,
+	NAME_MIN_LENGTH,
+	PAGE_SIZE_OPTIONS,
+	UUID_NULL,
+} from "../utils/Constants";
 import { getGridColDefForAction } from "../utils/getGridColDefForAction";
 import { getPathToWorkList } from "../utils/getPathString";
 
+import type { EditDataFormSetting } from "../components/EditDataDialog";
 import type { WorkGroup } from "../oas";
 import type { DateToNumberObjectType } from "../utils/DateToNumberType";
 import type {
@@ -144,8 +156,36 @@ const useGridColDefList = (): GridColDef<
 	);
 };
 
+const useEditFormSetting = (): EditDataFormSetting<
+	DateToNumberObjectType<WorkGroup>
+>[] => {
+	const { t } = useTranslation();
+
+	return [
+		{
+			name: "name",
+			label: t("Name"),
+			type: FieldTypes.TEXT,
+			isRequired: true,
+			minLength: NAME_MIN_LENGTH,
+			maxLength: NAME_MAX_LENGTH,
+		},
+		{
+			name: "description",
+			label: t("Description"),
+			type: FieldTypes.TEXT,
+			isRequired: true,
+			isMultiline: true,
+			rows: 4,
+			minLength: DESCRIPTION_MIN_LENGTH,
+			maxLength: DESCRIPTION_MAX_LENGTH,
+		},
+	];
+};
+
 const WorkGroupsPage = () => {
 	const { t } = useTranslation();
+	const editFormSetting = useEditFormSetting();
 
 	const dispatch = useAppDispatch();
 	const workGroupList = useAppSelector(workGroupListSelector);
@@ -216,7 +256,17 @@ const WorkGroupsPage = () => {
 				pageSizeOptions={PAGE_SIZE_OPTIONS}
 				getRowId={getRowId}
 				columns={columns}></DataGrid>
-			<EditWorkGroupDialog />
+			<EditDataDialog<DateToNumberObjectType<WorkGroup>>
+				createData={createWorkGroup}
+				updateData={updateWorkGroup}
+				formSettings={editFormSetting}
+				createModeTitle={t("Add New Work Group")}
+				editModeTitle={t("Edit Work Group")}
+				getId={(data) => data.workGroupsId}
+				initialStateSelector={editTargetWorkGroupSelector}
+				isEditingSelector={isEditingSelector}
+				setIsEditing={setIsEditing}
+			/>
 		</Box>
 	);
 };
