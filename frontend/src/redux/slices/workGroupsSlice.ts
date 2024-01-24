@@ -6,6 +6,7 @@ import { workGroupApiSelector } from "../selectors/apiSelector";
 import { workGroupListSelector } from "../selectors/workGroupsSelector";
 
 import type { DateToNumberObjectType } from "../../utils/DateToNumberType";
+import type { setIsEditingPayloadType } from "../payloadTypes";
 import type { RootState } from "../store";
 import type { PayloadAction } from "@reduxjs/toolkit";
 
@@ -50,10 +51,7 @@ export const workGroupsSlice = createSlice({
 		setIsLoading: (state, action: PayloadAction<boolean>) => {
 			state.isLoading = action.payload;
 		},
-		setIsEditing: (
-			state,
-			action: PayloadAction<{ isEditing: boolean; targetId?: string }>
-		) => {
+		setIsEditing: (state, action: PayloadAction<setIsEditingPayloadType>) => {
 			state.isEditing = action.payload.isEditing;
 			state.editErrorMessage = undefined;
 			state.editTargetWorkGroupId = action.payload.targetId;
