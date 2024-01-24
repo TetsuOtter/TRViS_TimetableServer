@@ -182,7 +182,48 @@ export const createWorkGroup = createAsyncThunk<
 		return fulfillWithValue(undefined);
 	}
 );
+export const updateWorkGroup = createAsyncThunk<
+	void,
+	DateToNumberObjectType<WorkGroup>,
+	{ state: RootState }
+>(
+	"workGroups/updateWorkGroup",
+	async (
+		payload,
+		{ dispatch, getState, rejectWithValue, fulfillWithValue }
+	) => {
+		const state = getState();
+		const api = workGroupApiSelector(state);
 
+		if (payload.workGroupsId == null) {
+			throw new Error("workGroupsId is undefined");
+		}
+
+		try {
+			await api.updateWorkGroup({
+				workGroupId: payload.workGroupsId,
+				workGroup: {
+					...payload,
+					createdAt: payload.createdAt
+						? new Date(payload.createdAt)
+						: undefined,
+				},
+			});
+
+			await dispatch(reloadWorkGroups());
+		} catch (e) {
+			if (e instanceof ResponseError) {
+				const errorObj = await e.response.json();
+				console.log("updateWorkGroup errorObj", errorObj);
+				return rejectWithValue(errorObj.message ?? e.message);
+			}
+			console.log("updateWorkGroup error General", e);
+			return rejectWithValue("Unknown error");
+		}
+
+		return fulfillWithValue(undefined);
+	}
+);
 export const deleteWorkGroup = createAsyncThunk<
 	void,
 	{ workGroupId: string },

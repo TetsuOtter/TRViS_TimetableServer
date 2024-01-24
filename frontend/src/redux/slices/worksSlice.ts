@@ -200,6 +200,51 @@ export const createWork = createAsyncThunk<
 		return fulfillWithValue(undefined);
 	}
 );
+export const updateWork = createAsyncThunk<
+	void,
+	DateToNumberObjectType<Work>,
+	{ state: RootState }
+>(
+	"works/updateWork",
+	async (
+		payload,
+		{ dispatch, getState, rejectWithValue, fulfillWithValue }
+	) => {
+		const state = getState();
+		const api = workApiSelector(state);
+		const worksId = payload.worksId;
+		if (worksId === undefined) {
+			throw new Error("WorksId is undefined");
+		}
+
+		try {
+			await api.updateWork({
+				workId: worksId,
+				work: {
+					...payload,
+					createdAt: payload.createdAt
+						? new Date(payload.createdAt)
+						: undefined,
+					affectDate: payload.affectDate
+						? new Date(payload.affectDate)
+						: undefined,
+				},
+			});
+
+			await dispatch(reloadWorks(undefined));
+		} catch (e) {
+			if (e instanceof ResponseError) {
+				const errorObj = await e.response.json();
+				console.log("updateWork errorObj", errorObj);
+				return rejectWithValue(errorObj.message ?? e.message);
+			}
+			console.log("updateWork error General", e);
+			return rejectWithValue("Unknown error");
+		}
+
+		return fulfillWithValue(undefined);
+	}
+);
 
 export const deleteWork = createAsyncThunk<
 	void,
