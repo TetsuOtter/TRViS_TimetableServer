@@ -234,7 +234,6 @@ CREATE TABLE
 
   affect_date
     DATETIME
-    NOT NULL
   ,
 
   affix_content_type
@@ -355,7 +354,7 @@ CREATE TABLE
   remarks
     TEXT(65535)
   ,
-  
+
   before_departure
     VARCHAR(1023)
   ,
