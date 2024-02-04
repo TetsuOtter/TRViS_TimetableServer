@@ -68,7 +68,7 @@ export type EditDataFormSelectFieldSettings<
 	T extends string | number | symbol,
 > = {
 	type: (typeof FieldTypes)["SELECT"];
-	items: Record<T, string>;
+	items: Record<T, { value: T; label: string }>;
 };
 export type EditDataFormSetting<T extends FieldValues> = {
 	name: Path<T>;
@@ -89,7 +89,7 @@ export type EditDataFormSetting<T extends FieldValues> = {
 	| {
 			type: (typeof FieldTypes)["SWITCH"];
 	  }
-	| EditDataFormSelectFieldSettings<string | number | symbol>
+	| EditDataFormSelectFieldSettings<string | number>
 );
 const isStringField = <T extends FieldValues>(
 	settings: EditDataFormSetting<T>
@@ -167,11 +167,11 @@ const FormElement = <T extends FieldValues>(props: {
 						label={settings.label}
 						variant="outlined"
 						fullWidth>
-						{Object.entries(settings.items).map(([k, v]) => (
+						{Object.entries(settings.items).map(([key, { label }]) => (
 							<MenuItem
-								key={k}
-								value={k}>
-								{v}
+								key={key}
+								value={key}>
+								{label}
 							</MenuItem>
 						))}
 					</Select>
@@ -252,7 +252,24 @@ export const EditDataDialog = <T extends FieldValues>({
 		async (v: T) => {
 			setErrorMessage(undefined);
 			try {
-				await dispatchCreateOrUpdate({ ...initialState, ...v });
+				const nextState = { ...initialState, ...v };
+				formSettings.forEach((settings) => {
+					if (settings.type === FieldTypes.NUMBER) {
+						const num = nextState[settings.name] as unknown;
+						if (num != null && typeof num !== "number") {
+							nextState[settings.name] = Number(
+								num
+							) as (typeof nextState)[typeof settings.name];
+						}
+					} else if (settings.type === FieldTypes.SELECT) {
+						const item = nextState[settings.name] as string;
+						if (item != null) {
+							nextState[settings.name] = settings.items[item]
+								?.value as (typeof nextState)[typeof settings.name];
+						}
+					}
+				});
+				await dispatchCreateOrUpdate(nextState);
 				reset();
 			} catch (e) {
 				console.error(`handleUpdateOrAdd(isAddNew: ${isAddNew})`, e);
@@ -265,7 +282,7 @@ export const EditDataDialog = <T extends FieldValues>({
 				}
 			}
 		},
-		[dispatchCreateOrUpdate, initialState, isAddNew, reset, t]
+		[dispatchCreateOrUpdate, formSettings, initialState, isAddNew, reset, t]
 	);
 	const handleCancel = useCallback(() => {
 		dispatch(setIsEditing({ isEditing: false }));
