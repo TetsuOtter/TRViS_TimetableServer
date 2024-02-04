@@ -6,6 +6,8 @@ import { workApiSelector } from "../selectors/apiSelector";
 import { currentShowingWorkGroupIdSelector } from "../selectors/workGroupsSelector";
 import { workListSelector } from "../selectors/worksSelector";
 
+import { setCurrentShowingWorkGroup } from "./workGroupsSlice";
+
 import type { Work } from "../../oas";
 import type { DateToNumberObjectType } from "../../utils/DateToNumberType";
 import type { RootState } from "../store";
@@ -301,13 +303,26 @@ export const setCurrentShowingWork = createAsyncThunk<
 			const getWorkResult = await api.getWork({
 				workId: workId,
 			});
-			const workToStore = {
+
+			if (getWorkResult.workGroupsId == null) {
+				throw new Error("workGroupsId is undefined");
+			}
+
+			const workToStore: DateToNumberObjectType<Work> & {
+				workGroupsId: NonNullable<Work["workGroupsId"]>;
+			} = {
 				...getWorkResult,
+				// null警告回避のため、個別で代入する
+				workGroupsId: getWorkResult.workGroupsId,
 				createdAt: getWorkResult.createdAt?.getTime(),
 				affectDate: getWorkResult.affectDate?.getTime(),
 			};
 			dispatch(worksSlice.actions.setWorkList([workToStore]));
 			dispatch(worksSlice.actions.setCurrentShowingWork(workToStore));
+
+			dispatch(
+				setCurrentShowingWorkGroup({ workGroupId: workToStore.workGroupsId })
+			);
 			return;
 		} catch (e) {
 			if (e instanceof ResponseError) {
