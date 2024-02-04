@@ -70,3 +70,6 @@ export const currentShowingWorkSelector: AppSelector<
 export const currentShowingWorkIdSelector: AppSelector<string | undefined> = (
 	state
 ) => currentShowingWorkSelector(state)?.worksId;
+export const currentShowingWorkParentIdSelector: AppSelector<
+	string | undefined
+> = (state) => currentShowingWorkSelector(state)?.workGroupsId;

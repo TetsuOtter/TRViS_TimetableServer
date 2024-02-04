@@ -7,6 +7,7 @@ export const STATION_TRACKS_ID_PLACEHOLDER_KEY = "stationTracksId";
 const PATH_SEG_WORK_GROUPS = "work_groups";
 const PATH_SEG_WORKS = "works";
 const PATH_SEG_TRAINS = "trains";
+const PATH_SEG_TIMETABLE_ROWS = "timetable_rows";
 const PATH_SEG_STATIONS = "stations";
 const PATH_SEG_STATION_TRACKS = "station_tracks";
 
@@ -48,6 +49,11 @@ export const getPathToTrainList = genPathToChildListGetter(
 	PATH_SEG_TRAINS
 );
 export const getPathToTrainOne = genPathToOneGetter(PATH_SEG_TRAINS);
+
+export const getPathToTimetableRowList = genPathToChildListGetter(
+	PATH_SEG_TRAINS,
+	PATH_SEG_TIMETABLE_ROWS
+);
 
 export const getPathToStationList = genPathToChildListGetter(
 	PATH_SEG_WORK_GROUPS,

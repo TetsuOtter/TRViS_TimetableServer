@@ -3,6 +3,7 @@ import { configureStore } from "@reduxjs/toolkit";
 import authInfoReducer from "./slices/authInfoSlice";
 import messageDialogReducer from "./slices/messageDialogSlice";
 import systemReducer from "./slices/systemSlice";
+import trainsReducer from "./slices/trainsSlice";
 import workGroupsReducer from "./slices/workGroupsSlice";
 import worksReducer from "./slices/worksSlice";
 
@@ -16,6 +17,7 @@ export const store = configureStore({
 
 		workGroups: workGroupsReducer,
 		works: worksReducer,
+		trains: trainsReducer,
 	},
 });
 
