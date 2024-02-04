@@ -10,6 +10,8 @@ import {
 	Stack,
 	TextField,
 	Typography,
+	Select,
+	MenuItem,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers";
 import { Controller, useForm } from "react-hook-form";
@@ -40,6 +42,7 @@ export const FieldTypes = {
 	URL: "url",
 	TEL: "tel",
 	COLOR: "color",
+	SELECT: "select",
 } as const;
 export type FieldTypes = (typeof FieldTypes)[keyof typeof FieldTypes];
 type StringFieldTypes = (typeof FieldTypes)[
@@ -58,6 +61,12 @@ type TextFieldSettings = {
 	isMultiline?: boolean;
 	rows?: number;
 };
+export type EditDataFormSelectFieldSettings<
+	T extends string | number | symbol,
+> = {
+	type: (typeof FieldTypes)["SELECT"];
+	items: Record<T, string>;
+};
 export type EditDataFormSetting<T extends FieldValues> = {
 	name: Path<T>;
 	label: string;
@@ -74,6 +83,7 @@ export type EditDataFormSetting<T extends FieldValues> = {
 	| {
 			type: (typeof FieldTypes)["DATE"];
 	  }
+	| EditDataFormSelectFieldSettings<string | number | symbol>
 );
 const isStringField = <T extends FieldValues>(
 	settings: EditDataFormSetting<T>
@@ -144,6 +154,21 @@ const FormElement = <T extends FieldValues>(props: {
 							},
 						}}
 					/>
+				) : settings.type === FieldTypes.SELECT ? (
+					<Select
+						{...field}
+						disabled={props.isProcessing}
+						label={settings.label}
+						variant="outlined"
+						fullWidth>
+						{Object.entries(settings.items).map(([k, v]) => (
+							<MenuItem
+								key={k}
+								value={k}>
+								{v}
+							</MenuItem>
+						))}
+					</Select>
 				) : (
 					<TextField
 						{...field}
