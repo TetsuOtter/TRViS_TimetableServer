@@ -1,5 +1,5 @@
 import { memo, useCallback, useEffect, useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import { Add, Train } from "@mui/icons-material";
 import {
@@ -14,13 +14,11 @@ import { DataGrid } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
 
 import { EditDataDialog, FieldTypes } from "../components/EditDataDialog";
+import { useUpdateCurrentShowingWorkGroups } from "../hooks/updateCurrentShowingDataHook";
 import DeleteButtonInDataGrid from "../parts/DeleteButtonInDataGrid";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { isLoggedInSelector } from "../redux/selectors/authInfoSelector";
-import {
-	canWriteToCurrentShowingWorkGroupSelector,
-	currentShowingWorkGroupIdSelector,
-} from "../redux/selectors/workGroupsSelector";
+import { canWriteToCurrentShowingWorkGroupSelector } from "../redux/selectors/workGroupsSelector";
 import {
 	currentPageFrom1Selector,
 	editTargetWorkSelector,
@@ -30,7 +28,6 @@ import {
 	totalItemsCountSelector,
 	workListSelector,
 } from "../redux/selectors/worksSelector";
-import { setCurrentShowingWorkGroup } from "../redux/slices/workGroupsSlice";
 import {
 	createWork,
 	deleteWork,
@@ -47,10 +44,7 @@ import {
 	UUID_NULL,
 } from "../utils/Constants";
 import { getGridColDefForAction } from "../utils/getGridColDefForAction";
-import {
-	WORK_GROUPS_ID_PLACEHOLDER_KEY,
-	getPathToTrainList,
-} from "../utils/getPathString";
+import { getPathToTrainList } from "../utils/getPathString";
 
 import type { EditDataFormSetting } from "../components/EditDataDialog";
 import type { Work } from "../oas";
@@ -201,16 +195,12 @@ const useEditFormSetting = (): EditDataFormSetting<
 };
 
 const WorksPage = () => {
-	const urlParams = useParams<{ [WORK_GROUPS_ID_PLACEHOLDER_KEY]: string }>();
-	const urlParamsWorkGroupsId = urlParams[WORK_GROUPS_ID_PLACEHOLDER_KEY];
+	useUpdateCurrentShowingWorkGroups();
 
 	const { t } = useTranslation();
 	const editFormSetting = useEditFormSetting();
 
 	const dispatch = useAppDispatch();
-	const currentShowingWorkGroupsId = useAppSelector(
-		currentShowingWorkGroupIdSelector
-	);
 	const workList = useAppSelector(workListSelector);
 
 	const isSignedIn = useAppSelector(isLoggedInSelector);
@@ -222,19 +212,8 @@ const WorksPage = () => {
 	const columns = useGridColDefList();
 
 	useEffect(() => {
-		if (
-			urlParamsWorkGroupsId != null &&
-			urlParamsWorkGroupsId !== currentShowingWorkGroupsId
-		) {
-			dispatch(
-				setCurrentShowingWorkGroup({
-					workGroupId: urlParamsWorkGroupsId,
-				})
-			);
-		}
-
 		dispatch(reloadWorks());
-	}, [currentShowingWorkGroupsId, dispatch, urlParamsWorkGroupsId, isSignedIn]);
+	}, [dispatch, isSignedIn]);
 
 	const handlePageChange = useCallback(
 		(model: GridPaginationModel) => {
