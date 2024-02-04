@@ -320,7 +320,7 @@ export const setCurrentShowingWork = createAsyncThunk<
 			dispatch(worksSlice.actions.setWorkList([workToStore]));
 			dispatch(worksSlice.actions.setCurrentShowingWork(workToStore));
 
-			dispatch(
+			await dispatch(
 				setCurrentShowingWorkGroup({ workGroupId: workToStore.workGroupsId })
 			);
 			return;
