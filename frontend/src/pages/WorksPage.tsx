@@ -30,12 +30,10 @@ import {
 	totalItemsCountSelector,
 	workListSelector,
 } from "../redux/selectors/worksSelector";
-import {
-	deleteWorkGroup,
-	setCurrentShowingWorkGroup,
-} from "../redux/slices/workGroupsSlice";
+import { setCurrentShowingWorkGroup } from "../redux/slices/workGroupsSlice";
 import {
 	createWork,
+	deleteWork,
 	reloadWorks,
 	setIsEditing,
 	updateWork,
@@ -51,7 +49,7 @@ import {
 import { getGridColDefForAction } from "../utils/getGridColDefForAction";
 import {
 	WORK_GROUPS_ID_PLACEHOLDER_KEY,
-	getPathToWorkList,
+	getPathToTrainList,
 } from "../utils/getPathString";
 
 import type { EditDataFormSetting } from "../components/EditDataDialog";
@@ -63,8 +61,9 @@ import type {
 	GridValueFormatterParams,
 } from "@mui/x-data-grid";
 
+const getRowIdOrUndef = (row: DateToNumberObjectType<Work>) => row.worksId;
 const getRowId = (row: DateToNumberObjectType<Work>) =>
-	row.worksId ?? UUID_NULL;
+	getRowIdOrUndef(row) ?? UUID_NULL;
 
 const useGridColDefList = (): GridColDef[] => {
 	const {
@@ -76,10 +75,10 @@ const useGridColDefList = (): GridColDef[] => {
 	const canWrite = useAppSelector(canWriteToCurrentShowingWorkGroupSelector);
 
 	const showTrainList = useCallback(
-		(workGroupsId?: string) => {
-			console.log(workGroupsId);
-			if (workGroupsId != null) {
-				navigate(getPathToWorkList(workGroupsId));
+		(worksId?: string) => {
+			console.log(worksId);
+			if (worksId != null) {
+				navigate(getPathToTrainList(worksId));
 				console.log("navigate");
 			}
 		},
@@ -90,10 +89,9 @@ const useGridColDefList = (): GridColDef[] => {
 			getGridColDefForAction(
 				"showTrainList",
 				(params) =>
-					params.row.workGroupsId && (
+					getRowIdOrUndef(params.row) && (
 						<Tooltip title={t("Show Train List")}>
-							<IconButton
-								onClick={() => showTrainList(params.row.workGroupsId)}>
+							<IconButton onClick={() => showTrainList(getRowId(params.row))}>
 								<Train />
 							</IconButton>
 						</Tooltip>
@@ -102,11 +100,11 @@ const useGridColDefList = (): GridColDef[] => {
 			getGridColDefForAction(
 				"deleteData",
 				(params) =>
-					params.row.workGroupsId && (
-						<DeleteButtonInDataGrid<void, { workGroupId: string }>
+					getRowIdOrUndef(params.row) && (
+						<DeleteButtonInDataGrid<void, { workId: string }>
 							disabled={!canWrite}
-							thunk={deleteWorkGroup}
-							thunkArg={{ workGroupId: params.row.workGroupsId }}
+							thunk={deleteWork}
+							thunkArg={{ workId: getRowId(params.row) }}
 						/>
 					)
 			),
