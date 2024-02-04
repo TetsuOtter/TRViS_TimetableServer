@@ -24,7 +24,6 @@ import type { TextFieldProps } from "@mui/material";
 import type { ActionCreatorWithPayload } from "@reduxjs/toolkit";
 import type {
 	Control,
-	ControllerProps,
 	FieldValues,
 	Path,
 	RegisterOptions,

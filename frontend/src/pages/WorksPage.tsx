@@ -123,6 +123,16 @@ const useGridColDefList = (): GridColDef[] => {
 				sortable: false,
 			},
 			{
+				field: "affectDate",
+				headerName: t("Affect Date"),
+				width: 180,
+				sortable: false,
+				valueFormatter: (params: GridValueFormatterParams<number>) => {
+					const date = new Date(params.value);
+					return date.toLocaleDateString(language);
+				},
+			},
+			{
 				field: "createdAt",
 				headerName: t("Created At"),
 				valueFormatter: (params: GridValueFormatterParams<number>) => {
@@ -147,7 +157,7 @@ const useGridColDefList = (): GridColDef[] => {
 				sortable: false,
 			},
 		],
-		[language, t]
+		[canWrite, language, showTrainList, t]
 	);
 };
 
@@ -174,6 +184,20 @@ const useEditFormSetting = (): EditDataFormSetting<
 			rows: 4,
 			minLength: DESCRIPTION_MIN_LENGTH,
 			maxLength: DESCRIPTION_MAX_LENGTH,
+		},
+		{
+			name: "affectDate",
+			label: t("Affect Date"),
+			type: FieldTypes.DATE,
+			isRequired: false,
+		},
+		{
+			name: "remarks",
+			label: t("Work Remarks"),
+			type: FieldTypes.TEXT,
+			isRequired: false,
+			isMultiline: true,
+			rows: 4,
 		},
 	];
 };
