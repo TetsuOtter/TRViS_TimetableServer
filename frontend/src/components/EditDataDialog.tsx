@@ -11,6 +11,7 @@ import {
 	TextField,
 	Typography,
 } from "@mui/material";
+import { DatePicker } from "@mui/x-date-pickers";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
@@ -23,6 +24,7 @@ import type { TextFieldProps } from "@mui/material";
 import type { ActionCreatorWithPayload } from "@reduxjs/toolkit";
 import type {
 	Control,
+	ControllerProps,
 	FieldValues,
 	Path,
 	RegisterOptions,
@@ -69,6 +71,9 @@ export type EditDataFormSetting<T extends FieldValues> = {
 			type: (typeof FieldTypes)["NUMBER"];
 			min?: number;
 			max?: number;
+	  }
+	| {
+			type: (typeof FieldTypes)["DATE"];
 	  }
 );
 const isStringField = <T extends FieldValues>(
@@ -124,20 +129,37 @@ const FormElement = <T extends FieldValues>(props: {
 				required: { value: settings.isRequired, message: t("required") },
 				...propsMinMaxLength,
 			}}
-			render={({ field, formState: { errors } }) => (
-				<TextField
-					{...field}
-					disabled={props.isProcessing}
-					label={settings.label}
-					type={settings.type}
-					variant="outlined"
-					margin="normal"
-					fullWidth
-					{...textFieldProps}
-					error={errors[settings.name]?.message !== undefined}
-					helperText={<>{errors[settings.name]?.message}</>}
-				/>
-			)}
+			render={({ field, formState: { errors } }) =>
+				settings.type === FieldTypes.DATE ? (
+					<DatePicker
+						{...field}
+						disabled={props.isProcessing}
+						label={settings.label}
+						slotProps={{
+							textField: {
+								variant: "outlined",
+								margin: "normal",
+								fullWidth: true,
+								error: errors[settings.name]?.message !== undefined,
+								helperText: <>{errors[settings.name]?.message}</>,
+							},
+						}}
+					/>
+				) : (
+					<TextField
+						{...field}
+						disabled={props.isProcessing}
+						label={settings.label}
+						type={settings.type}
+						variant="outlined"
+						margin="normal"
+						fullWidth
+						{...textFieldProps}
+						error={errors[settings.name]?.message !== undefined}
+						helperText={<>{errors[settings.name]?.message}</>}
+					/>
+				)
+			}
 		/>
 	);
 };
