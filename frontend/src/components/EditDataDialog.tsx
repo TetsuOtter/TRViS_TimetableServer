@@ -211,7 +211,8 @@ export const EditDataDialog = <T extends FieldValues>({
 	);
 	const handleCancel = useCallback(() => {
 		dispatch(setIsEditing({ isEditing: false }));
-	}, [dispatch, setIsEditing]);
+		reset();
+	}, [dispatch, reset, setIsEditing]);
 
 	return (
 		<Dialog
