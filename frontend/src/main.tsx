@@ -9,6 +9,13 @@ import {
 	enUS as muiDataGridEnUs,
 	jaJP as muiDataGridJaJp,
 } from "@mui/x-data-grid";
+import {
+	enUS as muiDatePickerEnUs,
+	jaJP as muiDatePickerJaJp,
+	LocalizationProvider as DatePickerLocalizationProvider,
+} from "@mui/x-date-pickers";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFnsV3";
+import { enUS as dateFnsEnUs, ja as dateFnsJa } from "date-fns/locale";
 import i18n, { changeLanguage } from "i18next";
 import I18nextBrowserLanguageDetector from "i18next-browser-languagedetector";
 import I18NextHttpBackend from "i18next-http-backend";
@@ -102,15 +109,20 @@ const RootComponentWithRedux = () => {
 		i18n: { language },
 	} = useTranslation();
 
-	const muiTranslations = useMemo(() => {
-		switch (language) {
-			case I18N_LANGUAGES.Japanese:
-				return [muiCoreJaJp, muiDataGridJaJp];
-			case I18N_LANGUAGES.English:
-			default:
-				return [muiCoreEnUs, muiDataGridEnUs];
-		}
-	}, [language]);
+	const [muiTranslations, muiDatePickerTranslations, dateFnsLocale] =
+		useMemo(() => {
+			switch (language) {
+				case I18N_LANGUAGES.Japanese:
+					return [[muiCoreJaJp, muiDataGridJaJp], muiDatePickerJaJp, dateFnsJa];
+				case I18N_LANGUAGES.English:
+				default:
+					return [
+						[muiCoreEnUs, muiDataGridEnUs],
+						muiDatePickerEnUs,
+						dateFnsEnUs,
+					];
+			}
+		}, [language]);
 
 	const theme = useMemo(
 		() =>
@@ -127,10 +139,18 @@ const RootComponentWithRedux = () => {
 
 	return (
 		<ThemeProvider theme={theme}>
-			<CssBaseline />
-			<MyAppBar />
-			<RouterProvider router={router} />
-			<MessageDialog />
+			<DatePickerLocalizationProvider
+				dateAdapter={AdapterDateFns}
+				adapterLocale={dateFnsLocale}
+				localeText={
+					muiDatePickerTranslations.components.MuiLocalizationProvider
+						.defaultProps.localeText
+				}>
+				<CssBaseline />
+				<MyAppBar />
+				<RouterProvider router={router} />
+				<MessageDialog />
+			</DatePickerLocalizationProvider>
 		</ThemeProvider>
 	);
 };
