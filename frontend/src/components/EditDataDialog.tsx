@@ -12,6 +12,8 @@ import {
 	Typography,
 	Select,
 	MenuItem,
+	Switch,
+	FormControlLabel,
 } from "@mui/material";
 import { DatePicker } from "@mui/x-date-pickers";
 import { Controller, useForm } from "react-hook-form";
@@ -43,6 +45,7 @@ export const FieldTypes = {
 	TEL: "tel",
 	COLOR: "color",
 	SELECT: "select",
+	SWITCH: "switch",
 } as const;
 export type FieldTypes = (typeof FieldTypes)[keyof typeof FieldTypes];
 type StringFieldTypes = (typeof FieldTypes)[
@@ -82,6 +85,9 @@ export type EditDataFormSetting<T extends FieldValues> = {
 	  }
 	| {
 			type: (typeof FieldTypes)["DATE"];
+	  }
+	| {
+			type: (typeof FieldTypes)["SWITCH"];
 	  }
 	| EditDataFormSelectFieldSettings<string | number | symbol>
 );
@@ -169,6 +175,12 @@ const FormElement = <T extends FieldValues>(props: {
 							</MenuItem>
 						))}
 					</Select>
+				) : settings.type === FieldTypes.SWITCH ? (
+					<FormControlLabel
+						label={settings.label}
+						disabled={props.isProcessing}
+						control={<Switch {...field} />}
+					/>
 				) : (
 					<TextField
 						{...field}
