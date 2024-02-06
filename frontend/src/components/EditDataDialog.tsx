@@ -344,7 +344,7 @@ export const EditDataDialog = <T extends FieldValues>({
 							onClick={handleSubmit(handleUpdateOrAdd)}
 							endIcon={<Send />}
 							disabled={isProcessing}>
-							{isAddNew ? t("Add") : t("New")}
+							{isAddNew ? t("Add") : t("Update")}
 						</Button>
 					</Box>
 				</Stack>
