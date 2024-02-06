@@ -271,6 +271,7 @@ export const EditDataDialog = <T extends FieldValues>({
 				});
 				await dispatchCreateOrUpdate(nextState);
 				reset();
+				dispatch(setIsEditing({ isEditing: false }));
 			} catch (e) {
 				console.error(`handleUpdateOrAdd(isAddNew: ${isAddNew})`, e);
 				if (e instanceof Error) {
@@ -282,7 +283,16 @@ export const EditDataDialog = <T extends FieldValues>({
 				}
 			}
 		},
-		[dispatchCreateOrUpdate, formSettings, initialState, isAddNew, reset, t]
+		[
+			dispatch,
+			dispatchCreateOrUpdate,
+			formSettings,
+			initialState,
+			isAddNew,
+			reset,
+			setIsEditing,
+			t,
+		]
 	);
 	const handleCancel = useCallback(() => {
 		dispatch(setIsEditing({ isEditing: false }));
