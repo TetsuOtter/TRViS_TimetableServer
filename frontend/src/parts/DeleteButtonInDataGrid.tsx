@@ -29,7 +29,10 @@ const DeleteButton = <Returned, ThunkArg>(
 	props: DeleteButtonProps<Returned, ThunkArg>
 ) => {
 	const { t } = useTranslation();
-	const [dispatchDelete, isProcessing] = useActionWithProcessing(props.thunk);
+	const [dispatchDelete, isProcessing] = useActionWithProcessing<
+		Returned,
+		ThunkArg
+	>(props.thunk);
 	const [isTooltipOpen, setIsTooltipOpen] = useState(false);
 	const [errorMessage, setErrorMessage] = useState("");
 
