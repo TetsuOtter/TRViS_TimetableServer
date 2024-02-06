@@ -270,7 +270,7 @@ export const EditDataDialog = <T extends FieldValues>({
 					}
 				});
 				await dispatchCreateOrUpdate(nextState);
-				reset();
+				reset(nextState);
 				dispatch(setIsEditing({ isEditing: false }));
 			} catch (e) {
 				console.error(`handleUpdateOrAdd(isAddNew: ${isAddNew})`, e);
