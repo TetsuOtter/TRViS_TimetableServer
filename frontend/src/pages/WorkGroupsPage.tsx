@@ -1,7 +1,7 @@
 import { memo, useCallback, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { Add, Work } from "@mui/icons-material";
+import { Add, Edit, Work } from "@mui/icons-material";
 import {
 	Box,
 	Button,
@@ -66,6 +66,7 @@ const useGridColDefList = (): GridColDef<
 		i18n: { language },
 	} = useTranslation();
 	const navigate = useNavigate();
+	const dispatch = useAppDispatch();
 
 	const showWorkList = useCallback(
 		(workGroupsId?: string) => {
@@ -78,6 +79,17 @@ const useGridColDefList = (): GridColDef<
 		[navigate]
 	);
 
+	const showEditDataDialog = useCallback(
+		(workGroupsId: string | undefined) => {
+			if (workGroupsId == null) {
+				return;
+			}
+
+			dispatch(setIsEditing({ isEditing: true, targetId: workGroupsId }));
+		},
+		[dispatch]
+	);
+
 	return useMemo(
 		(): GridColDef<DateToNumberObjectType<WorkGroup>>[] => [
 			getGridColDefForAction(
@@ -88,6 +100,26 @@ const useGridColDefList = (): GridColDef<
 							<IconButton onClick={() => showWorkList(params.row.workGroupsId)}>
 								<Work />
 							</IconButton>
+						</Tooltip>
+					)
+			),
+			getGridColDefForAction(
+				"editData",
+				(params) =>
+					params.row.workGroupsId && (
+						<Tooltip title={t("Edit Data")}>
+							<span>
+								<IconButton
+									disabled={
+										params.row.privilegeType !==
+											WorkGroupPrivilegeTypeEnum.Admin &&
+										params.row.privilegeType !==
+											WorkGroupPrivilegeTypeEnum.Write
+									}
+									onClick={() => showEditDataDialog(params.row.workGroupsId)}>
+									<Edit />
+								</IconButton>
+							</span>
 						</Tooltip>
 					)
 			),
@@ -152,7 +184,7 @@ const useGridColDefList = (): GridColDef<
 				sortable: false,
 			},
 		],
-		[language, showWorkList, t]
+		[language, showEditDataDialog, showWorkList, t]
 	);
 };
 
