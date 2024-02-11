@@ -50,8 +50,11 @@ import "@fontsource/roboto/700.css";
 
 const rootNode = document.getElementById("root");
 if (rootNode == null) {
-	document.write("ERROR: rootNode is null");
-	throw new Error("rootNode is null");
+	const message = "ERROR: rootNode is null";
+	const errorMsgElement = document.createElement("p");
+	errorMsgElement.textContent = message;
+	document.body.appendChild(errorMsgElement);
+	throw new Error(message);
 }
 
 const router = createBrowserRouter([
