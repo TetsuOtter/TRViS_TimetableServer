@@ -13,7 +13,7 @@ import type { DateToNumberObjectType } from "../../utils/DateToNumberType";
 import type { RootState } from "../store";
 import type { PayloadAction } from "@reduxjs/toolkit";
 
-export interface WorksState {
+export type WorksState = {
 	workList: DateToNumberObjectType<Work>[];
 
 	isLoading: boolean;
@@ -28,7 +28,7 @@ export interface WorksState {
 	editTargetWorkId: string | undefined;
 
 	currentShowingWork: DateToNumberObjectType<Work> | undefined;
-}
+};
 
 const initialState: WorksState = {
 	workList: [],
@@ -139,7 +139,7 @@ export const reloadWorks = createAsyncThunk<
 	});
 
 	const totalCountStr = resultRaw.raw.headers.get(API_RES_HEADER_X_TOTAL_COUNT);
-	const totalCount = totalCountStr ? Number(totalCountStr) : undefined;
+	const totalCount = totalCountStr != null ? Number(totalCountStr) : undefined;
 	dispatch(worksSlice.actions.setTotalItemsCount(totalCount ?? 0));
 
 	const result = await resultRaw.value();
@@ -172,12 +172,12 @@ export const createWork = createAsyncThunk<
 				workGroupId: workGroupsId,
 				work: {
 					...payload,
-					createdAt: payload.createdAt
-						? new Date(payload.createdAt)
-						: undefined,
-					affectDate: payload.affectDate
-						? new Date(payload.affectDate)
-						: undefined,
+					createdAt:
+						payload.createdAt != null ? new Date(payload.createdAt) : undefined,
+					affectDate:
+						payload.affectDate != null
+							? new Date(payload.affectDate)
+							: undefined,
 				},
 			});
 			const result = await resultRaw.value();
@@ -224,12 +224,12 @@ export const updateWork = createAsyncThunk<
 				workId: worksId,
 				work: {
 					...payload,
-					createdAt: payload.createdAt
-						? new Date(payload.createdAt)
-						: undefined,
-					affectDate: payload.affectDate
-						? new Date(payload.affectDate)
-						: undefined,
+					createdAt:
+						payload.createdAt != null ? new Date(payload.createdAt) : undefined,
+					affectDate:
+						payload.affectDate != null
+							? new Date(payload.affectDate)
+							: undefined,
 				},
 			});
 

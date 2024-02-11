@@ -10,6 +10,7 @@ import {
 	isMessageDialogOpenSelector,
 } from "../redux/selectors/messageDialogSelector";
 import { closeMessageDialog } from "../redux/slices/messageDialogSlice";
+import { strHasValue } from "../utils/strHasValue";
 
 const MessageDialog = () => {
 	const { t } = useTranslation();
@@ -28,7 +29,9 @@ const MessageDialog = () => {
 			open={isOpen}
 			onClose={handleClose}>
 			<Paper sx={{ p: "1em" }}>
-				{messageTitle && <Typography variant="h5">{messageTitle}</Typography>}
+				{strHasValue(messageTitle) && (
+					<Typography variant="h5">{messageTitle}</Typography>
+				)}
 				<Typography variant="body1">{messageBody}</Typography>
 				<Box sx={{ display: "flex", justifyContent: "flex-end" }}>
 					<Button

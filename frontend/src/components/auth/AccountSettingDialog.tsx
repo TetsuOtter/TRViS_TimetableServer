@@ -77,7 +77,7 @@ const AccountSettingDialog = () => {
 					<Typography>{t("User ID")}</Typography>
 					<OutlinedInput
 						size="small"
-						disabled={true}
+						disabled
 						value={userId}
 						type="text"
 						sx={{
@@ -118,10 +118,12 @@ const AccountSettingDialog = () => {
 					<Chip
 						size="small"
 						disabled={isProcessing}
-						color={isEmailVerified ? "success" : "error"}
-						variant={isEmailVerified ? "outlined" : "filled"}
-						label={isEmailVerified ? t("Verified") : t("Unverified")}
-						onDelete={isEmailVerified ? undefined : handleReloadVerified}
+						color={isEmailVerified === true ? "success" : "error"}
+						variant={isEmailVerified === true ? "outlined" : "filled"}
+						label={isEmailVerified === true ? t("Verified") : t("Unverified")}
+						onDelete={
+							isEmailVerified === true ? undefined : handleReloadVerified
+						}
 						deleteIcon={<Refresh />}
 					/>
 				</Box>

@@ -13,7 +13,11 @@ import {
 import { DataGrid } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
 
-import { EditDataDialog, FieldTypes } from "../components/EditDataDialog";
+import { EditDataDialog } from "../components/EditDataDialog";
+import {
+	FieldTypes,
+	type EditDataFormSetting,
+} from "../components/FormParts/FieldTypes";
 import { useUpdateCurrentShowingWorkGroups } from "../hooks/updateCurrentShowingDataHook";
 import DeleteButtonInDataGrid from "../parts/DeleteButtonInDataGrid";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
@@ -46,7 +50,6 @@ import {
 import { getGridColDefForAction } from "../utils/getGridColDefForAction";
 import { getPathToTrainList } from "../utils/getPathString";
 
-import type { EditDataFormSetting } from "../components/EditDataDialog";
 import type { Station } from "../oas";
 import type { DateToNumberObjectType } from "../utils/DateToNumberType";
 import type {
@@ -81,27 +84,23 @@ const useGridColDefList = (): GridColDef[] => {
 	);
 	return useMemo(
 		() => [
-			getGridColDefForAction(
-				"showTrainList",
-				(params) =>
-					getRowIdOrUndef(params.row) && (
-						<Tooltip title={t("Show Train List")}>
-							<IconButton onClick={() => showTrainList(getRowId(params.row))}>
-								<Train />
-							</IconButton>
-						</Tooltip>
-					)
+			getGridColDefForAction("showTrainList", (params) =>
+				getRowIdOrUndef(params.row) == null ? undefined : (
+					<Tooltip title={t("Show Train List")}>
+						<IconButton onClick={() => showTrainList(getRowId(params.row))}>
+							<Train />
+						</IconButton>
+					</Tooltip>
+				)
 			),
-			getGridColDefForAction(
-				"deleteData",
-				(params) =>
-					getRowIdOrUndef(params.row) && (
-						<DeleteButtonInDataGrid<void, { stationId: string }>
-							disabled={!canWrite}
-							thunk={deleteStation}
-							thunkArg={{ stationId: getRowId(params.row) }}
-						/>
-					)
+			getGridColDefForAction("deleteData", (params) =>
+				getRowIdOrUndef(params.row) == null ? undefined : (
+					<DeleteButtonInDataGrid<void, { stationId: string }>
+						disabled={!canWrite}
+						thunk={deleteStation}
+						thunkArg={{ stationId: getRowId(params.row) }}
+					/>
+				)
 			),
 			{
 				field: "name",
@@ -280,7 +279,8 @@ const StationsPage = () => {
 				onPaginationModelChange={handlePageChange}
 				pageSizeOptions={PAGE_SIZE_OPTIONS}
 				getRowId={getRowId}
-				columns={columns}></DataGrid>
+				columns={columns}
+			/>
 			<EditDataDialog<DateToNumberObjectType<Station>>
 				createData={createStation}
 				updateData={updateStation}

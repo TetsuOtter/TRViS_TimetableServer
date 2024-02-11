@@ -13,7 +13,8 @@ import {
 import { DataGrid } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
 
-import { EditDataDialog, FieldTypes } from "../components/EditDataDialog";
+import { EditDataDialog } from "../components/EditDataDialog";
+import { FieldTypes } from "../components/FormParts/FieldTypes";
 import PrivilegeTypeChip from "../components/PrivilegeTypeChip";
 import { WorkGroupPrivilegeTypeEnum } from "../oas";
 import DeleteButtonInDataGrid from "../parts/DeleteButtonInDataGrid";
@@ -46,7 +47,7 @@ import {
 import { getGridColDefForAction } from "../utils/getGridColDefForAction";
 import { getPathToWorkList } from "../utils/getPathString";
 
-import type { EditDataFormSetting } from "../components/EditDataDialog";
+import type { EditDataFormSetting } from "../components/FormParts/FieldTypes";
 import type { WorkGroup } from "../oas";
 import type { DateToNumberObjectType } from "../utils/DateToNumberType";
 import type {
@@ -92,49 +93,42 @@ const useGridColDefList = (): GridColDef<
 
 	return useMemo(
 		(): GridColDef<DateToNumberObjectType<WorkGroup>>[] => [
-			getGridColDefForAction(
-				"showWork",
-				(params) =>
-					params.row.workGroupsId && (
-						<Tooltip title={t("Show Work List")}>
-							<IconButton onClick={() => showWorkList(params.row.workGroupsId)}>
-								<Work />
+			getGridColDefForAction("showWork", (params) =>
+				params.row.workGroupsId == null ? undefined : (
+					<Tooltip title={t("Show Work List")}>
+						<IconButton onClick={() => showWorkList(params.row.workGroupsId)}>
+							<Work />
+						</IconButton>
+					</Tooltip>
+				)
+			),
+			getGridColDefForAction("editData", (params) =>
+				params.row.workGroupsId == null ? undefined : (
+					<Tooltip title={t("Edit Data")}>
+						<span>
+							<IconButton
+								disabled={
+									params.row.privilegeType !==
+										WorkGroupPrivilegeTypeEnum.Admin &&
+									params.row.privilegeType !== WorkGroupPrivilegeTypeEnum.Write
+								}
+								onClick={() => showEditDataDialog(params.row.workGroupsId)}>
+								<Edit />
 							</IconButton>
-						</Tooltip>
-					)
+						</span>
+					</Tooltip>
+				)
 			),
-			getGridColDefForAction(
-				"editData",
-				(params) =>
-					params.row.workGroupsId && (
-						<Tooltip title={t("Edit Data")}>
-							<span>
-								<IconButton
-									disabled={
-										params.row.privilegeType !==
-											WorkGroupPrivilegeTypeEnum.Admin &&
-										params.row.privilegeType !==
-											WorkGroupPrivilegeTypeEnum.Write
-									}
-									onClick={() => showEditDataDialog(params.row.workGroupsId)}>
-									<Edit />
-								</IconButton>
-							</span>
-						</Tooltip>
-					)
-			),
-			getGridColDefForAction(
-				"deleteData",
-				(params) =>
-					params.row.workGroupsId && (
-						<DeleteButtonInDataGrid<void, { workGroupId: string }>
-							disabled={
-								params.row.privilegeType !== WorkGroupPrivilegeTypeEnum.Admin
-							}
-							thunk={deleteWorkGroup}
-							thunkArg={{ workGroupId: params.row.workGroupsId }}
-						/>
-					)
+			getGridColDefForAction("deleteData", (params) =>
+				params.row.workGroupsId == null ? undefined : (
+					<DeleteButtonInDataGrid<void, { workGroupId: string }>
+						disabled={
+							params.row.privilegeType !== WorkGroupPrivilegeTypeEnum.Admin
+						}
+						thunk={deleteWorkGroup}
+						thunkArg={{ workGroupId: params.row.workGroupsId }}
+					/>
+				)
 			),
 			{
 				field: "name",
@@ -287,7 +281,8 @@ const WorkGroupsPage = () => {
 				onPaginationModelChange={handlePageChange}
 				pageSizeOptions={PAGE_SIZE_OPTIONS}
 				getRowId={getRowId}
-				columns={columns}></DataGrid>
+				columns={columns}
+			/>
 			<EditDataDialog<DateToNumberObjectType<WorkGroup>>
 				createData={createWorkGroup}
 				updateData={updateWorkGroup}

@@ -13,7 +13,7 @@ import type { DateToNumberObjectType } from "../../utils/DateToNumberType";
 import type { RootState } from "../store";
 import type { PayloadAction } from "@reduxjs/toolkit";
 
-export interface StationsState {
+export type StationsState = {
 	stationList: DateToNumberObjectType<Station>[];
 
 	isLoading: boolean;
@@ -28,7 +28,7 @@ export interface StationsState {
 	editTargetStationId: string | undefined;
 
 	currentShowingStation: DateToNumberObjectType<Station> | undefined;
-}
+};
 
 const initialState: StationsState = {
 	stationList: [],
@@ -139,7 +139,7 @@ export const reloadStations = createAsyncThunk<
 	});
 
 	const totalCountStr = resultRaw.raw.headers.get(API_RES_HEADER_X_TOTAL_COUNT);
-	const totalCount = totalCountStr ? Number(totalCountStr) : undefined;
+	const totalCount = totalCountStr != null ? Number(totalCountStr) : undefined;
 	dispatch(stationsSlice.actions.setTotalItemsCount(totalCount ?? 0));
 
 	const result = await resultRaw.value();
@@ -171,9 +171,8 @@ export const createStation = createAsyncThunk<
 				workGroupId: workGroupsId,
 				station: {
 					...payload,
-					createdAt: payload.createdAt
-						? new Date(payload.createdAt)
-						: undefined,
+					createdAt:
+						payload.createdAt != null ? new Date(payload.createdAt) : undefined,
 				},
 			});
 			const result = await resultRaw.value();
@@ -220,9 +219,8 @@ export const updateStation = createAsyncThunk<
 				stationId: stationsId,
 				station: {
 					...payload,
-					createdAt: payload.createdAt
-						? new Date(payload.createdAt)
-						: undefined,
+					createdAt:
+						payload.createdAt != null ? new Date(payload.createdAt) : undefined,
 				},
 			});
 

@@ -20,14 +20,19 @@ import type {
 	RegisterOptions,
 } from "react-hook-form";
 
-export const FormElement = <T extends FieldValues>(props: {
+type FormElementProps<T extends FieldValues> = Readonly<{
+	data: T | undefined;
 	settings: EditDataFormSetting<T>;
 	control: Control<T>;
-	data: T | undefined;
 	isProcessing: boolean;
-}) => {
+}>;
+export const FormElement = <T extends FieldValues>({
+	data,
+	settings,
+	control,
+	isProcessing,
+}: FormElementProps<T>) => {
 	const { t } = useTranslation();
-	const { data, settings } = props;
 
 	const propsMinMaxLength: RegisterOptions<T, Path<T>> = {};
 	if (isStringField(settings)) {
@@ -54,7 +59,7 @@ export const FormElement = <T extends FieldValues>(props: {
 	return (
 		<Controller
 			name={settings.name}
-			control={props.control}
+			control={control}
 			defaultValue={data?.[settings.name]}
 			rules={{
 				required: { value: settings.isRequired, message: t("required") },
@@ -64,7 +69,7 @@ export const FormElement = <T extends FieldValues>(props: {
 				settings.type === FieldTypes.DATE ? (
 					<DatePicker
 						{...field}
-						disabled={props.isProcessing}
+						disabled={isProcessing}
 						label={settings.label}
 						slotProps={{
 							textField: {
@@ -79,7 +84,7 @@ export const FormElement = <T extends FieldValues>(props: {
 				) : settings.type === FieldTypes.SELECT ? (
 					<Select
 						{...field}
-						disabled={props.isProcessing}
+						disabled={isProcessing}
 						label={settings.label}
 						variant="outlined"
 						fullWidth>
@@ -94,13 +99,13 @@ export const FormElement = <T extends FieldValues>(props: {
 				) : settings.type === FieldTypes.SWITCH ? (
 					<FormControlLabel
 						label={settings.label}
-						disabled={props.isProcessing}
+						disabled={isProcessing}
 						control={<Switch {...field} />}
 					/>
 				) : (
 					<TextField
 						{...field}
-						disabled={props.isProcessing}
+						disabled={isProcessing}
 						label={settings.label}
 						type={settings.type}
 						variant="outlined"

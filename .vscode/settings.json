@@ -3,6 +3,8 @@
 	"editor.formatOnSave": true,
 	"editor.formatOnPaste": true,
 
+	"eslint.workingDirectories": ["./frontend"],
+	"prettier.configPath": "./frontend/.prettierrc.json",
 	"editor.codeActionsOnSave": {
 		"source.fixAll.eslint": "explicit"
 	},
@@ -44,5 +46,6 @@
 		"dockerfile",
 		"editorconfig",
 		"sql"
-	]
+	],
+	"prettier.requireConfig": true
 }

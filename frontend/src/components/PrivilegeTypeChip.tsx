@@ -10,7 +10,7 @@ import { privilegeTypeToString } from "../utils/PrivilegeTypeToString";
 import type { WorkGroupsPrivilegePrivilegeTypeEnum } from "../oas";
 
 export type PrivilegeTypeChipProps = {
-	privilegeType:
+	readonly privilegeType:
 		| undefined
 		| WorkGroupPrivilegeTypeEnum
 		| WorkGroupsPrivilegePrivilegeTypeEnum;

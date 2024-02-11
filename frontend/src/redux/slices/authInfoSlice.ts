@@ -25,7 +25,7 @@ export const ACTION_STATES = {
 export type ActionStateType =
 	(typeof ACTION_STATES)[keyof typeof ACTION_STATES];
 
-export interface AuthInfoState {
+export type AuthInfoState = {
 	isSignInUpDialogOpen: boolean;
 	isEMailVerifyDialogOpen: boolean;
 	isEMailVerifyDialogForNewUser: boolean;
@@ -42,7 +42,7 @@ export interface AuthInfoState {
 	isProcessing: boolean;
 	errorMessage?: string;
 	isEMailVerified?: boolean;
-}
+};
 
 const initialState: AuthInfoState = {
 	isSignInUpDialogOpen: false,
@@ -87,7 +87,7 @@ function onAuthFulfilled(
 
 	state.isEMailVerified = action.payload.isEMailVerified;
 	state.isSignInUpDialogOpen = false;
-	if (action.payload.isEMailVerifyDialogOpen) {
+	if (action.payload.isEMailVerifyDialogOpen === true) {
 		state.isEMailVerifyDialogOpen = true;
 		state.isEMailVerifyDialogForNewUser = true;
 	}

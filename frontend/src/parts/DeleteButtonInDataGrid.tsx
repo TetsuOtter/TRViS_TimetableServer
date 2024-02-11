@@ -20,37 +20,39 @@ import type { RootState } from "../redux/store";
 import type { AsyncThunk } from "@reduxjs/toolkit";
 
 type DeleteButtonProps<Returned, ThunkArg> = {
-	disabled?: boolean;
-	thunkArg: ThunkArg;
-	thunk: AsyncThunk<Returned, ThunkArg, { state: RootState }>;
+	readonly disabled?: boolean;
+	readonly thunkArg: ThunkArg;
+	readonly thunk: AsyncThunk<Returned, ThunkArg, { state: RootState }>;
 };
 
-const DeleteButton = <Returned, ThunkArg>(
-	props: DeleteButtonProps<Returned, ThunkArg>
-) => {
+const DeleteButton = <Returned, ThunkArg>({
+	disabled = false,
+	thunk,
+	thunkArg,
+}: DeleteButtonProps<Returned, ThunkArg>) => {
 	const { t } = useTranslation();
 	const [dispatchDelete, isProcessing] = useActionWithProcessing<
 		Returned,
 		ThunkArg
-	>(props.thunk);
+	>(thunk);
 	const [isTooltipOpen, setIsTooltipOpen] = useState(false);
 	const [errorMessage, setErrorMessage] = useState("");
 
 	const handleDelete = useCallback(() => {
 		setErrorMessage("");
-		dispatchDelete(props.thunkArg)
+		dispatchDelete(thunkArg)
 			.then(() => {
 				setIsTooltipOpen(false);
 			})
 			.catch((e) => {
-				if (e.message) {
+				if (e.message != null) {
 					setErrorMessage(e.message);
 				} else {
 					console.error(e);
 					setErrorMessage(t("Failed to delete the work group."));
 				}
 			});
-	}, [dispatchDelete, props.thunkArg, t]);
+	}, [dispatchDelete, thunkArg, t]);
 
 	const handleCloseTooltip = useCallback(() => {
 		setIsTooltipOpen(false);
@@ -111,7 +113,7 @@ const DeleteButton = <Returned, ThunkArg>(
 				</ClickAwayListener>
 			}>
 			<IconButton
-				disabled={isProcessing || props.disabled}
+				disabled={isProcessing || disabled}
 				aria-label="delete"
 				onClick={handleOpenTooltip}>
 				{isProcessing ? <CircularProgress size={20} /> : <Delete />}

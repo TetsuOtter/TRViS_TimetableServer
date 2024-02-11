@@ -48,6 +48,12 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 
+const rootNode = document.getElementById("root");
+if (rootNode == null) {
+	document.write("ERROR: rootNode is null");
+	throw new Error("rootNode is null");
+}
+
 const router = createBrowserRouter([
 	{
 		path: "/",
@@ -162,7 +168,7 @@ const RootComponentWithRedux = () => {
 	);
 };
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
+ReactDOM.createRoot(rootNode).render(
 	<React.StrictMode>
 		<Provider store={store}>
 			<RootComponentWithRedux />

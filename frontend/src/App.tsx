@@ -4,12 +4,14 @@ import { useSelector } from "react-redux";
 
 import { apiInfoApiSelector } from "./redux/selectors/apiSelector";
 
-function App() {
+const MSG = "Hello World!";
+
+const App = () => {
 	const api = useSelector(apiInfoApiSelector);
 	useEffect(() => {
 		api.getApiInfo().then(console.log).catch(console.error);
 	}, [api]);
-	return <>Hello World!</>;
-}
+	return <h1>{MSG}</h1>;
+};
 
 export default App;

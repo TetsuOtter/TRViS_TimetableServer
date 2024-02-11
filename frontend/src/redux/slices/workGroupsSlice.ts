@@ -1,16 +1,17 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 
-import { ResponseError, type WorkGroup } from "../../oas";
+import { ResponseError } from "../../oas";
 import { API_RES_HEADER_X_TOTAL_COUNT } from "../../utils/Constants";
 import { workGroupApiSelector } from "../selectors/apiSelector";
 import { workGroupListSelector } from "../selectors/workGroupsSelector";
 
+import type { WorkGroup } from "../../oas";
 import type { DateToNumberObjectType } from "../../utils/DateToNumberType";
 import type { setIsEditingPayloadType } from "../payloadTypes";
 import type { RootState } from "../store";
 import type { PayloadAction } from "@reduxjs/toolkit";
 
-export interface WorkGroupsState {
+export type WorkGroupsState = {
 	workGroupList: DateToNumberObjectType<WorkGroup>[];
 
 	isLoading: boolean;
@@ -25,7 +26,7 @@ export interface WorkGroupsState {
 	editTargetWorkGroupId: string | undefined;
 
 	currentShowingWorkGroup: DateToNumberObjectType<WorkGroup> | undefined;
-}
+};
 
 const initialState: WorkGroupsState = {
 	workGroupList: [],
@@ -128,7 +129,7 @@ export const reloadWorkGroups = createAsyncThunk<
 	});
 
 	const totalCountStr = resultRaw.raw.headers.get(API_RES_HEADER_X_TOTAL_COUNT);
-	const totalCount = totalCountStr ? Number(totalCountStr) : undefined;
+	const totalCount = totalCountStr != null ? Number(totalCountStr) : undefined;
 	dispatch(workGroupsSlice.actions.setTotalItemsCount(totalCount ?? 0));
 
 	const result = await resultRaw.value();
@@ -155,9 +156,8 @@ export const createWorkGroup = createAsyncThunk<
 			const resultRaw = await api.createWorkGroupRaw({
 				workGroup: {
 					...payload,
-					createdAt: payload.createdAt
-						? new Date(payload.createdAt)
-						: undefined,
+					createdAt:
+						payload.createdAt != null ? new Date(payload.createdAt) : undefined,
 				},
 			});
 			const result = await resultRaw.value();
@@ -204,9 +204,8 @@ export const updateWorkGroup = createAsyncThunk<
 				workGroupId: payload.workGroupsId,
 				workGroup: {
 					...payload,
-					createdAt: payload.createdAt
-						? new Date(payload.createdAt)
-						: undefined,
+					createdAt:
+						payload.createdAt != null ? new Date(payload.createdAt) : undefined,
 				},
 			});
 

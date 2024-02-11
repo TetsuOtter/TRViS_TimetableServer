@@ -39,6 +39,8 @@ import SignInUpDialog from "./auth/SignInUpDialog";
 import type { I18N_LANGUAGE_TYPE } from "../i18n";
 import type { SelectChangeEvent } from "@mui/material";
 
+const APP_TITLE = "TRViS Data Editor";
+
 const MyAppBar = () => {
 	const { t, i18n } = useTranslation();
 	const dispatch = useAppDispatch();
@@ -81,7 +83,7 @@ const MyAppBar = () => {
 						variant="h5"
 						component="div"
 						sx={{ flexGrow: 1 }}>
-						TRViS Data Editor
+						{APP_TITLE}
 					</Typography>
 					<Select
 						value={currentLanguage}

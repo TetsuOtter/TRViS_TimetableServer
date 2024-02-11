@@ -25,7 +25,7 @@ import type { AppAsyncThunk, AppSelector } from "../redux/store";
 import type { ActionCreatorWithPayload } from "@reduxjs/toolkit";
 import type { FieldValues } from "react-hook-form";
 
-type EditWorkDialogProps<T extends FieldValues> = {
+type EditWorkDialogProps<T extends FieldValues> = Readonly<{
 	formSettings: EditDataFormSetting<T>[];
 	isEditingSelector: AppSelector<boolean>;
 	setIsEditing: ActionCreatorWithPayload<setIsEditingPayloadType>;
@@ -37,7 +37,7 @@ type EditWorkDialogProps<T extends FieldValues> = {
 	initialStateSelector: AppSelector<T | undefined>;
 	createData: AppAsyncThunk<void, T>;
 	updateData: AppAsyncThunk<void, T>;
-};
+}>;
 
 export const EditDataDialog = <T extends FieldValues>({
 	formSettings,
