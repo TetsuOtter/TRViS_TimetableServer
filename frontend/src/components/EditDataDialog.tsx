@@ -8,197 +8,22 @@ import {
 	LinearProgress,
 	Paper,
 	Stack,
-	TextField,
 	Typography,
-	Select,
-	MenuItem,
-	Switch,
-	FormControlLabel,
 } from "@mui/material";
-import { DatePicker } from "@mui/x-date-pickers";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
 import { useActionWithProcessing } from "../redux/actionWithProcessingHook";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 
+import { FieldTypes } from "./FormParts/FieldTypes";
+import { FormElement } from "./FormParts/FormElement";
+
+import type { EditDataFormSetting } from "./FormParts/FieldTypes";
 import type { setIsEditingPayloadType } from "../redux/payloadTypes";
 import type { AppAsyncThunk, AppSelector } from "../redux/store";
-import type { TextFieldProps } from "@mui/material";
 import type { ActionCreatorWithPayload } from "@reduxjs/toolkit";
-import type {
-	Control,
-	FieldValues,
-	Path,
-	RegisterOptions,
-} from "react-hook-form";
-
-export const FieldTypes = {
-	TEXT: "text",
-	NUMBER: "number",
-	EMAIL: "email",
-	PASSWORD: "password",
-	DATE: "date",
-	TIME: "time",
-	DATETIME_LOCAL: "datetime-local",
-	URL: "url",
-	TEL: "tel",
-	COLOR: "color",
-	SELECT: "select",
-	SWITCH: "switch",
-} as const;
-export type FieldTypes = (typeof FieldTypes)[keyof typeof FieldTypes];
-type StringFieldTypes = (typeof FieldTypes)[
-	| "TEXT"
-	| "PASSWORD"
-	| "EMAIL"
-	| "URL"
-	| "TEL"];
-type StringFieldSettings = {
-	type: StringFieldTypes;
-	minLength?: number;
-	maxLength?: number;
-};
-type TextFieldSettings = {
-	type: (typeof FieldTypes)["TEXT"];
-	isMultiline?: boolean;
-	rows?: number;
-};
-export type EditDataFormSelectFieldSettings<
-	T extends string | number | symbol,
-> = {
-	type: (typeof FieldTypes)["SELECT"];
-	items: Record<T, { value: T; label: string }>;
-};
-export type EditDataFormSetting<T extends FieldValues> = {
-	name: Path<T>;
-	label: string;
-	type: FieldTypes;
-	isRequired: boolean;
-} & (
-	| StringFieldSettings
-	| TextFieldSettings
-	| {
-			type: (typeof FieldTypes)["NUMBER"];
-			min?: number;
-			max?: number;
-	  }
-	| {
-			type: (typeof FieldTypes)["DATE"];
-	  }
-	| {
-			type: (typeof FieldTypes)["SWITCH"];
-	  }
-	| EditDataFormSelectFieldSettings<string | number>
-);
-const isStringField = <T extends FieldValues>(
-	settings: EditDataFormSetting<T>
-): settings is EditDataFormSetting<T> & StringFieldSettings =>
-	settings.type === FieldTypes.TEXT ||
-	settings.type === FieldTypes.PASSWORD ||
-	settings.type === FieldTypes.EMAIL ||
-	settings.type === FieldTypes.URL ||
-	settings.type === FieldTypes.TEL;
-const isTextField = <T extends FieldValues>(
-	settings: EditDataFormSetting<T>
-): settings is EditDataFormSetting<T> & TextFieldSettings =>
-	settings.type === FieldTypes.TEXT;
-
-const FormElement = <T extends FieldValues>(props: {
-	settings: EditDataFormSetting<T>;
-	control: Control<T>;
-	data: T | undefined;
-	isProcessing: boolean;
-}) => {
-	const { t } = useTranslation();
-	const { data, settings } = props;
-
-	const propsMinMaxLength: RegisterOptions<T, Path<T>> = {};
-	if (isStringField(settings)) {
-		if (settings.minLength !== undefined) {
-			propsMinMaxLength.minLength = {
-				value: settings.minLength,
-				message: t("minLength", { minLength: settings.minLength }),
-			};
-		}
-		if (settings.maxLength !== undefined) {
-			propsMinMaxLength.maxLength = {
-				value: settings.maxLength,
-				message: t("maxLength", { maxLength: settings.maxLength }),
-			};
-		}
-	}
-
-	const textFieldProps: Partial<TextFieldProps> = {};
-	if (isTextField(settings)) {
-		textFieldProps.multiline = settings.isMultiline;
-		textFieldProps.rows = settings.rows;
-	}
-
-	return (
-		<Controller
-			name={settings.name}
-			control={props.control}
-			defaultValue={data?.[settings.name]}
-			rules={{
-				required: { value: settings.isRequired, message: t("required") },
-				...propsMinMaxLength,
-			}}
-			render={({ field, formState: { errors } }) =>
-				settings.type === FieldTypes.DATE ? (
-					<DatePicker
-						{...field}
-						disabled={props.isProcessing}
-						label={settings.label}
-						slotProps={{
-							textField: {
-								variant: "outlined",
-								margin: "normal",
-								fullWidth: true,
-								error: errors[settings.name]?.message !== undefined,
-								helperText: <>{errors[settings.name]?.message}</>,
-							},
-						}}
-					/>
-				) : settings.type === FieldTypes.SELECT ? (
-					<Select
-						{...field}
-						disabled={props.isProcessing}
-						label={settings.label}
-						variant="outlined"
-						fullWidth>
-						{Object.entries(settings.items).map(([key, { label }]) => (
-							<MenuItem
-								key={key}
-								value={key}>
-								{label}
-							</MenuItem>
-						))}
-					</Select>
-				) : settings.type === FieldTypes.SWITCH ? (
-					<FormControlLabel
-						label={settings.label}
-						disabled={props.isProcessing}
-						control={<Switch {...field} />}
-					/>
-				) : (
-					<TextField
-						{...field}
-						disabled={props.isProcessing}
-						label={settings.label}
-						type={settings.type}
-						variant="outlined"
-						margin="normal"
-						fullWidth
-						{...textFieldProps}
-						error={errors[settings.name]?.message !== undefined}
-						helperText={<>{errors[settings.name]?.message}</>}
-					/>
-				)
-			}
-		/>
-	);
-};
+import type { FieldValues } from "react-hook-form";
 
 type EditWorkDialogProps<T extends FieldValues> = {
 	formSettings: EditDataFormSetting<T>[];
