@@ -1,7 +1,7 @@
 import { memo, useCallback, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { Add, Edit, Work } from "@mui/icons-material";
+import { Add, Edit, Store, Work } from "@mui/icons-material";
 import {
 	Box,
 	Button,
@@ -45,7 +45,10 @@ import {
 	UUID_NULL,
 } from "../utils/Constants";
 import { getGridColDefForAction } from "../utils/getGridColDefForAction";
-import { getPathToWorkList } from "../utils/getPathString";
+import {
+	getPathToStationList,
+	getPathToWorkList,
+} from "../utils/getPathString";
 
 import type { EditDataFormSetting } from "../components/FormParts/FieldTypes";
 import type { WorkGroup } from "../oas";
@@ -79,6 +82,16 @@ const useGridColDefList = (): GridColDef<
 		},
 		[navigate]
 	);
+	const showStationList = useCallback(
+		(workGroupsId?: string) => {
+			console.log(workGroupsId);
+			if (workGroupsId != null) {
+				navigate(getPathToStationList(workGroupsId));
+				console.log("navigate");
+			}
+		},
+		[navigate]
+	);
 
 	const showEditDataDialog = useCallback(
 		(workGroupsId: string | undefined) => {
@@ -98,6 +111,16 @@ const useGridColDefList = (): GridColDef<
 					<Tooltip title={t("Show Work List")}>
 						<IconButton onClick={() => showWorkList(params.row.workGroupsId)}>
 							<Work />
+						</IconButton>
+					</Tooltip>
+				)
+			),
+			getGridColDefForAction("showStation", (params) =>
+				params.row.workGroupsId == null ? undefined : (
+					<Tooltip title={t("Show Station List")}>
+						<IconButton
+							onClick={() => showStationList(params.row.workGroupsId)}>
+							<Store />
 						</IconButton>
 					</Tooltip>
 				)

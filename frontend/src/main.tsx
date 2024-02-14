@@ -29,11 +29,13 @@ import { auth } from "./firebase/configure.ts";
 import { useAppThemeMode } from "./hooks/appThemeModeHook.ts";
 import { I18N_LANGUAGES, I18N_LANGUAGES_ARRAY } from "./i18n.ts";
 import ErrorPage from "./pages/ErrorPage.tsx";
+import StationsPage from "./pages/StationsPage.tsx";
 import TrainsPage from "./pages/TrainsPage.tsx";
 import WorkGroupsPage from "./pages/WorkGroupsPage.tsx";
 import WorksPage from "./pages/WorksPage.tsx";
 import { store } from "./redux/store.ts";
 import {
+	getPathToStationList,
 	getPathToTrainList,
 	getPathToWorkGroupList,
 	getPathToWorkList,
@@ -75,6 +77,10 @@ const router = createBrowserRouter([
 	{
 		path: getPathToTrainList(`:${WORKS_ID_PLACEHOLDER_KEY}`),
 		element: <TrainsPage />,
+	},
+	{
+		path: getPathToStationList(`:${WORK_GROUPS_ID_PLACEHOLDER_KEY}`),
+		element: <StationsPage />,
 	},
 ]);
 
