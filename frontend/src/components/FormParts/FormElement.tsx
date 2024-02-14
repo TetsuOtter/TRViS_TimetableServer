@@ -55,6 +55,13 @@ export const FormElement = <T extends FieldValues>({
 		textFieldProps.multiline = settings.isMultiline;
 		textFieldProps.rows = settings.rows;
 	}
+	if (settings.type === FieldTypes.NUMBER) {
+		textFieldProps.inputMode = "numeric";
+		textFieldProps.inputProps = {
+			min: settings.min,
+			max: settings.max,
+		};
+	}
 
 	return (
 		<Controller
