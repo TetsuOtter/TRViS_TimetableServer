@@ -2,9 +2,9 @@ import { createSelector } from "@reduxjs/toolkit";
 
 import { currentShowingWorkIdSelector } from "./worksSelector";
 
-import type { Train } from "../../oas";
 import type { DateToNumberObjectType } from "../../utils/DateToNumberType";
 import type { AppSelector } from "../store";
+import type { Train } from "trvis-api";
 
 export const trainListSelector: AppSelector<DateToNumberObjectType<Train>[]> = (
 	state

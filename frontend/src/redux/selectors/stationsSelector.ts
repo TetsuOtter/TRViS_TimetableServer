@@ -2,9 +2,9 @@ import { createSelector } from "@reduxjs/toolkit";
 
 import { currentShowingWorkGroupIdSelector } from "./workGroupsSelector";
 
-import type { Station } from "../../oas";
 import type { DateToNumberObjectType } from "../../utils/DateToNumberType";
 import type { AppSelector } from "../store";
+import type { Station } from "trvis-api";
 
 export const stationListSelector: AppSelector<
 	DateToNumberObjectType<Station>[]

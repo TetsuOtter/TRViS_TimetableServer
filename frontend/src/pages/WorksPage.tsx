@@ -48,13 +48,13 @@ import { getGridColDefForAction } from "../utils/getGridColDefForAction";
 import { getPathToTrainList } from "../utils/getPathString";
 
 import type { EditDataFormSetting } from "../components/FormParts/FieldTypes";
-import type { Work } from "../oas";
 import type { DateToNumberObjectType } from "../utils/DateToNumberType";
 import type {
 	GridColDef,
 	GridPaginationModel,
 	GridValueFormatterParams,
 } from "@mui/x-data-grid";
+import type { Work } from "trvis-api";
 
 const getRowIdOrUndef = (row: DateToNumberObjectType<Work>) => row.worksId;
 const getRowId = (row: DateToNumberObjectType<Work>) =>

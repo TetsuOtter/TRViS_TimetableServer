@@ -1,5 +1,4 @@
 import { createSelector } from "@reduxjs/toolkit";
-
 import {
 	ApiInfoApi,
 	AuthApi,
@@ -13,13 +12,14 @@ import {
 	TrainApi,
 	WorkApi,
 	WorkGroupApi,
-} from "../../oas";
-import { oasConfigParamsDefaultValue } from "../../oas-config";
+} from "trvis-api";
+
+import { oasConfigParamsDefaultValue } from "../../api-config";
 
 import { jwtSelector } from "./authInfoSelector";
 
-import type { ConfigurationParameters } from "../../oas";
 import type { AppSelector } from "../store";
+import type { ConfigurationParameters } from "trvis-api";
 
 const oasConfigParamsWithTokenSelector: AppSelector<ConfigurationParameters> =
 	createSelector([jwtSelector], (jwt) => ({

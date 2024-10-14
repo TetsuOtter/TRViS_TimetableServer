@@ -1,10 +1,9 @@
 import { createSelector } from "@reduxjs/toolkit";
+import { WorkGroupPrivilegeTypeEnum } from "trvis-api";
 
-import { WorkGroupPrivilegeTypeEnum } from "../../oas";
-
-import type { WorkGroup } from "../../oas";
 import type { DateToNumberObjectType } from "../../utils/DateToNumberType";
 import type { AppSelector } from "../store";
+import type { WorkGroup } from "trvis-api";
 
 export const workGroupListSelector: AppSelector<
 	DateToNumberObjectType<WorkGroup>[]

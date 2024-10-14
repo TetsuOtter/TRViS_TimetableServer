@@ -2,9 +2,9 @@ import { createSelector } from "@reduxjs/toolkit";
 
 import { currentShowingWorkGroupIdSelector } from "./workGroupsSelector";
 
-import type { Work } from "../../oas";
 import type { DateToNumberObjectType } from "../../utils/DateToNumberType";
 import type { AppSelector } from "../store";
+import type { Work } from "trvis-api";
 
 export const workListSelector: AppSelector<DateToNumberObjectType<Work>[]> = (
 	state

@@ -1,7 +1,7 @@
-import { WorkGroupPrivilegeTypeEnum } from "../oas";
+import { WorkGroupPrivilegeTypeEnum } from "trvis-api";
 
-import type { WorkGroupsPrivilegePrivilegeTypeEnum } from "../oas";
 import type { TFunction } from "i18next";
+import type { WorkGroupsPrivilegePrivilegeTypeEnum } from "trvis-api";
 
 export const privilegeTypeToString = (
 	privilegeType:

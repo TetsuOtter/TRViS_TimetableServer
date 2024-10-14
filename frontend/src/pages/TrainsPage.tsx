@@ -48,13 +48,13 @@ import { getGridColDefForAction } from "../utils/getGridColDefForAction";
 import { getPathToTimetableRowList } from "../utils/getPathString";
 
 import type { EditDataFormSetting } from "../components/FormParts/FieldTypes";
-import type { Train } from "../oas";
 import type { DateToNumberObjectType } from "../utils/DateToNumberType";
 import type {
 	GridColDef,
 	GridPaginationModel,
 	GridValueFormatterParams,
 } from "@mui/x-data-grid";
+import type { Train } from "trvis-api";
 
 const TRAIN_DIRECTION = {
 	OUTBOUND: 1,

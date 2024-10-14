@@ -50,10 +50,10 @@ supportsES6: false
 paramNaming: camelCase
 
 # Description: The name under which you want to publish generated npm package. Required to generate a full package
-# npmName:
+npmName: trvis-api
 
 # Description: The version of your npm package. If not provided, using the version from the OpenAPI specification file.
-# npmVersion: 1.0.0
+npmVersion: 1.0.0
 
 # Description: When setting this property to true, the version will be suffixed with -SNAPSHOT.yyyyMMddHHmm
 snapshot: false

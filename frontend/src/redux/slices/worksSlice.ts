@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { ResponseError } from "trvis-api";
 
-import { ResponseError } from "../../oas";
 import { API_RES_HEADER_X_TOTAL_COUNT } from "../../utils/Constants";
 import { workApiSelector } from "../selectors/apiSelector";
 import { currentShowingWorkGroupIdSelector } from "../selectors/workGroupsSelector";
@@ -8,10 +8,10 @@ import { workListSelector } from "../selectors/worksSelector";
 
 import { setCurrentShowingWorkGroup } from "./workGroupsSlice";
 
-import type { Work } from "../../oas";
 import type { DateToNumberObjectType } from "../../utils/DateToNumberType";
 import type { RootState } from "../store";
 import type { PayloadAction } from "@reduxjs/toolkit";
+import type { Work } from "trvis-api";
 
 export type WorksState = {
 	workList: DateToNumberObjectType<Work>[];

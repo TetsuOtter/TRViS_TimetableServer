@@ -50,7 +50,6 @@ import {
 import { getGridColDefForAction } from "../utils/getGridColDefForAction";
 import { getPathToTrainList } from "../utils/getPathString";
 
-import type { Station } from "../oas";
 import type { DateToNumberObjectType } from "../utils/DateToNumberType";
 import type {
 	GridColDef,

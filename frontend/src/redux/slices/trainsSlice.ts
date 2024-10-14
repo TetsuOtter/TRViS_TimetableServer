@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { ResponseError } from "trvis-api";
 
-import { ResponseError } from "../../oas";
 import { API_RES_HEADER_X_TOTAL_COUNT } from "../../utils/Constants";
 import { trainApiSelector } from "../selectors/apiSelector";
 import { trainListSelector } from "../selectors/trainsSelector";
@@ -8,10 +8,10 @@ import { currentShowingWorkIdSelector } from "../selectors/worksSelector";
 
 import { setCurrentShowingWork } from "./worksSlice";
 
-import type { Train } from "../../oas";
 import type { DateToNumberObjectType } from "../../utils/DateToNumberType";
 import type { RootState } from "../store";
 import type { PayloadAction } from "@reduxjs/toolkit";
+import type { Train } from "trvis-api";
 
 export type TrainsState = {
 	trainList: DateToNumberObjectType<Train>[];

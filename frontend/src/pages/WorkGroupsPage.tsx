@@ -12,11 +12,11 @@ import {
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import { useTranslation } from "react-i18next";
+import { WorkGroupPrivilegeTypeEnum } from "trvis-api";
 
 import { EditDataDialog } from "../components/EditDataDialog";
 import { FieldTypes } from "../components/FormParts/FieldTypes";
 import PrivilegeTypeChip from "../components/PrivilegeTypeChip";
-import { WorkGroupPrivilegeTypeEnum } from "../oas";
 import DeleteButtonInDataGrid from "../parts/DeleteButtonInDataGrid";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { isLoggedInSelector } from "../redux/selectors/authInfoSelector";
@@ -51,13 +51,13 @@ import {
 } from "../utils/getPathString";
 
 import type { EditDataFormSetting } from "../components/FormParts/FieldTypes";
-import type { WorkGroup } from "../oas";
 import type { DateToNumberObjectType } from "../utils/DateToNumberType";
 import type {
 	GridColDef,
 	GridPaginationModel,
 	GridValueFormatterParams,
 } from "@mui/x-data-grid";
+import type { WorkGroup } from "trvis-api";
 
 const getRowId = (row: DateToNumberObjectType<WorkGroup>) =>
 	row.workGroupsId ?? UUID_NULL;
