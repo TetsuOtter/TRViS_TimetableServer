@@ -15,6 +15,7 @@ use PDO;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
+use OpenApi\Attributes as OA;
 
 final class TimetableRowApi extends AbstractTimetableRowApi
 {
@@ -177,6 +178,33 @@ final class TimetableRowApi extends AbstractTimetableRowApi
 		);
 	}
 
+	#[OA\Post(
+		path: '/trains/{trainId}/timetable_rows',
+		operationId: 'createTimetableRow',
+		summary: '作成する',
+		description: "指定のTrainに属する TimetableRow を新しく作成する\n\n属するWorkGroupへのWRITE権限が必要です。",
+		security: [['bearerAuth' => []]],
+		tags: ['timetable_row']
+	)]
+	#[OA\Parameter(
+		name: 'trainId',
+		in: 'path',
+		required: true,
+		description: 'TrainのID',
+		schema: new OA\Schema(type: 'string', format: 'uuid')
+	)]
+	#[OA\RequestBody(
+		required: true,
+		content: new OA\JsonContent(ref: '#/components/schemas/TimetableRow')
+	)]
+	#[OA\Response(
+		response: 201,
+		description: '作成成功',
+		content: new OA\JsonContent(ref: '#/components/schemas/TimetableRow')
+	)]
+	#[OA\Response(response: 400, description: 'リクエストが不正')]
+	#[OA\Response(response: 401, description: '認証エラー')]
+	#[OA\Response(response: 404, description: 'WorkGroupが見つからない')]
 	public function createTimetableRow(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
@@ -189,6 +217,26 @@ final class TimetableRowApi extends AbstractTimetableRowApi
 		);
 	}
 
+	#[OA\Delete(
+		path: '/timetable_rows/{timetableRowId}',
+		operationId: 'deleteTimetableRow',
+		summary: '削除する',
+		description: "既存のTimetableRowを削除する\n\n属するWorkGroupへのWRITE権限が必要です。",
+		security: [['bearerAuth' => []]],
+		tags: ['timetable_row']
+	)]
+	#[OA\Parameter(
+		name: 'timetableRowId',
+		in: 'path',
+		required: true,
+		description: 'Timetable RowのID',
+		schema: new OA\Schema(type: 'string', format: 'uuid')
+	)]
+	#[OA\Response(response: 200, description: '削除成功')]
+	#[OA\Response(response: 400, description: 'リクエストが不正')]
+	#[OA\Response(response: 401, description: '認証エラー')]
+	#[OA\Response(response: 403, description: '許可されていない操作')]
+	#[OA\Response(response: 404, description: 'コンテンツまたはWorkGroupが見つからない')]
 	public function deleteTimetableRow(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
@@ -201,6 +249,29 @@ final class TimetableRowApi extends AbstractTimetableRowApi
 		);
 	}
 
+	#[OA\Get(
+		path: '/timetable_rows/{timetableRowId}',
+		operationId: 'getTimetableRow',
+		summary: '1件取得する',
+		description: "TimetableRowを1件取得する\n\n属するWorkGroupへのREAD権限が必要です。",
+		security: [['bearerAuth' => []]],
+		tags: ['timetable_row']
+	)]
+	#[OA\Parameter(
+		name: 'timetableRowId',
+		in: 'path',
+		required: true,
+		description: 'Timetable RowのID',
+		schema: new OA\Schema(type: 'string', format: 'uuid')
+	)]
+	#[OA\Response(
+		response: 200,
+		description: '取得成功',
+		content: new OA\JsonContent(ref: '#/components/schemas/TimetableRow')
+	)]
+	#[OA\Response(response: 400, description: 'リクエストが不正')]
+	#[OA\Response(response: 401, description: '認証エラー')]
+	#[OA\Response(response: 404, description: 'コンテンツまたはWorkGroupが見つからない')]
 	public function getTimetableRow(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
@@ -213,6 +284,53 @@ final class TimetableRowApi extends AbstractTimetableRowApi
 		);
 	}
 
+	#[OA\Get(
+		path: '/trains/{trainId}/timetable_rows',
+		operationId: 'getTimetableRowList',
+		summary: '複数件取得する',
+		description: "指定のTrainに属するTimetableRowの情報を複数件取得する\n\n属するWorkGroupへのREAD権限が必要です。",
+		security: [['bearerAuth' => []]],
+		tags: ['timetable_row']
+	)]
+	#[OA\Parameter(
+		name: 'trainId',
+		in: 'path',
+		required: true,
+		description: 'TrainのID',
+		schema: new OA\Schema(type: 'string', format: 'uuid')
+	)]
+	#[OA\Parameter(
+		name: 'pageNumber',
+		in: 'query',
+		required: false,
+		description: 'ページ番号 (0以上)',
+		schema: new OA\Schema(type: 'integer', minimum: 0)
+	)]
+	#[OA\Parameter(
+		name: 'pageSize',
+		in: 'query',
+		required: false,
+		description: 'ページサイズ (1以上)',
+		schema: new OA\Schema(type: 'integer', minimum: 1)
+	)]
+	#[OA\Parameter(
+		name: 'pageTopId',
+		in: 'query',
+		required: false,
+		description: 'ページの先頭ID',
+		schema: new OA\Schema(type: 'string', format: 'uuid')
+	)]
+	#[OA\Response(
+		response: 200,
+		description: '取得成功',
+		content: new OA\JsonContent(
+			type: 'array',
+			items: new OA\Items(ref: '#/components/schemas/TimetableRow')
+		)
+	)]
+	#[OA\Response(response: 400, description: 'リクエストが不正')]
+	#[OA\Response(response: 401, description: '認証エラー')]
+	#[OA\Response(response: 404, description: 'WorkGroupが見つからない')]
 	public function getTimetableRowList(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
@@ -225,6 +343,33 @@ final class TimetableRowApi extends AbstractTimetableRowApi
 		);
 	}
 
+	#[OA\Put(
+		path: '/timetable_rows/{timetableRowId}',
+		operationId: 'updateTimetableRow',
+		summary: '更新する',
+		description: "既存のTimetableRowの情報を更新する\n\n属するWorkGroupへのWRITE権限が必要です。",
+		security: [['bearerAuth' => []]],
+		tags: ['timetable_row']
+	)]
+	#[OA\Parameter(
+		name: 'timetableRowId',
+		in: 'path',
+		required: true,
+		description: 'Timetable RowのID',
+		schema: new OA\Schema(type: 'string', format: 'uuid')
+	)]
+	#[OA\RequestBody(
+		required: true,
+		content: new OA\JsonContent(ref: '#/components/schemas/TimetableRow')
+	)]
+	#[OA\Response(
+		response: 200,
+		description: '更新成功',
+		content: new OA\JsonContent(ref: '#/components/schemas/TimetableRow')
+	)]
+	#[OA\Response(response: 400, description: 'リクエストが不正')]
+	#[OA\Response(response: 401, description: '認証エラー')]
+	#[OA\Response(response: 404, description: 'コンテンツまたはWorkGroupが見つからない')]
 	public function updateTimetableRow(
 		ServerRequestInterface $request,
 		ResponseInterface $response,

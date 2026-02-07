@@ -1,0 +1,1439 @@
+openapi: 3.0.0
+info:
+  title: 'TRViS用 時刻表管理用API'
+  version: 1.0.0
+servers:
+  -
+    url: 'http://localhost:8080/api/v1'
+    description: ローカル開発環境(Docker)
+  -
+    url: 'http://localhost:8888/api/v1'
+    description: ローカル開発環境(ホストマシン)
+  -
+    url: 'https://trvis.t0r.dev/api/v1'
+    description: 本番環境
+paths:
+  /:
+    get:
+      tags:
+        - api_info
+      summary: APIの情報を取得する
+      description: APIのバージョン等、APIの情報を取得する
+      operationId: getApiInfo
+      responses:
+        '200':
+          description: APIの情報
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiInfo'
+  '/work_groups/{workGroupId}/stations':
+    post:
+      tags:
+        - station
+      summary: 作成する
+      description: "指定のWorkGroupに属する Station を新しく作成する\n\n属するWorkGroupへのWRITE権限が必要です。"
+      operationId: createStation
+      parameters:
+        -
+          name: workGroupId
+          in: path
+          description: WorkGroupのID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Station'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Station'
+        '400':
+          description: リクエストが不正
+        '401':
+          description: 認証エラー
+        '404':
+          description: WorkGroupが見つからない
+      security:
+        -
+          bearerAuth: []
+  '/trains/{trainId}/timetable_rows':
+    get:
+      tags:
+        - timetable_row
+      summary: 複数件取得する
+      description: "指定のTrainに属するTimetableRowの情報を複数件取得する\n\n属するWorkGroupへのREAD権限が必要です。"
+      operationId: getTimetableRowList
+      parameters:
+        -
+          name: trainId
+          in: path
+          description: TrainのID
+          required: true
+          schema:
+            type: string
+            format: uuid
+        -
+          name: pageNumber
+          in: query
+          description: 'ページ番号 (0以上)'
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+        -
+          name: pageSize
+          in: query
+          description: 'ページサイズ (1以上)'
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+        -
+          name: pageTopId
+          in: query
+          description: ページの先頭ID
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TimetableRow'
+        '400':
+          description: リクエストが不正
+        '401':
+          description: 認証エラー
+        '404':
+          description: WorkGroupが見つからない
+      security:
+        -
+          bearerAuth: []
+    post:
+      tags:
+        - timetable_row
+      summary: 作成する
+      description: "指定のTrainに属する TimetableRow を新しく作成する\n\n属するWorkGroupへのWRITE権限が必要です。"
+      operationId: createTimetableRow
+      parameters:
+        -
+          name: trainId
+          in: path
+          description: TrainのID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimetableRow'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimetableRow'
+        '400':
+          description: リクエストが不正
+        '401':
+          description: 認証エラー
+        '404':
+          description: WorkGroupが見つからない
+      security:
+        -
+          bearerAuth: []
+  '/timetable_rows/{timetableRowId}':
+    get:
+      tags:
+        - timetable_row
+      summary: 1件取得する
+      description: "TimetableRowを1件取得する\n\n属するWorkGroupへのREAD権限が必要です。"
+      operationId: getTimetableRow
+      parameters:
+        -
+          name: timetableRowId
+          in: path
+          description: 'Timetable RowのID'
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimetableRow'
+        '400':
+          description: リクエストが不正
+        '401':
+          description: 認証エラー
+        '404':
+          description: コンテンツまたはWorkGroupが見つからない
+      security:
+        -
+          bearerAuth: []
+    put:
+      tags:
+        - timetable_row
+      summary: 更新する
+      description: "既存のTimetableRowの情報を更新する\n\n属するWorkGroupへのWRITE権限が必要です。"
+      operationId: updateTimetableRow
+      parameters:
+        -
+          name: timetableRowId
+          in: path
+          description: 'Timetable RowのID'
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimetableRow'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimetableRow'
+        '400':
+          description: リクエストが不正
+        '401':
+          description: 認証エラー
+        '404':
+          description: コンテンツまたはWorkGroupが見つからない
+      security:
+        -
+          bearerAuth: []
+    delete:
+      tags:
+        - timetable_row
+      summary: 削除する
+      description: "既存のTimetableRowを削除する\n\n属するWorkGroupへのWRITE権限が必要です。"
+      operationId: deleteTimetableRow
+      parameters:
+        -
+          name: timetableRowId
+          in: path
+          description: 'Timetable RowのID'
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 削除成功
+        '400':
+          description: リクエストが不正
+        '401':
+          description: 認証エラー
+        '403':
+          description: 許可されていない操作
+        '404':
+          description: コンテンツまたはWorkGroupが見つからない
+      security:
+        -
+          bearerAuth: []
+  '/works/{workId}/trains':
+    get:
+      tags:
+        - train
+      summary: 複数件取得する
+      description: "指定のWorkに属するTrainの情報を複数件取得する\n\n属するWorkGroupへのREAD権限が必要です。"
+      operationId: getTrainList
+      parameters:
+        -
+          name: workId
+          in: path
+          description: WorkのID
+          required: true
+          schema:
+            type: string
+            format: uuid
+        -
+          name: pageNumber
+          in: query
+          description: 'ページ番号 (0以上)'
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+        -
+          name: pageSize
+          in: query
+          description: 'ページサイズ (1以上)'
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+        -
+          name: pageTopId
+          in: query
+          description: ページの先頭ID
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Train'
+        '400':
+          description: リクエストが不正
+        '401':
+          description: 認証エラー
+        '404':
+          description: WorkGroupが見つからない
+      security:
+        -
+          bearerAuth: []
+    post:
+      tags:
+        - train
+      summary: 作成する
+      description: "指定のWorkに属する Train を新しく作成する\n\n属するWorkGroupへのWRITE権限が必要です。"
+      operationId: createTrain
+      parameters:
+        -
+          name: workId
+          in: path
+          description: WorkのID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Train'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Train'
+        '400':
+          description: リクエストが不正
+        '401':
+          description: 認証エラー
+        '404':
+          description: WorkGroupが見つからない
+      security:
+        -
+          bearerAuth: []
+  '/trains/{trainId}':
+    get:
+      tags:
+        - train
+      summary: 1件取得する
+      description: "Trainを1件取得する\n\n属するWorkGroupへのREAD権限が必要です。"
+      operationId: getTrain
+      parameters:
+        -
+          name: trainId
+          in: path
+          description: TrainのID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Train'
+        '400':
+          description: リクエストが不正
+        '401':
+          description: 認証エラー
+        '404':
+          description: コンテンツまたはWorkGroupが見つからない
+      security:
+        -
+          bearerAuth: []
+    put:
+      tags:
+        - train
+      summary: 更新する
+      description: "既存のTrainの情報を更新する\n\n属するWorkGroupへのWRITE権限が必要です。"
+      operationId: updateTrain
+      parameters:
+        -
+          name: trainId
+          in: path
+          description: TrainのID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Train'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Train'
+        '400':
+          description: リクエストが不正
+        '401':
+          description: 認証エラー
+        '404':
+          description: コンテンツまたはWorkGroupが見つからない
+      security:
+        -
+          bearerAuth: []
+    delete:
+      tags:
+        - train
+      summary: 削除する
+      description: "既存のTrainを削除する\n\n属するWorkGroupへのWRITE権限が必要です。"
+      operationId: deleteTrain
+      parameters:
+        -
+          name: trainId
+          in: path
+          description: TrainのID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 削除成功
+        '400':
+          description: リクエストが不正
+        '401':
+          description: 認証エラー
+        '403':
+          description: 許可されていない操作
+        '404':
+          description: コンテンツまたはWorkGroupが見つからない
+      security:
+        -
+          bearerAuth: []
+  '/work_groups/{workGroupId}/works':
+    get:
+      tags:
+        - work
+      summary: 複数件取得する
+      description: "指定のWorkGroupに属するWorkの情報を複数件取得する\n\n属するWorkGroupへのREAD権限が必要です。"
+      operationId: getWorkList
+      parameters:
+        -
+          name: workGroupId
+          in: path
+          description: WorkGroupのID
+          required: true
+          schema:
+            type: string
+            format: uuid
+        -
+          name: pageNumber
+          in: query
+          description: 'ページ番号 (0以上)'
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+        -
+          name: pageSize
+          in: query
+          description: 'ページサイズ (1以上)'
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+        -
+          name: pageTopId
+          in: query
+          description: ページの先頭ID
+          required: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Work'
+        '400':
+          description: リクエストが不正
+        '401':
+          description: 認証エラー
+        '404':
+          description: WorkGroupが見つからない
+      security:
+        -
+          bearerAuth: []
+    post:
+      tags:
+        - work
+      summary: 作成する
+      description: "指定のWorkGroupに属する Work を新しく作成する\n\n属するWorkGroupへのWRITE権限が必要です。"
+      operationId: createWork
+      parameters:
+        -
+          name: workGroupId
+          in: path
+          description: WorkGroupのID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Work'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Work'
+        '400':
+          description: リクエストが不正
+        '401':
+          description: 認証エラー
+        '404':
+          description: WorkGroupが見つからない
+      security:
+        -
+          bearerAuth: []
+  '/works/{workId}':
+    get:
+      tags:
+        - work
+      summary: 1件取得する
+      description: "Workを1件取得する\n\n属するWorkGroupへのREAD権限が必要です。"
+      operationId: getWork
+      parameters:
+        -
+          name: workId
+          in: path
+          description: WorkのID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Work'
+        '400':
+          description: リクエストが不正
+        '401':
+          description: 認証エラー
+        '404':
+          description: コンテンツまたはWorkGroupが見つからない
+      security:
+        -
+          bearerAuth: []
+    put:
+      tags:
+        - work
+      summary: 更新する
+      description: "既存のWorkの情報を更新する\n\n属するWorkGroupへのWRITE権限が必要です。"
+      operationId: updateWork
+      parameters:
+        -
+          name: workId
+          in: path
+          description: WorkのID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Work'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Work'
+        '400':
+          description: リクエストが不正
+        '401':
+          description: 認証エラー
+        '404':
+          description: コンテンツまたはWorkGroupが見つからない
+      security:
+        -
+          bearerAuth: []
+    delete:
+      tags:
+        - work
+      summary: 削除する
+      description: "既存のWorkを削除する\n\n属するWorkGroupへのWRITE権限が必要です。"
+      operationId: deleteWork
+      parameters:
+        -
+          name: workId
+          in: path
+          description: WorkのID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 削除成功
+        '400':
+          description: リクエストが不正
+        '401':
+          description: 認証エラー
+        '403':
+          description: 許可されていない操作
+        '404':
+          description: コンテンツまたはWorkGroupが見つからない
+      security:
+        -
+          bearerAuth: []
+  /work_groups:
+    get:
+      tags:
+        - work_group
+      summary: 複数件取得する
+      description: "WorkGroupの情報を複数件取得する\n\n認証が必要です。"
+      operationId: getWorkGroupList
+      parameters:
+        -
+          name: pageNumber
+          in: query
+          description: 'ページ番号 (0以上)'
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+        -
+          name: pageSize
+          in: query
+          description: 'ページサイズ (1以上)'
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WorkGroup'
+        '400':
+          description: リクエストが不正
+        '401':
+          description: 認証エラー
+      security:
+        -
+          bearerAuth: []
+    post:
+      tags:
+        - work_group
+      summary: 作成する
+      description: "新しいWorkGroupを作成する\n\n認証が必要です。"
+      operationId: createWorkGroup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkGroup'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkGroup'
+        '400':
+          description: リクエストが不正
+        '401':
+          description: 認証エラー
+      security:
+        -
+          bearerAuth: []
+  '/work_groups/{workGroupId}':
+    get:
+      tags:
+        - work_group
+      summary: 1件取得する
+      description: "WorkGroupを1件取得する\n\n属するWorkGroupへのREAD権限が必要です。"
+      operationId: getWorkGroup
+      parameters:
+        -
+          name: workGroupId
+          in: path
+          description: WorkGroupのID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 取得成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkGroup'
+        '400':
+          description: リクエストが不正
+        '401':
+          description: 認証エラー
+        '404':
+          description: WorkGroupが見つからない
+      security:
+        -
+          bearerAuth: []
+components:
+  schemas:
+    ApiInfo:
+      title: ApiInfo
+      description: API情報
+      properties:
+        server_name:
+          description: サーバの名前
+          type: string
+          readOnly: true
+        version:
+          description: APIのバージョン
+          type: string
+          readOnly: true
+      type: object
+    Color:
+      title: Color
+      description: 'Color (色) のデータ構造'
+      required:
+        - description
+        - name
+        - color_8bit
+      properties:
+        colors_id:
+          description: 'ColorのID (UUID)'
+          type: string
+          format: uuid
+          readOnly: true
+        work_groups_id:
+          description: 'この色が属するWorkGroupのID (UUID)'
+          type: string
+          format: uuid
+          readOnly: true
+        created_at:
+          description: 作成日時
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          description: 更新日時
+          type: string
+          format: date-time
+          readOnly: true
+        description:
+          description: Colorの説明
+          type: string
+          example: Colorの説明が入ります
+        name:
+          description: 'Colorの名前 (詳細な説明はdescriptionに書く)'
+          type: string
+          example: 赤
+        color_8bit:
+          $ref: '#/components/schemas/Color8bit'
+        color_real:
+          oneOf:
+            -
+              $ref: '#/components/schemas/ColorReal'
+          nullable: true
+          description: 色の小数表現
+      type: object
+    Color8bit:
+      title: Color8bit
+      description: 色の8bit表現
+      required:
+        - red
+        - green
+        - blue
+      properties:
+        red:
+          description: '色の赤色成分 (8bit)'
+          type: integer
+          maximum: 255
+          minimum: 0
+          example: 127
+        green:
+          description: '色の緑色成分 (8bit)'
+          type: integer
+          maximum: 255
+          minimum: 0
+          example: 127
+        blue:
+          description: '色の青色成分 (8bit)'
+          type: integer
+          maximum: 255
+          minimum: 0
+          example: 127
+      type: object
+    ColorReal:
+      title: ColorReal
+      description: 色の小数表現
+      required:
+        - red
+        - green
+        - blue
+      properties:
+        red:
+          description: '色の赤色成分 (小数)'
+          type: number
+          format: double
+          maximum: 1
+          minimum: 0
+          example: 0.5
+        green:
+          description: '色の緑色成分 (小数)'
+          type: number
+          format: double
+          maximum: 1
+          minimum: 0
+          example: 0.5
+        blue:
+          description: '色の青色成分 (小数)'
+          type: number
+          format: double
+          maximum: 1
+          minimum: 0
+          example: 0.5
+      type: object
+    InviteKey:
+      title: InviteKey
+      description: 'InviteKey (招待キー) のデータ構造'
+      required:
+        - description
+      properties:
+        invite_keys_id:
+          description: 'Invite Key (UUID)'
+          type: string
+          format: uuid
+          readOnly: true
+        work_groups_id:
+          description: '対応するWorkGroupのID (UUID)'
+          type: string
+          format: uuid
+          readOnly: true
+        created_at:
+          description: 作成日時
+          type: string
+          format: date-time
+          readOnly: true
+        description:
+          description: 招待キーの説明
+          type: string
+          example: グループAの招待キー
+        valid_from:
+          description: 'キーの有効期限 (開始)'
+          type: string
+          format: date-time
+          nullable: true
+        expires_at:
+          description: 'キーの有効期限 (終了)'
+          type: string
+          format: date-time
+          nullable: true
+        use_limit:
+          description: キーの使用回数の上限
+          type: integer
+          minimum: 1
+          example: 15
+          nullable: true
+        disabled_at:
+          description: 'キーが無効になった日時 (Expireした場合はexpires_atと同じ値)'
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        privilege_type:
+          description: 招待キーで付与される権限
+          type: string
+          enum:
+            - read
+            - write
+            - admin
+          example: read
+          nullable: true
+      type: object
+    Station:
+      title: Station
+      description: 'Station (駅) のデータ構造'
+      required:
+        - description
+        - name
+        - location_km
+        - record_type
+      properties:
+        stations_id:
+          description: 'StationのID (UUID)'
+          type: string
+          format: uuid
+          readOnly: true
+        work_groups_id:
+          description: 'WorkGroupのID (UUID)'
+          type: string
+          format: uuid
+          readOnly: true
+        created_at:
+          description: 作成日時
+          type: string
+          format: date-time
+          readOnly: true
+        description:
+          description: Stationの説明
+          type: string
+          example: Stationの説明が入ります
+        name:
+          description: 駅名
+          type: string
+          example: 東京
+        location_km:
+          description: '駅の位置 (km)'
+          type: number
+          format: double
+          example: 12.345
+        location_lonlat:
+          oneOf:
+            -
+              $ref: '#/components/schemas/StationLocationLonlat'
+          nullable: true
+          description: '駅の位置 (緯度経度)'
+        on_station_detect_radius_m:
+          description: 'その駅にいるかどうかを判定する円の半径 (m)'
+          type: number
+          format: double
+          example: 123.45
+          nullable: true
+        record_type:
+          description: 駅の種類
+          type: number
+          example: 0
+      type: object
+    StationLocationLonlat:
+      title: StationLocationLonlat
+      description: '駅の位置情報 (緯度経度)'
+      required:
+        - longitude
+        - latitude
+      properties:
+        longitude:
+          description: 経度
+          type: number
+          format: double
+          example: 123.45
+        latitude:
+          description: 緯度
+          type: number
+          format: double
+          example: 12.345
+      type: object
+    StationTrack:
+      title: StationTrack
+      description: 'StationTrack (駅の番線情報) のデータ構造'
+      required:
+        - name
+        - description
+      properties:
+        station_tracks_id:
+          description: 'Station TrackのID (UUID)'
+          type: string
+          format: uuid
+          readOnly: true
+        stations_id:
+          description: 'StationのID (UUID)'
+          type: string
+          format: uuid
+          readOnly: true
+        created_at:
+          description: 作成日時
+          type: string
+          format: date-time
+          readOnly: true
+        description:
+          description: 'Station Trackの説明'
+          type: string
+          example: 'Station Trackの説明が入ります'
+        name:
+          description: その番線の名前
+          type: string
+          example: 上2
+        run_in_limit:
+          description: '進入制限のデフォルト値 (km/h)'
+          type: integer
+          minimum: 0
+          example: 15
+          nullable: true
+        run_out_limit:
+          description: '進出制限のデフォルト値 (km/h)'
+          type: integer
+          minimum: 0
+          example: 15
+          nullable: true
+      type: object
+    TimetableRow:
+      title: TimetableRow
+      description: 'TimetableRow (運転時刻表の1行) のデータ構造'
+      properties:
+        timetable_rows_id:
+          description: 'TimetableRowのID (UUID)'
+          type: string
+          format: uuid
+          readOnly: true
+        trains_id:
+          description: 'このデータが紐づいているTrainのID (UUID)'
+          type: string
+          format: uuid
+          readOnly: true
+        stations_id:
+          description: 'この行の駅のID (UUID)'
+          type: string
+          format: uuid
+        station_tracks_id:
+          description: '駅の番線情報のID (UUID)'
+          type: string
+          format: uuid
+          nullable: true
+        colors_id_marker:
+          description: 'マーカーの色情報のID (UUID)'
+          type: string
+          format: uuid
+          nullable: true
+        description:
+          description: このTimetableRowの説明
+          type: string
+          example: このTimetableRowの説明が入ります
+          nullable: true
+        created_at:
+          description: 作成日時
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          description: 更新日時
+          type: string
+          format: date-time
+          readOnly: true
+        drive_time_mm:
+          description: '駅間運転時間 (分)'
+          type: integer
+          maximum: 99
+          minimum: 0
+          example: 3
+          nullable: true
+        drive_time_ss:
+          description: '駅間運転時間 (秒)'
+          type: integer
+          maximum: 59
+          minimum: 0
+          example: 15
+          nullable: true
+        is_operation_only_stop:
+          description: 運転停車かどうか
+          type: boolean
+          example: false
+          nullable: true
+        is_pass:
+          description: 通過駅かどうか
+          type: boolean
+          example: false
+          nullable: true
+        has_bracket:
+          description: 到着時刻に括弧を付けるかどうか
+          type: boolean
+          example: false
+          nullable: true
+        is_last_stop:
+          description: 終着駅かどうか
+          type: boolean
+          example: false
+          nullable: true
+        arrive_time_hh:
+          description: '到着時刻 (時)'
+          type: integer
+          maximum: 23
+          minimum: 0
+          example: 15
+          nullable: true
+        arrive_time_mm:
+          description: '到着時刻 (分)'
+          type: integer
+          maximum: 59
+          minimum: 0
+          example: 20
+          nullable: true
+        arrive_time_ss:
+          description: '到着時刻 (秒)'
+          type: integer
+          maximum: 59
+          minimum: 0
+          example: 25
+          nullable: true
+        departure_time_hh:
+          description: '出発時刻 (時)'
+          type: integer
+          maximum: 23
+          minimum: 0
+          example: 15
+          nullable: true
+        departure_time_mm:
+          description: '出発時刻 (分)'
+          type: integer
+          maximum: 59
+          minimum: 0
+          example: 20
+          nullable: true
+        departure_time_ss:
+          description: '出発時刻 (秒)'
+          type: integer
+          maximum: 59
+          minimum: 0
+          example: 25
+          nullable: true
+        run_in_limit:
+          description: '進入制限 (km/h)'
+          type: integer
+          minimum: 0
+          example: 15
+          nullable: true
+        run_out_limit:
+          description: '進出制限 (km/h)'
+          type: integer
+          minimum: 0
+          example: 15
+          nullable: true
+        remarks:
+          description: 注意事項
+          type: string
+          example: 通過設定
+          nullable: true
+        arrive_str:
+          description: 到着時刻欄に表示する文字列
+          type: string
+          example: 停車
+          nullable: true
+        departure_str:
+          description: 出発時刻欄に表示する文字列
+          type: string
+          example: '???'
+          nullable: true
+        marker_text:
+          description: マーカー部分に表示する文字列
+          type: string
+          example: 合図
+          nullable: true
+        work_type:
+          description: '作業種別 (実装準備中)'
+          type: string
+          nullable: true
+      type: object
+    TokenRequest:
+      title: トークン発行リクエスト
+      description: トークンの発行をリクエストする際に使用するオブジェクト
+      required:
+        - api_key
+      properties:
+        api_key:
+          description: APIキー
+          type: string
+        client_id:
+          description: クライアントID
+          type: string
+          nullable: true
+      type: object
+    TokenResponse:
+      title: TokenResponse
+      description: トークン発行のレスポンス
+      properties:
+        client_id:
+          description: クライアントの識別子
+          type: string
+        token:
+          description: 発行された認証トークン
+          type: string
+        expires:
+          description: トークンの有効期限
+          type: string
+      type: object
+    Train:
+      title: Train
+      description: 'Train (列車) のデータ構造'
+      required:
+        - description
+        - train_number
+        - direction
+        - day_count
+      properties:
+        trains_id:
+          description: 'TrainのID (UUID)'
+          type: string
+          format: uuid
+          readOnly: true
+        works_id:
+          description: 'WorkのID (UUID)'
+          type: string
+          format: uuid
+          readOnly: true
+        created_at:
+          description: 作成日時
+          type: string
+          format: date-time
+          readOnly: true
+        description:
+          description: 'Train (列車) の説明'
+          type: string
+          example: 'Train (列車) の説明が入ります'
+        train_number:
+          description: 列車番号
+          type: string
+          example: 試9999M
+        max_speed:
+          description: '最高速度 (km/h)'
+          type: string
+          example: '130\nシク〜 60'
+          nullable: true
+        speed_type:
+          description: 速度種別
+          type: string
+          example: '停電A9\nシク〜 特定'
+          nullable: true
+        nominal_tractive_capacity:
+          description: けん引定数
+          type: string
+          example: 999系\n9M1T
+          nullable: true
+        car_count:
+          description: '編成両数 (0以下で非表示)'
+          type: integer
+          example: 10
+          nullable: true
+        destination:
+          description: 行先
+          type: string
+          example: '東  京'
+          nullable: true
+        begin_remarks:
+          description: '乗車前の注意事項 (「乗継」など)'
+          type: string
+          example: (乗継)
+          nullable: true
+        after_remarks:
+          description: '降車後の注意事項 (「乗継」など)'
+          type: string
+          example: (乗継)
+          nullable: true
+        remarks:
+          description: 注意事項
+          type: string
+          example: 'XXXX ~ YYYY 徐行 30km/h\nAAAA ~ BBBB 車掌省略'
+          nullable: true
+        before_departure:
+          description: 発前
+          type: string
+          example: '転線 5分          転線'
+          nullable: true
+        after_arrive:
+          description: 着後
+          type: string
+          example: '転線 5分          転線'
+          nullable: true
+        train_info:
+          description: 列車に関する情報
+          type: string
+          example: '<div style="color: red">車掌省略</div>'
+          nullable: true
+        direction:
+          description: '進行方向 (0~1: 下り, -1: 上り)'
+          type: integer
+          example: 1
+        day_count:
+          description: '仕業の初日からの経過日数 (0で初日/日勤、1で明け)'
+          type: integer
+          minimum: 0
+          example: 1
+        is_ride_on_moving:
+          description: 添乗での移動かどうか
+          type: boolean
+          example: false
+          nullable: true
+      type: object
+    WorkGroup:
+      title: WorkGroup
+      description: 'WorkGroup (作業グループ) のデータ構造'
+      required:
+        - description
+        - name
+      properties:
+        work_groups_id:
+          description: 'WorkGroupのID (UUID)'
+          type: string
+          format: uuid
+          readOnly: true
+        created_at:
+          description: 作成日時
+          type: string
+          format: date-time
+          readOnly: true
+        description:
+          description: WorkGroupの説明
+          type: string
+          example: WorkGroupの説明が入ります
+        name:
+          description: WorkGroupの名前
+          type: string
+          example: AAA乗務員区
+      type: object
+    WorkGroupsPrivilege:
+      title: WorkGroupsPrivilege
+      description: 'WorkGroupsPrivilege (WorkGroupへのアクセス権限) のデータ構造'
+      required:
+        - privilege_type
+      properties:
+        uid:
+          description: UserID
+          type: string
+          readOnly: true
+        work_groups_id:
+          description: 'WorkGroupのID (UUID)'
+          type: string
+          format: uuid
+          readOnly: true
+        invite_keys_id:
+          description: 'InviteKeyのID (UUID)'
+          type: string
+          format: uuid
+          readOnly: true
+        created_at:
+          description: 作成日時
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          description: 更新日時
+          type: string
+          format: date-time
+          readOnly: true
+        privilege_type:
+          description: 権限の種類
+          type: string
+          enum:
+            - read
+            - write
+            - admin
+          example: admin
+      type: object
+    Work:
+      title: Work
+      description: 'Work (仕業) のデータ構造'
+      required:
+        - description
+        - name
+      properties:
+        works_id:
+          description: 'WorkのID (UUID)'
+          type: string
+          format: uuid
+          readOnly: true
+        work_groups_id:
+          description: 'WorkGroupのID (UUID)'
+          type: string
+          format: uuid
+          readOnly: true
+        created_at:
+          description: 作成日時
+          type: string
+          format: date-time
+          readOnly: true
+        description:
+          description: Workの説明
+          type: string
+          example: Workの説明が入ります
+        name:
+          description: Workの名前
+          type: string
+          example: 第NNN仕業
+      type: object
+  securitySchemes:
+    bearerAuth:
+      type: http
+      bearerFormat: JWT
+      scheme: bearer
+tags:
+  -
+    name: api_info
+    description: APIの情報を取得する
+  -
+    name: work_group
+    description: 'Work Groupの操作を行う'
+  -
+    name: station
+    description: Stationの操作を行う
+  -
+    name: work
+    description: 'Work (仕業) の操作を行う'
+  -
+    name: train
+    description: 'Train (列車) の操作を行う'
+  -
+    name: timetable_row
+    description: 'TimetableRow (運転時刻表の1行) の操作を行う'

@@ -11,6 +11,7 @@ use PDO;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
+use OpenApi\Attributes as OA;
 
 final class ColorApi extends AbstractColorApi
 {

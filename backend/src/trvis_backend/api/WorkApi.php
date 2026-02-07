@@ -14,6 +14,7 @@ use PDO;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
+use OpenApi\Attributes as OA;
 
 final class WorkApi extends AbstractWorkApi
 {
@@ -75,6 +76,33 @@ final class WorkApi extends AbstractWorkApi
 		);
 	}
 
+	#[OA\Post(
+		path: '/work_groups/{workGroupId}/works',
+		operationId: 'createWork',
+		summary: '作成する',
+		description: "指定のWorkGroupに属する Work を新しく作成する\n\n属するWorkGroupへのWRITE権限が必要です。",
+		security: [['bearerAuth' => []]],
+		tags: ['work']
+	)]
+	#[OA\Parameter(
+		name: 'workGroupId',
+		in: 'path',
+		required: true,
+		description: 'WorkGroupのID',
+		schema: new OA\Schema(type: 'string', format: 'uuid')
+	)]
+	#[OA\RequestBody(
+		required: true,
+		content: new OA\JsonContent(ref: '#/components/schemas/Work')
+	)]
+	#[OA\Response(
+		response: 201,
+		description: '作成成功',
+		content: new OA\JsonContent(ref: '#/components/schemas/Work')
+	)]
+	#[OA\Response(response: 400, description: 'リクエストが不正')]
+	#[OA\Response(response: 401, description: '認証エラー')]
+	#[OA\Response(response: 404, description: 'WorkGroupが見つからない')]
 	public function createWork(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
@@ -87,6 +115,26 @@ final class WorkApi extends AbstractWorkApi
 		);
 	}
 
+	#[OA\Delete(
+		path: '/works/{workId}',
+		operationId: 'deleteWork',
+		summary: '削除する',
+		description: "既存のWorkを削除する\n\n属するWorkGroupへのWRITE権限が必要です。",
+		security: [['bearerAuth' => []]],
+		tags: ['work']
+	)]
+	#[OA\Parameter(
+		name: 'workId',
+		in: 'path',
+		required: true,
+		description: 'WorkのID',
+		schema: new OA\Schema(type: 'string', format: 'uuid')
+	)]
+	#[OA\Response(response: 200, description: '削除成功')]
+	#[OA\Response(response: 400, description: 'リクエストが不正')]
+	#[OA\Response(response: 401, description: '認証エラー')]
+	#[OA\Response(response: 403, description: '許可されていない操作')]
+	#[OA\Response(response: 404, description: 'コンテンツまたはWorkGroupが見つからない')]
 	public function deleteWork(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
@@ -99,6 +147,29 @@ final class WorkApi extends AbstractWorkApi
 		);
 	}
 
+	#[OA\Get(
+		path: '/works/{workId}',
+		operationId: 'getWork',
+		summary: '1件取得する',
+		description: "Workを1件取得する\n\n属するWorkGroupへのREAD権限が必要です。",
+		security: [['bearerAuth' => []]],
+		tags: ['work']
+	)]
+	#[OA\Parameter(
+		name: 'workId',
+		in: 'path',
+		required: true,
+		description: 'WorkのID',
+		schema: new OA\Schema(type: 'string', format: 'uuid')
+	)]
+	#[OA\Response(
+		response: 200,
+		description: '取得成功',
+		content: new OA\JsonContent(ref: '#/components/schemas/Work')
+	)]
+	#[OA\Response(response: 400, description: 'リクエストが不正')]
+	#[OA\Response(response: 401, description: '認証エラー')]
+	#[OA\Response(response: 404, description: 'コンテンツまたはWorkGroupが見つからない')]
 	public function getWork(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
@@ -111,6 +182,53 @@ final class WorkApi extends AbstractWorkApi
 		);
 	}
 
+	#[OA\Get(
+		path: '/work_groups/{workGroupId}/works',
+		operationId: 'getWorkList',
+		summary: '複数件取得する',
+		description: "指定のWorkGroupに属するWorkの情報を複数件取得する\n\n属するWorkGroupへのREAD権限が必要です。",
+		security: [['bearerAuth' => []]],
+		tags: ['work']
+	)]
+	#[OA\Parameter(
+		name: 'workGroupId',
+		in: 'path',
+		required: true,
+		description: 'WorkGroupのID',
+		schema: new OA\Schema(type: 'string', format: 'uuid')
+	)]
+	#[OA\Parameter(
+		name: 'pageNumber',
+		in: 'query',
+		required: false,
+		description: 'ページ番号 (0以上)',
+		schema: new OA\Schema(type: 'integer', minimum: 0)
+	)]
+	#[OA\Parameter(
+		name: 'pageSize',
+		in: 'query',
+		required: false,
+		description: 'ページサイズ (1以上)',
+		schema: new OA\Schema(type: 'integer', minimum: 1)
+	)]
+	#[OA\Parameter(
+		name: 'pageTopId',
+		in: 'query',
+		required: false,
+		description: 'ページの先頭ID',
+		schema: new OA\Schema(type: 'string', format: 'uuid')
+	)]
+	#[OA\Response(
+		response: 200,
+		description: '取得成功',
+		content: new OA\JsonContent(
+			type: 'array',
+			items: new OA\Items(ref: '#/components/schemas/Work')
+		)
+	)]
+	#[OA\Response(response: 400, description: 'リクエストが不正')]
+	#[OA\Response(response: 401, description: '認証エラー')]
+	#[OA\Response(response: 404, description: 'WorkGroupが見つからない')]
 	public function getWorkList(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
@@ -123,6 +241,33 @@ final class WorkApi extends AbstractWorkApi
 		);
 	}
 
+	#[OA\Put(
+		path: '/works/{workId}',
+		operationId: 'updateWork',
+		summary: '更新する',
+		description: "既存のWorkの情報を更新する\n\n属するWorkGroupへのWRITE権限が必要です。",
+		security: [['bearerAuth' => []]],
+		tags: ['work']
+	)]
+	#[OA\Parameter(
+		name: 'workId',
+		in: 'path',
+		required: true,
+		description: 'WorkのID',
+		schema: new OA\Schema(type: 'string', format: 'uuid')
+	)]
+	#[OA\RequestBody(
+		required: true,
+		content: new OA\JsonContent(ref: '#/components/schemas/Work')
+	)]
+	#[OA\Response(
+		response: 200,
+		description: '更新成功',
+		content: new OA\JsonContent(ref: '#/components/schemas/Work')
+	)]
+	#[OA\Response(response: 400, description: 'リクエストが不正')]
+	#[OA\Response(response: 401, description: '認証エラー')]
+	#[OA\Response(response: 404, description: 'コンテンツまたはWorkGroupが見つからない')]
 	public function updateWork(
 		ServerRequestInterface $request,
 		ResponseInterface $response,

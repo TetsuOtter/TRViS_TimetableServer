@@ -15,6 +15,7 @@ use PDO;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
+use OpenApi\Attributes as OA;
 use Ramsey\Uuid\Uuid;
 
 /**
@@ -43,6 +44,25 @@ class WorkGroupApi extends AbstractWorkGroupApi
 	const MAX_LEN_DESCRIPTION = 255;
 	const MAX_LEN_NAME = 255;
 
+	#[OA\Post(
+		path: '/work_groups',
+		operationId: 'createWorkGroup',
+		summary: '作成する',
+		description: "新しいWorkGroupを作成する\n\n認証が必要です。",
+		security: [['bearerAuth' => []]],
+		tags: ['work_group']
+	)]
+	#[OA\RequestBody(
+		required: true,
+		content: new OA\JsonContent(ref: '#/components/schemas/WorkGroup')
+	)]
+	#[OA\Response(
+		response: 201,
+		description: '作成成功',
+		content: new OA\JsonContent(ref: '#/components/schemas/WorkGroup')
+	)]
+	#[OA\Response(response: 400, description: 'リクエストが不正')]
+	#[OA\Response(response: 401, description: '認証エラー')]
 	public function createWorkGroup(
 		ServerRequestInterface $request,
 		ResponseInterface $response
@@ -95,6 +115,29 @@ class WorkGroupApi extends AbstractWorkGroupApi
 		)->getResponseWithJson($response);
 	}
 
+	#[OA\Get(
+		path: '/work_groups/{workGroupId}',
+		operationId: 'getWorkGroup',
+		summary: '1件取得する',
+		description: "WorkGroupを1件取得する\n\n属するWorkGroupへのREAD権限が必要です。",
+		security: [['bearerAuth' => []]],
+		tags: ['work_group']
+	)]
+	#[OA\Parameter(
+		name: 'workGroupId',
+		in: 'path',
+		required: true,
+		description: 'WorkGroupのID',
+		schema: new OA\Schema(type: 'string', format: 'uuid')
+	)]
+	#[OA\Response(
+		response: 200,
+		description: '取得成功',
+		content: new OA\JsonContent(ref: '#/components/schemas/WorkGroup')
+	)]
+	#[OA\Response(response: 400, description: 'リクエストが不正')]
+	#[OA\Response(response: 401, description: '認証エラー')]
+	#[OA\Response(response: 404, description: 'WorkGroupが見つからない')]
 	public function getWorkGroup(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
@@ -115,6 +158,38 @@ class WorkGroupApi extends AbstractWorkGroupApi
 		)->getResponseWithJson($response);
 	}
 
+	#[OA\Get(
+		path: '/work_groups',
+		operationId: 'getWorkGroupList',
+		summary: '複数件取得する',
+		description: "WorkGroupの情報を複数件取得する\n\n認証が必要です。",
+		security: [['bearerAuth' => []]],
+		tags: ['work_group']
+	)]
+	#[OA\Parameter(
+		name: 'pageNumber',
+		in: 'query',
+		required: false,
+		description: 'ページ番号 (0以上)',
+		schema: new OA\Schema(type: 'integer', minimum: 0)
+	)]
+	#[OA\Parameter(
+		name: 'pageSize',
+		in: 'query',
+		required: false,
+		description: 'ページサイズ (1以上)',
+		schema: new OA\Schema(type: 'integer', minimum: 1)
+	)]
+	#[OA\Response(
+		response: 200,
+		description: '取得成功',
+		content: new OA\JsonContent(
+			type: 'array',
+			items: new OA\Items(ref: '#/components/schemas/WorkGroup')
+		)
+	)]
+	#[OA\Response(response: 400, description: 'リクエストが不正')]
+	#[OA\Response(response: 401, description: '認証エラー')]
 	public function getWorkGroupList(
 		ServerRequestInterface $request,
 		ResponseInterface $response

@@ -13,6 +13,7 @@ use PDO;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
+use OpenApi\Attributes as OA;
 
 final class StationApi extends AbstractStationApi
 {
@@ -54,6 +55,33 @@ final class StationApi extends AbstractStationApi
 		);
 	}
 
+	#[OA\Post(
+		path: '/work_groups/{workGroupId}/stations',
+		operationId: 'createStation',
+		summary: '作成する',
+		description: "指定のWorkGroupに属する Station を新しく作成する\n\n属するWorkGroupへのWRITE権限が必要です。",
+		security: [['bearerAuth' => []]],
+		tags: ['station']
+	)]
+	#[OA\Parameter(
+		name: 'workGroupId',
+		in: 'path',
+		required: true,
+		description: 'WorkGroupのID',
+		schema: new OA\Schema(type: 'string', format: 'uuid')
+	)]
+	#[OA\RequestBody(
+		required: true,
+		content: new OA\JsonContent(ref: '#/components/schemas/Station')
+	)]
+	#[OA\Response(
+		response: 201,
+		description: '作成成功',
+		content: new OA\JsonContent(ref: '#/components/schemas/Station')
+	)]
+	#[OA\Response(response: 400, description: 'リクエストが不正')]
+	#[OA\Response(response: 401, description: '認証エラー')]
+	#[OA\Response(response: 404, description: 'WorkGroupが見つからない')]
 	public function createStation(
 		ServerRequestInterface $request,
 		ResponseInterface $response,

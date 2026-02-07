@@ -13,6 +13,7 @@ use PDO;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
+use OpenApi\Attributes as OA;
 
 final class TrainApi extends AbstractTrainApi
 {
@@ -107,6 +108,33 @@ final class TrainApi extends AbstractTrainApi
 		);
 	}
 
+	#[OA\Post(
+		path: '/works/{workId}/trains',
+		operationId: 'createTrain',
+		summary: '作成する',
+		description: "指定のWorkに属する Train を新しく作成する\n\n属するWorkGroupへのWRITE権限が必要です。",
+		security: [['bearerAuth' => []]],
+		tags: ['train']
+	)]
+	#[OA\Parameter(
+		name: 'workId',
+		in: 'path',
+		required: true,
+		description: 'WorkのID',
+		schema: new OA\Schema(type: 'string', format: 'uuid')
+	)]
+	#[OA\RequestBody(
+		required: true,
+		content: new OA\JsonContent(ref: '#/components/schemas/Train')
+	)]
+	#[OA\Response(
+		response: 201,
+		description: '作成成功',
+		content: new OA\JsonContent(ref: '#/components/schemas/Train')
+	)]
+	#[OA\Response(response: 400, description: 'リクエストが不正')]
+	#[OA\Response(response: 401, description: '認証エラー')]
+	#[OA\Response(response: 404, description: 'WorkGroupが見つからない')]
 	public function createTrain(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
@@ -119,6 +147,26 @@ final class TrainApi extends AbstractTrainApi
 		);
 	}
 
+	#[OA\Delete(
+		path: '/trains/{trainId}',
+		operationId: 'deleteTrain',
+		summary: '削除する',
+		description: "既存のTrainを削除する\n\n属するWorkGroupへのWRITE権限が必要です。",
+		security: [['bearerAuth' => []]],
+		tags: ['train']
+	)]
+	#[OA\Parameter(
+		name: 'trainId',
+		in: 'path',
+		required: true,
+		description: 'TrainのID',
+		schema: new OA\Schema(type: 'string', format: 'uuid')
+	)]
+	#[OA\Response(response: 200, description: '削除成功')]
+	#[OA\Response(response: 400, description: 'リクエストが不正')]
+	#[OA\Response(response: 401, description: '認証エラー')]
+	#[OA\Response(response: 403, description: '許可されていない操作')]
+	#[OA\Response(response: 404, description: 'コンテンツまたはWorkGroupが見つからない')]
 	public function deleteTrain(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
@@ -131,6 +179,29 @@ final class TrainApi extends AbstractTrainApi
 		);
 	}
 
+	#[OA\Get(
+		path: '/trains/{trainId}',
+		operationId: 'getTrain',
+		summary: '1件取得する',
+		description: "Trainを1件取得する\n\n属するWorkGroupへのREAD権限が必要です。",
+		security: [['bearerAuth' => []]],
+		tags: ['train']
+	)]
+	#[OA\Parameter(
+		name: 'trainId',
+		in: 'path',
+		required: true,
+		description: 'TrainのID',
+		schema: new OA\Schema(type: 'string', format: 'uuid')
+	)]
+	#[OA\Response(
+		response: 200,
+		description: '取得成功',
+		content: new OA\JsonContent(ref: '#/components/schemas/Train')
+	)]
+	#[OA\Response(response: 400, description: 'リクエストが不正')]
+	#[OA\Response(response: 401, description: '認証エラー')]
+	#[OA\Response(response: 404, description: 'コンテンツまたはWorkGroupが見つからない')]
 	public function getTrain(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
@@ -143,6 +214,53 @@ final class TrainApi extends AbstractTrainApi
 		);
 	}
 
+	#[OA\Get(
+		path: '/works/{workId}/trains',
+		operationId: 'getTrainList',
+		summary: '複数件取得する',
+		description: "指定のWorkに属するTrainの情報を複数件取得する\n\n属するWorkGroupへのREAD権限が必要です。",
+		security: [['bearerAuth' => []]],
+		tags: ['train']
+	)]
+	#[OA\Parameter(
+		name: 'workId',
+		in: 'path',
+		required: true,
+		description: 'WorkのID',
+		schema: new OA\Schema(type: 'string', format: 'uuid')
+	)]
+	#[OA\Parameter(
+		name: 'pageNumber',
+		in: 'query',
+		required: false,
+		description: 'ページ番号 (0以上)',
+		schema: new OA\Schema(type: 'integer', minimum: 0)
+	)]
+	#[OA\Parameter(
+		name: 'pageSize',
+		in: 'query',
+		required: false,
+		description: 'ページサイズ (1以上)',
+		schema: new OA\Schema(type: 'integer', minimum: 1)
+	)]
+	#[OA\Parameter(
+		name: 'pageTopId',
+		in: 'query',
+		required: false,
+		description: 'ページの先頭ID',
+		schema: new OA\Schema(type: 'string', format: 'uuid')
+	)]
+	#[OA\Response(
+		response: 200,
+		description: '取得成功',
+		content: new OA\JsonContent(
+			type: 'array',
+			items: new OA\Items(ref: '#/components/schemas/Train')
+		)
+	)]
+	#[OA\Response(response: 400, description: 'リクエストが不正')]
+	#[OA\Response(response: 401, description: '認証エラー')]
+	#[OA\Response(response: 404, description: 'WorkGroupが見つからない')]
 	public function getTrainList(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
@@ -155,6 +273,33 @@ final class TrainApi extends AbstractTrainApi
 		);
 	}
 
+	#[OA\Put(
+		path: '/trains/{trainId}',
+		operationId: 'updateTrain',
+		summary: '更新する',
+		description: "既存のTrainの情報を更新する\n\n属するWorkGroupへのWRITE権限が必要です。",
+		security: [['bearerAuth' => []]],
+		tags: ['train']
+	)]
+	#[OA\Parameter(
+		name: 'trainId',
+		in: 'path',
+		required: true,
+		description: 'TrainのID',
+		schema: new OA\Schema(type: 'string', format: 'uuid')
+	)]
+	#[OA\RequestBody(
+		required: true,
+		content: new OA\JsonContent(ref: '#/components/schemas/Train')
+	)]
+	#[OA\Response(
+		response: 200,
+		description: '更新成功',
+		content: new OA\JsonContent(ref: '#/components/schemas/Train')
+	)]
+	#[OA\Response(response: 400, description: 'リクエストが不正')]
+	#[OA\Response(response: 401, description: '認証エラー')]
+	#[OA\Response(response: 404, description: 'コンテンツまたはWorkGroupが見つからない')]
 	public function updateTrain(
 		ServerRequestInterface $request,
 		ResponseInterface $response,
