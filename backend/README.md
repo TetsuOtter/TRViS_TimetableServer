@@ -65,7 +65,7 @@ Quote from [3. The Command-Line Test Runner — PHPUnit 8.5 Manual](https://phpu
 
 ### PHP CodeSniffer
 
-[PHP CodeSniffer Documentation](https://github.com/squizlabs/PHP_CodeSniffer/wiki). This tool helps to follow coding style and avoid common PHP coding mistakes.
+[PHP CodeSniffer Documentation](https://github.com/PHPCSStandards/PHP_CodeSniffer/wiki). This tool helps to follow coding style and avoid common PHP coding mistakes.
 
 #### Run
 
@@ -76,7 +76,7 @@ $ composer phpcs
 #### Config
 
 Package contains fully functional config `./phpcs.xml.dist` file. It checks source code against PSR-1 and PSR-2 coding standards.
-Create `./phpcs.xml` in root folder to override it. More info at [Using a Default Configuration File](https://github.com/squizlabs/PHP_CodeSniffer/wiki/Advanced-Usage#using-a-default-configuration-file)
+Create `./phpcs.xml` in root folder to override it. More info at [Using a Default Configuration File](https://github.com/PHPCSStandards/PHP_CodeSniffer/wiki/Advanced-Usage#using-a-default-configuration-file)
 
 ### PHPLint
 
