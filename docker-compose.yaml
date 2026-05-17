@@ -95,6 +95,22 @@ services:
         target: /var/lib/mysql
     env_file:
       - mysql/.env
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: webmon-phpmyadmin
+    hostname: webmon-phpmyadmin
+    ports:
+      - "81:80"
+    networks:
+      - back-db
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    env_file:
+      - mysql/.env
+    depends_on:
+      - mysql
 volumes:
   webmon-db:
 networks:
