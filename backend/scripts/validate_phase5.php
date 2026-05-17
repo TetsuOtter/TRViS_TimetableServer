@@ -19,7 +19,10 @@
 require '/var/www/html/vendor/autoload.php';
 
 use dev_t0r\trvis_backend\service\WorkGroupsService;
+use dev_t0r\trvis_backend\service\LineService;
 use dev_t0r\trvis_backend\repo\WorkGroupsPrivilegesRepo;
+use dev_t0r\trvis_backend\repo\LineRepo;
+use dev_t0r\trvis_backend\model\Line;
 use dev_t0r\trvis_backend\model\InviteKeyPrivilegeType;
 use Ramsey\Uuid\Uuid;
 use Psr\Log\NullLogger;
@@ -52,6 +55,7 @@ $X = "p5-X-$suffix";          // non-member (anonymous-adjust probe)
 // rows created, for cleanup
 $projectIds = [];
 $workGroupIds = [];
+$lineIds = [];
 
 function cntOwned(PDO $db, string $table, string $col, string $val): int {
 	$st = $db->prepare("SELECT COUNT(*) FROM `$table` WHERE `$col` = :v");
@@ -188,6 +192,61 @@ try {
 			&& count(array_filter($r7->value, fn($w) => (string)$w->projects_id === $projId)) === count($r7->value);
 		check('every returned WG belongs to the queried project', $allInProject);
 	}
+
+	echo "== Scenario 8 (Phase 7): Line CRUD + project-rooted privilege ==\n";
+	$lineSvc = new LineService($db, $logger);
+	$lineRepo = new LineRepo($db, $logger);
+	$lm = new Line();
+	$lm->setData(['name' => "P7 Line $suffix", 'description' => 'line desc']);
+	$c8 = $lineSvc->create(Uuid::fromString($projId), $U, [$lm]);
+	check('8 createLine not error', !$c8->isError, $c8->isError ? "[{$c8->statusCode}] {$c8->errorMsg}" : '');
+	if (!$c8->isError) {
+		check('8 create returns 1 Line', is_array($c8->value) && count($c8->value) === 1,
+			'count=' . (is_array($c8->value) ? count($c8->value) : gettype($c8->value)));
+		$line = $c8->value[0];
+		$lineId = (string)$line->lines_id;
+		$lineIds[] = $lineId;
+		check('8 Line.projects_id == this project (reserved-word alias OK)',
+			(string)$line->projects_id === $projId, "got " . (string)$line->projects_id);
+		check('8 Line.name round-trips', $line->name === "P7 Line $suffix");
+		// DB: row is in project_lines with project_lines_id, not a "lines" table
+		check('8 row exists in project_lines', cntOwned($db, 'project_lines', 'owner', $U) === 1);
+
+		// getOne (privilege via LineRepo::selectPrivilegeType project-rooted override)
+		$g8 = $lineSvc->getOne($U, Uuid::fromString($lineId));
+		check('8 getOne(admin) not error', !$g8->isError, $g8->isError ? "[{$g8->statusCode}] {$g8->errorMsg}" : '');
+		check('8 getOne returns same line', !$g8->isError && (string)$g8->value->lines_id === $lineId);
+
+		// getList by project
+		$l8 = $lineSvc->getPage($U, Uuid::fromString($projId), 1, 10, null);
+		check('8 getLineList not error', !$l8->isError, $l8->isError ? "[{$l8->statusCode}] {$l8->errorMsg}" : '');
+		check('8 getLineList returns the line', !$l8->isError && is_array($l8->value)
+			&& count(array_filter($l8->value, fn($x) => (string)$x->lines_id === $lineId)) === 1);
+
+		// project-rooted privilege override: admin sees admin, non-member -> 404
+		$p8a = $lineRepo->selectPrivilegeType(id: Uuid::fromString($lineId), userId: $U, includeAnonymous: true);
+		check('8 selectPrivilegeType(owner) == admin', !$p8a->isError && $p8a->value === InviteKeyPrivilegeType::admin,
+			$p8a->isError ? "[{$p8a->statusCode}] {$p8a->errorMsg}" : 'got ' . var_export($p8a->value, true));
+		$p8b = $lineRepo->selectPrivilegeType(id: Uuid::fromString($lineId), userId: $X, includeAnonymous: true);
+		check('8 selectPrivilegeType(non-member) -> 404', $p8b->isError && $p8b->statusCode === 404,
+			'isError=' . var_export($p8b->isError, true) . " status={$p8b->statusCode}");
+
+		// update name -> reflected
+		$lm2 = new Line();
+		$lm2->setData(['name' => "P7 Line UPDATED $suffix"]);
+		$u8 = $lineSvc->update($U, Uuid::fromString($lineId), $lm2, ['name' => "P7 Line UPDATED $suffix"]);
+		check('8 updateLine not error', !$u8->isError, $u8->isError ? "[{$u8->statusCode}] {$u8->errorMsg}" : '');
+		$g8b = $lineSvc->getOne($U, Uuid::fromString($lineId));
+		check('8 update reflected', !$g8b->isError && $g8b->value->name === "P7 Line UPDATED $suffix",
+			$g8b->isError ? '' : 'got ' . $g8b->value->name);
+
+		// soft-delete -> gone from getOne and list
+		$d8 = $lineSvc->delete($U, Uuid::fromString($lineId));
+		check('8 deleteLine not error', !$d8->isError, $d8->isError ? "[{$d8->statusCode}] {$d8->errorMsg}" : '');
+		$g8c = $lineSvc->getOne($U, Uuid::fromString($lineId));
+		check('8 deleted Line -> 404', $g8c->isError && $g8c->statusCode === 404,
+			'isError=' . var_export($g8c->isError, true) . " status={$g8c->statusCode}");
+	}
 } catch (\Throwable $e) {
 	echo "\n!! EXCEPTION: " . get_class($e) . ': ' . $e->getMessage() . "\n";
 	echo $e->getTraceAsString() . "\n";
@@ -205,6 +264,9 @@ try {
 		}
 		foreach ($workGroupIds as $id) {
 			$db->prepare("DELETE FROM work_groups WHERE work_groups_id = UNHEX(REPLACE(:id,'-',''))")->execute([':id' => $id]);
+		}
+		foreach ($lineIds as $id) {
+			$db->prepare("DELETE FROM project_lines WHERE project_lines_id = UNHEX(REPLACE(:id,'-',''))")->execute([':id' => $id]);
 		}
 		foreach ($projectIds as $id) {
 			$db->prepare("DELETE FROM projects WHERE projects_id = UNHEX(REPLACE(:id,'-',''))")->execute([':id' => $id]);
