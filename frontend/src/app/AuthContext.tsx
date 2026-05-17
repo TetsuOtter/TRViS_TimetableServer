@@ -10,6 +10,7 @@ import {
 	useMemo,
 	useState,
 } from "react";
+import type { ReactNode } from "react";
 
 import {
 	createUserWithEmailAndPassword,
@@ -25,15 +26,15 @@ import { getAuthErrorMessage } from "../firebase/getAuthErrorMessage";
 
 import type { SerializedError } from "@reduxjs/toolkit";
 import type { User } from "firebase/auth";
-import type { ReactNode } from "react";
 
-interface Credentials {
+type Credentials = {
 	email: string;
 	password: string;
-}
+};
 
-interface AuthContextValue {
+type AuthContextValue = {
 	user: User | null;
+	isAuthReady: boolean;
 	email: string;
 	userId: string;
 	isEmailVerified: boolean;
@@ -57,7 +58,7 @@ interface AuthContextValue {
 	isVerifyOpen: boolean;
 	isVerifyForNewUser: boolean;
 	closeVerify: () => void;
-}
+};
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
@@ -76,8 +77,13 @@ function toErrorMessage(error: unknown): string {
 	return getAuthErrorMessage({ message: String(error) });
 }
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export const AuthProvider = ({
+	children,
+}: {
+	readonly children: ReactNode;
+}) => {
 	const [user, setUser] = useState<User | null>(auth.currentUser);
+	const [isAuthReady, setIsAuthReady] = useState(false);
 	const [isProcessing, setIsProcessing] = useState(false);
 	const [errorMessage, setErrorMessage] = useState("");
 
@@ -90,6 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	useEffect(() => {
 		const unsubscribe = onAuthStateChanged(auth, (u) => {
 			setUser(u);
+			setIsAuthReady(true);
 		});
 		return unsubscribe;
 	}, []);
@@ -195,6 +202,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 	const value = useMemo<AuthContextValue>(
 		() => ({
 			user,
+			isAuthReady,
 			email: user?.email ?? "",
 			userId: user?.uid ?? "",
 			isEmailVerified: user?.emailVerified ?? false,
@@ -221,6 +229,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		}),
 		[
 			user,
+			isAuthReady,
 			isProcessing,
 			errorMessage,
 			signIn,
@@ -240,13 +249,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		]
 	);
 
-	return (
-		<AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-	);
-}
+	return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
 
-export function useAuth(): AuthContextValue {
+export const useAuth = (): AuthContextValue => {
 	const ctx = useContext(AuthContext);
-	if (!ctx) throw new Error("useAuth must be used within an AuthProvider");
+	if (ctx === null)
+		throw new Error("useAuth must be used within an AuthProvider");
 	return ctx;
-}
+};
