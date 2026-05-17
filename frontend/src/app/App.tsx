@@ -9,6 +9,12 @@ import {
 	useProjects,
 	useUpdateProject,
 } from "../api/hooks/useProjects";
+import {
+	useCreateWorkGroup,
+	useDeleteWorkGroup,
+	useUpdateWorkGroup,
+	useWorkGroups,
+} from "../api/hooks/useWorkGroups";
 import { AppShell } from "../components/AppShell";
 import AuthControls from "../components/auth/AuthControls";
 import {
@@ -267,6 +273,11 @@ export function App() {
 
 	const [data, setData] = useState<AppData>(() => createInitialData());
 	const [projectId, setProjectId] = useState<string | null>(null);
+
+	const { data: apiWorkGroups } = useWorkGroups(projectId ?? "");
+	const createWGMutation = useCreateWorkGroup(projectId ?? "");
+	const updateWGMutation = useUpdateWorkGroup(projectId ?? "");
+	const deleteWGMutation = useDeleteWorkGroup(projectId ?? "");
 	const [currentWG, setCurrentWG] = useState<string | null>(null);
 	const [currentWork, setCurrentWork] = useState<string | null>(null);
 	const [screen, setScreen] = useState<Screen>("projects");
@@ -295,7 +306,21 @@ export function App() {
 		null
 	);
 
-	const project = data.projects.find((p) => p.id === projectId);
+	const baseProject = apiProjects?.find((p) => p.id === projectId);
+	const project: Project | undefined =
+		baseProject !== undefined
+			? {
+					id: baseProject.id,
+					name: baseProject.name,
+					description: baseProject.description,
+					workGroups: (apiWorkGroups ?? []).map((wg) => ({
+						id: wg.id,
+						name: wg.name,
+						description: wg.description,
+						works: [],
+					})),
+				}
+			: undefined;
 	const wg = project?.workGroups.find((g) => g.id === currentWG);
 	const work = wg?.works.find((w) => w.id === currentWork);
 
@@ -371,11 +396,6 @@ export function App() {
 
 	const handleOpenProject = (pid: string) => {
 		setProjectId(pid);
-		const p = data.projects.find((x) => x.id === pid);
-		const firstWG = p?.workGroups[0];
-		const firstWork = firstWG?.works[0];
-		setCurrentWG(firstWG?.id || null);
-		setCurrentWork(firstWork?.id || null);
 		setScreen("work");
 	};
 
@@ -412,35 +432,23 @@ export function App() {
 		draft: Partial<Pick<WorkGroup, "id">> &
 			Pick<WorkGroup, "name" | "description">
 	) => {
-		if (!project) return;
-		let newProj: Project;
-		if (draft.id) {
-			newProj = {
-				...project,
-				workGroups: project.workGroups.map((g) =>
-					g.id === draft.id ? { ...g, ...draft } : g
-				),
-			};
+		if (project === undefined) return;
+		if (draft.id !== undefined && draft.id !== "") {
+			updateWGMutation.mutate(
+				{ id: draft.id, name: draft.name, description: draft.description },
+				{ onError: (e: Error) => alert(e.message) }
+			);
 		} else {
-			const newWG: WorkGroup = {
-				...draft,
-				id: uid("wg"),
-				works: [],
-			};
-			newProj = {
-				...project,
-				workGroups: [...project.workGroups, newWG],
-			};
+			createWGMutation.mutate(
+				{ name: draft.name, description: draft.description },
+				{ onError: (e: Error) => alert(e.message) }
+			);
 		}
-		updateProject(newProj);
 	};
 	const deleteWG = (wgId: string) => {
-		if (!project) return;
-		const newProj: Project = {
-			...project,
-			workGroups: project.workGroups.filter((g) => g.id !== wgId),
-		};
-		updateProject(newProj);
+		deleteWGMutation.mutate(wgId, {
+			onError: (e: Error) => alert(e.message),
+		});
 		if (currentWG === wgId) {
 			setCurrentWG(null);
 			setCurrentWork(null);
