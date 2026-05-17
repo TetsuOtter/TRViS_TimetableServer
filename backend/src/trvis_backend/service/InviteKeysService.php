@@ -6,6 +6,8 @@ use dev_t0r\trvis_backend\Constants;
 use dev_t0r\trvis_backend\model\InviteKey;
 use dev_t0r\trvis_backend\model\InviteKeyPrivilegeType;
 use dev_t0r\trvis_backend\repo\InviteKeysRepo;
+use dev_t0r\trvis_backend\repo\ProjectsPrivilegesRepo;
+use dev_t0r\trvis_backend\repo\WorkGroupsRepo;
 use dev_t0r\trvis_backend\repo\WorkGroupsPrivilegesRepo;
 use dev_t0r\trvis_backend\RetValueOrError;
 use dev_t0r\trvis_backend\Utils;
@@ -18,6 +20,8 @@ final class InviteKeysService
 {
 	private readonly InviteKeysRepo $inviteKeysRepo;
 	private readonly WorkGroupsPrivilegesRepo $workGroupsPrivilegesRepo;
+	private readonly WorkGroupsRepo $workGroupsRepo;
+	private readonly ProjectsPrivilegesRepo $projectsPrivilegesRepo;
 
 	public function __construct(
 		private readonly PDO $db,
@@ -25,6 +29,8 @@ final class InviteKeysService
 	) {
 		$this->inviteKeysRepo = new InviteKeysRepo($db, $logger);
 		$this->workGroupsPrivilegesRepo = new WorkGroupsPrivilegesRepo($db, $logger);
+		$this->workGroupsRepo = new WorkGroupsRepo($db, $logger);
+		$this->projectsPrivilegesRepo = new ProjectsPrivilegesRepo($db, $logger);
 	}
 
 	public function createInviteKey(
@@ -230,16 +236,25 @@ final class InviteKeysService
 					'currentPrivilegeType' => $currentPrivilegeType->value,
 				]
 			);
+			// Project = 権限ルート: 招待キーで付与する権限は所属Projectの
+			// projects_privileges に書き込む (Decision 2)
+			$projectsIdResult = $this->workGroupsRepo->selectProjectsIdByWorkGroupsId($workGroupId);
+			if ($projectsIdResult->isError) {
+				$this->db->rollBack();
+				return $projectsIdResult;
+			}
+			$projectsId = $projectsIdResult->value;
+
 			if ($isCreateNew) {
-				$execResult = $this->workGroupsPrivilegesRepo->insert(
-					workGroupsId: $workGroupId,
+				$execResult = $this->projectsPrivilegesRepo->insert(
+					projectsId: $projectsId,
 					privilegeType: $privilegeType,
 					userId: $userId,
 					inviteKeysId: $inviteKeyId,
 				);
 			} else {
-				$execResult = $this->workGroupsPrivilegesRepo->changeType(
-					workGroupsId: $workGroupId,
+				$execResult = $this->projectsPrivilegesRepo->changeType(
+					projectsId: $projectsId,
 					newPrivilegeType: $privilegeType,
 					userId: $userId,
 					inviteKeysId: $inviteKeyId,

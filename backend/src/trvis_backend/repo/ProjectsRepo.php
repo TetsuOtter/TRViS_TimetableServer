@@ -5,7 +5,7 @@ namespace dev_t0r\trvis_backend\repo;
 use DateTimeInterface;
 use dev_t0r\trvis_backend\Constants;
 use dev_t0r\trvis_backend\model\InviteKeyPrivilegeType;
-use dev_t0r\trvis_backend\model\WorkGroup;
+use dev_t0r\trvis_backend\model\Project;
 use dev_t0r\trvis_backend\RetValueOrError;
 use dev_t0r\trvis_backend\Utils;
 use PDO;
@@ -13,7 +13,7 @@ use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
-final class WorkGroupsRepo
+final class ProjectsRepo
 {
 	public function __construct(
 		private PDO $db,
@@ -21,45 +21,42 @@ final class WorkGroupsRepo
 	) {
 	}
 
-	private static function _fetchResultToWorkGroup(
+	private static function _fetchResultToProject(
 		mixed $data
-	): WorkGroup {
-		$workGroup = new WorkGroup();
-		$workGroup->setData([
-			'work_groups_id' => Uuid::fromBytes($data['work_groups_id']),
+	): Project {
+		$project = new Project();
+		$project->setData([
 			'projects_id' => Uuid::fromBytes($data['projects_id']),
 			'created_at' => $data['created_at'],
 			'description' => $data['description'],
 			'name' => $data['name'],
 			'privilege_type' => InviteKeyPrivilegeType::fromInt($data['privilege_type']),
 		]);
-		return $workGroup;
+		return $project;
 	}
 
 	/**
-	 * @return RetValueOrError<WorkGroup>
+	 * @return RetValueOrError<Project>
 	 */
-	public function selectWorkGroupOne(
+	public function selectProjectOne(
 		string $userId,
-		UuidInterface $workGroupId
+		UuidInterface $projectId
 	): RetValueOrError {
-		$this->logger->debug("selectOne workGroupId: {workGroupId}", ['workGroupId' => $workGroupId]);
+		$this->logger->debug("selectOne projectId: {projectId}", ['projectId' => $projectId]);
 		$WHERE_USER_ID =
 			$userId === Constants::UID_ANONYMOUS
 				? ' uid = :userId '
 				: ' uid IN (:userId, \'\') ';
 		$WHERE_PRIVILEGE_TYPE = ' privilege_type >= ' . InviteKeyPrivilegeType::read->value . ' ';
-		// Project = 権限ルート: WGの権限は所属Project (projects_privileges) から導出
 		$query = $this->db->prepare(<<<SQL
 			SELECT
-				work_groups.work_groups_id,
-				work_groups.projects_id,
-				work_groups.created_at,
-				work_groups.description,
-				work_groups.name,
+				projects.projects_id,
+				projects.created_at,
+				projects.description,
+				projects.name,
 				projects_privileges.privilege_type
 			FROM
-				work_groups
+				projects
 			JOIN
 				(SELECT
 					projects_id,
@@ -67,25 +64,25 @@ final class WorkGroupsRepo
 				FROM
 					projects_privileges
 				WHERE
+					projects_id = :projects_id
+				AND
 					deleted_at IS NULL
 				AND
 					$WHERE_USER_ID
 				AND
 					$WHERE_PRIVILEGE_TYPE
-				GROUP BY
-					projects_id
 				) AS projects_privileges
-			ON
-				projects_privileges.projects_id = work_groups.projects_id
+			USING
+				(projects_id)
 			WHERE
-				work_groups.work_groups_id = :work_groups_id
+				projects.projects_id = :projects_id
 			AND
-				work_groups.deleted_at IS NULL
+				projects.deleted_at IS NULL
 			;
 			SQL
 		);
 		$query->bindValue(':userId', $userId, PDO::PARAM_STR);
-		$query->bindValue(':work_groups_id', $workGroupId->getBytes(), PDO::PARAM_STR);
+		$query->bindValue(':projects_id', $projectId->getBytes(), PDO::PARAM_STR);
 
 		$isSuccess = $query->execute();
 		if (!$isSuccess) {
@@ -105,37 +102,34 @@ final class WorkGroupsRepo
 		$data = $query->fetch(PDO::FETCH_ASSOC);
 		if (!$data) {
 			$this->logger->info(
-				"WorkGroup not found ({workGroupId})",
+				"Project not found ({projectId})",
 				[
-					'workGroupId' => $workGroupId,
+					'projectId' => $projectId,
 				]
 			);
-			return Utils::errWorkGroupNotFound();
+			return Utils::errProjectNotFound();
 		}
 
-		$workGroup = $this->_fetchResultToWorkGroup($data);
-		$this->logger->debug("select result - workGroup: {workGroup}", ['workGroup' => $workGroup]);
-		return RetValueOrError::withValue($workGroup);
+		$project = $this->_fetchResultToProject($data);
+		$this->logger->debug("select result - project: {project}", ['project' => $project]);
+		return RetValueOrError::withValue($project);
 	}
 
 	private static function getSelectPageQuery(
 		string $userId,
 		bool $hasTopId,
 		bool $countOnly,
-		bool $hasProjectId = false,
 	): string {
 		$WHERE_USER_ID =
 			$userId === Constants::UID_ANONYMOUS
 				? ' uid = :userId '
 				: ' uid IN (:userId, \'\') ';
 		$WHERE_PRIVILEGE_TYPE = ' privilege_type >= ' . InviteKeyPrivilegeType::read->value . ' ';
-		$WHERE_PROJECT_ID = $hasProjectId ? ' work_groups.projects_id = :projects_id AND ' : ' ';
-		$WHERE_TOP_ID = $hasTopId ? ' work_groups.work_groups_id <= :top_id AND ' : ' ';
+		$WHERE_TOP_ID = $hasTopId ? ' projects.projects_id <= :top_id AND ' : ' ';
 		$COLUMNS = $countOnly ? ' COUNT(*) AS count ' : <<<SQL
-			work_groups_id,
-			work_groups.projects_id AS projects_id,
-			work_groups.created_at AS created_at,
-			work_groups.description AS description,
+			projects_id,
+			projects.created_at AS created_at,
+			projects.description AS description,
 			name,
 			projects_privileges.privilege_type
 
@@ -143,7 +137,7 @@ final class WorkGroupsRepo
 		$PAGING_QUERY = $countOnly ? '' : <<<SQL
 
 			ORDER BY
-				work_groups_id DESC
+				projects_id DESC
 			LIMIT
 				:perPage
 			OFFSET
@@ -153,7 +147,7 @@ final class WorkGroupsRepo
 			SELECT
 				$COLUMNS
 			FROM
-				work_groups
+				projects
 			JOIN
 				(SELECT
 					projects_id,
@@ -169,97 +163,19 @@ final class WorkGroupsRepo
 				GROUP BY
 					projects_id
 				) AS projects_privileges
-			ON
-				projects_privileges.projects_id = work_groups.projects_id
+			USING
+				(projects_id)
 			WHERE
-				$WHERE_PROJECT_ID
 				$WHERE_TOP_ID
-				work_groups.deleted_at IS NULL
+				projects.deleted_at IS NULL
 			$PAGING_QUERY
 			SQL;
 	}
 
 	/**
-	 * @return RetValueOrError<array<WorkGroup>>
+	 * @return RetValueOrError<array<Project>>
 	 */
-	public function selectWorkGroupPageByProjectId(
-		UuidInterface $projectId,
-		string $userId,
-		int $pageFrom1,
-		int $perPage,
-		?UuidInterface $topId,
-	): RetValueOrError {
-		$this->logger->debug("selectPageByProjectId(projectId:{projectId}, userId:{userId}, page:{page})", [
-			'projectId' => $projectId,
-			'userId' => $userId,
-			'page' => $pageFrom1,
-		]);
-		$hasTopId = !is_null($topId);
-		$query = $this->db->prepare(self::getSelectPageQuery($userId, $hasTopId, false, true));
-		$query->bindValue(':projects_id', $projectId->getBytes(), PDO::PARAM_STR);
-		if ($hasTopId) {
-			$query->bindValue(':top_id', $topId->getBytes(), PDO::PARAM_STR);
-		}
-		$query->bindValue(':userId', $userId, PDO::PARAM_STR);
-		$query->bindValue(':perPage', $perPage, PDO::PARAM_INT);
-		$query->bindValue(':offset', ($pageFrom1 - 1) * $perPage, PDO::PARAM_INT);
-
-		$isSuccess = $query->execute();
-		if (!$isSuccess) {
-			$errCode = $query->errorCode();
-			$this->logger->error(
-				"Failed to execute SQL ({errorCode} -> {errorInfo})",
-				[
-					"errorCode" => $errCode,
-					"errorInfo" => implode('\n\t', $query->errorInfo()),
-				],
-			);
-			return RetValueOrError::withError(500, "Failed to execute SQL - " . $errCode);
-		}
-
-		$workGroups = array_map(
-			fn ($data) => $this->_fetchResultToWorkGroup($data),
-			$query->fetchAll(PDO::FETCH_ASSOC),
-		);
-		return RetValueOrError::withValue($workGroups);
-	}
-
-	/**
-	 * @return RetValueOrError<number>
-	 */
-	public function selectWorkGroupPageByProjectIdTotalCount(
-		UuidInterface $projectId,
-		string $userId,
-		?UuidInterface $topId,
-	): RetValueOrError {
-		$hasTopId = !is_null($topId);
-		$query = $this->db->prepare(self::getSelectPageQuery($userId, $hasTopId, true, true));
-		$query->bindValue(':projects_id', $projectId->getBytes(), PDO::PARAM_STR);
-		if ($hasTopId) {
-			$query->bindValue(':top_id', $topId->getBytes(), PDO::PARAM_STR);
-		}
-		$query->bindValue(':userId', $userId, PDO::PARAM_STR);
-
-		$isSuccess = $query->execute();
-		if (!$isSuccess) {
-			$errCode = $query->errorCode();
-			$this->logger->error(
-				"Failed to execute SQL ({errorCode} -> {errorInfo})",
-				[
-					"errorCode" => $errCode,
-					"errorInfo" => implode('\n\t', $query->errorInfo()),
-				],
-			);
-			return RetValueOrError::withError(500, "Failed to execute SQL - " . $errCode);
-		}
-		$totalCount = $query->fetch(PDO::FETCH_ASSOC)['count'];
-		return RetValueOrError::withValue($totalCount);
-	}
-
-	/**
-	 * @return RetValueOrError<array<WorkGroup>>
-	 */
-	public function selectWorkGroupPage(
+	public function selectProjectPage(
 		string $userId,
 		int $pageFrom1,
 		int $perPage,
@@ -295,19 +211,19 @@ final class WorkGroupsRepo
 
 		$this->logger->debug("select success - rowCount: {rowCount}", ['rowCount' => $query->rowCount()]);
 
-		$workGroups = array_map(
-			fn ($data) => $this->_fetchResultToWorkGroup($data),
+		$projects = array_map(
+			fn ($data) => $this->_fetchResultToProject($data),
 			$query->fetchAll(PDO::FETCH_ASSOC),
 		);
 
-		$this->logger->debug("select result - workGroup: {workGroups}", ['workGroups' => $workGroups]);
-		return RetValueOrError::withValue($workGroups);
+		$this->logger->debug("select result - project: {projects}", ['projects' => $projects]);
+		return RetValueOrError::withValue($projects);
 	}
 
 	/**
 	 * @return RetValueOrError<number>
 	 */
-	public function selectWorkGroupPageTotalCount(
+	public function selectProjectPageTotalCount(
 		string $userId,
 		?UuidInterface $topId,
 	): RetValueOrError {
@@ -345,56 +261,19 @@ final class WorkGroupsRepo
 	/**
 	 * @return RetValueOrError<null>
 	 */
-	/**
-	 * 指定WorkGroupが属するProjectのIDを取得する。
-	 * @return RetValueOrError<UuidInterface>
-	 */
-	public function selectProjectsIdByWorkGroupsId(
-		UuidInterface $workGroupId,
-	): RetValueOrError {
-		try {
-			$query = $this->db->prepare(
-				'SELECT projects_id FROM work_groups WHERE work_groups_id = :work_groups_id AND deleted_at IS NULL;'
-			);
-			$query->bindValue(':work_groups_id', $workGroupId->getBytes(), PDO::PARAM_STR);
-			$query->execute();
-			$row = $query->fetch(PDO::FETCH_ASSOC);
-			if (!$row) {
-				return Utils::errWorkGroupNotFound();
-			}
-			return RetValueOrError::withValue(Uuid::fromBytes($row['projects_id']));
-		} catch (\PDOException $ex) {
-			$errCode = $ex->getCode();
-			$this->logger->error(
-				"Failed to execute SQL ({errorCode} -> {errorInfo})",
-				[
-					"errorCode" => $errCode,
-					"errorInfo" => $ex->getMessage(),
-				],
-			);
-			return RetValueOrError::withError(500, "Failed to execute SQL - " . $errCode);
-		}
-	}
-
-	/**
-	 * @return RetValueOrError<null>
-	 */
-	public function insertWorkGroup(
-		UuidInterface $workGroupId,
-		UuidInterface $projectsId,
+	public function insertProject(
+		UuidInterface $projectId,
 		string $owner,
 		string $description,
 		string $name
 	): RetValueOrError {
 		$query = $this->db->prepare(<<<SQL
-			INSERT INTO work_groups (
-				work_groups_id,
+			INSERT INTO projects (
 				projects_id,
 				owner,
 				description,
 				name
 			) VALUES (
-				:work_groups_id,
 				:projects_id,
 				:owner,
 				:description,
@@ -403,8 +282,7 @@ final class WorkGroupsRepo
 			SQL
 		);
 
-		$query->bindValue(':work_groups_id', $workGroupId->getBytes(), PDO::PARAM_STR);
-		$query->bindValue(':projects_id', $projectsId->getBytes(), PDO::PARAM_STR);
+		$query->bindValue(':projects_id', $projectId->getBytes(), PDO::PARAM_STR);
 		$query->bindValue(':owner', $owner, PDO::PARAM_STR);
 		$query->bindValue(':description', $description, PDO::PARAM_STR);
 		$query->bindValue(':name', $name, PDO::PARAM_STR);
@@ -430,7 +308,7 @@ final class WorkGroupsRepo
 			],
 		);
 		if ($errCode === '23000') {
-			return RetValueOrError::withError(Constants::HTTP_CONFLICT, "WorkGroup already exists");
+			return RetValueOrError::withError(Constants::HTTP_CONFLICT, "Project already exists");
 		}
 
 		return RetValueOrError::withError(Constants::HTTP_INTERNAL_SERVER_ERROR, "Failed to execute SQL - " . $errCode);
@@ -439,17 +317,17 @@ final class WorkGroupsRepo
 	/**
 	 * @return RetValueOrError<null>
 	 */
-	public function updateWorkGroup(
-		UuidInterface $workGroupId,
+	public function updateProject(
+		UuidInterface $projectId,
 		?string $description,
 		?string $name
 	): RetValueOrError {
 		$hasName = !is_null($name);
 		$hasDescription = !is_null($description);
 		$this->logger->info(
-			"updateWorkGroup({workGroupId}, '{description}', '{name}') -> hasName: {hasName}, hasDescription: {hasDescription}",
+			"updateProject({projectId}, '{description}', '{name}') -> hasName: {hasName}, hasDescription: {hasDescription}",
 			[
-				'workGroupId' => $workGroupId,
+				'projectId' => $projectId,
 				'description' => $description,
 				'name' => $name,
 				'hasName' => $hasName,
@@ -461,7 +339,7 @@ final class WorkGroupsRepo
 		}
 
 		$query = $this->db->prepare(<<<SQL
-			UPDATE work_groups SET
+			UPDATE projects SET
 			SQL
 			.
 			($hasName ? ' name = :name ' : '')
@@ -472,13 +350,13 @@ final class WorkGroupsRepo
 			.
 			<<<SQL
 			WHERE
-				work_groups_id = :work_groups_id
+				projects_id = :projects_id
 			AND
 				deleted_at IS NULL
 			;
 			SQL
 		);
-		$query->bindValue(':work_groups_id', $workGroupId->getBytes(), PDO::PARAM_STR);
+		$query->bindValue(':projects_id', $projectId->getBytes(), PDO::PARAM_STR);
 		if ($hasDescription) {
 			$query->bindValue(':description', $description, PDO::PARAM_STR);
 		}
@@ -491,12 +369,12 @@ final class WorkGroupsRepo
 			if ($isSuccess) {
 				if ($query->rowCount() === 0) {
 					$this->logger->info(
-						"WorkGroup not found ({workGroupId})",
+						"Project not found ({projectId})",
 						[
-							'workGroupId' => $workGroupId,
+							'projectId' => $projectId,
 						]
 					);
-					return Utils::errWorkGroupNotFound();
+					return Utils::errProjectNotFound();
 				} else {
 					return RetValueOrError::withValue(null);
 				}
@@ -517,7 +395,7 @@ final class WorkGroupsRepo
 			],
 		);
 		if ($errCode === '23000') {
-			return RetValueOrError::withError(Constants::HTTP_CONFLICT, "WorkGroup already exists");
+			return RetValueOrError::withError(Constants::HTTP_CONFLICT, "Project already exists");
 		}
 
 		return RetValueOrError::withError(Constants::HTTP_INTERNAL_SERVER_ERROR, "Failed to execute SQL - " . $errCode);
@@ -526,14 +404,14 @@ final class WorkGroupsRepo
 	/**
 	 * @return RetValueOrError<null>
 	 */
-	public function deleteWorkGroup(
-		UuidInterface $workGroupId,
+	public function deleteProject(
+		UuidInterface $projectId,
 		?DateTimeInterface $deletedAt = null,
 	): RetValueOrError {
 		$this->logger->info(
-			"deleteWorkGroup({workGroupId}, {deletedAt})",
+			"deleteProject({projectId}, {deletedAt})",
 			[
-				'workGroupId' => $workGroupId,
+				'projectId' => $projectId,
 				'deletedAt' => $deletedAt,
 			]
 		);
@@ -541,17 +419,17 @@ final class WorkGroupsRepo
 		$deletedAtPlaceholder = $hasDeletedAt ? ':deleted_at' : 'CURRENT_TIMESTAMP()';
 		$query = $this->db->prepare(<<<SQL
 			UPDATE
-				work_groups
+				projects
 			SET
 				deleted_at = $deletedAtPlaceholder
 			WHERE
-				work_groups_id = :work_groups_id
+				projects_id = :projects_id
 			AND
 				deleted_at IS NULL
 			;
 			SQL
 		);
-		$query->bindValue(':work_groups_id', $workGroupId->getBytes(), PDO::PARAM_STR);
+		$query->bindValue(':projects_id', $projectId->getBytes(), PDO::PARAM_STR);
 		if ($hasDeletedAt) {
 			$query->bindValue($deletedAtPlaceholder, Utils::utcDateStrOrNull($deletedAt), PDO::PARAM_STR);
 		}
@@ -561,12 +439,12 @@ final class WorkGroupsRepo
 
 			if ($query->rowCount() === 0) {
 				$this->logger->info(
-					"WorkGroup not found ({workGroupId})",
+					"Project not found ({projectId})",
 					[
-						'workGroupId' => $workGroupId,
+						'projectId' => $projectId,
 					]
 				);
-				return Utils::errWorkGroupNotFound();
+				return Utils::errProjectNotFound();
 			} else {
 				return RetValueOrError::withValue(null);
 			}

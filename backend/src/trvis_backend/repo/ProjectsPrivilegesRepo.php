@@ -5,7 +5,7 @@ namespace dev_t0r\trvis_backend\repo;
 use DateTimeInterface;
 use dev_t0r\trvis_backend\Constants;
 use dev_t0r\trvis_backend\model\InviteKeyPrivilegeType;
-use dev_t0r\trvis_backend\model\WorkGroupsPrivilege;
+use dev_t0r\trvis_backend\model\ProjectsPrivilege;
 use dev_t0r\trvis_backend\RetValueOrError;
 use dev_t0r\trvis_backend\Utils;
 use PDO;
@@ -13,7 +13,7 @@ use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
-final class WorkGroupsPrivilegesRepo implements IMyRepoSelectPrivilegeType
+final class ProjectsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 {
 	public function __construct(
 		private readonly PDO $db,
@@ -22,66 +22,19 @@ final class WorkGroupsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 	}
 
 	/**
-	 * 指定WorkGroupが属するProjectのIDを取得する。
-	 *
-	 * Project = 権限ルート方式: WorkGroupの権限は所属Projectの権限から導出する。
-	 * projects_id が NULL のレガシーWG (旧 POST /work_groups で作成) は
-	 * 従来どおり work_groups_privileges を参照する (後方互換)。
-	 *
-	 * @return RetValueOrError<?UuidInterface> value=null は Project未割当(レガシー)
-	 */
-	private function _selectProjectsIdByWorkGroupsId(
-		UuidInterface $workGroupsId,
-		bool $selectForUpdate = false,
-	): RetValueOrError {
-		try
-		{
-			$query = $this->db->prepare(
-				'SELECT projects_id FROM work_groups WHERE work_groups_id = :workGroupsId AND deleted_at IS NULL'
-				. ($selectForUpdate ? ' FOR UPDATE' : '')
-				. ';'
-			);
-			$query->bindValue(':workGroupsId', $workGroupsId->getBytes(), PDO::PARAM_STR);
-			$query->execute();
-			if ($query->rowCount() === 0)
-			{
-				return Utils::errWorkGroupNotFound();
-			}
-			$row = $query->fetch(PDO::FETCH_ASSOC);
-			$projectsIdBytes = $row['projects_id'];
-			return RetValueOrError::withValue(
-				is_null($projectsIdBytes) ? null : Uuid::fromBytes($projectsIdBytes)
-			);
-		}
-		catch (\PDOException $e)
-		{
-			$errCode = $e->getCode();
-			$this->logger->error(
-				'failed to resolve projects_id for work group ({errorCode})',
-				[ "errorCode" => $errCode ],
-			);
-			return RetValueOrError::withError(
-				Constants::HTTP_INTERNAL_SERVER_ERROR,
-				"Failed to execute SQL - " . $errCode,
-				$errCode,
-			);
-		}
-	}
-
-	/**
 	 * @return RetValueOrError<null>
 	 */
 	public function insert(
-		UuidInterface $workGroupsId,
+		UuidInterface $projectsId,
 		InviteKeyPrivilegeType $privilegeType = InviteKeyPrivilegeType::none,
 		string $userId = '',
 		?UuidInterface $inviteKeysId = null,
 	): RetValueOrError {
 		$this->logger->debug(
-			'inserting work group privilege (user:{userId}, WorkGroup:{workGroupsId}, InviteKey:{inviteKeysId}, PrivilegeType:{privilegeType})',
+			'inserting project privilege (user:{userId}, Project:{projectsId}, InviteKey:{inviteKeysId}, PrivilegeType:{privilegeType})',
 			[
 				'userId' => $userId,
-				'workGroupsId' => $workGroupsId,
+				'projectsId' => $projectsId,
 				'inviteKeysId' => $inviteKeysId,
 				'privilegeType' => $privilegeType,
 			]
@@ -91,15 +44,15 @@ final class WorkGroupsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 		{
 			$query = $this->db->prepare(<<<SQL
 				INSERT INTO
-					work_groups_privileges
+					projects_privileges
 				(
 					uid,
-					work_groups_id,
+					projects_id,
 					invite_keys_id,
 					privilege_type
 				) VALUES (
 					:userId,
-					:workGroupsId,
+					:projectsId,
 					:inviteKeysId,
 					:privilegeType
 				)
@@ -107,7 +60,7 @@ final class WorkGroupsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 				SQL
 			);
 			$query->bindValue(':userId', $userId, PDO::PARAM_STR);
-			$query->bindValue(':workGroupsId', $workGroupsId->getBytes(), PDO::PARAM_STR);
+			$query->bindValue(':projectsId', $projectsId->getBytes(), PDO::PARAM_STR);
 			$query->bindValue(':inviteKeysId', $inviteKeysId?->getBytes(), PDO::PARAM_STR);
 			$query->bindValue(':privilegeType', $privilegeType->value, PDO::PARAM_INT);
 			$query->execute();
@@ -118,7 +71,7 @@ final class WorkGroupsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 			$errCode = $e->getCode();
 			$errInfo = $e->errorInfo;
 			$this->logger->error(
-				'failed to insert work group  ({errorCode} -> {errorInfo})',
+				'failed to insert project  ({errorCode} -> {errorInfo})',
 				[
 					"errorCode" => $errCode,
 					"errorInfo" => $errInfo,
@@ -136,16 +89,16 @@ final class WorkGroupsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 	 * @return RetValueOrError<null>
 	 */
 	public function changeType(
-		UuidInterface $workGroupsId,
+		UuidInterface $projectsId,
 		InviteKeyPrivilegeType $newPrivilegeType = InviteKeyPrivilegeType::none,
 		string $userId = '',
 		?UuidInterface $inviteKeysId = null,
 	): RetValueOrError {
 		$this->logger->debug(
-			'changing work group privilege (user:{userId}, WorkGroup:{workGroupsId}, InviteKey:{inviteKeysId}, NewPrivilegeType:{privilegeType})',
+			'changing project privilege (user:{userId}, Project:{projectsId}, InviteKey:{inviteKeysId}, NewPrivilegeType:{privilegeType})',
 			[
 				'userId' => $userId,
-				'workGroupsId' => $workGroupsId,
+				'projectsId' => $projectsId,
 				'inviteKeysId' => $inviteKeysId,
 				'privilegeType' => $newPrivilegeType,
 			]
@@ -155,7 +108,7 @@ final class WorkGroupsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 		{
 			$query = $this->db->prepare(<<<SQL
 				UPDATE
-					work_groups_privileges
+					projects_privileges
 				SET
 					updated_at = CURRENT_TIMESTAMP(),
 					invite_keys_id = :inviteKeysId,
@@ -163,27 +116,27 @@ final class WorkGroupsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 				WHERE
 						uid = :userId
 					AND
-						work_groups_id = :workGroupsId
+						projects_id = :projectsId
 				;
 				SQL
 			);
 			$query->bindValue(':userId', $userId, PDO::PARAM_STR);
-			$query->bindValue(':workGroupsId', $workGroupsId->getBytes(), PDO::PARAM_STR);
+			$query->bindValue(':projectsId', $projectsId->getBytes(), PDO::PARAM_STR);
 			$query->bindValue(':inviteKeysId', $inviteKeysId?->getBytes(), PDO::PARAM_STR);
 			$query->bindValue(':privilegeType', $newPrivilegeType->value, PDO::PARAM_INT);
 			$query->execute();
 
 			if ($query->rowCount() === 0) {
 				$this->logger->warning(
-					'work group privileges for specified user not found (user:{userId}, WorkGroup:{workGroupsId})',
+					'project privileges for specified user not found (user:{userId}, Project:{projectsId})',
 					[
 						'userId' => $userId,
-						'workGroupsId' => $workGroupsId,
+						'projectsId' => $projectsId,
 					]
 				);
 				return RetValueOrError::withError(
 					Constants::HTTP_NOT_FOUND,
-					'work group privileges for specified user not found'
+					'project privileges for specified user not found'
 				);
 			}
 			return RetValueOrError::withValue(null);
@@ -193,7 +146,7 @@ final class WorkGroupsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 			$errCode = $e->getCode();
 			$errInfo = $e->errorInfo;
 			$this->logger->error(
-				'failed to change work group  ({errorCode} -> {errorInfo})',
+				'failed to change project  ({errorCode} -> {errorInfo})',
 				[
 					"errorCode" => $errCode,
 					"errorInfo" => $errInfo,
@@ -217,10 +170,10 @@ final class WorkGroupsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 		bool $selectForUpdate = false,
 	): RetValueOrError {
 		$this->logger->debug(
-			'selecting work group privilege (user:{userId}, WorkGroup:{workGroupsId})',
+			'selecting project privilege (user:{userId}, Project:{projectsId})',
 			[
 				'userId' => $userId,
-				'workGroupsId' => $id,
+				'projectsId' => $id,
 			]
 		);
 
@@ -229,22 +182,6 @@ final class WorkGroupsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 			// リクエスト対象自体がAnonymousの場合は、わざわざOR条件にする必要はない
 			$includeAnonymous = false;
 		}
-
-		$projectsIdResult = $this->_selectProjectsIdByWorkGroupsId($id, $selectForUpdate);
-		if ($projectsIdResult->isError) {
-			return $projectsIdResult;
-		}
-		$projectsId = $projectsIdResult->value;
-		if (!is_null($projectsId)) {
-			// Project = 権限ルート: 所属Projectの権限を導出して返す
-			return (new ProjectsPrivilegesRepo($this->db, $this->logger))->selectPrivilegeType(
-				id: $projectsId,
-				userId: $userId,
-				includeAnonymous: $includeAnonymous,
-				selectForUpdate: $selectForUpdate,
-			);
-		}
-		// projects_id 未割当(レガシー)の場合のみ、従来の work_groups_privileges を参照
 		try
 		{
 			$query = $this->db->prepare(
@@ -255,9 +192,9 @@ final class WorkGroupsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 					uid,
 					invite_keys_id
 				FROM
-					work_groups_privileges
+					projects_privileges
 				WHERE
-					work_groups_id = :workGroupsId
+					projects_id = :projectsId
 				AND
 				SQL)
 				.
@@ -270,11 +207,11 @@ final class WorkGroupsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 				';'
 			);
 			$query->bindValue(':userId', $userId, PDO::PARAM_STR);
-			$query->bindValue(':workGroupsId', $id->getBytes(), PDO::PARAM_STR);
+			$query->bindValue(':projectsId', $id->getBytes(), PDO::PARAM_STR);
 			$query->execute();
 			if ($query->rowCount() === 0)
 			{
-				return Utils::errWorkGroupNotFound();
+				return Utils::errProjectNotFound();
 			}
 
 			$privilegeTypeList = $query->fetchAll(PDO::FETCH_ASSOC);
@@ -311,7 +248,7 @@ final class WorkGroupsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 			$errCode = $e->getCode();
 			$errInfo = $e->errorInfo;
 			$this->logger->error(
-				'failed to select work group  ({errorCode} -> {errorInfo})',
+				'failed to select project  ({errorCode} -> {errorInfo})',
 				[
 					"errorCode" => $errCode,
 					"errorInfo" => $errInfo,
@@ -326,19 +263,19 @@ final class WorkGroupsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 	}
 
 	/**
-	 * @return RetValueOrError<WorkGroupsPrivilege>
+	 * @return RetValueOrError<ProjectsPrivilege>
 	 */
 	public function selectPrivilegeTypeObject(
-		UuidInterface $workGroupsId,
+		UuidInterface $projectsId,
 		string $userId = Constants::UID_ANONYMOUS,
 		bool $includeAnonymous = false,
 		bool $selectForUpdate = false,
 	): RetValueOrError {
 		$this->logger->debug(
-			'selecting work group privilege (user:{userId}, WorkGroup:{workGroupsId}, includeAnonymous:{includeAnonymous}, selectForUpdate:{selectForUpdate})',
+			'selecting project privilege (user:{userId}, Project:{projectsId}, includeAnonymous:{includeAnonymous}, selectForUpdate:{selectForUpdate})',
 			[
 				'userId' => $userId,
-				'workGroupsId' => $workGroupsId,
+				'projectsId' => $projectsId,
 				'includeAnonymous' => $includeAnonymous ? 'true' : 'false',
 				'selectForUpdate' => $selectForUpdate ? 'true' : 'false',
 			]
@@ -349,37 +286,6 @@ final class WorkGroupsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 			$this->logger->debug('userId is anonymous, so includeAnonymous is set to false');
 			$includeAnonymous = false;
 		}
-
-		$projectsIdResult = $this->_selectProjectsIdByWorkGroupsId($workGroupsId, $selectForUpdate);
-		if ($projectsIdResult->isError) {
-			return $projectsIdResult;
-		}
-		$projectsId = $projectsIdResult->value;
-		if (!is_null($projectsId)) {
-			// Project = 権限ルート: Projectの権限を導出し、WorkGroupsPrivilege形に詰め替えて返す
-			// (GET /work_groups/{id}/privileges のレスポンススキーマを維持するため)
-			$projObjResult = (new ProjectsPrivilegesRepo($this->db, $this->logger))->selectPrivilegeTypeObject(
-				projectsId: $projectsId,
-				userId: $userId,
-				includeAnonymous: $includeAnonymous,
-				selectForUpdate: $selectForUpdate,
-			);
-			if ($projObjResult->isError) {
-				return $projObjResult;
-			}
-			$pp = $projObjResult->value;
-			$wgp = new WorkGroupsPrivilege();
-			$wgp->setData([
-				'uid' => $pp->uid,
-				'work_groups_id' => $workGroupsId,
-				'invite_keys_id' => $pp->invite_keys_id,
-				'created_at' => $pp->created_at,
-				'updated_at' => $pp->updated_at,
-				'privilege_type' => $pp->privilege_type,
-			]);
-			return RetValueOrError::withValue($wgp);
-		}
-		// projects_id 未割当(レガシー)の場合のみ、従来の work_groups_privileges を参照
 		try
 		{
 			$query = $this->db->prepare(
@@ -387,15 +293,15 @@ final class WorkGroupsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 				.
 				(<<<SQL
 					uid,
-					work_groups_id,
+					projects_id,
 					invite_keys_id,
 					created_at,
 					updated_at,
 					privilege_type
 				FROM
-					work_groups_privileges
+					projects_privileges
 				WHERE
-					work_groups_id = :workGroupsId
+					projects_id = :projectsId
 				AND
 				SQL)
 				.
@@ -408,7 +314,7 @@ final class WorkGroupsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 				';'
 			);
 			$query->bindValue(':userId', $userId, PDO::PARAM_STR);
-			$query->bindValue(':workGroupsId', $workGroupsId->getBytes(), PDO::PARAM_STR);
+			$query->bindValue(':projectsId', $projectsId->getBytes(), PDO::PARAM_STR);
 			$query->execute();
 			$this->logger->debug(
 				'rowCount: {rowCount}',
@@ -418,7 +324,7 @@ final class WorkGroupsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 			);
 			if ($query->rowCount() === 0)
 			{
-				return Utils::errWorkGroupNotFound();
+				return Utils::errProjectNotFound();
 			}
 
 			$privilegeTypeList = $query->fetchAll(PDO::FETCH_ASSOC);
@@ -430,7 +336,7 @@ final class WorkGroupsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 				$inviteKeysId = $row['invite_keys_id'];
 				$obj = [
 					'uid' => $row['uid'],
-					'work_groups_id' => Uuid::fromBytes($row['work_groups_id']),
+					'projects_id' => Uuid::fromBytes($row['projects_id']),
 					'invite_keys_id' => is_null($inviteKeysId) ? null : Uuid::fromBytes($inviteKeysId),
 					'created_at' => Utils::dbDateStrToDateTime($row['created_at']),
 					'updated_at'=> Utils::dbDateStrToDateTime($row['updated_at']),
@@ -444,7 +350,7 @@ final class WorkGroupsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 				{
 					$maximumPrivilegeTypeValue = $privilegeTypeValue;
 
-					$privilegeTypeObject ??= new WorkGroupsPrivilege();
+					$privilegeTypeObject ??= new ProjectsPrivilege();
 					$privilegeTypeObject->setData($obj);
 				}
 			}
@@ -461,7 +367,7 @@ final class WorkGroupsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 			$errCode = $e->getCode();
 			$errInfo = $e->errorInfo;
 			$this->logger->error(
-				'failed to select work group  ({errorCode} -> {errorInfo})',
+				'failed to select project  ({errorCode} -> {errorInfo})',
 				[
 					"errorCode" => $errCode,
 					"errorInfo" => $errInfo,
@@ -478,14 +384,14 @@ final class WorkGroupsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 	/**
 	 * @return RetValueOrError<null>
 	 */
-	public function deleteByWorkGroupId(
-		UuidInterface $workGroupsId,
+	public function deleteByProjectId(
+		UuidInterface $projectsId,
 		?DateTimeInterface $deletedAt = null,
 	): RetValueOrError {
 		$this->logger->info(
-			'deleting work group privileges (WorkGroup:{workGroupsId}, deletedAt:{deletedAt})',
+			'deleting project privileges (Project:{projectsId}, deletedAt:{deletedAt})',
 			[
-				'workGroupsId' => $workGroupsId,
+				'projectsId' => $projectsId,
 				'deletedAt' => $deletedAt,
 			]
 		);
@@ -496,17 +402,17 @@ final class WorkGroupsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 		{
 			$query = $this->db->prepare(<<<SQL
 				UPDATE
-					work_groups_privileges
+					projects_privileges
 				SET
 					deleted_at = $deletedAtPlaceholder
 				WHERE
-					work_groups_id = :workGroupsId
+					projects_id = :projectsId
 				AND
 					deleted_at IS NULL
 				;
 				SQL
 			);
-			$query->bindValue(':workGroupsId', $workGroupsId->getBytes(), PDO::PARAM_STR);
+			$query->bindValue(':projectsId', $projectsId->getBytes(), PDO::PARAM_STR);
 			if ($hasDeletedAt)
 			{
 				$query->bindValue($deletedAtPlaceholder, Utils::utcDateStrOrNull($deletedAt), PDO::PARAM_STR);
@@ -515,9 +421,9 @@ final class WorkGroupsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 			$query->execute();
 			$rowCount = $query->rowCount();
 			$this->logger->debug(
-				'deleted work group privileges (WorkGroup:{workGroupsId}, deletedAt:{deletedAt}, rowCount:{rowCount})',
+				'deleted project privileges (Project:{projectsId}, deletedAt:{deletedAt}, rowCount:{rowCount})',
 				[
-					'workGroupsId' => $workGroupsId,
+					'projectsId' => $projectsId,
 					'deletedAt' => $deletedAt,
 					'rowCount' => $rowCount,
 				]
@@ -525,7 +431,7 @@ final class WorkGroupsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 			if ($rowCount === 0) {
 				return RetValueOrError::withError(
 					Constants::HTTP_NOT_FOUND,
-					'work group privileges not found',
+					'project privileges not found',
 				);
 			} else {
 				return RetValueOrError::withValue(null);
@@ -536,7 +442,7 @@ final class WorkGroupsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 			$errCode = $e->getCode();
 			$errInfo = $e->errorInfo;
 			$this->logger->error(
-				'failed to delete work group privileges ({errorCode} -> {errorInfo})',
+				'failed to delete project privileges ({errorCode} -> {errorInfo})',
 				[
 					"errorCode" => $errCode,
 					"errorInfo" => $errInfo,
