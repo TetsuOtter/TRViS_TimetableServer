@@ -8,18 +8,67 @@ import {
 	useCallback,
 } from "react";
 import type { CSSProperties, KeyboardEvent, RefObject } from "react";
+
+import type { Strings } from "../i18n/strings";
+import type {
+	Line as EntityLine,
+	ProjectStation as EntityProjectStation,
+	StationOnLine as EntityStationOnLine,
+} from "../types/entities";
 import type {
 	Line,
 	Station,
 	StationOnLine,
 	StopPattern,
-	AppData,
 } from "../types/model";
-import type { Strings } from "../i18n/strings";
 
-/* ─── helpers ─── */
-const genId = (prefix: string): string =>
-	prefix + Date.now() + Math.random().toString(36).slice(2, 6);
+/* ─── Model → entity-draft converters ─── */
+type EntityLineDraft = Omit<EntityLine, "id" | "projectId" | "createdAt">;
+type EntityLineUpdate = Pick<EntityLine, "id"> &
+	Omit<EntityLine, "id" | "projectId" | "createdAt">;
+
+type EntityStationDraft = Omit<
+	EntityProjectStation,
+	"id" | "projectId" | "createdAt"
+>;
+type EntityStationUpdate = Pick<EntityProjectStation, "id"> &
+	Omit<EntityProjectStation, "id" | "projectId" | "createdAt">;
+
+type EntitySolDraft = Omit<
+	EntityStationOnLine,
+	"id" | "projectId" | "createdAt"
+>;
+type EntitySolUpdate = Pick<EntityStationOnLine, "id"> &
+	Omit<EntityStationOnLine, "id" | "projectId" | "createdAt">;
+
+function modelLineToDraft(l: Line): EntityLineDraft {
+	return {
+		name: l.name,
+		description: l.description,
+	};
+}
+
+function modelStationToDraft(s: Station): EntityStationDraft {
+	return {
+		name: s.stationName,
+		fullName: s.fullName !== "" ? s.fullName : undefined,
+		longitude: s.longitude_deg,
+		latitude: s.latitude_deg,
+		onStationDetectRadiusM: s.onStationDetectRadius_m,
+		alwaysShowHh: s.alwaysShowHH,
+	};
+}
+
+function modelSolToDraft(sol: StationOnLine): EntitySolDraft {
+	return {
+		lineId: sol.lineId,
+		projectStationId: sol.stationId,
+		locationM: sol.location_m,
+		longitude: sol.longitude_deg,
+		latitude: sol.latitude_deg,
+		trackHiddenByDefault: sol.trackHiddenByDefault,
+	};
+}
 
 /* A station-on-line joined with its station for display in LineStationsTab. */
 interface LineStationEntry extends StationOnLine {
@@ -110,15 +159,18 @@ interface StationsTabProps {
 	stations: Station[];
 	stationsOnLine: StationOnLine[];
 	lines: Line[];
-	onUpdate: (patch: Partial<AppData>) => void;
-	t: Strings;
+	onCreateStation: (draft: EntityStationDraft) => void;
+	onUpdateStation: (vars: EntityStationUpdate) => void;
+	onDeleteStation: (id: string) => void;
 }
 
 function StationsTab({
 	stations,
 	stationsOnLine,
 	lines,
-	onUpdate,
+	onCreateStation,
+	onUpdateStation,
+	onDeleteStation,
 }: StationsTabProps) {
 	const [editingId, setEditingId] = useState<string | null>(null); // station id or 'new'
 	const [draft, setDraft] = useState<StationDraft>({
@@ -188,14 +240,11 @@ function StationsTab({
 			cancelEdit();
 			return;
 		}
+		const entityDraft = modelStationToDraft(draftToStation("_tmp"));
 		if (editingId === "new") {
-			onUpdate({ stations: [...stations, draftToStation(genId("s"))] });
-		} else {
-			onUpdate({
-				stations: stations.map(s =>
-					s.id === editingId ? { ...s, ...draftToStation(s.id) } : s
-				),
-			});
+			onCreateStation(entityDraft);
+		} else if (editingId !== null) {
+			onUpdateStation({ id: editingId, ...entityDraft });
 		}
 		setEditingId(null);
 	};
@@ -210,10 +259,7 @@ function StationsTab({
 			)
 		)
 			return;
-		onUpdate({
-			stations: stations.filter(s => s.id !== id),
-			stationsOnLine: stationsOnLine.filter(sol => sol.stationId !== id),
-		});
+		onDeleteStation(id);
 		if (editingId === id) setEditingId(null);
 	};
 
@@ -309,7 +355,7 @@ function StationsTab({
 				</span>
 				<QuickAddBar
 					stations={stations}
-					onAdd={s => onUpdate({ stations: [...stations, s] })}
+					onAdd={onCreateStation}
 				/>
 			</div>
 
@@ -827,7 +873,7 @@ function StationsTab({
 /* ─── Quick-add bar ─── */
 interface QuickAddBarProps {
 	stations: Station[];
-	onAdd: (s: Station) => void;
+	onAdd: (draft: EntityStationDraft) => void;
 }
 
 function QuickAddBar({ stations, onAdd }: QuickAddBarProps) {
@@ -840,11 +886,10 @@ function QuickAddBar({ stations, onAdd }: QuickAddBarProps) {
 		// auto fullName = name + '駅' if not already ending in 駅
 		const fullName = n.endsWith("駅") ? n : n + "駅";
 		onAdd({
-			id: genId("s"),
-			stationName: n,
+			name: n,
 			fullName,
-			onStationDetectRadius_m: 300,
-			alwaysShowHH: false,
+			onStationDetectRadiusM: 300,
+			alwaysShowHh: false,
 		});
 		setName("");
 		ref.current?.focus();
@@ -914,8 +959,10 @@ interface LineStationsTabProps {
 	lineStations: LineStationEntry[];
 	stations: Station[];
 	stationsOnLine: StationOnLine[];
-	onUpdate: (patch: Partial<AppData>) => void;
-	t: Strings;
+	onCreateStationOnLine: (draft: EntitySolDraft) => void;
+	onUpdateStationOnLine: (vars: EntitySolUpdate) => void;
+	onDeleteStationOnLine: (id: string) => void;
+	onReorderStationsOnLine: (updates: EntitySolUpdate[]) => void;
 }
 
 function LineStationsTab({
@@ -923,7 +970,10 @@ function LineStationsTab({
 	lineStations,
 	stations,
 	stationsOnLine,
-	onUpdate,
+	onCreateStationOnLine,
+	onUpdateStationOnLine,
+	onDeleteStationOnLine,
+	onReorderStationsOnLine,
 }: LineStationsTabProps) {
 	const [editingId, setEditingId] = useState<string | null>(null); // sol.id or 'new'
 	const [draft, setDraft] = useState<SolDraft>({
@@ -994,29 +1044,22 @@ function LineStationsTab({
 				setEditingId(null);
 				return;
 			}
-			const id = genId("sol");
-			onUpdate({
-				stationsOnLine: [
-					...stationsOnLine,
-					buildSol({
-						id,
-						lineId: activeLine.id,
-						stationId: draft.stationId,
-					}),
-				],
+			const sol = buildSol({
+				id: "_tmp",
+				lineId: activeLine.id,
+				stationId: draft.stationId,
 			});
-		} else {
-			onUpdate({
-				stationsOnLine: stationsOnLine.map(sol =>
-					sol.id === editingId
-						? buildSol({
-								id: sol.id,
-								lineId: sol.lineId,
-								stationId: sol.stationId,
-						  })
-						: sol
-				),
-			});
+			onCreateStationOnLine(modelSolToDraft(sol));
+		} else if (editingId !== null) {
+			const existing = stationsOnLine.find(sol => sol.id === editingId);
+			if (existing !== undefined) {
+				const sol = buildSol({
+					id: existing.id,
+					lineId: existing.lineId,
+					stationId: existing.stationId,
+				});
+				onUpdateStationOnLine({ id: sol.id, ...modelSolToDraft(sol) });
+			}
 		}
 		setEditingId(null);
 	};
@@ -1025,9 +1068,7 @@ function LineStationsTab({
 
 	const removeSol = (solId: string, stName: string) => {
 		if (!confirm(`「${stName}」をこの路線から除外しますか？`)) return;
-		onUpdate({
-			stationsOnLine: stationsOnLine.filter(sol => sol.id !== solId),
-		});
+		onDeleteStationOnLine(solId);
 		if (editingId === solId) setEditingId(null);
 	};
 
@@ -1047,7 +1088,8 @@ function LineStationsTab({
 		}
 	};
 
-	// Drag-to-reorder (reorder sol in this line only)
+	// Drag-to-reorder (reorder sol in this line only).
+	// Known degradation: issues N sequential update mutations for each reordered row.
 	const dragItem = useRef<string | null>(null);
 	const onDragStart = (
 		e: React.DragEvent<HTMLTableRowElement>,
@@ -1065,12 +1107,9 @@ function LineStationsTab({
 			setDragOver(null);
 			return;
 		}
-		const others = stationsOnLine.filter(
-			sol => sol.lineId !== activeLine.id
-		);
 		const mine = [
 			...stationsOnLine.filter(sol => sol.lineId === activeLine.id),
-		];
+		].sort((a, b) => (a.location_m || 0) - (b.location_m || 0));
 		const fromIdx = mine.findIndex(s => s.id === dragItem.current);
 		const toIdx = mine.findIndex(s => s.id === targetId);
 		const [moved] = mine.splice(fromIdx, 1);
@@ -1079,7 +1118,20 @@ function LineStationsTab({
 			return;
 		}
 		mine.splice(toIdx, 0, moved);
-		onUpdate({ stationsOnLine: [...others, ...mine] });
+		// Assign monotonic location_m values (1000m intervals) then persist changed rows
+		const updates: EntitySolUpdate[] = mine
+			.map((sol, idx) => {
+				const newLocationM = (idx + 1) * 1000;
+				return { sol, newLocationM };
+			})
+			.filter(({ sol, newLocationM }) => sol.location_m !== newLocationM)
+			.map(({ sol, newLocationM }) => ({
+				id: sol.id,
+				...modelSolToDraft({ ...sol, location_m: newLocationM }),
+			}));
+		if (updates.length > 0) {
+			onReorderStationsOnLine(updates);
+		}
 		dragItem.current = null;
 		setDragOver(null);
 	};
@@ -1885,7 +1937,18 @@ export interface LineManagerProps {
 	stations: Station[];
 	stationsOnLine: StationOnLine[];
 	stopPatterns: StopPattern[];
-	onUpdate: (patch: Partial<AppData>) => void;
+	activeLineId: string;
+	onSelectLine: (id: string) => void;
+	onCreateLine: (draft: EntityLineDraft) => void;
+	onUpdateLine: (vars: EntityLineUpdate) => void;
+	onDeleteLine: (id: string) => void;
+	onCreateStation: (draft: EntityStationDraft) => void;
+	onUpdateStation: (vars: EntityStationUpdate) => void;
+	onDeleteStation: (id: string) => void;
+	onCreateStationOnLine: (draft: EntitySolDraft) => void;
+	onUpdateStationOnLine: (vars: EntitySolUpdate) => void;
+	onDeleteStationOnLine: (id: string) => void;
+	onReorderStationsOnLine: (updates: EntitySolUpdate[]) => void;
 	onOpenStopPatternWizard: () => void;
 	onEditStopPattern: (p: StopPattern) => void;
 	t: Strings;
@@ -1896,15 +1959,23 @@ export function LineManager({
 	stations,
 	stationsOnLine,
 	stopPatterns,
-	onUpdate,
+	activeLineId,
+	onSelectLine,
+	onCreateLine,
+	onUpdateLine,
+	onDeleteLine,
+	onCreateStation,
+	onUpdateStation,
+	onDeleteStation,
+	onCreateStationOnLine,
+	onUpdateStationOnLine,
+	onDeleteStationOnLine,
+	onReorderStationsOnLine,
 	onOpenStopPatternWizard,
 	onEditStopPattern,
 	t,
 }: LineManagerProps) {
 	const [mainTab, setMainTab] = useState<"lines" | "stations">("lines");
-	const [activeLineId, setActiveLineId] = useState<string>(
-		lines[0]?.id || ""
-	);
 	const [lineTab, setLineTab] = useState<"stations" | "patterns">(
 		"stations"
 	);
@@ -1937,44 +2008,25 @@ export function LineManager({
 	);
 
 	const saveLine = (line: LineDraft) => {
-		if (line.id) {
-			onUpdate({
-				lines: lines.map(l =>
-					l.id === line.id ? ({ ...l, ...line } as Line) : l
-				),
-			});
+		if (line.id !== undefined && line.id !== "") {
+			onUpdateLine({ id: line.id, ...modelLineToDraft(line as Line) });
 		} else {
-			const id = genId("l");
-			onUpdate({
-				lines: [...lines, { ...line, id } as Line],
-			});
-			setActiveLineId(id);
+			onCreateLine(modelLineToDraft(line as Line));
 		}
 	};
 	const deleteLine = (id: string) => {
-		onUpdate({
-			lines: lines.filter(l => l.id !== id),
-			stationsOnLine: stationsOnLine.filter(
-				sol => sol.lineId !== id
-			),
-			stopPatterns: stopPatterns.filter(p => p.lineId !== id),
-		});
-		if (activeLineId === id)
-			setActiveLineId(lines.find(l => l.id !== id)?.id || "");
+		onDeleteLine(id);
+		if (activeLineId === id) {
+			const nextLine = lines.find(l => l.id !== id);
+			onSelectLine(nextLine !== undefined ? nextLine.id : "");
+		}
 	};
-	const duplicatePattern = (p: StopPattern) => {
-		const id = genId("sp");
-		onUpdate({
-			stopPatterns: [
-				...stopPatterns,
-				{ ...p, id, name: (p.name || "パターン") + " のコピー" },
-			],
-		});
+	const duplicatePattern = () => {
+		// StopPattern duplication will be wired to API in P4-5
 	};
-	const deletePattern = (id: string) =>
-		onUpdate({
-			stopPatterns: stopPatterns.filter(p => p.id !== id),
-		});
+	const deletePattern = (id: string) => {
+		void id; // StopPattern delete will be wired to API in P4-5
+	};
 
 	return (
 		<div
@@ -2107,7 +2159,7 @@ export function LineManager({
 									style={{ position: "relative" }}
 								>
 									<button
-										onClick={() => setActiveLineId(l.id)}
+										onClick={() => onSelectLine(l.id)}
 										style={{
 											display: "block",
 											width: "100%",
@@ -2214,8 +2266,10 @@ export function LineManager({
 										lineStations={lineStations}
 										stations={stations}
 										stationsOnLine={stationsOnLine}
-										onUpdate={onUpdate}
-										t={t}
+										onCreateStationOnLine={onCreateStationOnLine}
+										onUpdateStationOnLine={onUpdateStationOnLine}
+										onDeleteStationOnLine={onDeleteStationOnLine}
+										onReorderStationsOnLine={onReorderStationsOnLine}
 									/>
 								)}
 
@@ -2288,9 +2342,7 @@ export function LineManager({
 															onEditStopPattern &&
 															onEditStopPattern(p)
 														}
-														onDuplicate={() =>
-															duplicatePattern(p)
-														}
+														onDuplicate={duplicatePattern}
 														onDelete={deletePattern}
 													/>
 												))}
@@ -2310,8 +2362,9 @@ export function LineManager({
 					stations={stations}
 					stationsOnLine={stationsOnLine}
 					lines={lines}
-					onUpdate={onUpdate}
-					t={t}
+					onCreateStation={onCreateStation}
+					onUpdateStation={onUpdateStation}
+					onDeleteStation={onDeleteStation}
 				/>
 			)}
 

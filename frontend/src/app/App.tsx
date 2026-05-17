@@ -4,11 +4,29 @@
 import { useEffect, useMemo, useState } from "react";
 
 import {
+	useCreateLine,
+	useDeleteLine,
+	useLines,
+	useUpdateLine,
+} from "../api/hooks/useLines";
+import {
 	useCreateProject,
 	useDeleteProject,
 	useProjects,
 	useUpdateProject,
 } from "../api/hooks/useProjects";
+import {
+	useCreateProjectStation,
+	useDeleteProjectStation,
+	useProjectStations,
+	useUpdateProjectStation,
+} from "../api/hooks/useProjectStations";
+import {
+	useCreateStationOnLine,
+	useDeleteStationOnLine,
+	useStationsOnLine,
+	useUpdateStationOnLine,
+} from "../api/hooks/useStationsOnLine";
 import { useTimetableRows } from "../api/hooks/useTimetableRows";
 import {
 	useCreateTrain,
@@ -47,7 +65,10 @@ import { useSettings } from "./SettingsContext";
 
 import type { ContextMenuItem } from "../components/EntityDialogs";
 import type {
+	Line as EntityLine,
 	Project as EntityProject,
+	ProjectStation as EntityProjectStation,
+	StationOnLine as EntityStationOnLine,
 	TimetableRow as EntityTimetableRow,
 	Train as EntityTrain,
 	Work as EntityWork,
@@ -56,6 +77,7 @@ import type {
 	AppData,
 	Line,
 	Project,
+	Station,
 	StationOnLine,
 	StopPattern,
 	TimetableRow as ModelTimetableRow,
@@ -137,6 +159,38 @@ function entityWorkToModel(work: EntityWork, trains: ModelTrain[]): Work {
 				: "",
 		remarks: work.remarks ?? "",
 		trains,
+	};
+}
+
+function entityLineToModel(line: EntityLine): Line {
+	return {
+		id: line.id,
+		name: line.name,
+		description: line.description,
+	};
+}
+
+function entityProjectStationToModel(ps: EntityProjectStation): Station {
+	return {
+		id: ps.id,
+		stationName: ps.name,
+		fullName: ps.fullName ?? "",
+		longitude_deg: ps.longitude,
+		latitude_deg: ps.latitude,
+		onStationDetectRadius_m: ps.onStationDetectRadiusM,
+		alwaysShowHH: ps.alwaysShowHh,
+	};
+}
+
+function entityStationOnLineToModel(sol: EntityStationOnLine): StationOnLine {
+	return {
+		id: sol.id,
+		lineId: sol.lineId,
+		stationId: sol.projectStationId,
+		location_m: sol.locationM,
+		longitude_deg: sol.longitude,
+		latitude_deg: sol.latitude,
+		trackHiddenByDefault: sol.trackHiddenByDefault,
 	};
 }
 
@@ -390,6 +444,23 @@ export function App() {
 	const deleteTrainMutation = useDeleteTrain(currentWork ?? "");
 
 	const { data: apiTimetableRows } = useTimetableRows(currentTrain ?? "");
+
+	const [currentLine, setCurrentLine] = useState<string | null>(null);
+	const { data: apiLines } = useLines(projectId ?? "");
+	const createLineMutation = useCreateLine(projectId ?? "");
+	const updateLineMutation = useUpdateLine(projectId ?? "");
+	const deleteLineMutation = useDeleteLine(projectId ?? "");
+
+	const { data: apiProjectStations } = useProjectStations(projectId ?? "");
+	const createProjectStationMutation = useCreateProjectStation(projectId ?? "");
+	const updateProjectStationMutation = useUpdateProjectStation(projectId ?? "");
+	const deleteProjectStationMutation = useDeleteProjectStation(projectId ?? "");
+
+	const { data: apiStationsOnLine } = useStationsOnLine(currentLine ?? "");
+	const createStationOnLineMutation = useCreateStationOnLine(currentLine ?? "");
+	const updateStationOnLineMutation = useUpdateStationOnLine(currentLine ?? "");
+	const deleteStationOnLineMutation = useDeleteStationOnLine(currentLine ?? "");
+
 	const [showStopPattern, setShowStopPattern] = useState(false);
 	const [editingPattern, setEditingPattern] = useState<StopPattern | null>(
 		null
@@ -451,6 +522,14 @@ export function App() {
 	const wg = project?.workGroups.find((g) => g.id === currentWG);
 	const work = wg?.works.find((w) => w.id === currentWork);
 
+	const modelLines = (apiLines ?? []).map(entityLineToModel);
+	const modelProjectStations = (apiProjectStations ?? []).map(
+		entityProjectStationToModel
+	);
+	const modelStationsOnLine = (apiStationsOnLine ?? []).map(
+		entityStationOnLineToModel
+	);
+
 	useEffect(() => {
 		if (
 			screen === "work" &&
@@ -469,6 +548,18 @@ export function App() {
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [screen, projectId]);
+
+	// Auto-select first line when navigating to the lines screen with no line selected.
+	useEffect(() => {
+		if (
+			screen === "lines" &&
+			currentLine === null &&
+			(apiLines ?? []).length > 0
+		) {
+			setCurrentLine((apiLines ?? [])[0]?.id ?? null);
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [screen, apiLines]);
 
 	const breadcrumbs = useMemo(() => {
 		const bc = [
@@ -648,6 +739,85 @@ export function App() {
 		if (currentTrain === trainId) {
 			setCurrentTrain(null);
 		}
+	};
+
+	/* ─── Line CRUD (wired from LineManager) ─── */
+	const handleCreateLine = (
+		draft: Omit<EntityLine, "id" | "projectId" | "createdAt">
+	) => {
+		createLineMutation.mutate(draft, {
+			onError: (e: Error) => alert(e.message),
+		});
+	};
+	const handleUpdateLine = (
+		vars: Pick<EntityLine, "id"> &
+			Omit<EntityLine, "id" | "projectId" | "createdAt">
+	) => {
+		updateLineMutation.mutate(vars, {
+			onError: (e: Error) => alert(e.message),
+		});
+	};
+	const handleDeleteLine = (lineId: string) => {
+		deleteLineMutation.mutate(lineId, {
+			onError: (e: Error) => alert(e.message),
+		});
+		if (currentLine === lineId) {
+			setCurrentLine(null);
+		}
+	};
+
+	/* ─── ProjectStation CRUD (wired from LineManager) ─── */
+	const handleCreateStation = (
+		draft: Omit<EntityProjectStation, "id" | "projectId" | "createdAt">
+	) => {
+		createProjectStationMutation.mutate(draft, {
+			onError: (e: Error) => alert(e.message),
+		});
+	};
+	const handleUpdateStation = (
+		vars: Pick<EntityProjectStation, "id"> &
+			Omit<EntityProjectStation, "id" | "projectId" | "createdAt">
+	) => {
+		updateProjectStationMutation.mutate(vars, {
+			onError: (e: Error) => alert(e.message),
+		});
+	};
+	const handleDeleteStation = (stationId: string) => {
+		deleteProjectStationMutation.mutate(stationId, {
+			onError: (e: Error) => alert(e.message),
+		});
+	};
+
+	/* ─── StationOnLine CRUD (wired from LineManager) ─── */
+	const handleCreateStationOnLine = (
+		draft: Omit<EntityStationOnLine, "id" | "projectId" | "createdAt">
+	) => {
+		createStationOnLineMutation.mutate(draft, {
+			onError: (e: Error) => alert(e.message),
+		});
+	};
+	const handleUpdateStationOnLine = (
+		vars: Pick<EntityStationOnLine, "id"> &
+			Omit<EntityStationOnLine, "id" | "projectId" | "createdAt">
+	) => {
+		updateStationOnLineMutation.mutate(vars, {
+			onError: (e: Error) => alert(e.message),
+		});
+	};
+	const handleDeleteStationOnLine = (stationOnLineId: string) => {
+		deleteStationOnLineMutation.mutate(stationOnLineId, {
+			onError: (e: Error) => alert(e.message),
+		});
+	};
+	const handleReorderStationsOnLine = (
+		updates: (Pick<EntityStationOnLine, "id"> &
+			Omit<EntityStationOnLine, "id" | "projectId" | "createdAt">)[]
+	) => {
+		updates.forEach((vars) => {
+			updateStationOnLineMutation.mutate(vars, {
+				onError: (e: Error) => alert(e.message),
+			});
+		});
 	};
 
 	/* ─── JSON Import / Export ─── */
@@ -916,13 +1086,22 @@ export function App() {
 				)}
 				{projectId && screen === "lines" && (
 					<LineManager
-						lines={data.lines}
-						stations={data.stations}
-						stationsOnLine={data.stationsOnLine}
+						lines={modelLines}
+						stations={modelProjectStations}
+						stationsOnLine={modelStationsOnLine}
 						stopPatterns={data.stopPatterns}
-						onUpdate={(patch) =>
-							setData((d) => ({ ...d, ...patch }))
-						}
+						activeLineId={currentLine ?? ""}
+						onSelectLine={setCurrentLine}
+						onCreateLine={handleCreateLine}
+						onUpdateLine={handleUpdateLine}
+						onDeleteLine={handleDeleteLine}
+						onCreateStation={handleCreateStation}
+						onUpdateStation={handleUpdateStation}
+						onDeleteStation={handleDeleteStation}
+						onCreateStationOnLine={handleCreateStationOnLine}
+						onUpdateStationOnLine={handleUpdateStationOnLine}
+						onDeleteStationOnLine={handleDeleteStationOnLine}
+						onReorderStationsOnLine={handleReorderStationsOnLine}
 						onOpenStopPatternWizard={() => {
 							setEditingPattern(null);
 							setShowStopPattern(true);
