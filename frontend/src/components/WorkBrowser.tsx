@@ -7,6 +7,7 @@ import { BBCodeField } from "./BBCodeEditor";
 import { TimetableGrid } from "./TimetableGrid";
 
 import type { Strings } from "../i18n/strings";
+import type { Train as EntityTrain } from "../types/entities";
 import type {
 	Direction,
 	Line,
@@ -17,6 +18,32 @@ import type {
 	Train,
 	Work,
 } from "../types/model";
+
+type EntityTrainDraft = Omit<EntityTrain, "id" | "workId" | "createdAt">;
+type EntityTrainUpdate = Pick<EntityTrain, "id"> &
+	Omit<EntityTrain, "id" | "workId" | "createdAt">;
+
+function modelTrainToEntityDraft(t: Train): EntityTrainDraft {
+	return {
+		description: "",
+		trainNumber: t.trainNumber,
+		direction: t.direction,
+		dayCount: t.dayCount,
+		maxSpeed: t.maxSpeed !== "" ? t.maxSpeed : undefined,
+		speedType: t.speedType !== "" ? t.speedType : undefined,
+		nominalTractiveCapacity:
+			t.nominalTractiveCapacity !== "" ? t.nominalTractiveCapacity : undefined,
+		carCount: t.carCount,
+		destination: t.destination !== "" ? t.destination : undefined,
+		beginRemarks: t.beginRemarks !== "" ? t.beginRemarks : undefined,
+		afterRemarks: t.afterRemarks !== "" ? t.afterRemarks : undefined,
+		remarks: t.remarks !== "" ? t.remarks : undefined,
+		beforeDeparture: t.beforeDeparture !== "" ? t.beforeDeparture : undefined,
+		afterArrive: t.afterArrive !== "" ? t.afterArrive : undefined,
+		trainInfo: t.trainInfo !== "" ? t.trainInfo : undefined,
+		isRideOnMoving: t.isRideOnMoving,
+	};
+}
 
 type TextKey =
 	| "maxSpeed"
@@ -581,8 +608,10 @@ function TrainListPanel({
 
 interface WorkBrowserProps {
 	work: Work;
-	onUpdateWork: (w: Work) => void;
+	onCreateTrain: (draft: EntityTrainDraft) => void;
+	onUpdateTrain: (vars: EntityTrainUpdate) => void;
 	onDeleteTrain: (id: string) => void;
+	onSelectTrain: (id: string | null) => void;
 	onOpenStopPatternWizard: () => void;
 	stopPatterns: StopPattern[];
 	stations: Station[];
@@ -593,8 +622,10 @@ interface WorkBrowserProps {
 
 export function WorkBrowser({
 	work,
-	onUpdateWork,
+	onCreateTrain,
+	onUpdateTrain,
 	onDeleteTrain,
+	onSelectTrain,
 	stopPatterns,
 	stations,
 	stationsOnLine,
@@ -602,7 +633,7 @@ export function WorkBrowser({
 	t,
 }: WorkBrowserProps) {
 	const [selectedTrainId, setSelectedTrainId] = useState<string | null>(
-		work.trains[0]?.id || null
+		work.trains.length > 0 ? (work.trains[0]?.id ?? null) : null
 	);
 	const [showInfo, setShowInfo] = useState(false);
 	const [showApplyPattern, setShowApplyPattern] = useState(false);
@@ -611,40 +642,36 @@ export function WorkBrowser({
 	);
 	const selectedTrain = work.trains.find((tr) => tr.id === selectedTrainId);
 
+	const selectTrain = (id: string | null) => {
+		setSelectedTrainId(id);
+		onSelectTrain(id);
+	};
+
 	const updateTrain = (updated: Train) => {
-		const trains = work.trains.map((tr) =>
-			tr.id === updated.id ? updated : tr
-		);
-		onUpdateWork({ ...work, trains });
+		onUpdateTrain({ id: updated.id, ...modelTrainToEntityDraft(updated) });
 	};
 	const addTrain = () => {
-		const id = "t" + Date.now();
-		const newTrain: Train = {
-			id,
+		const draft: EntityTrainDraft = {
+			description: "",
 			trainNumber: "0000M",
 			direction: 1,
-			destination: "",
+			destination: undefined,
 			maxSpeed: "100",
 			speedType: "近郊型",
-			nominalTractiveCapacity: "",
+			nominalTractiveCapacity: undefined,
 			carCount: 10,
-			workType: "旅客",
 			dayCount: 0,
 			isRideOnMoving: false,
-			beginRemarks: "",
-			afterRemarks: "",
-			remarks: "",
-			beforeDeparture: "",
-			afterArrive: "",
-			trainInfo: "",
-			nextTrainId: "",
-			timetableRows: [],
+			beginRemarks: undefined,
+			afterRemarks: undefined,
+			remarks: undefined,
+			beforeDeparture: undefined,
+			afterArrive: undefined,
+			trainInfo: undefined,
 		};
-		onUpdateWork({ ...work, trains: [...work.trains, newTrain] });
-		setSelectedTrainId(id);
+		onCreateTrain(draft);
 	};
 	const addTrainFromPattern = ({
-		rows,
 		direction,
 		destination,
 	}: {
@@ -652,30 +679,25 @@ export function WorkBrowser({
 		direction: Direction;
 		destination: string;
 	}) => {
-		const id = "t" + Date.now();
-		const newTrain: Train = {
-			id,
+		const draft: EntityTrainDraft = {
+			description: "",
 			trainNumber: "0000M",
 			direction,
-			destination,
+			destination: destination !== "" ? destination : undefined,
 			maxSpeed: "100",
 			speedType: "近郊型",
-			nominalTractiveCapacity: "",
+			nominalTractiveCapacity: undefined,
 			carCount: 10,
-			workType: "旅客",
 			dayCount: 0,
 			isRideOnMoving: false,
-			beginRemarks: "",
-			afterRemarks: "",
-			remarks: "",
-			beforeDeparture: "",
-			afterArrive: "",
-			trainInfo: "",
-			nextTrainId: "",
-			timetableRows: rows,
+			beginRemarks: undefined,
+			afterRemarks: undefined,
+			remarks: undefined,
+			beforeDeparture: undefined,
+			afterArrive: undefined,
+			trainInfo: undefined,
 		};
-		onUpdateWork({ ...work, trains: [...work.trains, newTrain] });
-		setSelectedTrainId(id);
+		onCreateTrain(draft);
 	};
 
 	return (
@@ -689,7 +711,7 @@ export function WorkBrowser({
 			<TrainListPanel
 				trains={work.trains}
 				selectedId={selectedTrainId}
-				onSelect={setSelectedTrainId}
+				onSelect={selectTrain}
 				onAdd={addTrain}
 				onAddViaPattern={() => setShowApplyPattern(true)}
 				t={t}

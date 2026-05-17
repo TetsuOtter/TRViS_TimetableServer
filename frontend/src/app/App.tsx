@@ -9,12 +9,25 @@ import {
 	useProjects,
 	useUpdateProject,
 } from "../api/hooks/useProjects";
+import { useTimetableRows } from "../api/hooks/useTimetableRows";
+import {
+	useCreateTrain,
+	useDeleteTrain,
+	useTrains,
+	useUpdateTrain,
+} from "../api/hooks/useTrains";
 import {
 	useCreateWorkGroup,
 	useDeleteWorkGroup,
 	useUpdateWorkGroup,
 	useWorkGroups,
 } from "../api/hooks/useWorkGroups";
+import {
+	useCreateWork,
+	useDeleteWork,
+	useUpdateWork,
+	useWorks,
+} from "../api/hooks/useWorks";
 import { AppShell } from "../components/AppShell";
 import AuthControls from "../components/auth/AuthControls";
 import {
@@ -33,16 +46,99 @@ import { createInitialData } from "../data/sampleData";
 import { useSettings } from "./SettingsContext";
 
 import type { ContextMenuItem } from "../components/EntityDialogs";
-import type { Project as EntityProject } from "../types/entities";
+import type {
+	Project as EntityProject,
+	TimetableRow as EntityTimetableRow,
+	Train as EntityTrain,
+	Work as EntityWork,
+} from "../types/entities";
 import type {
 	AppData,
 	Line,
 	Project,
 	StationOnLine,
 	StopPattern,
+	TimetableRow as ModelTimetableRow,
+	Train as ModelTrain,
 	Work,
 	WorkGroup,
 } from "../types/model";
+
+function entityTimetableRowToModel(row: EntityTimetableRow): ModelTimetableRow {
+	const pad2 = (n: number) => String(n).padStart(2, "0");
+	const toTimeStr = (
+		hh: number | undefined,
+		mm: number | undefined,
+		ss: number | undefined
+	): string => {
+		if (hh === undefined || mm === undefined || ss === undefined) return "";
+		return `${pad2(hh)}:${pad2(mm)}:${pad2(ss)}`;
+	};
+	return {
+		id: row.id,
+		stationName: "",
+		arrive: toTimeStr(row.arriveTimeHh, row.arriveTimeMm, row.arriveTimeSs),
+		departure: toTimeStr(
+			row.departureTimeHh,
+			row.departureTimeMm,
+			row.departureTimeSs
+		),
+		arriveDisplayText: row.arriveStr,
+		departureDisplayText: row.departureStr,
+		trackName: "",
+		isPass: row.isPass ?? false,
+		isOperationOnlyStop: row.isOperationOnlyStop ?? false,
+		isLastStop: row.isLastStop,
+		hasBracket: row.hasBracket,
+		recordType: "station",
+		driveTime_MM: row.driveTimeMm ?? 0,
+		driveTime_SS: row.driveTimeSs ?? 0,
+		runInLimit: row.runInLimit ?? "",
+		runOutLimit: row.runOutLimit ?? "",
+		remarks: row.remarks ?? "",
+		workType: row.workType ?? "",
+	};
+}
+
+function entityTrainToModel(
+	train: EntityTrain,
+	timetableRows: ModelTimetableRow[]
+): ModelTrain {
+	return {
+		id: train.id,
+		trainNumber: train.trainNumber,
+		direction: train.direction === -1 ? -1 : 1,
+		destination: train.destination ?? "",
+		maxSpeed: train.maxSpeed ?? "",
+		speedType: train.speedType ?? "",
+		nominalTractiveCapacity: train.nominalTractiveCapacity ?? "",
+		carCount: train.carCount ?? 0,
+		workType: "",
+		dayCount: train.dayCount,
+		isRideOnMoving: train.isRideOnMoving ?? false,
+		beginRemarks: train.beginRemarks ?? "",
+		afterRemarks: train.afterRemarks ?? "",
+		remarks: train.remarks ?? "",
+		beforeDeparture: train.beforeDeparture ?? "",
+		afterArrive: train.afterArrive ?? "",
+		trainInfo: train.trainInfo ?? "",
+		nextTrainId: "",
+		timetableRows,
+	};
+}
+
+function entityWorkToModel(work: EntityWork, trains: ModelTrain[]): Work {
+	return {
+		id: work.id,
+		name: work.name,
+		affectDate:
+			work.affectDate !== undefined
+				? work.affectDate.toISOString().slice(0, 10)
+				: "",
+		remarks: work.remarks ?? "",
+		trains,
+	};
+}
 
 function uid(prefix: string): string {
 	return (
@@ -280,7 +376,20 @@ export function App() {
 	const deleteWGMutation = useDeleteWorkGroup(projectId ?? "");
 	const [currentWG, setCurrentWG] = useState<string | null>(null);
 	const [currentWork, setCurrentWork] = useState<string | null>(null);
+	const [currentTrain, setCurrentTrain] = useState<string | null>(null);
 	const [screen, setScreen] = useState<Screen>("projects");
+
+	const { data: apiWorks } = useWorks(currentWG ?? "");
+	const createWorkMutation = useCreateWork(currentWG ?? "");
+	const updateWorkMutation = useUpdateWork(currentWG ?? "");
+	const deleteWorkMutation = useDeleteWork(currentWG ?? "");
+
+	const { data: apiTrains } = useTrains(currentWork ?? "");
+	const createTrainMutation = useCreateTrain(currentWork ?? "");
+	const updateTrainMutation = useUpdateTrain(currentWork ?? "");
+	const deleteTrainMutation = useDeleteTrain(currentWork ?? "");
+
+	const { data: apiTimetableRows } = useTimetableRows(currentTrain ?? "");
 	const [showStopPattern, setShowStopPattern] = useState(false);
 	const [editingPattern, setEditingPattern] = useState<StopPattern | null>(
 		null
@@ -307,6 +416,11 @@ export function App() {
 	);
 
 	const baseProject = apiProjects?.find((p) => p.id === projectId);
+
+	const modelTimetableRows = (apiTimetableRows ?? []).map(
+		entityTimetableRowToModel
+	);
+
 	const project: Project | undefined =
 		baseProject !== undefined
 			? {
@@ -317,7 +431,20 @@ export function App() {
 						id: wg.id,
 						name: wg.name,
 						description: wg.description,
-						works: [],
+						works: (apiWorks ?? [])
+							.filter((w) => w.workGroupId === wg.id)
+							.map((w) => {
+								if (w.id !== currentWork) {
+									return entityWorkToModel(w, []);
+								}
+								const trains = (apiTrains ?? []).map((tr) => {
+									if (tr.id !== currentTrain) {
+										return entityTrainToModel(tr, []);
+									}
+									return entityTrainToModel(tr, modelTimetableRows);
+								});
+								return entityWorkToModel(w, trains);
+							}),
 					})),
 				}
 			: undefined;
@@ -342,31 +469,6 @@ export function App() {
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [screen, projectId]);
-
-	const updateProject = (updated: Project) => {
-		setData((d) => ({
-			...d,
-			projects: d.projects.map((p) =>
-				p.id === updated.id ? updated : p
-			),
-		}));
-	};
-	const updateWork = (updatedWork: Work) => {
-		if (!project || !wg) return;
-		const newWG: WorkGroup = {
-			...wg,
-			works: wg.works.map((w) =>
-				w.id === updatedWork.id ? updatedWork : w
-			),
-		};
-		const newProject: Project = {
-			...project,
-			workGroups: project.workGroups.map((g) =>
-				g.id === wg.id ? newWG : g
-			),
-		};
-		updateProject(newProject);
-	};
 
 	const breadcrumbs = useMemo(() => {
 		const bc = [
@@ -452,6 +554,7 @@ export function App() {
 		if (currentWG === wgId) {
 			setCurrentWG(null);
 			setCurrentWork(null);
+			setCurrentTrain(null);
 		}
 	};
 
@@ -461,58 +564,90 @@ export function App() {
 		draft: Partial<Pick<Work, "id">> &
 			Pick<Work, "name" | "affectDate" | "remarks">
 	) => {
-		if (!project) return;
-		const targetWG = project.workGroups.find((g) => g.id === wgId);
-		if (!targetWG) return;
-		let newWG: WorkGroup;
-		if (draft.id) {
-			newWG = {
-				...targetWG,
-				works: targetWG.works.map((w) =>
-					w.id === draft.id ? { ...w, ...draft } : w
-				),
-			};
+		if (project === undefined) return;
+		const onError = (e: Error) => alert(e.message);
+		if (draft.id !== undefined && draft.id !== "") {
+			const existing = (apiWorks ?? []).find((w) => w.id === draft.id);
+			updateWorkMutation.mutate(
+				{
+					id: draft.id,
+					name: draft.name,
+					description: existing?.description ?? "",
+					affectDate:
+						draft.affectDate !== undefined && draft.affectDate !== ""
+							? new Date(draft.affectDate)
+							: undefined,
+					affixContentType: existing?.affixContentType,
+					affixContent: existing?.affixContent,
+					remarks: draft.remarks,
+					hasETrainTimetable: existing?.hasETrainTimetable,
+					eTrainTimetableContentType:
+						existing?.eTrainTimetableContentType,
+					eTrainTimetableContent: existing?.eTrainTimetableContent,
+				},
+				{ onError }
+			);
 		} else {
-			const newW: Work = { ...draft, id: uid("w"), trains: [] };
-			newWG = { ...targetWG, works: [...targetWG.works, newW] };
-			setCurrentWG(wgId);
-			setCurrentWork(newW.id);
-			setScreen("work");
+			createWorkMutation.mutate(
+				{
+					name: draft.name,
+					description: "",
+					affectDate:
+						draft.affectDate !== undefined && draft.affectDate !== ""
+							? new Date(draft.affectDate)
+							: undefined,
+					remarks: draft.remarks,
+				},
+				{
+					onError,
+					onSuccess: (created) => {
+						const newId: string =
+							(created as { worksId?: string }).worksId ?? "";
+						setCurrentWG(wgId);
+						if (newId !== "") {
+							setCurrentWork(newId);
+						}
+						setScreen("work");
+					},
+				}
+			);
 		}
-		const newProj: Project = {
-			...project,
-			workGroups: project.workGroups.map((g) =>
-				g.id === wgId ? newWG : g
-			),
-		};
-		updateProject(newProj);
 	};
-	const deleteWork = (wgId: string, workId: string) => {
-		if (!project) return;
-		const targetWG = project.workGroups.find((g) => g.id === wgId);
-		if (!targetWG) return;
-		const newWG: WorkGroup = {
-			...targetWG,
-			works: targetWG.works.filter((w) => w.id !== workId),
-		};
-		const newProj: Project = {
-			...project,
-			workGroups: project.workGroups.map((g) =>
-				g.id === wgId ? newWG : g
-			),
-		};
-		updateProject(newProj);
-		if (currentWork === workId) setCurrentWork(null);
+	const deleteWork = (workId: string) => {
+		deleteWorkMutation.mutate(workId, {
+			onError: (e: Error) => alert(e.message),
+		});
+		if (currentWork === workId) {
+			setCurrentWork(null);
+			setCurrentTrain(null);
+		}
 	};
 
-	/* ─── Train delete (called from WorkBrowser dialog) ─── */
-	const deleteTrain = (trainId: string) => {
-		if (!work) return;
-		const newWork: Work = {
-			...work,
-			trains: work.trains.filter((tr) => tr.id !== trainId),
-		};
-		updateWork(newWork);
+	/* ─── Train CRUD (wired from WorkBrowser) ─── */
+	const handleCreateTrain = (
+		draft: Omit<EntityTrain, "id" | "workId" | "createdAt">
+	) => {
+		createTrainMutation.mutate(draft, {
+			onError: (e: Error) => alert(e.message),
+		});
+	};
+	const handleUpdateTrain = (
+		vars: Pick<EntityTrain, "id"> &
+			Omit<EntityTrain, "id" | "workId" | "createdAt">
+	) => {
+		const existing = (apiTrains ?? []).find((t) => t.id === vars.id);
+		updateTrainMutation.mutate(
+			{ ...vars, description: existing?.description ?? "" },
+			{ onError: (e: Error) => alert(e.message) }
+		);
+	};
+	const handleDeleteTrain = (trainId: string) => {
+		deleteTrainMutation.mutate(trainId, {
+			onError: (e: Error) => alert(e.message),
+		});
+		if (currentTrain === trainId) {
+			setCurrentTrain(null);
+		}
 	};
 
 	/* ─── JSON Import / Export ─── */
@@ -620,7 +755,10 @@ export function App() {
 			}}
 			onSelectLines={() => setScreen("lines")}
 			onAddWG={() => setEditingWG({ new: true })}
-			onAddWork={(w) => setEditingWork({ wgId: w.id, new: true })}
+			onAddWork={(w) => {
+					setCurrentWG(w.id);
+					setEditingWork({ wgId: w.id, new: true });
+				}}
 			onWGContext={(x, y, wgRef) =>
 				setContextMenu({
 					x,
@@ -634,8 +772,13 @@ export function App() {
 						{
 							icon: "＋",
 							label: t.newWork,
-							onClick: () =>
-								setEditingWork({ wgId: wgRef.id, new: true }),
+							onClick: () => {
+								setCurrentWG(wgRef.id);
+								setEditingWork({
+									wgId: wgRef.id,
+									new: true,
+								});
+							},
 						},
 						{
 							icon: "🗑",
@@ -671,7 +814,7 @@ export function App() {
 									title: "ワークを削除",
 									message: `「${w.name}」を削除します。配下の ${w.trains?.length || 0} 列車も削除されます。`,
 									onConfirm: () =>
-										deleteWork(wgRef.id, w.id),
+										deleteWork(w.id),
 								}),
 						},
 					],
@@ -733,8 +876,10 @@ export function App() {
 				{projectId && screen === "work" && work && (
 					<WorkBrowser
 						work={work}
-						onUpdateWork={updateWork}
-						onDeleteTrain={deleteTrain}
+						onCreateTrain={handleCreateTrain}
+						onUpdateTrain={handleUpdateTrain}
+						onDeleteTrain={handleDeleteTrain}
+						onSelectTrain={setCurrentTrain}
 						onOpenStopPatternWizard={() =>
 							setShowStopPattern(true)
 						}
