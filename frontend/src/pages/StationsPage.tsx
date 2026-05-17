@@ -56,6 +56,7 @@ import type {
 	GridPaginationModel,
 	GridValueFormatterParams,
 } from "@mui/x-data-grid";
+import type { Station } from "trvis-api";
 
 const getRowIdOrUndef = (row: DateToNumberObjectType<Station>) =>
 	row.stationsId;
@@ -188,12 +189,14 @@ const useEditFormSetting = (): EditDataFormSetting<
 			type: FieldTypes.NUMBER,
 			isRequired: true,
 		},
-		// {
-		// 	name: "locationLonlat",
-		// 	label: t("Location [lon,lat]"),
-		// 	type: FieldTypes.NUMBER,
-		// 	isRequired: false,
-		// },
+		{
+			name: "locationLonlat",
+			name_lat: "locationLonlat.latitude",
+			name_lon: "locationLonlat.longitude",
+			label: t("Location (degree)"),
+			type: FieldTypes.LOCATION_LONLAT,
+			isRequired: false,
+		},
 		{
 			name: "onStationDetectRadiusM",
 			label: t("On Station Detect Radius [m]"),

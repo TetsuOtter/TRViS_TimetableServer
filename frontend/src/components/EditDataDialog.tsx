@@ -23,7 +23,7 @@ import type { EditDataFormSetting } from "./FormParts/FieldTypes";
 import type { setIsEditingPayloadType } from "../redux/payloadTypes";
 import type { AppAsyncThunk, AppSelector } from "../redux/store";
 import type { ActionCreatorWithPayload } from "@reduxjs/toolkit";
-import type { FieldValues } from "react-hook-form";
+import type { FieldValues, Path } from "react-hook-form";
 
 type EditWorkDialogProps<T extends FieldValues> = Readonly<{
 	formSettings: EditDataFormSetting<T>[];
@@ -69,7 +69,7 @@ export const EditDataDialog = <T extends FieldValues>({
 		isAddNew ? createData : updateData
 	);
 
-	const { control, handleSubmit, reset } = useForm<T>({
+	const { control, handleSubmit, reset, setValue, getValues } = useForm<T>({
 		mode: "all",
 	});
 
@@ -137,12 +137,14 @@ export const EditDataDialog = <T extends FieldValues>({
 						{isAddNew ? createModeTitle : editModeTitle}
 					</Typography>
 					{formSettings.map((settings) => (
-						<FormElement<T>
+						<FormElement<T, Path<T>>
 							key={settings.name}
 							settings={settings}
 							control={control}
 							data={initialState}
 							isProcessing={isProcessing}
+							setValue={setValue}
+							getValues={getValues}
 						/>
 					))}
 

@@ -3,11 +3,11 @@ import { memo } from "react";
 import { Edit, Engineering, Help, MenuBook } from "@mui/icons-material";
 import { Chip } from "@mui/material";
 import { useTranslation } from "react-i18next";
+import { WorkGroupPrivilegeTypeEnum } from "trvis-api";
 
-import { WorkGroupPrivilegeTypeEnum } from "../oas";
 import { privilegeTypeToString } from "../utils/PrivilegeTypeToString";
 
-import type { WorkGroupsPrivilegePrivilegeTypeEnum } from "../oas";
+import type { WorkGroupsPrivilegePrivilegeTypeEnum } from "trvis-api";
 
 export type PrivilegeTypeChipProps = {
 	readonly privilegeType:

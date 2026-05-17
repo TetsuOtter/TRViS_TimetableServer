@@ -232,6 +232,8 @@ const useEditFormSetting = (): EditDataFormSetting<
 	];
 };
 
+// TODO: 招待リンクを作成する機能を追加する
+
 const WorkGroupsPage = () => {
 	const { t } = useTranslation();
 	const editFormSetting = useEditFormSetting();

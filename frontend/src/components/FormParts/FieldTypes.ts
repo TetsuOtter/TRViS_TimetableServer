@@ -13,6 +13,7 @@ export const FieldTypes = {
 	COLOR: "color",
 	SELECT: "select",
 	SWITCH: "switch",
+	LOCATION_LONLAT: "location_lonlat",
 } as const;
 export type FieldTypes = (typeof FieldTypes)[keyof typeof FieldTypes];
 
@@ -33,6 +34,11 @@ type TextFieldSettings = {
 	isMultiline?: boolean;
 	rows?: number;
 };
+export type LonLatFieldSettings<T extends FieldValues> = {
+	type: (typeof FieldTypes)["LOCATION_LONLAT"];
+	name_lat: Path<T>;
+	name_lon: Path<T>;
+};
 
 export type EditDataFormSelectFieldSettings<
 	T extends string | number | symbol,
@@ -41,14 +47,19 @@ export type EditDataFormSelectFieldSettings<
 	items: Record<T, { value: T; label: string }>;
 };
 
-export type EditDataFormSetting<T extends FieldValues> = {
-	name: Path<T>;
+export type EditDataFormSetting<
+	T extends FieldValues,
+	TPath extends Path<T> = Path<T>,
+> = {
+	name: TPath;
 	label: string;
 	type: FieldTypes;
 	isRequired: boolean;
+	isDisabled?: boolean;
 } & (
 	| StringFieldSettings
 	| TextFieldSettings
+	| LonLatFieldSettings<T>
 	| {
 			type: (typeof FieldTypes)["NUMBER"];
 			min?: number;
@@ -76,3 +87,8 @@ export const isTextField = <T extends FieldValues>(
 	settings: EditDataFormSetting<T>
 ): settings is EditDataFormSetting<T> & TextFieldSettings =>
 	settings.type === FieldTypes.TEXT;
+
+export const isLonLatField = <T extends FieldValues>(
+	settings: EditDataFormSetting<T>
+): settings is EditDataFormSetting<T> & LonLatFieldSettings<T> =>
+	settings.type === FieldTypes.LOCATION_LONLAT;

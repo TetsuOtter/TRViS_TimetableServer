@@ -9,7 +9,12 @@ import { DatePicker } from "@mui/x-date-pickers";
 import { Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 
-import { FieldTypes, isStringField, isTextField } from "./FieldTypes";
+import {
+	FieldTypes,
+	isLonLatField,
+	isStringField,
+	isTextField,
+} from "./FieldTypes";
 
 import type { EditDataFormSetting } from "./FieldTypes";
 import type { TextFieldProps } from "@mui/material";
@@ -18,21 +23,33 @@ import type {
 	FieldValues,
 	Path,
 	RegisterOptions,
+	UseFormGetValues,
+	UseFormSetValue,
 } from "react-hook-form";
 
-type FormElementProps<T extends FieldValues> = Readonly<{
+export type FormElementProps<
+	T extends FieldValues,
+	TPath extends Path<T>,
+> = Readonly<{
 	data: T | undefined;
-	settings: EditDataFormSetting<T>;
+	settings: EditDataFormSetting<T, TPath>;
 	control: Control<T>;
 	isProcessing: boolean;
+	setValue: UseFormSetValue<T>;
+	getValues: UseFormGetValues<T>;
 }>;
-export const FormElement = <T extends FieldValues>({
-	data,
+export const FormElement = <T extends FieldValues, TPath extends Path<T>>({
 	settings,
 	control,
 	isProcessing,
-}: FormElementProps<T>) => {
+	// setValue,
+	getValues,
+}: FormElementProps<T, TPath>) => {
 	const { t } = useTranslation();
+
+	if (isLonLatField(settings)) {
+		return null;
+	}
 
 	const propsMinMaxLength: RegisterOptions<T, Path<T>> = {};
 	if (isStringField(settings)) {
@@ -67,7 +84,7 @@ export const FormElement = <T extends FieldValues>({
 		<Controller
 			name={settings.name}
 			control={control}
-			defaultValue={data?.[settings.name]}
+			defaultValue={getValues(settings.name)}
 			rules={{
 				required: { value: settings.isRequired, message: t("required") },
 				...propsMinMaxLength,
@@ -76,7 +93,7 @@ export const FormElement = <T extends FieldValues>({
 				settings.type === FieldTypes.DATE ? (
 					<DatePicker
 						{...field}
-						disabled={isProcessing}
+						disabled={isProcessing || settings.isDisabled === true}
 						label={settings.label}
 						slotProps={{
 							textField: {
@@ -91,7 +108,7 @@ export const FormElement = <T extends FieldValues>({
 				) : settings.type === FieldTypes.SELECT ? (
 					<Select
 						{...field}
-						disabled={isProcessing}
+						disabled={isProcessing || settings.isDisabled === true}
 						label={settings.label}
 						variant="outlined"
 						fullWidth>
@@ -106,13 +123,13 @@ export const FormElement = <T extends FieldValues>({
 				) : settings.type === FieldTypes.SWITCH ? (
 					<FormControlLabel
 						label={settings.label}
-						disabled={isProcessing}
+						disabled={isProcessing || settings.isDisabled === true}
 						control={<Switch {...field} />}
 					/>
 				) : (
 					<TextField
 						{...field}
-						disabled={isProcessing}
+						disabled={isProcessing || settings.isDisabled === true}
 						label={settings.label}
 						type={settings.type}
 						variant="outlined"
