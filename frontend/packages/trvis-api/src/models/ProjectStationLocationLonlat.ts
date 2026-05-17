@@ -16,27 +16,27 @@ import { exists, mapValues } from '../runtime';
 /**
  * 駅の位置 (緯度経度)
  * @export
- * @interface StationLocationLonlat
+ * @interface ProjectStationLocationLonlat
  */
-export interface StationLocationLonlat {
+export interface ProjectStationLocationLonlat {
     /**
      * 経度
      * @type {number}
-     * @memberof StationLocationLonlat
+     * @memberof ProjectStationLocationLonlat
      */
     longitude: number;
     /**
      * 緯度
      * @type {number}
-     * @memberof StationLocationLonlat
+     * @memberof ProjectStationLocationLonlat
      */
     latitude: number;
 }
 
 /**
- * Check if a given object implements the StationLocationLonlat interface.
+ * Check if a given object implements the ProjectStationLocationLonlat interface.
  */
-export function instanceOfStationLocationLonlat(value: object): boolean {
+export function instanceOfProjectStationLocationLonlat(value: object): boolean {
     let isInstance = true;
     isInstance = isInstance && "longitude" in value;
     isInstance = isInstance && "latitude" in value;
@@ -44,11 +44,11 @@ export function instanceOfStationLocationLonlat(value: object): boolean {
     return isInstance;
 }
 
-export function StationLocationLonlatFromJSON(json: any): StationLocationLonlat {
-    return StationLocationLonlatFromJSONTyped(json, false);
+export function ProjectStationLocationLonlatFromJSON(json: any): ProjectStationLocationLonlat {
+    return ProjectStationLocationLonlatFromJSONTyped(json, false);
 }
 
-export function StationLocationLonlatFromJSONTyped(json: any, ignoreDiscriminator: boolean): StationLocationLonlat {
+export function ProjectStationLocationLonlatFromJSONTyped(json: any, ignoreDiscriminator: boolean): ProjectStationLocationLonlat {
     if ((json === undefined) || (json === null)) {
         return json;
     }
@@ -59,7 +59,7 @@ export function StationLocationLonlatFromJSONTyped(json: any, ignoreDiscriminato
     };
 }
 
-export function StationLocationLonlatToJSON(value?: StationLocationLonlat | null): any {
+export function ProjectStationLocationLonlatToJSON(value?: ProjectStationLocationLonlat | null): any {
     if (value === undefined) {
         return undefined;
     }

@@ -14,29 +14,29 @@
 
 import { exists, mapValues } from '../runtime';
 /**
- * 駅の位置 (緯度経度)
+ * その路線上での駅の位置 (緯度経度) ※未指定時はProject Stationの値を使用
  * @export
- * @interface StationLocationLonlat
+ * @interface StationOnLineLocationLonlat
  */
-export interface StationLocationLonlat {
+export interface StationOnLineLocationLonlat {
     /**
      * 経度
      * @type {number}
-     * @memberof StationLocationLonlat
+     * @memberof StationOnLineLocationLonlat
      */
     longitude: number;
     /**
      * 緯度
      * @type {number}
-     * @memberof StationLocationLonlat
+     * @memberof StationOnLineLocationLonlat
      */
     latitude: number;
 }
 
 /**
- * Check if a given object implements the StationLocationLonlat interface.
+ * Check if a given object implements the StationOnLineLocationLonlat interface.
  */
-export function instanceOfStationLocationLonlat(value: object): boolean {
+export function instanceOfStationOnLineLocationLonlat(value: object): boolean {
     let isInstance = true;
     isInstance = isInstance && "longitude" in value;
     isInstance = isInstance && "latitude" in value;
@@ -44,11 +44,11 @@ export function instanceOfStationLocationLonlat(value: object): boolean {
     return isInstance;
 }
 
-export function StationLocationLonlatFromJSON(json: any): StationLocationLonlat {
-    return StationLocationLonlatFromJSONTyped(json, false);
+export function StationOnLineLocationLonlatFromJSON(json: any): StationOnLineLocationLonlat {
+    return StationOnLineLocationLonlatFromJSONTyped(json, false);
 }
 
-export function StationLocationLonlatFromJSONTyped(json: any, ignoreDiscriminator: boolean): StationLocationLonlat {
+export function StationOnLineLocationLonlatFromJSONTyped(json: any, ignoreDiscriminator: boolean): StationOnLineLocationLonlat {
     if ((json === undefined) || (json === null)) {
         return json;
     }
@@ -59,7 +59,7 @@ export function StationLocationLonlatFromJSONTyped(json: any, ignoreDiscriminato
     };
 }
 
-export function StationLocationLonlatToJSON(value?: StationLocationLonlat | null): any {
+export function StationOnLineLocationLonlatToJSON(value?: StationOnLineLocationLonlat | null): any {
     if (value === undefined) {
         return undefined;
     }

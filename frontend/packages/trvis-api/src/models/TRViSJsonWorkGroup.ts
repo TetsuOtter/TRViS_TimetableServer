@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
+import { exists, mapValues } from '../runtime';
 import type { TRViSJsonWork } from './TRViSJsonWork';
 import {
     TRViSJsonWorkFromJSON,
@@ -49,10 +49,12 @@ export interface TRViSJsonWorkGroup {
 /**
  * Check if a given object implements the TRViSJsonWorkGroup interface.
  */
-export function instanceOfTRViSJsonWorkGroup(value: object): value is TRViSJsonWorkGroup {
-    if (!('name' in value) || value['name'] === undefined) return false;
-    if (!('works' in value) || value['works'] === undefined) return false;
-    return true;
+export function instanceOfTRViSJsonWorkGroup(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "name" in value;
+    isInstance = isInstance && "works" in value;
+
+    return isInstance;
 }
 
 export function TRViSJsonWorkGroupFromJSON(json: any): TRViSJsonWorkGroup {
@@ -60,26 +62,29 @@ export function TRViSJsonWorkGroupFromJSON(json: any): TRViSJsonWorkGroup {
 }
 
 export function TRViSJsonWorkGroupFromJSONTyped(json: any, ignoreDiscriminator: boolean): TRViSJsonWorkGroup {
-    if (json == null) {
+    if ((json === undefined) || (json === null)) {
         return json;
     }
     return {
         
         'name': json['Name'],
         'works': ((json['Works'] as Array<any>).map(TRViSJsonWorkFromJSON)),
-        'dBVersion': json['DBVersion'] == null ? undefined : json['DBVersion'],
+        'dBVersion': !exists(json, 'DBVersion') ? undefined : json['DBVersion'],
     };
 }
 
 export function TRViSJsonWorkGroupToJSON(value?: TRViSJsonWorkGroup | null): any {
-    if (value == null) {
-        return value;
+    if (value === undefined) {
+        return undefined;
+    }
+    if (value === null) {
+        return null;
     }
     return {
         
-        'Name': value['name'],
-        'Works': ((value['works'] as Array<any>).map(TRViSJsonWorkToJSON)),
-        'DBVersion': value['dBVersion'],
+        'Name': value.name,
+        'Works': ((value.works as Array<any>).map(TRViSJsonWorkToJSON)),
+        'DBVersion': value.dBVersion,
     };
 }
 

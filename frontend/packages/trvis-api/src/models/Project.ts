@@ -16,63 +16,57 @@ import { exists, mapValues } from '../runtime';
 /**
  * 
  * @export
- * @interface WorkGroup
+ * @interface Project
  */
-export interface WorkGroup {
+export interface Project {
     /**
-     * WorkGroupの説明
+     * Projectの説明
      * @type {string}
-     * @memberof WorkGroup
+     * @memberof Project
      */
     description: string;
     /**
-     * WorkGroupの名前
+     * Projectの名前
      * @type {string}
-     * @memberof WorkGroup
+     * @memberof Project
      */
     name: string;
     /**
-     * WorkGroupのID (UUID)
+     * ProjectのID (UUID)
      * @type {string}
-     * @memberof WorkGroup
-     */
-    readonly workGroupsId?: string;
-    /**
-     * 所属するProjectのID (UUID)
-     * @type {string}
-     * @memberof WorkGroup
+     * @memberof Project
      */
     readonly projectsId?: string;
     /**
      * 作成日時
      * @type {Date}
-     * @memberof WorkGroup
+     * @memberof Project
      */
     readonly createdAt?: Date;
     /**
      * 権限の種類
      * @type {string}
-     * @memberof WorkGroup
+     * @memberof Project
      */
-    readonly privilegeType?: WorkGroupPrivilegeTypeEnum;
+    readonly privilegeType?: ProjectPrivilegeTypeEnum;
 }
 
 
 /**
  * @export
  */
-export const WorkGroupPrivilegeTypeEnum = {
+export const ProjectPrivilegeTypeEnum = {
     Read: 'read',
     Write: 'write',
     Admin: 'admin'
 } as const;
-export type WorkGroupPrivilegeTypeEnum = typeof WorkGroupPrivilegeTypeEnum[keyof typeof WorkGroupPrivilegeTypeEnum];
+export type ProjectPrivilegeTypeEnum = typeof ProjectPrivilegeTypeEnum[keyof typeof ProjectPrivilegeTypeEnum];
 
 
 /**
- * Check if a given object implements the WorkGroup interface.
+ * Check if a given object implements the Project interface.
  */
-export function instanceOfWorkGroup(value: object): boolean {
+export function instanceOfProject(value: object): boolean {
     let isInstance = true;
     isInstance = isInstance && "description" in value;
     isInstance = isInstance && "name" in value;
@@ -80,11 +74,11 @@ export function instanceOfWorkGroup(value: object): boolean {
     return isInstance;
 }
 
-export function WorkGroupFromJSON(json: any): WorkGroup {
-    return WorkGroupFromJSONTyped(json, false);
+export function ProjectFromJSON(json: any): Project {
+    return ProjectFromJSONTyped(json, false);
 }
 
-export function WorkGroupFromJSONTyped(json: any, ignoreDiscriminator: boolean): WorkGroup {
+export function ProjectFromJSONTyped(json: any, ignoreDiscriminator: boolean): Project {
     if ((json === undefined) || (json === null)) {
         return json;
     }
@@ -92,14 +86,13 @@ export function WorkGroupFromJSONTyped(json: any, ignoreDiscriminator: boolean):
         
         'description': json['description'],
         'name': json['name'],
-        'workGroupsId': !exists(json, 'work_groups_id') ? undefined : json['work_groups_id'],
         'projectsId': !exists(json, 'projects_id') ? undefined : json['projects_id'],
         'createdAt': !exists(json, 'created_at') ? undefined : (new Date(json['created_at'])),
         'privilegeType': !exists(json, 'privilege_type') ? undefined : json['privilege_type'],
     };
 }
 
-export function WorkGroupToJSON(value?: WorkGroup | null): any {
+export function ProjectToJSON(value?: Project | null): any {
     if (value === undefined) {
         return undefined;
     }

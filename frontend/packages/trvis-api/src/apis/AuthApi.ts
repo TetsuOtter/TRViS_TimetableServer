@@ -78,7 +78,7 @@ export class AuthApi extends runtime.BaseAPI implements AuthApiInterface {
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: TokenRequestToJSON(requestParameters['tokenRequest']),
+            body: TokenRequestToJSON(requestParameters.tokenRequest),
         }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => TokenResponseFromJSON(jsonValue));

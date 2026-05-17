@@ -27,7 +27,7 @@ import {
 
 export interface CreateWorkRequest {
     workGroupId: string;
-    work: Omit<Work, 'works_id'|'work_groups_id'|'created_at'>;
+    work: Work;
 }
 
 export interface DeleteWorkRequest {
@@ -47,7 +47,7 @@ export interface GetWorkListRequest {
 
 export interface UpdateWorkRequest {
     workId: string;
-    work: Omit<Work, 'works_id'|'work_groups_id'|'created_at'>;
+    work: Work;
 }
 
 /**
@@ -154,18 +154,12 @@ export class WorkApi extends runtime.BaseAPI implements WorkApiInterface {
      * 作成する
      */
     async createWorkRaw(requestParameters: CreateWorkRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Work>> {
-        if (requestParameters['workGroupId'] == null) {
-            throw new runtime.RequiredError(
-                'workGroupId',
-                'Required parameter "workGroupId" was null or undefined when calling createWork().'
-            );
+        if (requestParameters.workGroupId === null || requestParameters.workGroupId === undefined) {
+            throw new runtime.RequiredError('workGroupId','Required parameter requestParameters.workGroupId was null or undefined when calling createWork.');
         }
 
-        if (requestParameters['work'] == null) {
-            throw new runtime.RequiredError(
-                'work',
-                'Required parameter "work" was null or undefined when calling createWork().'
-            );
+        if (requestParameters.work === null || requestParameters.work === undefined) {
+            throw new runtime.RequiredError('work','Required parameter requestParameters.work was null or undefined when calling createWork.');
         }
 
         const queryParameters: any = {};
@@ -183,11 +177,11 @@ export class WorkApi extends runtime.BaseAPI implements WorkApiInterface {
             }
         }
         const response = await this.request({
-            path: `/work_groups/{workGroupId}/works`.replace(`{${"workGroupId"}}`, encodeURIComponent(String(requestParameters['workGroupId']))),
+            path: `/work_groups/{workGroupId}/works`.replace(`{${"workGroupId"}}`, encodeURIComponent(String(requestParameters.workGroupId))),
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: WorkToJSON(requestParameters['work']),
+            body: WorkToJSON(requestParameters.work),
         }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => WorkFromJSON(jsonValue));
@@ -207,11 +201,8 @@ export class WorkApi extends runtime.BaseAPI implements WorkApiInterface {
      * 削除する
      */
     async deleteWorkRaw(requestParameters: DeleteWorkRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        if (requestParameters['workId'] == null) {
-            throw new runtime.RequiredError(
-                'workId',
-                'Required parameter "workId" was null or undefined when calling deleteWork().'
-            );
+        if (requestParameters.workId === null || requestParameters.workId === undefined) {
+            throw new runtime.RequiredError('workId','Required parameter requestParameters.workId was null or undefined when calling deleteWork.');
         }
 
         const queryParameters: any = {};
@@ -227,7 +218,7 @@ export class WorkApi extends runtime.BaseAPI implements WorkApiInterface {
             }
         }
         const response = await this.request({
-            path: `/works/{workId}`.replace(`{${"workId"}}`, encodeURIComponent(String(requestParameters['workId']))),
+            path: `/works/{workId}`.replace(`{${"workId"}}`, encodeURIComponent(String(requestParameters.workId))),
             method: 'DELETE',
             headers: headerParameters,
             query: queryParameters,
@@ -249,11 +240,8 @@ export class WorkApi extends runtime.BaseAPI implements WorkApiInterface {
      * 1件取得する
      */
     async getWorkRaw(requestParameters: GetWorkRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Work>> {
-        if (requestParameters['workId'] == null) {
-            throw new runtime.RequiredError(
-                'workId',
-                'Required parameter "workId" was null or undefined when calling getWork().'
-            );
+        if (requestParameters.workId === null || requestParameters.workId === undefined) {
+            throw new runtime.RequiredError('workId','Required parameter requestParameters.workId was null or undefined when calling getWork.');
         }
 
         const queryParameters: any = {};
@@ -269,7 +257,7 @@ export class WorkApi extends runtime.BaseAPI implements WorkApiInterface {
             }
         }
         const response = await this.request({
-            path: `/works/{workId}`.replace(`{${"workId"}}`, encodeURIComponent(String(requestParameters['workId']))),
+            path: `/works/{workId}`.replace(`{${"workId"}}`, encodeURIComponent(String(requestParameters.workId))),
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -292,25 +280,22 @@ export class WorkApi extends runtime.BaseAPI implements WorkApiInterface {
      * 複数件取得する
      */
     async getWorkListRaw(requestParameters: GetWorkListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Work>>> {
-        if (requestParameters['workGroupId'] == null) {
-            throw new runtime.RequiredError(
-                'workGroupId',
-                'Required parameter "workGroupId" was null or undefined when calling getWorkList().'
-            );
+        if (requestParameters.workGroupId === null || requestParameters.workGroupId === undefined) {
+            throw new runtime.RequiredError('workGroupId','Required parameter requestParameters.workGroupId was null or undefined when calling getWorkList.');
         }
 
         const queryParameters: any = {};
 
-        if (requestParameters['p'] != null) {
-            queryParameters['p'] = requestParameters['p'];
+        if (requestParameters.p !== undefined) {
+            queryParameters['p'] = requestParameters.p;
         }
 
-        if (requestParameters['limit'] != null) {
-            queryParameters['limit'] = requestParameters['limit'];
+        if (requestParameters.limit !== undefined) {
+            queryParameters['limit'] = requestParameters.limit;
         }
 
-        if (requestParameters['top'] != null) {
-            queryParameters['top'] = requestParameters['top'];
+        if (requestParameters.top !== undefined) {
+            queryParameters['top'] = requestParameters.top;
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -324,7 +309,7 @@ export class WorkApi extends runtime.BaseAPI implements WorkApiInterface {
             }
         }
         const response = await this.request({
-            path: `/work_groups/{workGroupId}/works`.replace(`{${"workGroupId"}}`, encodeURIComponent(String(requestParameters['workGroupId']))),
+            path: `/work_groups/{workGroupId}/works`.replace(`{${"workGroupId"}}`, encodeURIComponent(String(requestParameters.workGroupId))),
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -347,18 +332,12 @@ export class WorkApi extends runtime.BaseAPI implements WorkApiInterface {
      * 更新する
      */
     async updateWorkRaw(requestParameters: UpdateWorkRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Work>> {
-        if (requestParameters['workId'] == null) {
-            throw new runtime.RequiredError(
-                'workId',
-                'Required parameter "workId" was null or undefined when calling updateWork().'
-            );
+        if (requestParameters.workId === null || requestParameters.workId === undefined) {
+            throw new runtime.RequiredError('workId','Required parameter requestParameters.workId was null or undefined when calling updateWork.');
         }
 
-        if (requestParameters['work'] == null) {
-            throw new runtime.RequiredError(
-                'work',
-                'Required parameter "work" was null or undefined when calling updateWork().'
-            );
+        if (requestParameters.work === null || requestParameters.work === undefined) {
+            throw new runtime.RequiredError('work','Required parameter requestParameters.work was null or undefined when calling updateWork.');
         }
 
         const queryParameters: any = {};
@@ -376,11 +355,11 @@ export class WorkApi extends runtime.BaseAPI implements WorkApiInterface {
             }
         }
         const response = await this.request({
-            path: `/works/{workId}`.replace(`{${"workId"}}`, encodeURIComponent(String(requestParameters['workId']))),
+            path: `/works/{workId}`.replace(`{${"workId"}}`, encodeURIComponent(String(requestParameters.workId))),
             method: 'PUT',
             headers: headerParameters,
             query: queryParameters,
-            body: WorkToJSON(requestParameters['work']),
+            body: WorkToJSON(requestParameters.work),
         }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => WorkFromJSON(jsonValue));

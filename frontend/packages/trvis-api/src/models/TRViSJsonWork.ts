@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
+import { exists, mapValues } from '../runtime';
 import type { TRViSJsonTrain } from './TRViSJsonTrain';
 import {
     TRViSJsonTrainFromJSON,
@@ -85,10 +85,12 @@ export interface TRViSJsonWork {
 /**
  * Check if a given object implements the TRViSJsonWork interface.
  */
-export function instanceOfTRViSJsonWork(value: object): value is TRViSJsonWork {
-    if (!('name' in value) || value['name'] === undefined) return false;
-    if (!('trains' in value) || value['trains'] === undefined) return false;
-    return true;
+export function instanceOfTRViSJsonWork(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "name" in value;
+    isInstance = isInstance && "trains" in value;
+
+    return isInstance;
 }
 
 export function TRViSJsonWorkFromJSON(json: any): TRViSJsonWork {
@@ -96,38 +98,41 @@ export function TRViSJsonWorkFromJSON(json: any): TRViSJsonWork {
 }
 
 export function TRViSJsonWorkFromJSONTyped(json: any, ignoreDiscriminator: boolean): TRViSJsonWork {
-    if (json == null) {
+    if ((json === undefined) || (json === null)) {
         return json;
     }
     return {
         
         'name': json['Name'],
         'trains': ((json['Trains'] as Array<any>).map(TRViSJsonTrainFromJSON)),
-        'affectDate': json['AffectDate'] == null ? undefined : (new Date(json['AffectDate'])),
-        'affixContentType': json['AffixContentType'] == null ? undefined : json['AffixContentType'],
-        'affixContent': json['AffixContent'] == null ? undefined : json['AffixContent'],
-        'remarks': json['Remarks'] == null ? undefined : json['Remarks'],
-        'hasETrainTimetable': json['HasETrainTimetable'] == null ? undefined : json['HasETrainTimetable'],
-        'eTrainTimetableContentType': json['ETrainTimetableContentType'] == null ? undefined : json['ETrainTimetableContentType'],
-        'eTrainTimetableContent': json['ETrainTimetableContent'] == null ? undefined : json['ETrainTimetableContent'],
+        'affectDate': !exists(json, 'AffectDate') ? undefined : (json['AffectDate'] === null ? null : new Date(json['AffectDate'])),
+        'affixContentType': !exists(json, 'AffixContentType') ? undefined : json['AffixContentType'],
+        'affixContent': !exists(json, 'AffixContent') ? undefined : json['AffixContent'],
+        'remarks': !exists(json, 'Remarks') ? undefined : json['Remarks'],
+        'hasETrainTimetable': !exists(json, 'HasETrainTimetable') ? undefined : json['HasETrainTimetable'],
+        'eTrainTimetableContentType': !exists(json, 'ETrainTimetableContentType') ? undefined : json['ETrainTimetableContentType'],
+        'eTrainTimetableContent': !exists(json, 'ETrainTimetableContent') ? undefined : json['ETrainTimetableContent'],
     };
 }
 
 export function TRViSJsonWorkToJSON(value?: TRViSJsonWork | null): any {
-    if (value == null) {
-        return value;
+    if (value === undefined) {
+        return undefined;
+    }
+    if (value === null) {
+        return null;
     }
     return {
         
-        'Name': value['name'],
-        'Trains': ((value['trains'] as Array<any>).map(TRViSJsonTrainToJSON)),
-        'AffectDate': value['affectDate'] == null ? undefined : ((value['affectDate'] as any).toISOString().substring(0,10)),
-        'AffixContentType': value['affixContentType'],
-        'AffixContent': value['affixContent'],
-        'Remarks': value['remarks'],
-        'HasETrainTimetable': value['hasETrainTimetable'],
-        'ETrainTimetableContentType': value['eTrainTimetableContentType'],
-        'ETrainTimetableContent': value['eTrainTimetableContent'],
+        'Name': value.name,
+        'Trains': ((value.trains as Array<any>).map(TRViSJsonTrainToJSON)),
+        'AffectDate': value.affectDate === undefined ? undefined : (value.affectDate === null ? null : value.affectDate.toISOString().substring(0,10)),
+        'AffixContentType': value.affixContentType,
+        'AffixContent': value.affixContent,
+        'Remarks': value.remarks,
+        'HasETrainTimetable': value.hasETrainTimetable,
+        'ETrainTimetableContentType': value.eTrainTimetableContentType,
+        'ETrainTimetableContent': value.eTrainTimetableContent,
     };
 }
 

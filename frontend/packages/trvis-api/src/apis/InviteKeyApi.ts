@@ -30,7 +30,7 @@ import {
 
 export interface CreateInviteKeyRequest {
     workGroupId: string;
-    inviteKey: Omit<InviteKey, 'invite_keys_id'|'work_groups_id'|'created_at'|'disabled_at'>;
+    inviteKey: InviteKey;
 }
 
 export interface DeleteInviteKeyRequest {
@@ -58,7 +58,7 @@ export interface GetMyInviteKeyListRequest {
 
 export interface UpdateInviteKeyRequest {
     inviteKeyId: string;
-    inviteKey: Omit<InviteKey, 'invite_keys_id'|'work_groups_id'|'created_at'|'disabled_at'>;
+    inviteKey: InviteKey;
 }
 
 export interface UseInviteKeyRequest {
@@ -205,18 +205,12 @@ export class InviteKeyApi extends runtime.BaseAPI implements InviteKeyApiInterfa
      * 作成する
      */
     async createInviteKeyRaw(requestParameters: CreateInviteKeyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<WorkGroup>> {
-        if (requestParameters['workGroupId'] == null) {
-            throw new runtime.RequiredError(
-                'workGroupId',
-                'Required parameter "workGroupId" was null or undefined when calling createInviteKey().'
-            );
+        if (requestParameters.workGroupId === null || requestParameters.workGroupId === undefined) {
+            throw new runtime.RequiredError('workGroupId','Required parameter requestParameters.workGroupId was null or undefined when calling createInviteKey.');
         }
 
-        if (requestParameters['inviteKey'] == null) {
-            throw new runtime.RequiredError(
-                'inviteKey',
-                'Required parameter "inviteKey" was null or undefined when calling createInviteKey().'
-            );
+        if (requestParameters.inviteKey === null || requestParameters.inviteKey === undefined) {
+            throw new runtime.RequiredError('inviteKey','Required parameter requestParameters.inviteKey was null or undefined when calling createInviteKey.');
         }
 
         const queryParameters: any = {};
@@ -234,11 +228,11 @@ export class InviteKeyApi extends runtime.BaseAPI implements InviteKeyApiInterfa
             }
         }
         const response = await this.request({
-            path: `/work_groups/{workGroupId}/invite_keys`.replace(`{${"workGroupId"}}`, encodeURIComponent(String(requestParameters['workGroupId']))),
+            path: `/work_groups/{workGroupId}/invite_keys`.replace(`{${"workGroupId"}}`, encodeURIComponent(String(requestParameters.workGroupId))),
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: InviteKeyToJSON(requestParameters['inviteKey']),
+            body: InviteKeyToJSON(requestParameters.inviteKey),
         }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => WorkGroupFromJSON(jsonValue));
@@ -258,11 +252,8 @@ export class InviteKeyApi extends runtime.BaseAPI implements InviteKeyApiInterfa
      * 無効化する
      */
     async deleteInviteKeyRaw(requestParameters: DeleteInviteKeyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        if (requestParameters['inviteKeyId'] == null) {
-            throw new runtime.RequiredError(
-                'inviteKeyId',
-                'Required parameter "inviteKeyId" was null or undefined when calling deleteInviteKey().'
-            );
+        if (requestParameters.inviteKeyId === null || requestParameters.inviteKeyId === undefined) {
+            throw new runtime.RequiredError('inviteKeyId','Required parameter requestParameters.inviteKeyId was null or undefined when calling deleteInviteKey.');
         }
 
         const queryParameters: any = {};
@@ -278,7 +269,7 @@ export class InviteKeyApi extends runtime.BaseAPI implements InviteKeyApiInterfa
             }
         }
         const response = await this.request({
-            path: `/invite_keys/{inviteKeyId}`.replace(`{${"inviteKeyId"}}`, encodeURIComponent(String(requestParameters['inviteKeyId']))),
+            path: `/invite_keys/{inviteKeyId}`.replace(`{${"inviteKeyId"}}`, encodeURIComponent(String(requestParameters.inviteKeyId))),
             method: 'DELETE',
             headers: headerParameters,
             query: queryParameters,
@@ -300,11 +291,8 @@ export class InviteKeyApi extends runtime.BaseAPI implements InviteKeyApiInterfa
      * 1件取得する
      */
     async getInviteKeyRaw(requestParameters: GetInviteKeyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InviteKey>> {
-        if (requestParameters['inviteKeyId'] == null) {
-            throw new runtime.RequiredError(
-                'inviteKeyId',
-                'Required parameter "inviteKeyId" was null or undefined when calling getInviteKey().'
-            );
+        if (requestParameters.inviteKeyId === null || requestParameters.inviteKeyId === undefined) {
+            throw new runtime.RequiredError('inviteKeyId','Required parameter requestParameters.inviteKeyId was null or undefined when calling getInviteKey.');
         }
 
         const queryParameters: any = {};
@@ -312,7 +300,7 @@ export class InviteKeyApi extends runtime.BaseAPI implements InviteKeyApiInterfa
         const headerParameters: runtime.HTTPHeaders = {};
 
         const response = await this.request({
-            path: `/invite_keys/{inviteKeyId}`.replace(`{${"inviteKeyId"}}`, encodeURIComponent(String(requestParameters['inviteKeyId']))),
+            path: `/invite_keys/{inviteKeyId}`.replace(`{${"inviteKeyId"}}`, encodeURIComponent(String(requestParameters.inviteKeyId))),
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -335,29 +323,26 @@ export class InviteKeyApi extends runtime.BaseAPI implements InviteKeyApiInterfa
      * 一覧を取得する
      */
     async getInviteKeyListRaw(requestParameters: GetInviteKeyListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<InviteKey>>> {
-        if (requestParameters['workGroupId'] == null) {
-            throw new runtime.RequiredError(
-                'workGroupId',
-                'Required parameter "workGroupId" was null or undefined when calling getInviteKeyList().'
-            );
+        if (requestParameters.workGroupId === null || requestParameters.workGroupId === undefined) {
+            throw new runtime.RequiredError('workGroupId','Required parameter requestParameters.workGroupId was null or undefined when calling getInviteKeyList.');
         }
 
         const queryParameters: any = {};
 
-        if (requestParameters['p'] != null) {
-            queryParameters['p'] = requestParameters['p'];
+        if (requestParameters.p !== undefined) {
+            queryParameters['p'] = requestParameters.p;
         }
 
-        if (requestParameters['limit'] != null) {
-            queryParameters['limit'] = requestParameters['limit'];
+        if (requestParameters.limit !== undefined) {
+            queryParameters['limit'] = requestParameters.limit;
         }
 
-        if (requestParameters['top'] != null) {
-            queryParameters['top'] = requestParameters['top'];
+        if (requestParameters.top !== undefined) {
+            queryParameters['top'] = requestParameters.top;
         }
 
-        if (requestParameters['expired'] != null) {
-            queryParameters['expired'] = requestParameters['expired'];
+        if (requestParameters.expired !== undefined) {
+            queryParameters['expired'] = requestParameters.expired;
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -371,7 +356,7 @@ export class InviteKeyApi extends runtime.BaseAPI implements InviteKeyApiInterfa
             }
         }
         const response = await this.request({
-            path: `/work_groups/{workGroupId}/invite_keys`.replace(`{${"workGroupId"}}`, encodeURIComponent(String(requestParameters['workGroupId']))),
+            path: `/work_groups/{workGroupId}/invite_keys`.replace(`{${"workGroupId"}}`, encodeURIComponent(String(requestParameters.workGroupId))),
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -396,20 +381,20 @@ export class InviteKeyApi extends runtime.BaseAPI implements InviteKeyApiInterfa
     async getMyInviteKeyListRaw(requestParameters: GetMyInviteKeyListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<InviteKey>>> {
         const queryParameters: any = {};
 
-        if (requestParameters['p'] != null) {
-            queryParameters['p'] = requestParameters['p'];
+        if (requestParameters.p !== undefined) {
+            queryParameters['p'] = requestParameters.p;
         }
 
-        if (requestParameters['limit'] != null) {
-            queryParameters['limit'] = requestParameters['limit'];
+        if (requestParameters.limit !== undefined) {
+            queryParameters['limit'] = requestParameters.limit;
         }
 
-        if (requestParameters['top'] != null) {
-            queryParameters['top'] = requestParameters['top'];
+        if (requestParameters.top !== undefined) {
+            queryParameters['top'] = requestParameters.top;
         }
 
-        if (requestParameters['expired'] != null) {
-            queryParameters['expired'] = requestParameters['expired'];
+        if (requestParameters.expired !== undefined) {
+            queryParameters['expired'] = requestParameters.expired;
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -446,18 +431,12 @@ export class InviteKeyApi extends runtime.BaseAPI implements InviteKeyApiInterfa
      * (未実装) 更新する
      */
     async updateInviteKeyRaw(requestParameters: UpdateInviteKeyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<InviteKey>> {
-        if (requestParameters['inviteKeyId'] == null) {
-            throw new runtime.RequiredError(
-                'inviteKeyId',
-                'Required parameter "inviteKeyId" was null or undefined when calling updateInviteKey().'
-            );
+        if (requestParameters.inviteKeyId === null || requestParameters.inviteKeyId === undefined) {
+            throw new runtime.RequiredError('inviteKeyId','Required parameter requestParameters.inviteKeyId was null or undefined when calling updateInviteKey.');
         }
 
-        if (requestParameters['inviteKey'] == null) {
-            throw new runtime.RequiredError(
-                'inviteKey',
-                'Required parameter "inviteKey" was null or undefined when calling updateInviteKey().'
-            );
+        if (requestParameters.inviteKey === null || requestParameters.inviteKey === undefined) {
+            throw new runtime.RequiredError('inviteKey','Required parameter requestParameters.inviteKey was null or undefined when calling updateInviteKey.');
         }
 
         const queryParameters: any = {};
@@ -475,11 +454,11 @@ export class InviteKeyApi extends runtime.BaseAPI implements InviteKeyApiInterfa
             }
         }
         const response = await this.request({
-            path: `/invite_keys/{inviteKeyId}`.replace(`{${"inviteKeyId"}}`, encodeURIComponent(String(requestParameters['inviteKeyId']))),
+            path: `/invite_keys/{inviteKeyId}`.replace(`{${"inviteKeyId"}}`, encodeURIComponent(String(requestParameters.inviteKeyId))),
             method: 'PUT',
             headers: headerParameters,
             query: queryParameters,
-            body: InviteKeyToJSON(requestParameters['inviteKey']),
+            body: InviteKeyToJSON(requestParameters.inviteKey),
         }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => InviteKeyFromJSON(jsonValue));
@@ -499,11 +478,8 @@ export class InviteKeyApi extends runtime.BaseAPI implements InviteKeyApiInterfa
      * 使用する
      */
     async useInviteKeyRaw(requestParameters: UseInviteKeyRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<WorkGroup>> {
-        if (requestParameters['inviteKeyId'] == null) {
-            throw new runtime.RequiredError(
-                'inviteKeyId',
-                'Required parameter "inviteKeyId" was null or undefined when calling useInviteKey().'
-            );
+        if (requestParameters.inviteKeyId === null || requestParameters.inviteKeyId === undefined) {
+            throw new runtime.RequiredError('inviteKeyId','Required parameter requestParameters.inviteKeyId was null or undefined when calling useInviteKey.');
         }
 
         const queryParameters: any = {};
@@ -519,7 +495,7 @@ export class InviteKeyApi extends runtime.BaseAPI implements InviteKeyApiInterfa
             }
         }
         const response = await this.request({
-            path: `/invite_keys/{inviteKeyId}`.replace(`{${"inviteKeyId"}}`, encodeURIComponent(String(requestParameters['inviteKeyId']))),
+            path: `/invite_keys/{inviteKeyId}`.replace(`{${"inviteKeyId"}}`, encodeURIComponent(String(requestParameters.inviteKeyId))),
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,

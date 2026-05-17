@@ -27,7 +27,7 @@ import {
 
 export interface CreateTimetableRowRequest {
     trainId: string;
-    timetableRow: Omit<TimetableRow, 'timetable_rows_id'|'trains_id'|'created_at'|'updated_at'>;
+    timetableRow: TimetableRow;
 }
 
 export interface DeleteTimetableRowRequest {
@@ -47,7 +47,7 @@ export interface GetTimetableRowListRequest {
 
 export interface UpdateTimetableRowRequest {
     timetableRowId: string;
-    timetableRow: Omit<TimetableRow, 'timetable_rows_id'|'trains_id'|'created_at'|'updated_at'>;
+    timetableRow: TimetableRow;
 }
 
 /**
@@ -154,18 +154,12 @@ export class TimetableRowApi extends runtime.BaseAPI implements TimetableRowApiI
      * 作成する
      */
     async createTimetableRowRaw(requestParameters: CreateTimetableRowRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TimetableRow>> {
-        if (requestParameters['trainId'] == null) {
-            throw new runtime.RequiredError(
-                'trainId',
-                'Required parameter "trainId" was null or undefined when calling createTimetableRow().'
-            );
+        if (requestParameters.trainId === null || requestParameters.trainId === undefined) {
+            throw new runtime.RequiredError('trainId','Required parameter requestParameters.trainId was null or undefined when calling createTimetableRow.');
         }
 
-        if (requestParameters['timetableRow'] == null) {
-            throw new runtime.RequiredError(
-                'timetableRow',
-                'Required parameter "timetableRow" was null or undefined when calling createTimetableRow().'
-            );
+        if (requestParameters.timetableRow === null || requestParameters.timetableRow === undefined) {
+            throw new runtime.RequiredError('timetableRow','Required parameter requestParameters.timetableRow was null or undefined when calling createTimetableRow.');
         }
 
         const queryParameters: any = {};
@@ -183,11 +177,11 @@ export class TimetableRowApi extends runtime.BaseAPI implements TimetableRowApiI
             }
         }
         const response = await this.request({
-            path: `/trains/{trainId}/timetable_rows`.replace(`{${"trainId"}}`, encodeURIComponent(String(requestParameters['trainId']))),
+            path: `/trains/{trainId}/timetable_rows`.replace(`{${"trainId"}}`, encodeURIComponent(String(requestParameters.trainId))),
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: TimetableRowToJSON(requestParameters['timetableRow']),
+            body: TimetableRowToJSON(requestParameters.timetableRow),
         }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => TimetableRowFromJSON(jsonValue));
@@ -207,11 +201,8 @@ export class TimetableRowApi extends runtime.BaseAPI implements TimetableRowApiI
      * 削除する
      */
     async deleteTimetableRowRaw(requestParameters: DeleteTimetableRowRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        if (requestParameters['timetableRowId'] == null) {
-            throw new runtime.RequiredError(
-                'timetableRowId',
-                'Required parameter "timetableRowId" was null or undefined when calling deleteTimetableRow().'
-            );
+        if (requestParameters.timetableRowId === null || requestParameters.timetableRowId === undefined) {
+            throw new runtime.RequiredError('timetableRowId','Required parameter requestParameters.timetableRowId was null or undefined when calling deleteTimetableRow.');
         }
 
         const queryParameters: any = {};
@@ -227,7 +218,7 @@ export class TimetableRowApi extends runtime.BaseAPI implements TimetableRowApiI
             }
         }
         const response = await this.request({
-            path: `/timetable_rows/{timetableRowId}`.replace(`{${"timetableRowId"}}`, encodeURIComponent(String(requestParameters['timetableRowId']))),
+            path: `/timetable_rows/{timetableRowId}`.replace(`{${"timetableRowId"}}`, encodeURIComponent(String(requestParameters.timetableRowId))),
             method: 'DELETE',
             headers: headerParameters,
             query: queryParameters,
@@ -249,11 +240,8 @@ export class TimetableRowApi extends runtime.BaseAPI implements TimetableRowApiI
      * 1件取得する
      */
     async getTimetableRowRaw(requestParameters: GetTimetableRowRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TimetableRow>> {
-        if (requestParameters['timetableRowId'] == null) {
-            throw new runtime.RequiredError(
-                'timetableRowId',
-                'Required parameter "timetableRowId" was null or undefined when calling getTimetableRow().'
-            );
+        if (requestParameters.timetableRowId === null || requestParameters.timetableRowId === undefined) {
+            throw new runtime.RequiredError('timetableRowId','Required parameter requestParameters.timetableRowId was null or undefined when calling getTimetableRow.');
         }
 
         const queryParameters: any = {};
@@ -269,7 +257,7 @@ export class TimetableRowApi extends runtime.BaseAPI implements TimetableRowApiI
             }
         }
         const response = await this.request({
-            path: `/timetable_rows/{timetableRowId}`.replace(`{${"timetableRowId"}}`, encodeURIComponent(String(requestParameters['timetableRowId']))),
+            path: `/timetable_rows/{timetableRowId}`.replace(`{${"timetableRowId"}}`, encodeURIComponent(String(requestParameters.timetableRowId))),
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -292,25 +280,22 @@ export class TimetableRowApi extends runtime.BaseAPI implements TimetableRowApiI
      * 複数件取得する
      */
     async getTimetableRowListRaw(requestParameters: GetTimetableRowListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<TimetableRow>>> {
-        if (requestParameters['trainId'] == null) {
-            throw new runtime.RequiredError(
-                'trainId',
-                'Required parameter "trainId" was null or undefined when calling getTimetableRowList().'
-            );
+        if (requestParameters.trainId === null || requestParameters.trainId === undefined) {
+            throw new runtime.RequiredError('trainId','Required parameter requestParameters.trainId was null or undefined when calling getTimetableRowList.');
         }
 
         const queryParameters: any = {};
 
-        if (requestParameters['p'] != null) {
-            queryParameters['p'] = requestParameters['p'];
+        if (requestParameters.p !== undefined) {
+            queryParameters['p'] = requestParameters.p;
         }
 
-        if (requestParameters['limit'] != null) {
-            queryParameters['limit'] = requestParameters['limit'];
+        if (requestParameters.limit !== undefined) {
+            queryParameters['limit'] = requestParameters.limit;
         }
 
-        if (requestParameters['top'] != null) {
-            queryParameters['top'] = requestParameters['top'];
+        if (requestParameters.top !== undefined) {
+            queryParameters['top'] = requestParameters.top;
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -324,7 +309,7 @@ export class TimetableRowApi extends runtime.BaseAPI implements TimetableRowApiI
             }
         }
         const response = await this.request({
-            path: `/trains/{trainId}/timetable_rows`.replace(`{${"trainId"}}`, encodeURIComponent(String(requestParameters['trainId']))),
+            path: `/trains/{trainId}/timetable_rows`.replace(`{${"trainId"}}`, encodeURIComponent(String(requestParameters.trainId))),
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -347,18 +332,12 @@ export class TimetableRowApi extends runtime.BaseAPI implements TimetableRowApiI
      * 更新する
      */
     async updateTimetableRowRaw(requestParameters: UpdateTimetableRowRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<TimetableRow>> {
-        if (requestParameters['timetableRowId'] == null) {
-            throw new runtime.RequiredError(
-                'timetableRowId',
-                'Required parameter "timetableRowId" was null or undefined when calling updateTimetableRow().'
-            );
+        if (requestParameters.timetableRowId === null || requestParameters.timetableRowId === undefined) {
+            throw new runtime.RequiredError('timetableRowId','Required parameter requestParameters.timetableRowId was null or undefined when calling updateTimetableRow.');
         }
 
-        if (requestParameters['timetableRow'] == null) {
-            throw new runtime.RequiredError(
-                'timetableRow',
-                'Required parameter "timetableRow" was null or undefined when calling updateTimetableRow().'
-            );
+        if (requestParameters.timetableRow === null || requestParameters.timetableRow === undefined) {
+            throw new runtime.RequiredError('timetableRow','Required parameter requestParameters.timetableRow was null or undefined when calling updateTimetableRow.');
         }
 
         const queryParameters: any = {};
@@ -376,11 +355,11 @@ export class TimetableRowApi extends runtime.BaseAPI implements TimetableRowApiI
             }
         }
         const response = await this.request({
-            path: `/timetable_rows/{timetableRowId}`.replace(`{${"timetableRowId"}}`, encodeURIComponent(String(requestParameters['timetableRowId']))),
+            path: `/timetable_rows/{timetableRowId}`.replace(`{${"timetableRowId"}}`, encodeURIComponent(String(requestParameters.timetableRowId))),
             method: 'PUT',
             headers: headerParameters,
             query: queryParameters,
-            body: TimetableRowToJSON(requestParameters['timetableRow']),
+            body: TimetableRowToJSON(requestParameters.timetableRow),
         }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => TimetableRowFromJSON(jsonValue));

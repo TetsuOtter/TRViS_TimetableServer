@@ -16,43 +16,43 @@ import { exists, mapValues } from '../runtime';
 /**
  * 
  * @export
- * @interface WorkGroupsPrivilege
+ * @interface ProjectsPrivilege
  */
-export interface WorkGroupsPrivilege {
+export interface ProjectsPrivilege {
     /**
      * 権限の種類
      * @type {string}
-     * @memberof WorkGroupsPrivilege
+     * @memberof ProjectsPrivilege
      */
-    privilegeType: WorkGroupsPrivilegePrivilegeTypeEnum;
+    privilegeType: ProjectsPrivilegePrivilegeTypeEnum;
     /**
      * UserID
      * @type {string}
-     * @memberof WorkGroupsPrivilege
+     * @memberof ProjectsPrivilege
      */
     readonly uid?: string;
     /**
-     * WorkGroupのID (UUID)
+     * ProjectのID (UUID)
      * @type {string}
-     * @memberof WorkGroupsPrivilege
+     * @memberof ProjectsPrivilege
      */
-    readonly workGroupsId?: string;
+    readonly projectsId?: string;
     /**
      * InviteKeyのID (UUID)
      * @type {string}
-     * @memberof WorkGroupsPrivilege
+     * @memberof ProjectsPrivilege
      */
     readonly inviteKeysId?: string;
     /**
      * 作成日時
      * @type {Date}
-     * @memberof WorkGroupsPrivilege
+     * @memberof ProjectsPrivilege
      */
     readonly createdAt?: Date;
     /**
      * 更新日時
      * @type {Date}
-     * @memberof WorkGroupsPrivilege
+     * @memberof ProjectsPrivilege
      */
     readonly updatedAt?: Date;
 }
@@ -61,29 +61,29 @@ export interface WorkGroupsPrivilege {
 /**
  * @export
  */
-export const WorkGroupsPrivilegePrivilegeTypeEnum = {
+export const ProjectsPrivilegePrivilegeTypeEnum = {
     Read: 'read',
     Write: 'write',
     Admin: 'admin'
 } as const;
-export type WorkGroupsPrivilegePrivilegeTypeEnum = typeof WorkGroupsPrivilegePrivilegeTypeEnum[keyof typeof WorkGroupsPrivilegePrivilegeTypeEnum];
+export type ProjectsPrivilegePrivilegeTypeEnum = typeof ProjectsPrivilegePrivilegeTypeEnum[keyof typeof ProjectsPrivilegePrivilegeTypeEnum];
 
 
 /**
- * Check if a given object implements the WorkGroupsPrivilege interface.
+ * Check if a given object implements the ProjectsPrivilege interface.
  */
-export function instanceOfWorkGroupsPrivilege(value: object): boolean {
+export function instanceOfProjectsPrivilege(value: object): boolean {
     let isInstance = true;
     isInstance = isInstance && "privilegeType" in value;
 
     return isInstance;
 }
 
-export function WorkGroupsPrivilegeFromJSON(json: any): WorkGroupsPrivilege {
-    return WorkGroupsPrivilegeFromJSONTyped(json, false);
+export function ProjectsPrivilegeFromJSON(json: any): ProjectsPrivilege {
+    return ProjectsPrivilegeFromJSONTyped(json, false);
 }
 
-export function WorkGroupsPrivilegeFromJSONTyped(json: any, ignoreDiscriminator: boolean): WorkGroupsPrivilege {
+export function ProjectsPrivilegeFromJSONTyped(json: any, ignoreDiscriminator: boolean): ProjectsPrivilege {
     if ((json === undefined) || (json === null)) {
         return json;
     }
@@ -91,14 +91,14 @@ export function WorkGroupsPrivilegeFromJSONTyped(json: any, ignoreDiscriminator:
         
         'privilegeType': json['privilege_type'],
         'uid': !exists(json, 'uid') ? undefined : json['uid'],
-        'workGroupsId': !exists(json, 'work_groups_id') ? undefined : json['work_groups_id'],
+        'projectsId': !exists(json, 'projects_id') ? undefined : json['projects_id'],
         'inviteKeysId': !exists(json, 'invite_keys_id') ? undefined : json['invite_keys_id'],
         'createdAt': !exists(json, 'created_at') ? undefined : (new Date(json['created_at'])),
         'updatedAt': !exists(json, 'updated_at') ? undefined : (new Date(json['updated_at'])),
     };
 }
 
-export function WorkGroupsPrivilegeToJSON(value?: WorkGroupsPrivilege | null): any {
+export function ProjectsPrivilegeToJSON(value?: ProjectsPrivilege | null): any {
     if (value === undefined) {
         return undefined;
     }

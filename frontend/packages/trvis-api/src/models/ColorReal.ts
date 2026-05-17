@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
+import { exists, mapValues } from '../runtime';
 /**
  * 
  * @export
@@ -42,8 +42,10 @@ export interface ColorReal {
 /**
  * Check if a given object implements the ColorReal interface.
  */
-export function instanceOfColorReal(value: object): value is ColorReal {
-    return true;
+export function instanceOfColorReal(value: object): boolean {
+    let isInstance = true;
+
+    return isInstance;
 }
 
 export function ColorRealFromJSON(json: any): ColorReal {
@@ -51,26 +53,29 @@ export function ColorRealFromJSON(json: any): ColorReal {
 }
 
 export function ColorRealFromJSONTyped(json: any, ignoreDiscriminator: boolean): ColorReal {
-    if (json == null) {
+    if ((json === undefined) || (json === null)) {
         return json;
     }
     return {
         
-        'red': json['red'] == null ? undefined : json['red'],
-        'green': json['green'] == null ? undefined : json['green'],
-        'blue': json['blue'] == null ? undefined : json['blue'],
+        'red': !exists(json, 'red') ? undefined : json['red'],
+        'green': !exists(json, 'green') ? undefined : json['green'],
+        'blue': !exists(json, 'blue') ? undefined : json['blue'],
     };
 }
 
 export function ColorRealToJSON(value?: ColorReal | null): any {
-    if (value == null) {
-        return value;
+    if (value === undefined) {
+        return undefined;
+    }
+    if (value === null) {
+        return null;
     }
     return {
         
-        'red': value['red'],
-        'green': value['green'],
-        'blue': value['blue'],
+        'red': value.red,
+        'green': value.green,
+        'blue': value.blue,
     };
 }
 

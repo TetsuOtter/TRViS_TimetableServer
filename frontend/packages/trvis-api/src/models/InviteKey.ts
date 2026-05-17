@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
+import { exists, mapValues } from '../runtime';
 /**
  * 
  * @export
@@ -90,9 +90,11 @@ export type InviteKeyPrivilegeTypeEnum = typeof InviteKeyPrivilegeTypeEnum[keyof
 /**
  * Check if a given object implements the InviteKey interface.
  */
-export function instanceOfInviteKey(value: object): value is InviteKey {
-    if (!('description' in value) || value['description'] === undefined) return false;
-    return true;
+export function instanceOfInviteKey(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "description" in value;
+
+    return isInstance;
 }
 
 export function InviteKeyFromJSON(json: any): InviteKey {
@@ -100,34 +102,37 @@ export function InviteKeyFromJSON(json: any): InviteKey {
 }
 
 export function InviteKeyFromJSONTyped(json: any, ignoreDiscriminator: boolean): InviteKey {
-    if (json == null) {
+    if ((json === undefined) || (json === null)) {
         return json;
     }
     return {
         
         'description': json['description'],
-        'inviteKeysId': json['invite_keys_id'] == null ? undefined : json['invite_keys_id'],
-        'workGroupsId': json['work_groups_id'] == null ? undefined : json['work_groups_id'],
-        'createdAt': json['created_at'] == null ? undefined : (new Date(json['created_at'])),
-        'validFrom': json['valid_from'] == null ? undefined : (new Date(json['valid_from'])),
-        'expiresAt': json['expires_at'] == null ? undefined : (new Date(json['expires_at'])),
-        'useLimit': json['use_limit'] == null ? undefined : json['use_limit'],
-        'disabledAt': json['disabled_at'] == null ? undefined : (new Date(json['disabled_at'])),
-        'privilegeType': json['privilege_type'] == null ? undefined : json['privilege_type'],
+        'inviteKeysId': !exists(json, 'invite_keys_id') ? undefined : json['invite_keys_id'],
+        'workGroupsId': !exists(json, 'work_groups_id') ? undefined : json['work_groups_id'],
+        'createdAt': !exists(json, 'created_at') ? undefined : (new Date(json['created_at'])),
+        'validFrom': !exists(json, 'valid_from') ? undefined : (new Date(json['valid_from'])),
+        'expiresAt': !exists(json, 'expires_at') ? undefined : (new Date(json['expires_at'])),
+        'useLimit': !exists(json, 'use_limit') ? undefined : json['use_limit'],
+        'disabledAt': !exists(json, 'disabled_at') ? undefined : (new Date(json['disabled_at'])),
+        'privilegeType': !exists(json, 'privilege_type') ? undefined : json['privilege_type'],
     };
 }
 
-export function InviteKeyToJSON(value?: Omit<InviteKey, 'invite_keys_id'|'work_groups_id'|'created_at'|'disabled_at'> | null): any {
-    if (value == null) {
-        return value;
+export function InviteKeyToJSON(value?: InviteKey | null): any {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (value === null) {
+        return null;
     }
     return {
         
-        'description': value['description'],
-        'valid_from': value['validFrom'] == null ? undefined : ((value['validFrom']).toISOString()),
-        'expires_at': value['expiresAt'] == null ? undefined : ((value['expiresAt']).toISOString()),
-        'use_limit': value['useLimit'],
-        'privilege_type': value['privilegeType'],
+        'description': value.description,
+        'valid_from': value.validFrom === undefined ? undefined : (value.validFrom.toISOString()),
+        'expires_at': value.expiresAt === undefined ? undefined : (value.expiresAt.toISOString()),
+        'use_limit': value.useLimit,
+        'privilege_type': value.privilegeType,
     };
 }
 

@@ -64,11 +64,8 @@ export class DumpApi extends runtime.BaseAPI implements DumpApiInterface {
      * まとめて出力する
      */
     async dumpTimetableRaw(requestParameters: DumpTimetableRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<TRViSJsonWorkGroup>>> {
-        if (requestParameters['workGroupId'] == null) {
-            throw new runtime.RequiredError(
-                'workGroupId',
-                'Required parameter "workGroupId" was null or undefined when calling dumpTimetable().'
-            );
+        if (requestParameters.workGroupId === null || requestParameters.workGroupId === undefined) {
+            throw new runtime.RequiredError('workGroupId','Required parameter requestParameters.workGroupId was null or undefined when calling dumpTimetable.');
         }
 
         const queryParameters: any = {};
@@ -84,7 +81,7 @@ export class DumpApi extends runtime.BaseAPI implements DumpApiInterface {
             }
         }
         const response = await this.request({
-            path: `/dump/{workGroupId}`.replace(`{${"workGroupId"}}`, encodeURIComponent(String(requestParameters['workGroupId']))),
+            path: `/dump/{workGroupId}`.replace(`{${"workGroupId"}}`, encodeURIComponent(String(requestParameters.workGroupId))),
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,

@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
+import { exists, mapValues } from '../runtime';
 /**
  * 
  * @export
@@ -186,8 +186,10 @@ export interface TimetableRow {
 /**
  * Check if a given object implements the TimetableRow interface.
  */
-export function instanceOfTimetableRow(value: object): value is TimetableRow {
-    return true;
+export function instanceOfTimetableRow(value: object): boolean {
+    let isInstance = true;
+
+    return isInstance;
 }
 
 export function TimetableRowFromJSON(json: any): TimetableRow {
@@ -195,70 +197,73 @@ export function TimetableRowFromJSON(json: any): TimetableRow {
 }
 
 export function TimetableRowFromJSONTyped(json: any, ignoreDiscriminator: boolean): TimetableRow {
-    if (json == null) {
+    if ((json === undefined) || (json === null)) {
         return json;
     }
     return {
         
-        'timetableRowsId': json['timetable_rows_id'] == null ? undefined : json['timetable_rows_id'],
-        'trainsId': json['trains_id'] == null ? undefined : json['trains_id'],
-        'stationsId': json['stations_id'] == null ? undefined : json['stations_id'],
-        'stationTracksId': json['station_tracks_id'] == null ? undefined : json['station_tracks_id'],
-        'colorsIdMarker': json['colors_id_marker'] == null ? undefined : json['colors_id_marker'],
-        'description': json['description'] == null ? undefined : json['description'],
-        'createdAt': json['created_at'] == null ? undefined : (new Date(json['created_at'])),
-        'updatedAt': json['updated_at'] == null ? undefined : (new Date(json['updated_at'])),
-        'driveTimeMm': json['drive_time_mm'] == null ? undefined : json['drive_time_mm'],
-        'driveTimeSs': json['drive_time_ss'] == null ? undefined : json['drive_time_ss'],
-        'isOperationOnlyStop': json['is_operation_only_stop'] == null ? undefined : json['is_operation_only_stop'],
-        'isPass': json['is_pass'] == null ? undefined : json['is_pass'],
-        'hasBracket': json['has_bracket'] == null ? undefined : json['has_bracket'],
-        'isLastStop': json['is_last_stop'] == null ? undefined : json['is_last_stop'],
-        'arriveTimeHh': json['arrive_time_hh'] == null ? undefined : json['arrive_time_hh'],
-        'arriveTimeMm': json['arrive_time_mm'] == null ? undefined : json['arrive_time_mm'],
-        'arriveTimeSs': json['arrive_time_ss'] == null ? undefined : json['arrive_time_ss'],
-        'departureTimeHh': json['departure_time_hh'] == null ? undefined : json['departure_time_hh'],
-        'departureTimeMm': json['departure_time_mm'] == null ? undefined : json['departure_time_mm'],
-        'departureTimeSs': json['departure_time_ss'] == null ? undefined : json['departure_time_ss'],
-        'runInLimit': json['run_in_limit'] == null ? undefined : json['run_in_limit'],
-        'runOutLimit': json['run_out_limit'] == null ? undefined : json['run_out_limit'],
-        'remarks': json['remarks'] == null ? undefined : json['remarks'],
-        'arriveStr': json['arrive_str'] == null ? undefined : json['arrive_str'],
-        'departureStr': json['departure_str'] == null ? undefined : json['departure_str'],
-        'markerText': json['marker_text'] == null ? undefined : json['marker_text'],
-        'workType': json['work_type'] == null ? undefined : json['work_type'],
+        'timetableRowsId': !exists(json, 'timetable_rows_id') ? undefined : json['timetable_rows_id'],
+        'trainsId': !exists(json, 'trains_id') ? undefined : json['trains_id'],
+        'stationsId': !exists(json, 'stations_id') ? undefined : json['stations_id'],
+        'stationTracksId': !exists(json, 'station_tracks_id') ? undefined : json['station_tracks_id'],
+        'colorsIdMarker': !exists(json, 'colors_id_marker') ? undefined : json['colors_id_marker'],
+        'description': !exists(json, 'description') ? undefined : json['description'],
+        'createdAt': !exists(json, 'created_at') ? undefined : (new Date(json['created_at'])),
+        'updatedAt': !exists(json, 'updated_at') ? undefined : (new Date(json['updated_at'])),
+        'driveTimeMm': !exists(json, 'drive_time_mm') ? undefined : json['drive_time_mm'],
+        'driveTimeSs': !exists(json, 'drive_time_ss') ? undefined : json['drive_time_ss'],
+        'isOperationOnlyStop': !exists(json, 'is_operation_only_stop') ? undefined : json['is_operation_only_stop'],
+        'isPass': !exists(json, 'is_pass') ? undefined : json['is_pass'],
+        'hasBracket': !exists(json, 'has_bracket') ? undefined : json['has_bracket'],
+        'isLastStop': !exists(json, 'is_last_stop') ? undefined : json['is_last_stop'],
+        'arriveTimeHh': !exists(json, 'arrive_time_hh') ? undefined : json['arrive_time_hh'],
+        'arriveTimeMm': !exists(json, 'arrive_time_mm') ? undefined : json['arrive_time_mm'],
+        'arriveTimeSs': !exists(json, 'arrive_time_ss') ? undefined : json['arrive_time_ss'],
+        'departureTimeHh': !exists(json, 'departure_time_hh') ? undefined : json['departure_time_hh'],
+        'departureTimeMm': !exists(json, 'departure_time_mm') ? undefined : json['departure_time_mm'],
+        'departureTimeSs': !exists(json, 'departure_time_ss') ? undefined : json['departure_time_ss'],
+        'runInLimit': !exists(json, 'run_in_limit') ? undefined : json['run_in_limit'],
+        'runOutLimit': !exists(json, 'run_out_limit') ? undefined : json['run_out_limit'],
+        'remarks': !exists(json, 'remarks') ? undefined : json['remarks'],
+        'arriveStr': !exists(json, 'arrive_str') ? undefined : json['arrive_str'],
+        'departureStr': !exists(json, 'departure_str') ? undefined : json['departure_str'],
+        'markerText': !exists(json, 'marker_text') ? undefined : json['marker_text'],
+        'workType': !exists(json, 'work_type') ? undefined : json['work_type'],
     };
 }
 
-export function TimetableRowToJSON(value?: Omit<TimetableRow, 'timetable_rows_id'|'trains_id'|'created_at'|'updated_at'> | null): any {
-    if (value == null) {
-        return value;
+export function TimetableRowToJSON(value?: TimetableRow | null): any {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (value === null) {
+        return null;
     }
     return {
         
-        'stations_id': value['stationsId'],
-        'station_tracks_id': value['stationTracksId'],
-        'colors_id_marker': value['colorsIdMarker'],
-        'description': value['description'],
-        'drive_time_mm': value['driveTimeMm'],
-        'drive_time_ss': value['driveTimeSs'],
-        'is_operation_only_stop': value['isOperationOnlyStop'],
-        'is_pass': value['isPass'],
-        'has_bracket': value['hasBracket'],
-        'is_last_stop': value['isLastStop'],
-        'arrive_time_hh': value['arriveTimeHh'],
-        'arrive_time_mm': value['arriveTimeMm'],
-        'arrive_time_ss': value['arriveTimeSs'],
-        'departure_time_hh': value['departureTimeHh'],
-        'departure_time_mm': value['departureTimeMm'],
-        'departure_time_ss': value['departureTimeSs'],
-        'run_in_limit': value['runInLimit'],
-        'run_out_limit': value['runOutLimit'],
-        'remarks': value['remarks'],
-        'arrive_str': value['arriveStr'],
-        'departure_str': value['departureStr'],
-        'marker_text': value['markerText'],
-        'work_type': value['workType'],
+        'stations_id': value.stationsId,
+        'station_tracks_id': value.stationTracksId,
+        'colors_id_marker': value.colorsIdMarker,
+        'description': value.description,
+        'drive_time_mm': value.driveTimeMm,
+        'drive_time_ss': value.driveTimeSs,
+        'is_operation_only_stop': value.isOperationOnlyStop,
+        'is_pass': value.isPass,
+        'has_bracket': value.hasBracket,
+        'is_last_stop': value.isLastStop,
+        'arrive_time_hh': value.arriveTimeHh,
+        'arrive_time_mm': value.arriveTimeMm,
+        'arrive_time_ss': value.arriveTimeSs,
+        'departure_time_hh': value.departureTimeHh,
+        'departure_time_mm': value.departureTimeMm,
+        'departure_time_ss': value.departureTimeSs,
+        'run_in_limit': value.runInLimit,
+        'run_out_limit': value.runOutLimit,
+        'remarks': value.remarks,
+        'arrive_str': value.arriveStr,
+        'departure_str': value.departureStr,
+        'marker_text': value.markerText,
+        'work_type': value.workType,
     };
 }
 

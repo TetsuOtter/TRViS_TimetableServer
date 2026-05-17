@@ -16,63 +16,45 @@ import { exists, mapValues } from '../runtime';
 /**
  * 
  * @export
- * @interface WorkGroup
+ * @interface Line
  */
-export interface WorkGroup {
+export interface Line {
     /**
-     * WorkGroupの説明
+     * Lineの説明
      * @type {string}
-     * @memberof WorkGroup
+     * @memberof Line
      */
     description: string;
     /**
-     * WorkGroupの名前
+     * 路線名
      * @type {string}
-     * @memberof WorkGroup
+     * @memberof Line
      */
     name: string;
     /**
-     * WorkGroupのID (UUID)
+     * LineのID (UUID)
      * @type {string}
-     * @memberof WorkGroup
+     * @memberof Line
      */
-    readonly workGroupsId?: string;
+    readonly linesId?: string;
     /**
-     * 所属するProjectのID (UUID)
+     * ProjectのID (UUID)
      * @type {string}
-     * @memberof WorkGroup
+     * @memberof Line
      */
     readonly projectsId?: string;
     /**
      * 作成日時
      * @type {Date}
-     * @memberof WorkGroup
+     * @memberof Line
      */
     readonly createdAt?: Date;
-    /**
-     * 権限の種類
-     * @type {string}
-     * @memberof WorkGroup
-     */
-    readonly privilegeType?: WorkGroupPrivilegeTypeEnum;
 }
 
-
 /**
- * @export
+ * Check if a given object implements the Line interface.
  */
-export const WorkGroupPrivilegeTypeEnum = {
-    Read: 'read',
-    Write: 'write',
-    Admin: 'admin'
-} as const;
-export type WorkGroupPrivilegeTypeEnum = typeof WorkGroupPrivilegeTypeEnum[keyof typeof WorkGroupPrivilegeTypeEnum];
-
-
-/**
- * Check if a given object implements the WorkGroup interface.
- */
-export function instanceOfWorkGroup(value: object): boolean {
+export function instanceOfLine(value: object): boolean {
     let isInstance = true;
     isInstance = isInstance && "description" in value;
     isInstance = isInstance && "name" in value;
@@ -80,11 +62,11 @@ export function instanceOfWorkGroup(value: object): boolean {
     return isInstance;
 }
 
-export function WorkGroupFromJSON(json: any): WorkGroup {
-    return WorkGroupFromJSONTyped(json, false);
+export function LineFromJSON(json: any): Line {
+    return LineFromJSONTyped(json, false);
 }
 
-export function WorkGroupFromJSONTyped(json: any, ignoreDiscriminator: boolean): WorkGroup {
+export function LineFromJSONTyped(json: any, ignoreDiscriminator: boolean): Line {
     if ((json === undefined) || (json === null)) {
         return json;
     }
@@ -92,14 +74,13 @@ export function WorkGroupFromJSONTyped(json: any, ignoreDiscriminator: boolean):
         
         'description': json['description'],
         'name': json['name'],
-        'workGroupsId': !exists(json, 'work_groups_id') ? undefined : json['work_groups_id'],
+        'linesId': !exists(json, 'lines_id') ? undefined : json['lines_id'],
         'projectsId': !exists(json, 'projects_id') ? undefined : json['projects_id'],
         'createdAt': !exists(json, 'created_at') ? undefined : (new Date(json['created_at'])),
-        'privilegeType': !exists(json, 'privilege_type') ? undefined : json['privilege_type'],
     };
 }
 
-export function WorkGroupToJSON(value?: WorkGroup | null): any {
+export function LineToJSON(value?: Line | null): any {
     if (value === undefined) {
         return undefined;
     }

@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
+import { exists, mapValues } from '../runtime';
 /**
  * 
  * @export
@@ -66,10 +66,12 @@ export interface StationTrack {
 /**
  * Check if a given object implements the StationTrack interface.
  */
-export function instanceOfStationTrack(value: object): value is StationTrack {
-    if (!('description' in value) || value['description'] === undefined) return false;
-    if (!('name' in value) || value['name'] === undefined) return false;
-    return true;
+export function instanceOfStationTrack(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "description" in value;
+    isInstance = isInstance && "name" in value;
+
+    return isInstance;
 }
 
 export function StationTrackFromJSON(json: any): StationTrack {
@@ -77,31 +79,34 @@ export function StationTrackFromJSON(json: any): StationTrack {
 }
 
 export function StationTrackFromJSONTyped(json: any, ignoreDiscriminator: boolean): StationTrack {
-    if (json == null) {
+    if ((json === undefined) || (json === null)) {
         return json;
     }
     return {
         
         'description': json['description'],
         'name': json['name'],
-        'stationTracksId': json['station_tracks_id'] == null ? undefined : json['station_tracks_id'],
-        'stationsId': json['stations_id'] == null ? undefined : json['stations_id'],
-        'createdAt': json['created_at'] == null ? undefined : (new Date(json['created_at'])),
-        'runInLimit': json['run_in_limit'] == null ? undefined : json['run_in_limit'],
-        'runOutLimit': json['run_out_limit'] == null ? undefined : json['run_out_limit'],
+        'stationTracksId': !exists(json, 'station_tracks_id') ? undefined : json['station_tracks_id'],
+        'stationsId': !exists(json, 'stations_id') ? undefined : json['stations_id'],
+        'createdAt': !exists(json, 'created_at') ? undefined : (new Date(json['created_at'])),
+        'runInLimit': !exists(json, 'run_in_limit') ? undefined : json['run_in_limit'],
+        'runOutLimit': !exists(json, 'run_out_limit') ? undefined : json['run_out_limit'],
     };
 }
 
-export function StationTrackToJSON(value?: Omit<StationTrack, 'station_tracks_id'|'stations_id'|'created_at'> | null): any {
-    if (value == null) {
-        return value;
+export function StationTrackToJSON(value?: StationTrack | null): any {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (value === null) {
+        return null;
     }
     return {
         
-        'description': value['description'],
-        'name': value['name'],
-        'run_in_limit': value['runInLimit'],
-        'run_out_limit': value['runOutLimit'],
+        'description': value.description,
+        'name': value.name,
+        'run_in_limit': value.runInLimit,
+        'run_out_limit': value.runOutLimit,
     };
 }
 

@@ -27,7 +27,7 @@ import {
 
 export interface CreateColorRequest {
     workGroupId: string;
-    color: Omit<Color, 'colors_id'|'work_groups_id'|'created_at'|'updated_at'>;
+    color: Color;
 }
 
 export interface DeleteColorRequest {
@@ -47,7 +47,7 @@ export interface GetColorListRequest {
 
 export interface UpdateColorRequest {
     colorId: string;
-    color: Omit<Color, 'colors_id'|'work_groups_id'|'created_at'|'updated_at'>;
+    color: Color;
 }
 
 /**
@@ -154,18 +154,12 @@ export class ColorApi extends runtime.BaseAPI implements ColorApiInterface {
      * 作成する
      */
     async createColorRaw(requestParameters: CreateColorRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Color>> {
-        if (requestParameters['workGroupId'] == null) {
-            throw new runtime.RequiredError(
-                'workGroupId',
-                'Required parameter "workGroupId" was null or undefined when calling createColor().'
-            );
+        if (requestParameters.workGroupId === null || requestParameters.workGroupId === undefined) {
+            throw new runtime.RequiredError('workGroupId','Required parameter requestParameters.workGroupId was null or undefined when calling createColor.');
         }
 
-        if (requestParameters['color'] == null) {
-            throw new runtime.RequiredError(
-                'color',
-                'Required parameter "color" was null or undefined when calling createColor().'
-            );
+        if (requestParameters.color === null || requestParameters.color === undefined) {
+            throw new runtime.RequiredError('color','Required parameter requestParameters.color was null or undefined when calling createColor.');
         }
 
         const queryParameters: any = {};
@@ -183,11 +177,11 @@ export class ColorApi extends runtime.BaseAPI implements ColorApiInterface {
             }
         }
         const response = await this.request({
-            path: `/work_groups/{workGroupId}/colors`.replace(`{${"workGroupId"}}`, encodeURIComponent(String(requestParameters['workGroupId']))),
+            path: `/work_groups/{workGroupId}/colors`.replace(`{${"workGroupId"}}`, encodeURIComponent(String(requestParameters.workGroupId))),
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: ColorToJSON(requestParameters['color']),
+            body: ColorToJSON(requestParameters.color),
         }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => ColorFromJSON(jsonValue));
@@ -207,11 +201,8 @@ export class ColorApi extends runtime.BaseAPI implements ColorApiInterface {
      * 削除する
      */
     async deleteColorRaw(requestParameters: DeleteColorRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        if (requestParameters['colorId'] == null) {
-            throw new runtime.RequiredError(
-                'colorId',
-                'Required parameter "colorId" was null or undefined when calling deleteColor().'
-            );
+        if (requestParameters.colorId === null || requestParameters.colorId === undefined) {
+            throw new runtime.RequiredError('colorId','Required parameter requestParameters.colorId was null or undefined when calling deleteColor.');
         }
 
         const queryParameters: any = {};
@@ -227,7 +218,7 @@ export class ColorApi extends runtime.BaseAPI implements ColorApiInterface {
             }
         }
         const response = await this.request({
-            path: `/colors/{colorId}`.replace(`{${"colorId"}}`, encodeURIComponent(String(requestParameters['colorId']))),
+            path: `/colors/{colorId}`.replace(`{${"colorId"}}`, encodeURIComponent(String(requestParameters.colorId))),
             method: 'DELETE',
             headers: headerParameters,
             query: queryParameters,
@@ -249,11 +240,8 @@ export class ColorApi extends runtime.BaseAPI implements ColorApiInterface {
      * 1件取得する
      */
     async getColorRaw(requestParameters: GetColorRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Color>> {
-        if (requestParameters['colorId'] == null) {
-            throw new runtime.RequiredError(
-                'colorId',
-                'Required parameter "colorId" was null or undefined when calling getColor().'
-            );
+        if (requestParameters.colorId === null || requestParameters.colorId === undefined) {
+            throw new runtime.RequiredError('colorId','Required parameter requestParameters.colorId was null or undefined when calling getColor.');
         }
 
         const queryParameters: any = {};
@@ -269,7 +257,7 @@ export class ColorApi extends runtime.BaseAPI implements ColorApiInterface {
             }
         }
         const response = await this.request({
-            path: `/colors/{colorId}`.replace(`{${"colorId"}}`, encodeURIComponent(String(requestParameters['colorId']))),
+            path: `/colors/{colorId}`.replace(`{${"colorId"}}`, encodeURIComponent(String(requestParameters.colorId))),
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -292,25 +280,22 @@ export class ColorApi extends runtime.BaseAPI implements ColorApiInterface {
      * 複数件取得する
      */
     async getColorListRaw(requestParameters: GetColorListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Color>>> {
-        if (requestParameters['workGroupId'] == null) {
-            throw new runtime.RequiredError(
-                'workGroupId',
-                'Required parameter "workGroupId" was null or undefined when calling getColorList().'
-            );
+        if (requestParameters.workGroupId === null || requestParameters.workGroupId === undefined) {
+            throw new runtime.RequiredError('workGroupId','Required parameter requestParameters.workGroupId was null or undefined when calling getColorList.');
         }
 
         const queryParameters: any = {};
 
-        if (requestParameters['p'] != null) {
-            queryParameters['p'] = requestParameters['p'];
+        if (requestParameters.p !== undefined) {
+            queryParameters['p'] = requestParameters.p;
         }
 
-        if (requestParameters['limit'] != null) {
-            queryParameters['limit'] = requestParameters['limit'];
+        if (requestParameters.limit !== undefined) {
+            queryParameters['limit'] = requestParameters.limit;
         }
 
-        if (requestParameters['top'] != null) {
-            queryParameters['top'] = requestParameters['top'];
+        if (requestParameters.top !== undefined) {
+            queryParameters['top'] = requestParameters.top;
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -324,7 +309,7 @@ export class ColorApi extends runtime.BaseAPI implements ColorApiInterface {
             }
         }
         const response = await this.request({
-            path: `/work_groups/{workGroupId}/colors`.replace(`{${"workGroupId"}}`, encodeURIComponent(String(requestParameters['workGroupId']))),
+            path: `/work_groups/{workGroupId}/colors`.replace(`{${"workGroupId"}}`, encodeURIComponent(String(requestParameters.workGroupId))),
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -347,18 +332,12 @@ export class ColorApi extends runtime.BaseAPI implements ColorApiInterface {
      * 更新する
      */
     async updateColorRaw(requestParameters: UpdateColorRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Color>> {
-        if (requestParameters['colorId'] == null) {
-            throw new runtime.RequiredError(
-                'colorId',
-                'Required parameter "colorId" was null or undefined when calling updateColor().'
-            );
+        if (requestParameters.colorId === null || requestParameters.colorId === undefined) {
+            throw new runtime.RequiredError('colorId','Required parameter requestParameters.colorId was null or undefined when calling updateColor.');
         }
 
-        if (requestParameters['color'] == null) {
-            throw new runtime.RequiredError(
-                'color',
-                'Required parameter "color" was null or undefined when calling updateColor().'
-            );
+        if (requestParameters.color === null || requestParameters.color === undefined) {
+            throw new runtime.RequiredError('color','Required parameter requestParameters.color was null or undefined when calling updateColor.');
         }
 
         const queryParameters: any = {};
@@ -376,11 +355,11 @@ export class ColorApi extends runtime.BaseAPI implements ColorApiInterface {
             }
         }
         const response = await this.request({
-            path: `/colors/{colorId}`.replace(`{${"colorId"}}`, encodeURIComponent(String(requestParameters['colorId']))),
+            path: `/colors/{colorId}`.replace(`{${"colorId"}}`, encodeURIComponent(String(requestParameters.colorId))),
             method: 'PUT',
             headers: headerParameters,
             query: queryParameters,
-            body: ColorToJSON(requestParameters['color']),
+            body: ColorToJSON(requestParameters.color),
         }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => ColorFromJSON(jsonValue));
