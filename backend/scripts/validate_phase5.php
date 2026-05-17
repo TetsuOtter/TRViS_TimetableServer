@@ -20,9 +20,19 @@ require '/var/www/html/vendor/autoload.php';
 
 use dev_t0r\trvis_backend\service\WorkGroupsService;
 use dev_t0r\trvis_backend\service\LineService;
+use dev_t0r\trvis_backend\service\ProjectStationsService;
+use dev_t0r\trvis_backend\service\StopPatternsService;
+use dev_t0r\trvis_backend\service\StationsOnLineService;
+use dev_t0r\trvis_backend\service\StopPatternRowsService;
 use dev_t0r\trvis_backend\repo\WorkGroupsPrivilegesRepo;
 use dev_t0r\trvis_backend\repo\LineRepo;
+use dev_t0r\trvis_backend\repo\StopPatternsRepo;
 use dev_t0r\trvis_backend\model\Line;
+use dev_t0r\trvis_backend\model\ProjectStation;
+use dev_t0r\trvis_backend\model\ProjectStationLocationLonlat;
+use dev_t0r\trvis_backend\model\StopPattern;
+use dev_t0r\trvis_backend\model\StationOnLine;
+use dev_t0r\trvis_backend\model\StopPatternRow;
 use dev_t0r\trvis_backend\model\InviteKeyPrivilegeType;
 use Ramsey\Uuid\Uuid;
 use Psr\Log\NullLogger;
@@ -56,6 +66,10 @@ $X = "p5-X-$suffix";          // non-member (anonymous-adjust probe)
 $projectIds = [];
 $workGroupIds = [];
 $lineIds = [];
+$psIds = [];   // project_stations
+$spIds = [];   // stop_patterns
+$solIds = [];  // stations_on_line
+$sprIds = [];  // stop_pattern_rows
 
 function cntOwned(PDO $db, string $table, string $col, string $val): int {
 	$st = $db->prepare("SELECT COUNT(*) FROM `$table` WHERE `$col` = :v");
@@ -247,6 +261,141 @@ try {
 		check('8 deleted Line -> 404', $g8c->isError && $g8c->statusCode === 404,
 			'isError=' . var_export($g8c->isError, true) . " status={$g8c->statusCode}");
 	}
+
+	// shared fixtures for S10-S12: a live Line + a ProjectStation under $projId
+	$lineSvc = new LineService($db, $logger);
+	$fxLine = new Line();
+	$fxLine->setData(['name' => "FX Line $suffix", 'description' => 'fx']);
+	$fxLineR = $lineSvc->create(Uuid::fromString($projId), $U, [$fxLine]);
+	$fxLineId = $fxLineR->isError ? null : (string)$fxLineR->value[0]->lines_id;
+	if ($fxLineId !== null) { $lineIds[] = $fxLineId; }
+
+	echo "== Scenario 9 (Phase 7): ProjectStation CRUD + lonlat round-trip ==\n";
+	$psSvc = new ProjectStationsService($db, $logger);
+	$ll = new ProjectStationLocationLonlat();
+	$ll->setData(['longitude' => 139.766944, 'latitude' => 35.681111]);
+	$ps = new ProjectStation();
+	$ps->setData(['name' => "PS $suffix", 'always_show_hh' => true, 'location_lonlat' => $ll]);
+	$c9 = $psSvc->create(Uuid::fromString($projId), $U, [$ps]);
+	check('9 createProjectStation not error', !$c9->isError, $c9->isError ? "[{$c9->statusCode}] {$c9->errorMsg}" : '');
+	$psId = null;
+	if (!$c9->isError) {
+		$psObj = $c9->value[0];
+		$psId = (string)$psObj->project_stations_id;
+		$psIds[] = $psId;
+		check('9 PS.projects_id == project', (string)$psObj->projects_id === $projId);
+		check('9 PS.always_show_hh round-trips true', $psObj->always_show_hh === true);
+		check('9 PS lonlat round-trips (ST_PointFromText/ST_X)',
+			$psObj->location_lonlat !== null
+			&& abs($psObj->location_lonlat->longitude - 139.766944) < 1e-6
+			&& abs($psObj->location_lonlat->latitude - 35.681111) < 1e-6,
+			'got ' . json_encode($psObj->location_lonlat));
+		$g9 = $psSvc->getOne($U, Uuid::fromString($psId));
+		check('9 getOne not error', !$g9->isError);
+		$u9 = $psSvc->update($U, Uuid::fromString($psId),
+			(function(){ $m = new ProjectStation(); $m->setData(['name' => 'PS RENAMED']); return $m; })(),
+			['name' => 'PS RENAMED']);
+		check('9 update not error', !$u9->isError, $u9->isError ? "[{$u9->statusCode}] {$u9->errorMsg}" : '');
+		$g9b = $psSvc->getOne($U, Uuid::fromString($psId));
+		check('9 update reflected', !$g9b->isError && $g9b->value->name === 'PS RENAMED');
+	}
+
+	echo "== Scenario 10 (Phase 7): StopPattern (lines_id alias + direction int update) ==\n";
+	$spSvc = new StopPatternsService($db, $logger);
+	$sp = new StopPattern();
+	// mimic post-UuidValidationRule state: uuid fields are Uuid objects, not strings
+	$sp->setData(['name' => "SP $suffix", 'lines_id' => Uuid::fromString($fxLineId), 'direction' => 1]);
+	$c10 = $spSvc->create(Uuid::fromString($projId), $U, [$sp]);
+	check('10 createStopPattern not error', !$c10->isError, $c10->isError ? "[{$c10->statusCode}] {$c10->errorMsg}" : '');
+	$spId = null;
+	if (!$c10->isError) {
+		$spObj = $c10->value[0];
+		$spId = (string)$spObj->stop_patterns_id;
+		$spIds[] = $spId;
+		check('10 SP.projects_id == project', (string)$spObj->projects_id === $projId);
+		check('10 SP.lines_id == fixture line (project_lines alias)', (string)$spObj->lines_id === $fxLineId,
+			"got " . (string)$spObj->lines_id);
+		check('10 SP.direction round-trips 1', $spObj->direction === 1, 'got ' . var_export($spObj->direction, true));
+		// update direction -> -1 (exercises MyRepoBase update int path, post-bugfix)
+		$u10 = $spSvc->update($U, Uuid::fromString($spId),
+			(function(){ $m = new StopPattern(); $m->setData(['direction' => -1]); return $m; })(),
+			['direction' => -1]);
+		check('10 update direction not error', !$u10->isError, $u10->isError ? "[{$u10->statusCode}] {$u10->errorMsg}" : '');
+		$g10 = $spSvc->getOne($U, Uuid::fromString($spId));
+		check('10 direction updated to -1', !$g10->isError && $g10->value->direction === -1,
+			$g10->isError ? '' : 'got ' . var_export($g10->value->direction, true));
+	}
+
+	echo "== Scenario 11 (Phase 7): StationOnLine (projects_id via subquery, parentRepo=LineRepo) ==\n";
+	$solSvc = new StationsOnLineService($db, $logger);
+	if ($fxLineId !== null && $psId !== null) {
+		$sol = new StationOnLine();
+		$sol->setData(['project_stations_id' => Uuid::fromString($psId), 'location_m' => 12345.6, 'track_hidden_by_default' => false]);
+		$c11 = $solSvc->create(Uuid::fromString($fxLineId), $U, [$sol]);
+		check('11 createStationOnLine not error', !$c11->isError, $c11->isError ? "[{$c11->statusCode}] {$c11->errorMsg}" : '');
+		if (!$c11->isError) {
+			$solObj = $c11->value[0];
+			$solId = (string)$solObj->stations_on_line_id;
+			$solIds[] = $solId;
+			check('11 SOL.projects_id derived from line == project (subquery insert)',
+				(string)$solObj->projects_id === $projId, "got " . (string)$solObj->projects_id);
+			check('11 SOL.lines_id == fixture line', (string)$solObj->lines_id === $fxLineId);
+			check('11 SOL.project_stations_id == PS', (string)$solObj->project_stations_id === $psId);
+			check('11 SOL.location_m round-trips', abs($solObj->location_m - 12345.6) < 1e-6);
+			// parentRepo=LineRepo privilege: admin via line, non-member -> 404
+			$lr = new LineRepo($db, $logger);
+			$p11a = $lr->selectPrivilegeType(id: Uuid::fromString($fxLineId), userId: $U, includeAnonymous: true);
+			check('11 LineRepo priv(owner)==admin', !$p11a->isError && $p11a->value === InviteKeyPrivilegeType::admin);
+			$p11b = $solSvc->getOne($X, Uuid::fromString($solId));
+			check('11 non-member getOne(SOL) -> 404', $p11b->isError && $p11b->statusCode === 404,
+				"status={$p11b->statusCode}");
+			$d11 = $solSvc->delete($U, Uuid::fromString($solId));
+			check('11 delete not error', !$d11->isError);
+		}
+	} else {
+		check('11 fixtures available', false, 'missing fxLine or PS');
+	}
+
+	echo "== Scenario 12 (Phase 7): StopPatternRow (projects_id via subquery, parentRepo=StopPatternsRepo) ==\n";
+	$sprSvc = new StopPatternRowsService($db, $logger);
+	if ($spId !== null && $psId !== null) {
+		$spr = new StopPatternRow();
+		$spr->setData([
+			'project_stations_id' => Uuid::fromString($psId),
+			'sort_key' => 0,
+			'is_pass' => true,
+			'show_arrive' => false,
+			'track_name' => '1',
+		]);
+		$c12 = $sprSvc->create(Uuid::fromString($spId), $U, [$spr]);
+		check('12 createStopPatternRow not error', !$c12->isError, $c12->isError ? "[{$c12->statusCode}] {$c12->errorMsg}" : '');
+		if (!$c12->isError) {
+			$sprObj = $c12->value[0];
+			$sprId = (string)$sprObj->stop_pattern_rows_id;
+			$sprIds[] = $sprId;
+			check('12 SPR.projects_id derived from stop_pattern == project (subquery insert)',
+				(string)$sprObj->projects_id === $projId, "got " . (string)$sprObj->projects_id);
+			check('12 SPR.stop_patterns_id == parent', (string)$sprObj->stop_patterns_id === $spId);
+			check('12 SPR.is_pass round-trips true', $sprObj->is_pass === true);
+			check('12 SPR.show_arrive round-trips false (explicit override of default 1)',
+				$sprObj->show_arrive === false, 'got ' . var_export($sprObj->show_arrive, true));
+			check('12 SPR.track_name round-trips', $sprObj->track_name === '1');
+			// parentRepo=StopPatternsRepo privilege resolution
+			$spr2 = new StopPatternsRepo($db, $logger);
+			$p12 = $spr2->selectPrivilegeType(id: Uuid::fromString($spId), userId: $U, includeAnonymous: true);
+			check('12 StopPatternsRepo priv(owner)==admin', !$p12->isError && $p12->value === InviteKeyPrivilegeType::admin);
+			$p12b = $sprSvc->getOne($X, Uuid::fromString($sprId));
+			check('12 non-member getOne(SPR) -> 404', $p12b->isError && $p12b->statusCode === 404);
+			$u12 = $sprSvc->update($U, Uuid::fromString($sprId),
+				(function(){ $m = new StopPatternRow(); $m->setData(['sort_key' => 5]); return $m; })(),
+				['sort_key' => 5]);
+			check('12 update sort_key not error', !$u12->isError, $u12->isError ? "[{$u12->statusCode}] {$u12->errorMsg}" : '');
+			$g12 = $sprSvc->getOne($U, Uuid::fromString($sprId));
+			check('12 sort_key updated to 5', !$g12->isError && $g12->value->sort_key === 5);
+		}
+	} else {
+		check('12 fixtures available', false, 'missing stop_pattern or PS');
+	}
 } catch (\Throwable $e) {
 	echo "\n!! EXCEPTION: " . get_class($e) . ': ' . $e->getMessage() . "\n";
 	echo $e->getTraceAsString() . "\n";
@@ -256,6 +405,18 @@ try {
 	// hard cleanup, FK-safe order
 	try {
 		if ($db->inTransaction()) { $db->rollBack(); }
+		foreach ($sprIds as $id) {
+			$db->prepare("DELETE FROM stop_pattern_rows WHERE stop_pattern_rows_id = UNHEX(REPLACE(:id,'-',''))")->execute([':id' => $id]);
+		}
+		foreach ($solIds as $id) {
+			$db->prepare("DELETE FROM stations_on_line WHERE stations_on_line_id = UNHEX(REPLACE(:id,'-',''))")->execute([':id' => $id]);
+		}
+		foreach ($spIds as $id) {
+			$db->prepare("DELETE FROM stop_patterns WHERE stop_patterns_id = UNHEX(REPLACE(:id,'-',''))")->execute([':id' => $id]);
+		}
+		foreach ($psIds as $id) {
+			$db->prepare("DELETE FROM project_stations WHERE project_stations_id = UNHEX(REPLACE(:id,'-',''))")->execute([':id' => $id]);
+		}
 		foreach ($workGroupIds as $id) {
 			$db->prepare("DELETE FROM work_groups_privileges WHERE work_groups_id = UNHEX(REPLACE(:id,'-',''))")->execute([':id' => $id]);
 		}
