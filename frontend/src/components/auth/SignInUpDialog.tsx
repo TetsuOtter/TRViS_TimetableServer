@@ -1,28 +1,34 @@
-import { useCallback } from "react";
-
-import { Dialog } from "@mui/material";
-
-import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { isSignInUpDialogOpenSelector } from "../../redux/selectors/authInfoSelector";
-import { setSignInUpDialogOpen } from "../../redux/slices/authInfoSlice";
+// SignInUpDialog — new-design modal wrapper around SignInUpForm.
+// Open state controlled by useAuth() (isSignInOpen / closeSignIn).
+import { useAuth } from "../../app/AuthContext";
+import { useT } from "../../app/SettingsContext";
 
 import SignInUpForm from "./SignInUpForm";
 
 const SignInUpDialog = () => {
-	const dispatch = useAppDispatch();
+	const { isSignInOpen, closeSignIn } = useAuth();
+	const t = useT();
 
-	const isSignInUpDialogOpen = useAppSelector(isSignInUpDialogOpenSelector);
-
-	const handleCloseSignInUpForm = useCallback(() => {
-		dispatch(setSignInUpDialogOpen(false));
-	}, [dispatch]);
+	if (!isSignInOpen) return null;
 
 	return (
-		<Dialog
-			open={isSignInUpDialogOpen}
-			onClose={handleCloseSignInUpForm}>
-			<SignInUpForm />
-		</Dialog>
+		<div
+			className="modal-backdrop"
+			onClick={(e) => e.target === e.currentTarget && closeSignIn()}>
+			<div className="modal" style={{ maxWidth: 420 }}>
+				<div className="modal-header">
+					<span className="modal-title">{t.signInUp}</span>
+					<button
+						className="btn btn-ghost btn-sm"
+						onClick={closeSignIn}>
+						✕
+					</button>
+				</div>
+				<div className="modal-body">
+					<SignInUpForm />
+				</div>
+			</div>
+		</div>
 	);
 };
 

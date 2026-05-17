@@ -1,65 +1,87 @@
-import { useCallback } from "react";
+// EMailVerifyDialog — new-design modal asking the user to verify their email.
+// Mirrors the old slice logic: opens for brand-new unverified sign-ups
+// (isVerifyForNewUser). Adds "resend verification" and "reload" actions.
+import { useCallback, useState } from "react";
 
-import { Box, Button, Dialog, Paper, Typography } from "@mui/material";
-import { useTranslation } from "react-i18next";
+import { sendEmailVerification } from "firebase/auth";
 
-import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import {
-	isEMailVerifyDialogForNewUserSelector,
-	isEMailVerifyDialogOpenSelector,
-} from "../../redux/selectors/authInfoSelector";
-import { closeEMailVerifyDialog } from "../../redux/slices/authInfoSlice";
+import { useAuth } from "../../app/AuthContext";
+import { auth } from "../../firebase/configure";
 
 const EMailVerifyDialog = () => {
-	const { t } = useTranslation();
-	const dispatch = useAppDispatch();
+	const { isVerifyOpen, isVerifyForNewUser, closeVerify, reloadUser } =
+		useAuth();
+	const [isResending, setIsResending] = useState(false);
 
-	const isEmailVerifyDialogOpen = useAppSelector(
-		isEMailVerifyDialogOpenSelector
-	);
-	const isEmailVerifyDialogForNewUser = useAppSelector(
-		isEMailVerifyDialogForNewUserSelector
-	);
+	const handleResend = useCallback(async () => {
+		const currentUser = auth.currentUser;
+		if (currentUser == null) return;
+		setIsResending(true);
+		try {
+			await sendEmailVerification(currentUser, {
+				url: window.location.href,
+			});
+			alert("確認メールを再送しました。受信箱をご確認ください。");
+		} catch {
+			alert("確認メールの再送に失敗しました。");
+		} finally {
+			setIsResending(false);
+		}
+	}, []);
 
-	const handleCloseEmailVerifyDialog = useCallback(() => {
-		dispatch(closeEMailVerifyDialog());
-	}, [dispatch]);
+	const handleReload = useCallback(() => {
+		void reloadUser();
+	}, [reloadUser]);
+
+	if (!isVerifyOpen) return null;
 
 	return (
-		<Dialog
-			open={isEmailVerifyDialogOpen}
-			onClose={handleCloseEmailVerifyDialog}>
-			<Paper sx={{ p: "1.5em" }}>
-				<Typography
-					variant="h5"
-					sx={{ m: "0.5em 0" }}>
-					{isEmailVerifyDialogForNewUser
-						? t("Welcome to TRViS Data Editor! 🎉")
-						: t("Email verification")}
-				</Typography>
-				<Typography>
-					{isEmailVerifyDialogForNewUser
-						? t(
-								"Before you can use TRViS Data Editor, you need to verify your email address."
-							)
-						: t("Verify link was sent to your email address.")}
-				</Typography>
-				<Typography>
-					{t(
-						"Please check your inbox and follow the instructions to verify your email address."
-					)}
-				</Typography>
-				<Box sx={{ display: "flex", justifyContent: "center" }}>
-					<Button
-						variant="contained"
-						sx={{ mt: "1em" }}
-						onClick={handleCloseEmailVerifyDialog}
-						autoFocus>
-						{t("OK")}
-					</Button>
-				</Box>
-			</Paper>
-		</Dialog>
+		<div
+			className="modal-backdrop"
+			onClick={(e) => e.target === e.currentTarget && closeVerify()}>
+			<div className="modal" style={{ maxWidth: 460 }}>
+				<div className="modal-header">
+					<span className="modal-title">
+						{isVerifyForNewUser
+							? "TRViS Data Editor へようこそ 🎉"
+							: "メールアドレスの確認"}
+					</span>
+					<button
+						className="btn btn-ghost btn-sm"
+						onClick={closeVerify}>
+						✕
+					</button>
+				</div>
+				<div
+					className="modal-body"
+					style={{ fontSize: 13, lineHeight: 1.7 }}>
+					<p style={{ marginBottom: 8 }}>
+						{isVerifyForNewUser
+							? "TRViS Data Editor を利用するには、メールアドレスの確認が必要です。"
+							: "確認用リンクをメールアドレス宛に送信しました。"}
+					</p>
+					<p>
+						受信箱を確認し、案内に従ってメールアドレスを確認してください。
+					</p>
+				</div>
+				<div className="modal-footer">
+					<button
+						className="btn btn-secondary"
+						disabled={isResending}
+						onClick={handleResend}>
+						確認メールを再送
+					</button>
+					<button
+						className="btn btn-primary"
+						onClick={handleReload}>
+						確認しました（再読み込み）
+					</button>
+					<button className="btn btn-ghost" onClick={closeVerify}>
+						閉じる
+					</button>
+				</div>
+			</div>
+		</div>
 	);
 };
 
