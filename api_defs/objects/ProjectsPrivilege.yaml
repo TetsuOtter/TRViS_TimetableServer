@@ -1,0 +1,38 @@
+ProjectsPrivilege:
+  type: object
+  title: ProjectsPrivilege
+  required:
+    - privilege_type
+  properties:
+    uid:
+      type: string
+      readOnly: true
+      description: UserID
+    projects_id:
+      type: string
+      format: uuid
+      readOnly: true
+      description: ProjectのID (UUID)
+    invite_keys_id:
+      type: string
+      format: uuid
+      readOnly: true
+      description: InviteKeyのID (UUID)
+    created_at:
+      type: string
+      format: date-time
+      readOnly: true
+      description: 作成日時
+    updated_at:
+      type: string
+      format: date-time
+      readOnly: true
+      description: 更新日時
+    privilege_type:
+      type: string
+      description: 権限の種類
+      enum:
+        - read
+        - write
+        - admin
+      example: admin

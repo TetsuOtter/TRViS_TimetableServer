@@ -1,20 +1,15 @@
-WorkGroup:
+Project:
   type: object
-  title: WorkGroup
+  title: Project
   required:
     - description
     - name
   properties:
-    work_groups_id:
-      type: string
-      format: uuid
-      readOnly: true
-      description: WorkGroupのID (UUID)
     projects_id:
       type: string
       format: uuid
       readOnly: true
-      description: 所属するProjectのID (UUID)
+      description: ProjectのID (UUID)
     created_at:
       type: string
       format: date-time
@@ -22,12 +17,12 @@ WorkGroup:
       description: 作成日時
     description:
       type: string
-      description: WorkGroupの説明
-      example: WorkGroupの説明が入ります
+      description: Projectの説明
+      example: Projectの説明が入ります
     name:
       type: string
-      description: WorkGroupの名前
-      example: AAA乗務員区
+      description: Projectの名前
+      example: AAA鉄道
     privilege_type:
       type: string
       description: 権限の種類
@@ -38,8 +33,8 @@ WorkGroup:
         - admin
       example: admin
 
-WorkGroupArray:
+ProjectArray:
   type: array
-  title: WorkGroupArray
+  title: ProjectArray
   items:
-    $ref: '#/WorkGroup'
+    $ref: '#/Project'
