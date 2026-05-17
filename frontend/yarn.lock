@@ -2218,6 +2218,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@tanstack/query-core@npm:5.100.10":
+  version: 5.100.10
+  resolution: "@tanstack/query-core@npm:5.100.10"
+  checksum: 10c0/fd220485b8223d44877324b0229a7d664c5840f3daf177c4a76e67d1d0be1a78a908b0649b3e275b9cfa7a31250c0770688cc37bb439a90c5b1d7a07974d8828
+  languageName: node
+  linkType: hard
+
+"@tanstack/react-query@npm:^5.100.10":
+  version: 5.100.10
+  resolution: "@tanstack/react-query@npm:5.100.10"
+  dependencies:
+    "@tanstack/query-core": "npm:5.100.10"
+  peerDependencies:
+    react: ^18 || ^19
+  checksum: 10c0/d25e67e78b28463a6db9d48027e194891365e3f21c5278f83f71af6c683951b979853b755388c0eca9e4510bd24c8a59e5d7920c2d7a42bd293bddd2900f901b
+  languageName: node
+  linkType: hard
+
 "@tsconfig/strictest@npm:^2.0.2":
   version: 2.0.5
   resolution: "@tsconfig/strictest@npm:2.0.5"
@@ -6943,6 +6961,7 @@ __metadata:
     "@mui/x-data-grid": "npm:^6.18.7"
     "@mui/x-date-pickers": "npm:^6.19.3"
     "@reduxjs/toolkit": "npm:^2.0.1"
+    "@tanstack/react-query": "npm:^5.100.10"
     "@tsconfig/strictest": "npm:^2.0.2"
     "@types/react": "npm:^18.2.43"
     "@types/react-dom": "npm:^18.2.17"

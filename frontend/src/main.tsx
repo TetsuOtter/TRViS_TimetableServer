@@ -2,9 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 
 import { App } from "./app/App";
-import { AuthProvider } from "./app/AuthContext";
-import AuthGate from "./app/AuthGate";
-import { SettingsProvider } from "./app/SettingsContext";
+import AppProviders from "./app/AppProviders";
 
 import "./styles/global.css";
 
@@ -19,12 +17,8 @@ if (rootNode == null) {
 
 ReactDOM.createRoot(rootNode).render(
 	<React.StrictMode>
-		<SettingsProvider>
-			<AuthProvider>
-				<AuthGate>
-					<App />
-				</AuthGate>
-			</AuthProvider>
-		</SettingsProvider>
+		<AppProviders>
+			<App />
+		</AppProviders>
 	</React.StrictMode>
 );
