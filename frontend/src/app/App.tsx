@@ -3,6 +3,12 @@
 // via SettingsContext. Layout is fixed to the design's default ("sidebar").
 import { useEffect, useMemo, useState } from "react";
 
+import {
+	useCreateProject,
+	useDeleteProject,
+	useProjects,
+	useUpdateProject,
+} from "../api/hooks/useProjects";
 import { AppShell } from "../components/AppShell";
 import AuthControls from "../components/auth/AuthControls";
 import {
@@ -21,6 +27,7 @@ import { createInitialData } from "../data/sampleData";
 import { useSettings } from "./SettingsContext";
 
 import type { ContextMenuItem } from "../components/EntityDialogs";
+import type { Project as EntityProject } from "../types/entities";
 import type {
 	AppData,
 	Line,
@@ -248,6 +255,16 @@ export function App() {
 	const { theme, toggleTheme, lang, toggleLang, density, t } =
 		useSettings();
 
+	const {
+		data: apiProjects,
+		isLoading: projectsLoading,
+		error: projectsError,
+		refetch: refetchProjects,
+	} = useProjects();
+	const createProjectMutation = useCreateProject();
+	const updateProjectMutation = useUpdateProject();
+	const deleteProjectMutation = useDeleteProject();
+
 	const [data, setData] = useState<AppData>(() => createInitialData());
 	const [projectId, setProjectId] = useState<string | null>(null);
 	const [currentWG, setCurrentWG] = useState<string | null>(null);
@@ -367,22 +384,23 @@ export function App() {
 		draft: Partial<Pick<Project, "id">> &
 			Pick<Project, "name" | "description">
 	) => {
-		if (draft.id) {
-			updateProject(draft as Project);
+		const onError = (e: Error) => alert(e.message);
+		if (draft.id !== undefined && draft.id !== "") {
+			updateProjectMutation.mutate(
+				{ id: draft.id, name: draft.name, description: draft.description },
+				{ onError }
+			);
 		} else {
-			const newP: Project = {
-				...draft,
-				id: uid("p"),
-				workGroups: [],
-			};
-			setData((d) => ({ ...d, projects: [...d.projects, newP] }));
+			createProjectMutation.mutate(
+				{ name: draft.name, description: draft.description },
+				{ onError }
+			);
 		}
 	};
-	const deleteProject = (p: Project) => {
-		setData((d) => ({
-			...d,
-			projects: d.projects.filter((x) => x.id !== p.id),
-		}));
+	const deleteProject = (p: EntityProject) => {
+		deleteProjectMutation.mutate(p.id, {
+			onError: (e) => alert(e.message),
+		});
 		if (projectId === p.id) {
 			setProjectId(null);
 			setScreen("projects");
@@ -672,10 +690,24 @@ export function App() {
 				t={t}>
 				{!projectId && (
 					<ProjectListScreen
-						projects={data.projects}
+						projects={apiProjects ?? []}
+						isLoading={projectsLoading}
+						error={projectsError}
+						onRetry={() => {
+							void refetchProjects();
+						}}
 						onOpen={handleOpenProject}
 						onNew={() => setEditingProject({ new: true })}
-						onEdit={(p) => setEditingProject({ project: p })}
+						onEdit={(p) =>
+							setEditingProject({
+								project: {
+									id: p.id,
+									name: p.name,
+									description: p.description,
+									workGroups: [],
+								},
+							})
+						}
 						onDelete={(p) =>
 							setConfirmDialog({
 								title: "プロジェクトを削除",
@@ -685,7 +717,7 @@ export function App() {
 						}
 						onImport={importJson}
 						onExport={(pid) =>
-							pid ? exportProject(pid) : exportAll()
+							pid !== undefined ? exportProject(pid) : exportAll()
 						}
 						t={t}
 					/>
