@@ -24,13 +24,13 @@ namespace dev_t0r\trvis_backend\model;
 use dev_t0r\BaseModel;
 
 /**
- * WorkGroup
+ * Project
  *
  * @package dev_t0r\trvis_backend\model
  * @author  OpenAPI Generator team
  * @link    https://github.com/openapitools/openapi-generator
  */
-class WorkGroup extends BaseModel
+class Project extends BaseModel
 {
     /**
      * @var string Models namespace.
@@ -44,19 +44,13 @@ class WorkGroup extends BaseModel
      */
     protected const MODEL_SCHEMA = <<<'SCHEMA'
 {
-  "title" : "WorkGroup",
+  "title" : "Project",
   "required" : [ "description", "name" ],
   "type" : "object",
   "properties" : {
-    "work_groups_id" : {
-      "type" : "string",
-      "description" : "WorkGroupのID (UUID)",
-      "format" : "uuid",
-      "readOnly" : true
-    },
     "projects_id" : {
       "type" : "string",
-      "description" : "所属するProjectのID (UUID)",
+      "description" : "ProjectのID (UUID)",
       "format" : "uuid",
       "readOnly" : true
     },
@@ -68,13 +62,13 @@ class WorkGroup extends BaseModel
     },
     "description" : {
       "type" : "string",
-      "description" : "WorkGroupの説明",
-      "example" : "WorkGroupの説明が入ります"
+      "description" : "Projectの説明",
+      "example" : "Projectの説明が入ります"
     },
     "name" : {
       "type" : "string",
-      "description" : "WorkGroupの名前",
-      "example" : "AAA乗務員区"
+      "description" : "Projectの名前",
+      "example" : "AAA鉄道"
     },
     "privilege_type" : {
       "type" : "string",

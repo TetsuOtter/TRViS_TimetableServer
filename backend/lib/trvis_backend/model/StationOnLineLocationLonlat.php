@@ -24,13 +24,13 @@ namespace dev_t0r\trvis_backend\model;
 use dev_t0r\BaseModel;
 
 /**
- * WorkGroup
+ * StationOnLineLocationLonlat
  *
  * @package dev_t0r\trvis_backend\model
  * @author  OpenAPI Generator team
  * @link    https://github.com/openapitools/openapi-generator
  */
-class WorkGroup extends BaseModel
+class StationOnLineLocationLonlat extends BaseModel
 {
     /**
      * @var string Models namespace.
@@ -44,46 +44,23 @@ class WorkGroup extends BaseModel
      */
     protected const MODEL_SCHEMA = <<<'SCHEMA'
 {
-  "title" : "WorkGroup",
-  "required" : [ "description", "name" ],
+  "required" : [ "latitude", "longitude" ],
   "type" : "object",
   "properties" : {
-    "work_groups_id" : {
-      "type" : "string",
-      "description" : "WorkGroupのID (UUID)",
-      "format" : "uuid",
-      "readOnly" : true
+    "longitude" : {
+      "type" : "number",
+      "description" : "経度",
+      "format" : "double",
+      "example" : 139.766944
     },
-    "projects_id" : {
-      "type" : "string",
-      "description" : "所属するProjectのID (UUID)",
-      "format" : "uuid",
-      "readOnly" : true
-    },
-    "created_at" : {
-      "type" : "string",
-      "description" : "作成日時",
-      "format" : "date-time",
-      "readOnly" : true
-    },
-    "description" : {
-      "type" : "string",
-      "description" : "WorkGroupの説明",
-      "example" : "WorkGroupの説明が入ります"
-    },
-    "name" : {
-      "type" : "string",
-      "description" : "WorkGroupの名前",
-      "example" : "AAA乗務員区"
-    },
-    "privilege_type" : {
-      "type" : "string",
-      "description" : "権限の種類",
-      "readOnly" : true,
-      "example" : "admin",
-      "enum" : [ "read", "write", "admin" ]
+    "latitude" : {
+      "type" : "number",
+      "description" : "緯度",
+      "format" : "double",
+      "example" : 35.681111
     }
-  }
+  },
+  "description" : "その路線上での駅の位置 (緯度経度) ※未指定時はProject Stationの値を使用"
 }
 SCHEMA;
 }

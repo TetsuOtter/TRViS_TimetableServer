@@ -24,13 +24,13 @@ namespace dev_t0r\trvis_backend\model;
 use dev_t0r\BaseModel;
 
 /**
- * WorkGroup
+ * ProjectStation
  *
  * @package dev_t0r\trvis_backend\model
  * @author  OpenAPI Generator team
  * @link    https://github.com/openapitools/openapi-generator
  */
-class WorkGroup extends BaseModel
+class ProjectStation extends BaseModel
 {
     /**
      * @var string Models namespace.
@@ -44,19 +44,19 @@ class WorkGroup extends BaseModel
      */
     protected const MODEL_SCHEMA = <<<'SCHEMA'
 {
-  "title" : "WorkGroup",
-  "required" : [ "description", "name" ],
+  "title" : "ProjectStation",
+  "required" : [ "name" ],
   "type" : "object",
   "properties" : {
-    "work_groups_id" : {
+    "project_stations_id" : {
       "type" : "string",
-      "description" : "WorkGroupのID (UUID)",
+      "description" : "Project Station (Project内共通の駅) のID (UUID)",
       "format" : "uuid",
       "readOnly" : true
     },
     "projects_id" : {
       "type" : "string",
-      "description" : "所属するProjectのID (UUID)",
+      "description" : "ProjectのID (UUID)",
       "format" : "uuid",
       "readOnly" : true
     },
@@ -66,22 +66,29 @@ class WorkGroup extends BaseModel
       "format" : "date-time",
       "readOnly" : true
     },
-    "description" : {
-      "type" : "string",
-      "description" : "WorkGroupの説明",
-      "example" : "WorkGroupの説明が入ります"
-    },
     "name" : {
       "type" : "string",
-      "description" : "WorkGroupの名前",
-      "example" : "AAA乗務員区"
+      "description" : "駅名",
+      "example" : "東京"
     },
-    "privilege_type" : {
+    "full_name" : {
       "type" : "string",
-      "description" : "権限の種類",
-      "readOnly" : true,
-      "example" : "admin",
-      "enum" : [ "read", "write", "admin" ]
+      "description" : "駅のフルネーム",
+      "example" : "東京駅"
+    },
+    "location_lonlat" : {
+      "$ref" : "#/components/schemas/ProjectStation_location_lonlat"
+    },
+    "on_station_detect_radius_m" : {
+      "type" : "number",
+      "description" : "その駅にいるかどうかを判定する円の半径 (m)",
+      "format" : "double",
+      "example" : 123.45
+    },
+    "always_show_hh" : {
+      "type" : "boolean",
+      "description" : "時刻表示で常に「時」を表示するかどうか",
+      "example" : false
     }
   }
 }

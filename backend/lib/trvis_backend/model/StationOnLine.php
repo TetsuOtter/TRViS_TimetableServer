@@ -24,13 +24,13 @@ namespace dev_t0r\trvis_backend\model;
 use dev_t0r\BaseModel;
 
 /**
- * WorkGroup
+ * StationOnLine
  *
  * @package dev_t0r\trvis_backend\model
  * @author  OpenAPI Generator team
  * @link    https://github.com/openapitools/openapi-generator
  */
-class WorkGroup extends BaseModel
+class StationOnLine extends BaseModel
 {
     /**
      * @var string Models namespace.
@@ -44,21 +44,31 @@ class WorkGroup extends BaseModel
      */
     protected const MODEL_SCHEMA = <<<'SCHEMA'
 {
-  "title" : "WorkGroup",
-  "required" : [ "description", "name" ],
+  "title" : "StationOnLine",
+  "required" : [ "lines_id", "location_m", "project_stations_id" ],
   "type" : "object",
   "properties" : {
-    "work_groups_id" : {
+    "stations_on_line_id" : {
       "type" : "string",
-      "description" : "WorkGroupのID (UUID)",
+      "description" : "StationOnLineのID (UUID)",
       "format" : "uuid",
       "readOnly" : true
     },
     "projects_id" : {
       "type" : "string",
-      "description" : "所属するProjectのID (UUID)",
+      "description" : "ProjectのID (UUID)",
       "format" : "uuid",
       "readOnly" : true
+    },
+    "lines_id" : {
+      "type" : "string",
+      "description" : "紐づくLineのID (UUID)",
+      "format" : "uuid"
+    },
+    "project_stations_id" : {
+      "type" : "string",
+      "description" : "紐づくProject StationのID (UUID)",
+      "format" : "uuid"
     },
     "created_at" : {
       "type" : "string",
@@ -66,22 +76,19 @@ class WorkGroup extends BaseModel
       "format" : "date-time",
       "readOnly" : true
     },
-    "description" : {
-      "type" : "string",
-      "description" : "WorkGroupの説明",
-      "example" : "WorkGroupの説明が入ります"
+    "location_m" : {
+      "type" : "number",
+      "description" : "その路線上での駅の位置 (m)",
+      "format" : "double",
+      "example" : 12345.6
     },
-    "name" : {
-      "type" : "string",
-      "description" : "WorkGroupの名前",
-      "example" : "AAA乗務員区"
+    "location_lonlat" : {
+      "$ref" : "#/components/schemas/StationOnLine_location_lonlat"
     },
-    "privilege_type" : {
-      "type" : "string",
-      "description" : "権限の種類",
-      "readOnly" : true,
-      "example" : "admin",
-      "enum" : [ "read", "write", "admin" ]
+    "track_hidden_by_default" : {
+      "type" : "boolean",
+      "description" : "デフォルトで番線を非表示にするかどうか",
+      "example" : false
     }
   }
 }

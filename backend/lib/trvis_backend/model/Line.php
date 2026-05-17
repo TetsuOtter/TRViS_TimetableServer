@@ -24,13 +24,13 @@ namespace dev_t0r\trvis_backend\model;
 use dev_t0r\BaseModel;
 
 /**
- * WorkGroup
+ * Line
  *
  * @package dev_t0r\trvis_backend\model
  * @author  OpenAPI Generator team
  * @link    https://github.com/openapitools/openapi-generator
  */
-class WorkGroup extends BaseModel
+class Line extends BaseModel
 {
     /**
      * @var string Models namespace.
@@ -44,19 +44,19 @@ class WorkGroup extends BaseModel
      */
     protected const MODEL_SCHEMA = <<<'SCHEMA'
 {
-  "title" : "WorkGroup",
+  "title" : "Line",
   "required" : [ "description", "name" ],
   "type" : "object",
   "properties" : {
-    "work_groups_id" : {
+    "lines_id" : {
       "type" : "string",
-      "description" : "WorkGroupのID (UUID)",
+      "description" : "LineのID (UUID)",
       "format" : "uuid",
       "readOnly" : true
     },
     "projects_id" : {
       "type" : "string",
-      "description" : "所属するProjectのID (UUID)",
+      "description" : "ProjectのID (UUID)",
       "format" : "uuid",
       "readOnly" : true
     },
@@ -68,20 +68,13 @@ class WorkGroup extends BaseModel
     },
     "description" : {
       "type" : "string",
-      "description" : "WorkGroupの説明",
-      "example" : "WorkGroupの説明が入ります"
+      "description" : "Lineの説明",
+      "example" : "Lineの説明が入ります"
     },
     "name" : {
       "type" : "string",
-      "description" : "WorkGroupの名前",
-      "example" : "AAA乗務員区"
-    },
-    "privilege_type" : {
-      "type" : "string",
-      "description" : "権限の種類",
-      "readOnly" : true,
-      "example" : "admin",
-      "enum" : [ "read", "write", "admin" ]
+      "description" : "路線名",
+      "example" : "東海道本線"
     }
   }
 }
