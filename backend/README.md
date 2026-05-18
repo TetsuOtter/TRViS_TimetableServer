@@ -1,282 +1,121 @@
-# trvis_backend\main - PHP Slim 4 Server library for TRViS用 時刻表管理用API
+# TRViS Timetable Server — Backend
 
-* [OpenAPI Generator](https://openapi-generator.tech)
-* [Slim 4 Documentation](https://www.slimframework.com/docs/v4/)
+[TRViS](https://github.com/TetsuOtter/TRViS) 用の時刻表データを保存・配信する REST API です。
+PHP 8.2 / [Slim 4](https://www.slimframework.com/) + [PHP-DI](https://php-di.org/) で実装しています。
 
-This server has been generated with [Slim PSR-7](https://github.com/slimphp/Slim-Psr7) implementation.
-[PHP-DI](https://php-di.org/doc/frameworks/slim.html) package used as dependency container.
+API 仕様の source-of-truth は [`../api_defs/`](../api_defs/README.md) の OpenAPI 定義です。
+このディレクトリのコードは、その定義から OpenAPI Generator（`php-slim4`）で生成した雛形に、
+手書きの実装を肉付けする構成になっています。
 
-## Requirements
+## ディレクトリ構成
 
-* Web server with URL rewriting
-* PHP 7.4 or newer
+| パス                  | 内容                                                                              | 生成 / 手書き |
+| --------------------- | --------------------------------------------------------------------------------- | ------------- |
+| `lib/`                | OpenAPI Generator が生成するモデル・抽象クラス・ルーティング登録                   | 生成（原則編集しない） |
+| `src/trvis_backend/`  | 手書きの実装本体                                                                  | 手書き        |
+| `public/index.php`    | エントリポイント（コンテナ構築・ミドルウェア・ルーティング起動）                  | 生成（ignore 済み） |
+| `config/`             | 環境別設定（後述）                                                                | 手書き        |
+| `tests/`              | PHPUnit テスト（`Api/` `Model/` `Integration/`）                                  | 手書き        |
+| `scripts/`            | 補助スクリプト                                                                    | 手書き        |
+| `logs/`               | アプリ／Apache ログ出力先                                                          | —             |
+| `Dockerfile`          | `php:8.2-apache` ベース。ドキュメントルートは `public/`                            | 手書き        |
 
-This package contains `.htaccess` for Apache configuration.
-If you use another server(Nginx, HHVM, IIS, lighttpd) check out [Web Servers](https://www.slimframework.com/docs/v3/start/web-servers.html) doc.
+オートロード（`composer.json`）は PSR-4 で `dev_t0r\` を `lib/` と `src/` の **両方** に
+マッピングしています。生成コードと手書きコードが同じ名前空間ツリーに同居し、
+ルーティングはクラス名規約（`XxxApi` → `dev_t0r\trvis_backend\api\XxxApi`）で解決されます。
 
-## Installation via [Composer](https://getcomposer.org/)
+### 実装のレイヤ（`src/trvis_backend/`）
 
-Navigate into your project's root directory and execute the bash command shown below.
-This command downloads the Slim Framework and its third-party dependencies into your project's `vendor/` directory.
-```bash
-$ composer install
+```
+api/      … HTTP ハンドラ。リクエスト検証 → service 呼び出し → レスポンス整形
+service/  … ユースケース／権限判定。トランザクション境界
+repo/     … SQL（PDO）。1 テーブル ≒ 1 リポジトリ
+validator/… 型・値バリデーションルール群
+model/    … 列挙型・日時など手書きモデル補助
+auth/     … MyAuthMiddleware（認証トークン検証）
 ```
 
-## Add configs
+## 認証・認可モデル
 
-[PHP-DI package](https://php-di.org/doc/getting-started.html) helps to decouple configuration from implementation. App loads configuration files in straight order(`$env` can be `prod` or `dev`):
-1. `config/$env/default.inc.php` (contains safe values, can be committed to vcs)
-2. `config/$env/config.inc.php` (user config, excluded from vcs, can contain sensitive values, passwords etc.)
-3. `lib/App/RegisterDependencies.php`
+**「リクエストをゲートする」のではなく「権限でフィルタする」方式**です。
 
-When running via `docker compose`, copy the tracked docker template to the
-(gitignored) user config before bringing the stack up:
-```bash
-$ cp backend/config/prod/config.docker.inc.php backend/config/prod/config.inc.php
-```
-This template points the DB at `webmon-db` and the Firebase Auth Emulator at
-`webmon-firebase:9099` (the in-compose hostnames).
+- `MyAuthMiddleware` は `Authorization: Bearer <token>` が **付いていれば** Firebase で検証する。
+  - 不正なトークン → `400`
+  - 期限切れトークン → `401`
+- トークンが **無ければそのまま通し**、ハンドラには匿名 UID（`Constants::UID_ANONYMOUS`）が渡る。
+- 参照系（`GET`）は匿名でも通るが、返るのは **その利用者に見える範囲だけ**。
+  匿名の権限で見える行がゼロなら `200 []`（＝仕様どおりの正常応答であり、脆弱性ではない）。
+- 作成・更新・削除は匿名を拒否（`401 "Token was not set"`）。
 
-## Start devserver
+権限の最上位単位は **Project** です（旧 WorkGroup 単位の権限を置き換え）。
+詳細は [`../api_defs/`](../api_defs/README.md) の OpenAPI 定義を参照してください。
 
-Run the following command in terminal to start localhost web server, assuming `./php-slim-server/public/` is public-accessible directory with `index.php` file:
-```bash
-$ php -S localhost:8888 -t php-slim-server/public
-```
-> **Warning** This web server was designed to aid application development.
-> It may also be useful for testing purposes or for application demonstrations that are run in controlled environments.
-> It is not intended to be a full-featured web server. It should not be used on a public network.
+## 設定（`config/`）
 
-## Tests
+環境（`APP_ENV` で `dev` / `prod` を切替、未指定なら `prod`）ごとに 2〜3 ファイルの重ね合わせ:
 
-### PHPUnit
+| ファイル                                | VCS        | 役割                                                                 |
+| --------------------------------------- | ---------- | -------------------------------------------------------------------- |
+| `config/$env/default.inc.php`           | 追跡       | 機密を含まない既定値。**常に読み込まれる**                            |
+| `config/$env/config.inc.php`            | gitignore  | 開発者ごとのローカル上書き。**存在すれば**読み込まれる（秘密はここ）  |
+| `config/prod/config.docker.inc.php`     | 追跡       | Docker 用テンプレート。名前では読まれない。コピー元として使う        |
 
-This package uses PHPUnit 8 or 9(depends from your PHP version) for unit testing.
-[Test folder](tests) contains templates which you can fill with real test assertions.
-How to write tests read at [2. Writing Tests for PHPUnit - PHPUnit 8.5 Manual](https://phpunit.readthedocs.io/en/8.5/writing-tests-for-phpunit.html).
+Docker Compose で起動する場合は、テンプレートを `config.inc.php` にコピーします:
 
-#### Run
-
-Command | Target
----- | ----
-`$ composer test` | All tests
-`$ composer test-apis` | Apis tests
-`$ composer test-models` | Models tests
-
-#### Config
-
-Package contains fully functional config `./phpunit.xml.dist` file. Create `./phpunit.xml` in root folder to override it.
-
-Quote from [3. The Command-Line Test Runner — PHPUnit 8.5 Manual](https://phpunit.readthedocs.io/en/8.5/textui.html#command-line-options):
-
-> If phpunit.xml or phpunit.xml.dist (in that order) exist in the current working directory and --configuration is not used, the configuration will be automatically read from that file.
-
-### PHP CodeSniffer
-
-[PHP CodeSniffer Documentation](https://github.com/squizlabs/PHP_CodeSniffer/wiki). This tool helps to follow coding style and avoid common PHP coding mistakes.
-
-#### Run
-
-```bash
-$ composer phpcs
+```sh
+cp config/prod/config.docker.inc.php config/prod/config.inc.php
 ```
 
-#### Config
+`config.docker.inc.php` は DB を `webmon-db`、Firebase Auth Emulator を
+`webmon-firebase:9099` に向けた固定値を持ちます（同一 compose ネットワーク前提）。
+`config.inc.php` は Git 管理外なので、機密値はここに書きます。
 
-Package contains fully functional config `./phpcs.xml.dist` file. It checks source code against PSR-1 and PSR-2 coding standards.
-Create `./phpcs.xml` in root folder to override it. More info at [Using a Default Configuration File](https://github.com/squizlabs/PHP_CodeSniffer/wiki/Advanced-Usage#using-a-default-configuration-file)
+## 起動方法
 
-### PHPLint
+### ホスト PHP の組み込みサーバ（開発時）
 
-[PHPLint Documentation](https://github.com/overtrue/phplint). Checks PHP syntax only.
+リポジトリルートの補助スクリプトを使います:
 
-#### Run
-
-```bash
-$ composer phplint
+```sh
+./_php.sh        # backend/ で php -S localhost:8888 -t public
 ```
 
-## Show errors
+→ `http://localhost:8888/api/v1/`
 
-Switch your app environment to development in `public/.htaccess` file:
-```ini
-## .htaccess
-<IfModule mod_env.c>
-    SetEnv APP_ENV 'development'
-</IfModule>
+### Docker Compose
+
+リポジトリルートの [`README.md`](../README.md) のクイックスタート参照。
+`php` コンテナは proxy 経由のほか `http://localhost:8080/api/v1/` で直接叩けます。
+
+## テスト
+
+PHPUnit 11（`vendor/` に同梱）。`backend/` 直下で実行します。
+
+```sh
+composer test          # 全テスト
+composer test-apis     # phpunit --testsuite Apis（tests/Api）
+composer test-models   # phpunit --testsuite Models（tests/Model）
+composer phpcs         # コーディング規約チェック
+composer phplint       # 構文チェック（vendor を除外）
 ```
 
-## Mock Server
-Since this feature should be used for development only, change environment to `development` and send additional HTTP header `X-dev_t0r-Mock: ping` with any request to get mocked response.
-CURL example:
-```console
-curl --request GET \
-    --url 'http://localhost:8888/v2/pet/findByStatus?status=available' \
-    --header 'accept: application/json' \
-    --header 'X-dev_t0r-Mock: ping'
-[{"id":-8738629417578509312,"category":{"id":-4162503862215270400,"name":"Lorem ipsum dol"},"name":"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem i","photoUrls":["Lor"],"tags":[{"id":-3506202845849391104,"name":"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectet"}],"status":"pending"}]
+`tests/Integration/` および一部の API テストは実 DB に接続します。
+DB が無い環境では skip ガードされます。CI（`.github/workflows/backend-tests.yml`）は
+PHP 8.2 + MySQL 8.0 で実 DB 統合テストまで含めて実行します。
+
+## コード生成との関係（重要）
+
+`lib/` や `public/index.php` は OpenAPI Generator の出力です。
+**手で編集してはいけません**（次回生成で上書きされます）。
+
+API を変えるときは `../api_defs/` の OpenAPI 定義を編集し、再生成します:
+
+```sh
+cd ../api_defs
+./bundle.sh        # 仕様をバンドル（openapi.bundle.yml を生成）
+./gen_php.sh       # backend/ を再生成
 ```
 
-Used packages:
-* [Openapi Data Mocker](https://github.com/ybelenko/openapi-data-mocker) - first implementation of OAS3 fake data generator.
-* [Openapi Data Mocker Server Middleware](https://github.com/ybelenko/openapi-data-mocker-server-middleware) - PSR-15 HTTP server middleware.
-* [Openapi Data Mocker Interfaces](https://github.com/ybelenko/openapi-data-mocker-interfaces) - package with mocking interfaces.
-
-## Logging
-
-Build contains pre-configured [`monolog/monolog`](https://github.com/Seldaek/monolog) package. Make sure that `logs` folder is writable.
-Add required log handlers/processors/formatters in `lib/App/RegisterDependencies.php`.
-
-## API Endpoints
-
-All URIs are relative to *http://localhost:8080/api/v1*
-
-> Important! Do not modify abstract API controllers directly! Instead extend them by implementation classes like:
-
-```php
-// src/Api/PetApi.php
-
-namespace dev_t0r\trvis_backend\api;
-
-use dev_t0r\trvis_backend\api\AbstractPetApi;
-use Psr\Http\Message\ServerRequestInterface;
-use Psr\Http\Message\ResponseInterface;
-
-class PetApi extends AbstractPetApi
-{
-    public function addPet(
-        ServerRequestInterface $request,
-        ResponseInterface $response
-    ): ResponseInterface {
-        // your implementation of addPet method here
-    }
-}
-```
-
-When you need to inject dependencies into API controller check [PHP-DI - Controllers as services](https://github.com/PHP-DI/Slim-Bridge#controllers-as-services) guide.
-
-Place all your implementation classes in `./src` folder accordingly.
-For instance, when abstract class located at `./lib/Api/AbstractPetApi.php` you need to create implementation class at `./src/Api/PetApi.php`.
-
-Class | Method | HTTP request | Description
------------- | ------------- | ------------- | -------------
-*AbstractApiInfoApi* | **getApiInfo** | **GET** / | APIの情報を取得する
-*AbstractAuthApi* | **issueToken** | **POST** /auths | (未実装) 認証トークンを発行
-*AbstractColorApi* | **createColor** | **POST** /work_groups/{workGroupId}/colors | 作成する
-*AbstractColorApi* | **deleteColor** | **DELETE** /colors/{colorId} | 削除する
-*AbstractColorApi* | **getColor** | **GET** /colors/{colorId} | 1件取得する
-*AbstractColorApi* | **getColorList** | **GET** /work_groups/{workGroupId}/colors | 複数件取得する
-*AbstractColorApi* | **updateColor** | **PUT** /colors/{colorId} | 更新する
-*AbstractDumpApi* | **dumpTimetable** | **GET** /dump/{workGroupId} | まとめて出力する
-*AbstractInviteKeyApi* | **getMyInviteKeyList** | **GET** /invite_keys | 一覧を取得する
-*AbstractInviteKeyApi* | **createInviteKey** | **POST** /work_groups/{workGroupId}/invite_keys | 作成する
-*AbstractInviteKeyApi* | **deleteInviteKey** | **DELETE** /invite_keys/{inviteKeyId} | 無効化する
-*AbstractInviteKeyApi* | **getInviteKey** | **GET** /invite_keys/{inviteKeyId} | 1件取得する
-*AbstractInviteKeyApi* | **getInviteKeyList** | **GET** /work_groups/{workGroupId}/invite_keys | 一覧を取得する
-*AbstractInviteKeyApi* | **updateInviteKey** | **PUT** /invite_keys/{inviteKeyId} | (未実装) 更新する
-*AbstractInviteKeyApi* | **useInviteKey** | **POST** /invite_keys/{inviteKeyId} | 使用する
-*AbstractLineApi* | **createLine** | **POST** /projects/{projectId}/lines | 作成する
-*AbstractLineApi* | **deleteLine** | **DELETE** /lines/{lineId} | 削除する
-*AbstractLineApi* | **getLine** | **GET** /lines/{lineId} | 1件取得する
-*AbstractLineApi* | **getLineList** | **GET** /projects/{projectId}/lines | 複数件取得する
-*AbstractLineApi* | **updateLine** | **PUT** /lines/{lineId} | 更新する
-*AbstractProjectApi* | **createProject** | **POST** /projects | 作成する
-*AbstractProjectApi* | **getProjectList** | **GET** /projects | 複数件取得する
-*AbstractProjectApi* | **deleteProject** | **DELETE** /projects/{projectId} | 削除する
-*AbstractProjectApi* | **getProject** | **GET** /projects/{projectId} | 1件取得する
-*AbstractProjectApi* | **getProjectPrivilege** | **GET** /projects/{projectId}/privileges | 権限情報を取得する
-*AbstractProjectApi* | **updateProject** | **PUT** /projects/{projectId} | 更新する
-*AbstractProjectApi* | **updateProjectPrivilege** | **PUT** /projects/{projectId}/privileges | 権限を更新する
-*AbstractProjectStationApi* | **createProjectStation** | **POST** /projects/{projectId}/project_stations | 作成する
-*AbstractProjectStationApi* | **deleteProjectStation** | **DELETE** /project_stations/{projectStationId} | 削除する
-*AbstractProjectStationApi* | **getProjectStation** | **GET** /project_stations/{projectStationId} | 1件取得する
-*AbstractProjectStationApi* | **getProjectStationList** | **GET** /projects/{projectId}/project_stations | 複数件取得する
-*AbstractProjectStationApi* | **updateProjectStation** | **PUT** /project_stations/{projectStationId} | 更新する
-*AbstractStationApi* | **createStation** | **POST** /work_groups/{workGroupId}/stations | 作成する
-*AbstractStationApi* | **deleteStation** | **DELETE** /stations/{stationId} | 削除する
-*AbstractStationApi* | **getStation** | **GET** /stations/{stationId} | 1件取得する
-*AbstractStationApi* | **getStationList** | **GET** /work_groups/{workGroupId}/stations | 複数件取得する
-*AbstractStationApi* | **updateStation** | **PUT** /stations/{stationId} | 更新する
-*AbstractStationOnLineApi* | **createStationOnLine** | **POST** /lines/{lineId}/stations_on_line | 作成する
-*AbstractStationOnLineApi* | **deleteStationOnLine** | **DELETE** /stations_on_line/{stationOnLineId} | 削除する
-*AbstractStationOnLineApi* | **getStationOnLine** | **GET** /stations_on_line/{stationOnLineId} | 1件取得する
-*AbstractStationOnLineApi* | **getStationOnLineList** | **GET** /lines/{lineId}/stations_on_line | 複数件取得する
-*AbstractStationOnLineApi* | **updateStationOnLine** | **PUT** /stations_on_line/{stationOnLineId} | 更新する
-*AbstractStationTrackApi* | **createStationTrack** | **POST** /stations/{stationId}/tracks | 作成する
-*AbstractStationTrackApi* | **deleteStationTrack** | **DELETE** /tracks/{stationTrackId} | 削除する
-*AbstractStationTrackApi* | **getStationTrack** | **GET** /tracks/{stationTrackId} | 1件取得する
-*AbstractStationTrackApi* | **getStationTrackList** | **GET** /stations/{stationId}/tracks | 複数件取得する
-*AbstractStationTrackApi* | **updateStationTrack** | **PUT** /tracks/{stationTrackId} | 更新する
-*AbstractStopPatternApi* | **createStopPattern** | **POST** /projects/{projectId}/stop_patterns | 作成する
-*AbstractStopPatternApi* | **deleteStopPattern** | **DELETE** /stop_patterns/{stopPatternId} | 削除する
-*AbstractStopPatternApi* | **getStopPattern** | **GET** /stop_patterns/{stopPatternId} | 1件取得する
-*AbstractStopPatternApi* | **getStopPatternList** | **GET** /projects/{projectId}/stop_patterns | 複数件取得する
-*AbstractStopPatternApi* | **updateStopPattern** | **PUT** /stop_patterns/{stopPatternId} | 更新する
-*AbstractStopPatternRowApi* | **createStopPatternRow** | **POST** /stop_patterns/{stopPatternId}/rows | 作成する
-*AbstractStopPatternRowApi* | **deleteStopPatternRow** | **DELETE** /stop_pattern_rows/{stopPatternRowId} | 削除する
-*AbstractStopPatternRowApi* | **getStopPatternRow** | **GET** /stop_pattern_rows/{stopPatternRowId} | 1件取得する
-*AbstractStopPatternRowApi* | **getStopPatternRowList** | **GET** /stop_patterns/{stopPatternId}/rows | 複数件取得する
-*AbstractStopPatternRowApi* | **updateStopPatternRow** | **PUT** /stop_pattern_rows/{stopPatternRowId} | 更新する
-*AbstractTimetableRowApi* | **createTimetableRow** | **POST** /trains/{trainId}/timetable_rows | 作成する
-*AbstractTimetableRowApi* | **deleteTimetableRow** | **DELETE** /timetable_rows/{timetableRowId} | 削除する
-*AbstractTimetableRowApi* | **getTimetableRow** | **GET** /timetable_rows/{timetableRowId} | 1件取得する
-*AbstractTimetableRowApi* | **getTimetableRowList** | **GET** /trains/{trainId}/timetable_rows | 複数件取得する
-*AbstractTimetableRowApi* | **updateTimetableRow** | **PUT** /timetable_rows/{timetableRowId} | 更新する
-*AbstractTrainApi* | **createTrain** | **POST** /works/{workId}/trains | 作成する
-*AbstractTrainApi* | **deleteTrain** | **DELETE** /trains/{trainId} | 削除する
-*AbstractTrainApi* | **getTrain** | **GET** /trains/{trainId} | 1件取得する
-*AbstractTrainApi* | **getTrainList** | **GET** /works/{workId}/trains | 複数件取得する
-*AbstractTrainApi* | **updateTrain** | **PUT** /trains/{trainId} | 更新する
-*AbstractWorkApi* | **createWork** | **POST** /work_groups/{workGroupId}/works | 作成する
-*AbstractWorkApi* | **deleteWork** | **DELETE** /works/{workId} | 削除する
-*AbstractWorkApi* | **getWork** | **GET** /works/{workId} | 1件取得する
-*AbstractWorkApi* | **getWorkList** | **GET** /work_groups/{workGroupId}/works | 複数件取得する
-*AbstractWorkApi* | **updateWork** | **PUT** /works/{workId} | 更新する
-*AbstractWorkGroupApi* | **createWorkGroup** | **POST** /work_groups | 作成する
-*AbstractWorkGroupApi* | **getWorkGroupList** | **GET** /work_groups | 複数件取得する
-*AbstractWorkGroupApi* | **createWorkGroupInProject** | **POST** /projects/{projectId}/work_groups | 作成する
-*AbstractWorkGroupApi* | **deleteWorkGroup** | **DELETE** /work_groups/{workGroupId} | 削除する
-*AbstractWorkGroupApi* | **getPrivilege** | **GET** /work_groups/{workGroupId}/privileges | 権限情報を取得する
-*AbstractWorkGroupApi* | **getWorkGroup** | **GET** /work_groups/{workGroupId} | 1件取得する
-*AbstractWorkGroupApi* | **getWorkGroupListByProject** | **GET** /projects/{projectId}/work_groups | 複数件取得する
-*AbstractWorkGroupApi* | **updatePrivilege** | **PUT** /work_groups/{workGroupId}/privileges | 権限を更新する
-*AbstractWorkGroupApi* | **updateWorkGroup** | **PUT** /work_groups/{workGroupId} | 更新する
-
-
-## Models
-
-* dev_t0r\trvis_backend\model\ApiInfo
-* dev_t0r\trvis_backend\model\Color
-* dev_t0r\trvis_backend\model\Color8bit
-* dev_t0r\trvis_backend\model\ColorReal
-* dev_t0r\trvis_backend\model\InviteKey
-* dev_t0r\trvis_backend\model\Line
-* dev_t0r\trvis_backend\model\Project
-* dev_t0r\trvis_backend\model\ProjectStation
-* dev_t0r\trvis_backend\model\ProjectStationLocationLonlat
-* dev_t0r\trvis_backend\model\ProjectsPrivilege
-* dev_t0r\trvis_backend\model\Schema
-* dev_t0r\trvis_backend\model\Station
-* dev_t0r\trvis_backend\model\StationLocationLonlat
-* dev_t0r\trvis_backend\model\StationOnLine
-* dev_t0r\trvis_backend\model\StationOnLineLocationLonlat
-* dev_t0r\trvis_backend\model\StationTrack
-* dev_t0r\trvis_backend\model\StopPattern
-* dev_t0r\trvis_backend\model\StopPatternRow
-* dev_t0r\trvis_backend\model\TRViSJsonTimetableRow
-* dev_t0r\trvis_backend\model\TRViSJsonTrain
-* dev_t0r\trvis_backend\model\TRViSJsonWork
-* dev_t0r\trvis_backend\model\TRViSJsonWorkGroup
-* dev_t0r\trvis_backend\model\TimetableRow
-* dev_t0r\trvis_backend\model\TokenRequest
-* dev_t0r\trvis_backend\model\TokenResponse
-* dev_t0r\trvis_backend\model\Train
-* dev_t0r\trvis_backend\model\Work
-* dev_t0r\trvis_backend\model\WorkGroup
-* dev_t0r\trvis_backend\model\WorkGroupsPrivilege
-
-
-## Authentication
-
-### Advanced middleware configuration
-Ref to used Slim Token Middleware [dyorg/slim-token-authentication](https://github.com/dyorg/slim-token-authentication/tree/1.x#readme)
+生成器が**上書きしてはいけない**ファイルは `.openapi-generator-ignore` に列挙しています
+（`composer.json`、`config/`、`public/index.php`、DI/ミドルウェア登録、本 `README.md` など）。
+手書きで残したいファイルを増やすときは、必ずこのファイルにも追記してください。

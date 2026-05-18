@@ -1,174 +1,75 @@
-# データベース関係
+# TRViS Timetable Server — Database（MySQL）
 
-## 持たせるデータ
+[TRViS](https://github.com/TetsuOtter/TRViS) 時刻表データを格納する MySQL 8.0 です。
+Docker Compose では `mysql`（コンテナ名 `webmon-db`）として起動し、
+バックエンド（`php`）からのみ内部ネットワーク経由でアクセスされます。
 
-### v1_0
+## ディレクトリ構成
 
-- api_keys
-  - (common)
-    - api_keys_id
-    - created_at
-    - owner
-    - description
-  - api_key
-  - expires_at
-- work_groups_privileges
-  - uid
-  - work_groups_id
-  - invite_keys_id
-  - created_at
-  - updated_at
-  - deleted_at
-  - privilege_type
-    - none = 0
-    - read = 1
-    - write = 2
-    - admin = 3
-- invite_keys
-  - invite_keys_id
-  - work_groups_id
-  - created_at
-  - owner
-  - updated_at
-  - deleted_at
-  - description
-  - valid_from
-  - expires_at
-  - use_limit
-  - disabled_at
-  - privilege_type
-    - none = 0
-    - read = 1
-    - write = 2
-    - admin = 3
+| パス             | 内容                                                                       |
+| ---------------- | -------------------------------------------------------------------------- |
+| `init_sql/`      | 初回起動時に実行される初期化 SQL                                           |
+| `conf.d/my.cnf`  | MySQL 設定（`utf8mb4`、スロークエリログ等）                                |
+| `logs/`          | エラーログ・スロークエリログのバインド先（ログ本体は Git 管理外）          |
+| `.env.sample`    | 認証情報のテンプレート                                                      |
+| `.env`           | 実際の認証情報（`.env.sample` からコピー。**Git 管理外**）                 |
 
-- work_groups
-  - (common)
-    - work_groups_id
-    - created_at
-    - owner
-    - updated_at
-    - deleted_at
-    - description
-  - name
-- works
-  - (common)
-    - works_id
-    - work_groups_id
-    - description
-    - created_at
-    - owner
-    - updated_at
-    - deleted_at
-  - name
-  - affect_date
-  - affix_content_type
-  - affix_file_name
-  - remarks
-  - has_e_train_timetable
-  - e_train_timetable_content_type
-  - e_train_timetable_file_name
-- trains
-  - (common)
-    - trains_id
-    - works_id
-    - description
-    - created_at
-    - owner
-    - updated_at
-    - deleted_at
-  - train_number
-  - max_speed
-  - speed_type
-  - nominal_tractive_capacity
-  - car_count
-  - destination
-  - begin_remarks
-  - after_remarks
-  - remarks
-  - before_departure
-  - after_arrive
-  - train_info
-  - direction
-  - day_count
-  - is_ride_on_moving
-- stations
-  - (common)
-    - stations_id
-    - work_groups_id
-    - description
-    - created_at
-    - owner
-    - updated_at
-    - deleted_at
-  - name
-  - location_km
-  - location_lonlat
-  - on_station_detect_radius_m
-  - record_type
-- station_tracks
-  - (common)
-    - station_tracks_id
-    - stations_id
-    - description
-    - created_at
-    - owner
-    - updated_at
-    - deleted_at
-  - name
-  - run_in_limit
-  - run_out_limit
-- timetable_rows
-  - (common)
-    - timetable_rows_id
-    - trains_id
-    - stations_id
-    - station_tracks_id
-    - colors_id_marker
-    - description
-    - created_at
-    - owner
-    - updated_at
-    - deleted_at
-  - drive_time_mm
-  - drive_time_ss
-  - is_operation_only_stop
-  - is_pass
-  - has_bracket
-  - is_last_stop
-  - arrive_hh
-  - arrive_mm
-  - arrive_ss
-  - departure_hh
-  - departure_mm
-  - departure_ss
-  - run_in_limit
-  - run_out_limit
-  - remarks
-  - arrive_str
-  - departure_str
-  - marker_text
-  - work_type
-- colors
-  - (common)
-    - colors_id
-    - work_groups_id
-    - description
-    - created_at
-    - owner
-    - updated_at
-    - deleted_at
-  - name
-  - red_8bit
-  - green_8bit
-  - blue_8bit
-  - red_real
-  - green_real
-  - blue_real
+## スキーマ（正は SQL ファイル）
 
-trainsの `before_departure_on_station_track_col` 等は、deprecatedとするため含めない。
+**スキーマの source-of-truth は [`init_sql/0_create_db.sql`](init_sql/0_create_db.sql)** です。
+このファイルに定義された 17 テーブルが初回起動時に作成されます:
 
-削除操作は論理削除とし、操作量の都合で以下のテーブル以外への `deleted_at` 設定はバッチ処理にする。
-- work_groups_privileges
-- invite_keys
-- work_groups
+```text
+projects                  … 権限の最上位単位（旧 WorkGroup 権限を置き換える privilege root）
+work_groups               … projects 配下（projects_id は NOT NULL）
+project_lines             … 路線（後述の予約語回避）
+project_stations          … Project 共通の駅
+stations_on_line          … 路線上の駅
+stop_patterns             … 停車パターン
+stop_pattern_rows         … 停車パターンの行
+works / trains / timetable_rows / stations / station_tracks / colors
+api_keys / invite_keys
+work_groups_privileges / projects_privileges
+```
+
+FK のルート連鎖は `projects` を起点に
+`work_groups` / `project_lines` / `project_stations` / `stop_patterns` へ伸びます。
+
+### 設計上の注意
+
+- **`lines` は MySQL の予約語**のため、DB 上のテーブル名・カラム名は
+  `project_lines` / `project_lines_id` を使います。OpenAPI 定義では `Line` / `lines_id`
+  のままで、バックエンドの repo 層でエイリアスして吸収しています。
+- UUID は `BINARY(16)` で格納します。
+- 削除は **論理削除**（`deleted_at` を設定）が基本です。
+
+旧版で手書きしていたデータモデル仕様（旧 `work_groups` 権限ベース）は廃止しました。
+現行スキーマは必ず SQL ファイルを参照してください。
+API としての見え方は [`../api_defs/README.md`](../api_defs/README.md) を参照。
+
+## 認証情報
+
+```sh
+cp .env.sample .env
+```
+
+| 変数                  | 既定値 | 用途                       |
+| --------------------- | ------ | -------------------------- |
+| `MYSQL_USER`          | `test` | アプリ用ユーザ             |
+| `MYSQL_PASSWORD`      | `test` | 同パスワード               |
+| `MYSQL_DATABASE`      | `test` | データベース名             |
+| `MYSQL_ROOT_PASSWORD` | `test` | root パスワード            |
+
+バックエンドの接続先（Docker 構成）は
+`backend/config/prod/config.docker.inc.php` の DSN（`host=webmon-db;dbname=test`）と
+一致させます。詳細は [`../backend/README.md`](../backend/README.md) を参照してください。
+
+## 接続（開発時）
+
+リポジトリルートの補助スクリプトでコンテナ内 `mysql` クライアントへ接続できます:
+
+```sh
+./_mysql.sh
+```
+
+DB 管理 UI が必要なときは phpMyAdmin（`http://localhost:81/`）も利用できます。
