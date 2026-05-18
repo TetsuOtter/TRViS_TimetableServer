@@ -12,6 +12,20 @@ dist
 dist-ssr
 *.local
 
+# TypeScript Project References のビルド情報 (tsc -b が生成、追跡不要)
+*.tsbuildinfo
+
+# Yarn Berry (nodeLinker: node-modules)。install-state.gz は
+# yarn install で再生成される端末ローカルなキャッシュで、毎回変化して
+# 無用な diff を生むため追跡しない (corepack 運用で releases も不要)。
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+.pnp.*
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

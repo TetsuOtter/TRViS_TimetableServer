@@ -1,0 +1,7 @@
+# ビルドコンテキストからホスト由来の生成物を除外する。
+# COPY ./packages がローカルの node_modules/dist/.yarn を取り込んで
+# イメージが汚れる/古い成果物が混ざるのを防ぐ (dist はイメージ内で生成)。
+**/node_modules
+**/dist
+**/.yarn
+**/*.tsbuildinfo
