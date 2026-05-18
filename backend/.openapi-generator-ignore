@@ -1,5 +1,6 @@
 .github/
 composer.json
+README.md
 /.gitignore
 public/index.php
 config/
