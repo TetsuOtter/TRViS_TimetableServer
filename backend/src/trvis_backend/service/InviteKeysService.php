@@ -428,6 +428,11 @@ final class InviteKeysService
 				inviteKeyId: $inviteKeyId,
 				userId: $userId,
 			);
+			if ($disableInviteKeyResult->isError) {
+				$this->db->rollBack();
+				return $disableInviteKeyResult;
+			}
+			$this->db->commit();
 			return $disableInviteKeyResult;
 		} catch (\Throwable $th) {
 			$this->db->rollBack();

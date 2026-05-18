@@ -355,7 +355,6 @@ final class InviteKeysRepo
 				SQL
 			);
 			$query->bindValue(':invite_keys_id', $inviteKeyId->getBytes(), PDO::PARAM_STR);
-			$query->bindValue(':user_id', $userId, PDO::PARAM_STR);
 
 			if ($query->execute()) {
 				$rowCount = $query->rowCount();
