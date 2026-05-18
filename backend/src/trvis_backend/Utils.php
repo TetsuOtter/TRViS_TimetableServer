@@ -196,4 +196,22 @@ final class Utils
 	public static function errTimetableRowNotFound(): RetValueOrError {
 		return RetValueOrError::withError(Constants::HTTP_NOT_FOUND, "TimetableRow not found");
 	}
+	public static function errProjectNotFound(): RetValueOrError {
+		return RetValueOrError::withError(Constants::HTTP_NOT_FOUND, "Project not found");
+	}
+	public static function errLineNotFound(): RetValueOrError {
+		return RetValueOrError::withError(Constants::HTTP_NOT_FOUND, "Line not found");
+	}
+	public static function errProjectStationNotFound(): RetValueOrError {
+		return RetValueOrError::withError(Constants::HTTP_NOT_FOUND, "ProjectStation not found");
+	}
+	public static function errStationOnLineNotFound(): RetValueOrError {
+		return RetValueOrError::withError(Constants::HTTP_NOT_FOUND, "StationOnLine not found");
+	}
+	public static function errStopPatternNotFound(): RetValueOrError {
+		return RetValueOrError::withError(Constants::HTTP_NOT_FOUND, "StopPattern not found");
+	}
+	public static function errStopPatternRowNotFound(): RetValueOrError {
+		return RetValueOrError::withError(Constants::HTTP_NOT_FOUND, "StopPatternRow not found");
+	}
 }

@@ -588,9 +588,9 @@ abstract class MyRepoBase implements IMyRepoBase
 					$paramType = PDO::PARAM_NULL;
 				} else if ($newValue instanceof UuidInterface) {
 					$newValue = $value->getBytes();
-				} else if ($$newValue instanceof DateTimeInterface) {
-					$newValue = Utils::utcDateStrOrNull($$newValue);
-				} else if ($$newValue instanceof BackedEnum) {
+				} else if ($newValue instanceof DateTimeInterface) {
+					$newValue = Utils::utcDateStrOrNull($newValue);
+				} else if ($newValue instanceof BackedEnum) {
 					$newValue = $newValue->value;
 					$paramType = PDO::PARAM_INT;
 				} else if (is_int($newValue)) {

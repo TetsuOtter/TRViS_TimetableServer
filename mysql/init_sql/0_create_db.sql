@@ -103,7 +103,8 @@ CREATE TABLE
 
   projects_id
     BINARY(16)
-    COMMENT 'UUID v4 (所属するProject。未割当の旧データはNULL)'
+    NOT NULL
+    COMMENT 'UUID v4 (所属するProject。未リリースのため常にNOT NULL)'
   ,
 
   created_at

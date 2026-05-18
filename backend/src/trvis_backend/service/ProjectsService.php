@@ -4,11 +4,8 @@ namespace dev_t0r\trvis_backend\service;
 
 use dev_t0r\trvis_backend\Constants;
 use dev_t0r\trvis_backend\model\InviteKeyPrivilegeType;
-use dev_t0r\trvis_backend\repo\InviteKeysRepo;
 use dev_t0r\trvis_backend\repo\ProjectsRepo;
 use dev_t0r\trvis_backend\repo\ProjectsPrivilegesRepo;
-use dev_t0r\trvis_backend\repo\WorkGroupsRepo;
-use dev_t0r\trvis_backend\repo\WorkGroupsPrivilegesRepo;
 use dev_t0r\trvis_backend\RetValueOrError;
 use dev_t0r\trvis_backend\Utils;
 use PDO;
@@ -16,40 +13,34 @@ use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
-final class WorkGroupsService
+final class ProjectsService
 {
-	private readonly WorkGroupsRepo $workGroupsRepo;
-	private readonly WorkGroupsPrivilegesRepo $workGroupsPrivilegesRepo;
-	private readonly InviteKeysRepo $inviteKeysRepo;
 	private readonly ProjectsRepo $projectsRepo;
 	private readonly ProjectsPrivilegesRepo $projectsPrivilegesRepo;
 	public function __construct(
 		private readonly PDO $db,
 		private readonly LoggerInterface $logger,
 	) {
-		$this->workGroupsRepo = new WorkGroupsRepo($db, $logger);
-		$this->workGroupsPrivilegesRepo = new WorkGroupsPrivilegesRepo($db, $logger);
-		$this->inviteKeysRepo = new InviteKeysRepo($db, $logger);
 		$this->projectsRepo = new ProjectsRepo($db, $logger);
 		$this->projectsPrivilegesRepo = new ProjectsPrivilegesRepo($db, $logger);
 	}
 
-	public function selectWorkGroupOne(
-		UuidInterface $workGroupsId,
+	public function selectProjectOne(
+		UuidInterface $projectsId,
 		?string $currentUserId
 	): RetValueOrError {
 		$this->logger->debug(
-			"selectOne workGroupsId: {workGroupsId}, currentUserId: {currentUserId}",
+			"selectOne projectsId: {projectsId}, currentUserId: {currentUserId}",
 			[
-				'workGroupsId' => $workGroupsId,
+				'projectsId' => $projectsId,
 				'currentUserId' => $currentUserId,
 			],
 		);
 
-		return $this->workGroupsRepo->selectWorkGroupOne($currentUserId, $workGroupsId);
+		return $this->projectsRepo->selectProjectOne($currentUserId, $projectsId);
 	}
 
-	public function selectWorkGroupPage(
+	public function selectProjectPage(
 		string $userId,
 		int $pageFrom1,
 		int $perPage,
@@ -65,11 +56,11 @@ final class WorkGroupsService
 			],
 		);
 
-		$totalCountResult = $this->workGroupsRepo->selectWorkGroupPageTotalCount(
+		$totalCountResult = $this->projectsRepo->selectProjectPageTotalCount(
 			userId: $userId,
 			topId: $topId,
 		);
-		$selectResult = $this->workGroupsRepo->selectWorkGroupPage(
+		$selectResult = $this->projectsRepo->selectProjectPage(
 			userId: $userId,
 			pageFrom1: $pageFrom1,
 			perPage: $perPage,
@@ -82,13 +73,13 @@ final class WorkGroupsService
 		);
 	}
 
-	public function createWorkGroup(
+	public function createProject(
 		string $userId,
 		string $name,
 		string $description,
 	): RetValueOrError {
 		$this->logger->debug(
-			"createWorkGroup(userId:{userId}, name:{name}, description:{description})",
+			"createProject(userId:{userId}, name:{name}, description:{description})",
 			[
 				'userId' => $userId,
 				'name' => $name,
@@ -99,34 +90,9 @@ final class WorkGroupsService
 		$this->db->beginTransaction();
 
 		try {
-			// Project = 権限ルート: WG専用のProjectを暗黙生成し、その配下にWGを作成。
-			// 権限は projects_privileges にのみ付与する (work_groups_privileges は不使用)。
 			$projectsId = Uuid::uuid7();
-			$insertProjectResult = $this->projectsRepo->insertProject(
+			$insertResult = $this->projectsRepo->insertProject(
 				projectId: $projectsId,
-				owner: $userId,
-				name: $name,
-				description: $description,
-			);
-			if ($insertProjectResult->isError) {
-				$this->db->rollBack();
-				return $insertProjectResult;
-			}
-
-			$insertProjectPrivilegeResult = $this->projectsPrivilegesRepo->insert(
-				projectsId: $projectsId,
-				userId: $userId,
-				privilegeType: InviteKeyPrivilegeType::admin,
-			);
-			if ($insertProjectPrivilegeResult->isError) {
-				$this->db->rollBack();
-				return $insertProjectPrivilegeResult;
-			}
-
-			$workGroupsId = Uuid::uuid7();
-			$insertResult = $this->workGroupsRepo->insertWorkGroup(
-				workGroupId: $workGroupsId,
-				projectsId: $projectsId,
 				owner: $userId,
 				name: $name,
 				description: $description,
@@ -136,19 +102,29 @@ final class WorkGroupsService
 				return $insertResult;
 			}
 
+			$insertPrivilegeResult = $this->projectsPrivilegesRepo->insert(
+				projectsId: $projectsId,
+				userId: $userId,
+				privilegeType: InviteKeyPrivilegeType::admin,
+			);
+			if ($insertPrivilegeResult->isError) {
+				$this->db->rollBack();
+				return $insertPrivilegeResult;
+			}
+
 			$this->db->commit();
-			$selectWorkGroupOneResult = $this->workGroupsRepo->selectWorkGroupOne($userId, $workGroupsId);
-			if ($selectWorkGroupOneResult->isError) {
-				return $selectWorkGroupOneResult;
+			$selectProjectOneResult = $this->projectsRepo->selectProjectOne($userId, $projectsId);
+			if ($selectProjectOneResult->isError) {
+				return $selectProjectOneResult;
 			} else {
 				return RetValueOrError::withValue(
-					$selectWorkGroupOneResult->value,
+					$selectProjectOneResult->value,
 					Constants::HTTP_CREATED,
 				);
 			}
 		} catch (\Throwable $e) {
 			$this->logger->error(
-				"Failed to create work group: {exception}",
+				"Failed to create project: {exception}",
 				[
 					'exception' => $e,
 				],
@@ -164,110 +140,24 @@ final class WorkGroupsService
 		}
 	}
 
-	/**
-	 * 指定Projectの配下にWorkGroupを作成する (POST /projects/{id}/work_groups)
-	 */
-	public function createWorkGroupInProject(
+	public function updateProject(
 		UuidInterface $projectsId,
-		string $userId,
-		string $name,
-		string $description,
-	): RetValueOrError {
-		$this->logger->debug(
-			"createWorkGroupInProject(projectsId:{projectsId}, userId:{userId})",
-			[ 'projectsId' => $projectsId, 'userId' => $userId ],
-		);
-
-		$privResult = $this->projectsPrivilegesRepo->selectPrivilegeType(
-			id: $projectsId,
-			userId: $userId,
-			includeAnonymous: true,
-		);
-		if ($privResult->isError) {
-			return $privResult;
-		}
-		$priv = $privResult->value;
-		if (!$priv->hasPrivilege(InviteKeyPrivilegeType::read)) {
-			return Utils::errProjectNotFound();
-		}
-		if (!$priv->hasPrivilege(InviteKeyPrivilegeType::write)) {
-			return RetValueOrError::withError(
-				Constants::HTTP_FORBIDDEN,
-				'You don\'t have permission to create a work group in this project',
-			);
-		}
-
-		$workGroupsId = Uuid::uuid7();
-		$insertResult = $this->workGroupsRepo->insertWorkGroup(
-			workGroupId: $workGroupsId,
-			projectsId: $projectsId,
-			owner: $userId,
-			name: $name,
-			description: $description,
-		);
-		if ($insertResult->isError) {
-			return $insertResult;
-		}
-
-		$selectResult = $this->workGroupsRepo->selectWorkGroupOne($userId, $workGroupsId);
-		if ($selectResult->isError) {
-			return $selectResult;
-		}
-		return RetValueOrError::withValue($selectResult->value, Constants::HTTP_CREATED);
-	}
-
-	/**
-	 * 指定Projectに属するWorkGroupを一覧取得する (GET /projects/{id}/work_groups)
-	 */
-	public function selectWorkGroupListByProject(
-		UuidInterface $projectsId,
-		string $userId,
-		int $pageFrom1,
-		int $perPage,
-		?UuidInterface $topId,
-	): RetValueOrError {
-		$this->logger->debug(
-			"selectWorkGroupListByProject(projectsId:{projectsId}, userId:{userId}, page:{page})",
-			[ 'projectsId' => $projectsId, 'userId' => $userId, 'page' => $pageFrom1 ],
-		);
-
-		$totalCountResult = $this->workGroupsRepo->selectWorkGroupPageByProjectIdTotalCount(
-			projectId: $projectsId,
-			userId: $userId,
-			topId: $topId,
-		);
-		$selectResult = $this->workGroupsRepo->selectWorkGroupPageByProjectId(
-			projectId: $projectsId,
-			userId: $userId,
-			pageFrom1: $pageFrom1,
-			perPage: $perPage,
-			topId: $topId,
-		);
-
-		return RetValueOrError::withTotalCount(
-			value: $selectResult,
-			totalCount: $totalCountResult,
-		);
-	}
-
-	public function updateWorkGroup(
-		UuidInterface $workGroupsId,
 		string $userId,
 		?string $name,
 		?string $description,
 	): RetValueOrError {
 		$this->logger->debug(
-			"updateWorkGroup(workGroupsId:{workGroupsId}, userId:{userId}, name:{name}, description:{description})",
+			"updateProject(projectsId:{projectsId}, userId:{userId}, name:{name}, description:{description})",
 			[
-				'workGroupsId' => $workGroupsId,
+				'projectsId' => $projectsId,
 				'userId' => $userId,
 				'name' => $name,
 				'description' => $description,
 			],
 		);
 
-		$selectPrivilegeTypeResult = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
-			id: $workGroupsId,
+		$selectPrivilegeTypeResult = $this->projectsPrivilegesRepo->selectPrivilegeType(
+			id: $projectsId,
 			userId: $userId,
 			includeAnonymous: true,
 		);
@@ -276,47 +166,47 @@ final class WorkGroupsService
 		}
 
 		$userPrivilegeType = $selectPrivilegeTypeResult->value;
-		$this->logger->debug("updateWorkGroup userPrivilegeType: {userPrivilegeType}", [
-			'workGroupsId' => $workGroupsId,
+		$this->logger->debug("updateProject userPrivilegeType: {userPrivilegeType}", [
+			'projectsId' => $projectsId,
 			'userPrivilegeType' => $userPrivilegeType,
 		]);
 		if (!$userPrivilegeType->hasPrivilege(InviteKeyPrivilegeType::read)) {
 			// READ権限不足の場合は、404を返す
-			return Utils::errWorkGroupNotFound();
+			return Utils::errProjectNotFound();
 		}
 		if (!$userPrivilegeType->hasPrivilege(InviteKeyPrivilegeType::write)) {
 			// READ権限がありWRITE権限がない場合は、403を返す
 			return RetValueOrError::withError(
 				Constants::HTTP_FORBIDDEN,
-				'You don\'t have permission to update this work group',
+				'You don\'t have permission to update this project',
 			);
 		}
-		$updateWorkGroupResult = $this->workGroupsRepo->updateWorkGroup(
-			workGroupId: $workGroupsId,
+		$updateProjectResult = $this->projectsRepo->updateProject(
+			projectId: $projectsId,
 			name: $name,
 			description: $description,
 		);
-		if ($updateWorkGroupResult->isError) {
-			return $updateWorkGroupResult;
+		if ($updateProjectResult->isError) {
+			return $updateProjectResult;
 		}
 
-		return $this->workGroupsRepo->selectWorkGroupOne($userId, $workGroupsId);
+		return $this->projectsRepo->selectProjectOne($userId, $projectsId);
 	}
 
-	public function deleteWorkGroup(
-		UuidInterface $workGroupsId,
+	public function deleteProject(
+		UuidInterface $projectsId,
 		string $userId,
 	): RetValueOrError {
 		$this->logger->debug(
-			"deleteWorkGroup(workGroupsId:{workGroupsId}, userId:{userId})",
+			"deleteProject(projectsId:{projectsId}, userId:{userId})",
 			[
-				'workGroupsId' => $workGroupsId,
+				'projectsId' => $projectsId,
 				'userId' => $userId,
 			],
 		);
 
-		$selectPrivilegeTypeResult = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
-			id: $workGroupsId,
+		$selectPrivilegeTypeResult = $this->projectsPrivilegesRepo->selectPrivilegeType(
+			id: $projectsId,
 			userId: $userId,
 			includeAnonymous: true,
 		);
@@ -325,40 +215,40 @@ final class WorkGroupsService
 		}
 
 		$userPrivilegeType = $selectPrivilegeTypeResult->value;
-		$this->logger->debug("deleteWorkGroup userPrivilegeType: {userPrivilegeType}", [
-			'workGroupsId' => $workGroupsId,
+		$this->logger->debug("deleteProject userPrivilegeType: {userPrivilegeType}", [
+			'projectsId' => $projectsId,
 			'userPrivilegeType' => $userPrivilegeType,
 		]);
 		if (!$userPrivilegeType->hasPrivilege(InviteKeyPrivilegeType::read)) {
 			// READ権限不足の場合は、404を返す
-			return Utils::errWorkGroupNotFound();
+			return Utils::errProjectNotFound();
 		}
 		if (!$userPrivilegeType->hasPrivilege(InviteKeyPrivilegeType::admin)) {
 			// READ権限がありADMIN権限がない場合は、403を返す
 			return RetValueOrError::withError(
 				Constants::HTTP_FORBIDDEN,
-				'You don\'t have permission to delete this work group',
+				'You don\'t have permission to delete this project',
 			);
 		}
 
 		$this->db->beginTransaction();
 		try {
 			$now = Utils::getUtcNow();
-			$this->logger->debug("deleteWorkGroup now: {now}", [
+			$this->logger->debug("deleteProject now: {now}", [
 				'now' => $now,
 			]);
 
-			$deleteWorkGroupResult = $this->workGroupsRepo->deleteWorkGroup(
-				workGroupId: $workGroupsId,
+			$deleteProjectResult = $this->projectsRepo->deleteProject(
+				projectId: $projectsId,
 				deletedAt: $now,
 			);
-			if ($deleteWorkGroupResult->isError) {
+			if ($deleteProjectResult->isError) {
 				$this->db->rollBack();
-				return $deleteWorkGroupResult;
+				return $deleteProjectResult;
 			}
 
-			$deletePrivilegeResult = $this->workGroupsPrivilegesRepo->deleteByWorkGroupId(
-				workGroupsId: $workGroupsId,
+			$deletePrivilegeResult = $this->projectsPrivilegesRepo->deleteByProjectId(
+				projectsId: $projectsId,
 				deletedAt: $now,
 			);
 			if ($deletePrivilegeResult->isError && $deletePrivilegeResult->statusCode !== Constants::HTTP_NOT_FOUND) {
@@ -366,27 +256,18 @@ final class WorkGroupsService
 				return $deletePrivilegeResult;
 			}
 
-			$deleteInviteKeyResult = $this->inviteKeysRepo->deleteByWorkGroupId(
-				workGroupsId: $workGroupsId,
-				deletedAt: $now,
-			);
-			if ($deleteInviteKeyResult->isError && $deleteInviteKeyResult->statusCode !== Constants::HTTP_NOT_FOUND) {
-				$this->db->rollBack();
-				return $deleteInviteKeyResult;
-			}
-
 			$this->db->commit();
 			$this->logger->info(
-				"deleteWorkGroup({workGroupsId}) by user:'{userId}' success",
+				"deleteProject({projectsId}) by user:'{userId}' success",
 				[
-					'workGroupsId' => $workGroupsId,
+					'projectsId' => $projectsId,
 					'userId' => $userId,
 				],
 			);
 			return RetValueOrError::withValue(null);
 		} catch (\Throwable $e) {
 			$this->logger->error(
-				"Failed to delete work group: {exception}",
+				"Failed to delete project: {exception}",
 				[
 					'exception' => $e,
 				],
@@ -403,14 +284,14 @@ final class WorkGroupsService
 	}
 
 	public function getPrivileges(
-		UuidInterface $workGroupsId,
+		UuidInterface $projectsId,
 		string $senderUserId,
 		?string $targetUserId,
 	): RetValueOrError {
 		$this->logger->debug(
-			"getPrivileges(workGroupsId:{workGroupsId}, senderUserId:{userId}, targetUserId:{targetUserId})",
+			"getPrivileges(projectsId:{projectsId}, senderUserId:{userId}, targetUserId:{targetUserId})",
 			[
-				'workGroupsId' => $workGroupsId,
+				'projectsId' => $projectsId,
 				'userId' => $senderUserId,
 				'targetUserId' => $targetUserId,
 			],
@@ -420,8 +301,8 @@ final class WorkGroupsService
 			$targetUserId = $senderUserId;
 		}
 
-		$senderPrivilegeTypeResult = $this->workGroupsPrivilegesRepo->selectPrivilegeTypeObject(
-			workGroupsId: $workGroupsId,
+		$senderPrivilegeTypeResult = $this->projectsPrivilegesRepo->selectPrivilegeTypeObject(
+			projectsId: $projectsId,
 			userId: $senderUserId,
 			includeAnonymous: true,
 		);
@@ -438,14 +319,14 @@ final class WorkGroupsService
 
 		$senderPrivilegeType = $senderPrivilegeTypeResult->value->privilege_type;
 		$this->logger->debug("getPrivileges userPrivilegeType: {userPrivilegeType}", [
-			'workGroupsId' => $workGroupsId,
+			'projectsId' => $projectsId,
 			'userPrivilegeType' => $senderPrivilegeType,
 		]);
 
 		if ($senderUserId === $targetUserId) {
 			// READ権限不足の場合は、404を返す
 			if (!$senderPrivilegeType->hasPrivilege(InviteKeyPrivilegeType::read)) {
-				return Utils::errWorkGroupNotFound();
+				return Utils::errProjectNotFound();
 			} else {
 				return $senderPrivilegeTypeResult;
 			}
@@ -459,8 +340,8 @@ final class WorkGroupsService
 			);
 		}
 
-		$targetPrivilegeTypeResult = $this->workGroupsPrivilegesRepo->selectPrivilegeTypeObject(
-			workGroupsId: $workGroupsId,
+		$targetPrivilegeTypeResult = $this->projectsPrivilegesRepo->selectPrivilegeTypeObject(
+			projectsId: $projectsId,
 			userId: $targetUserId,
 			includeAnonymous: true,
 		);
@@ -474,15 +355,15 @@ final class WorkGroupsService
 	}
 
 	public function updatePrivilege(
-		UuidInterface $workGroupsId,
+		UuidInterface $projectsId,
 		string $senderUserId,
 		?string $targetUserId,
 		InviteKeyPrivilegeType $newPrivilegeType
 	): RetValueOrError {
 		$this->logger->debug(
-			'updatePrivilege(workGroupsId:{workGroupsId}, senderUserId:{userId}, targetUserId:{targetUserId}, newPrivilegeType:{newPrivilegeType})',
+			'updatePrivilege(projectsId:{projectsId}, senderUserId:{userId}, targetUserId:{targetUserId}, newPrivilegeType:{newPrivilegeType})',
 			[
-				'workGroupsId' => $workGroupsId,
+				'projectsId' => $projectsId,
 				'userId' => $senderUserId,
 				'targetUserId' => $targetUserId,
 				'newPrivilegeType' => $newPrivilegeType,
@@ -493,8 +374,8 @@ final class WorkGroupsService
 			$targetUserId = $senderUserId;
 		}
 
-		$senderPrivilegeTypeResult = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
-			id: $workGroupsId,
+		$senderPrivilegeTypeResult = $this->projectsPrivilegesRepo->selectPrivilegeType(
+			id: $projectsId,
 			userId: $senderUserId,
 			includeAnonymous: true,
 		);
@@ -510,13 +391,13 @@ final class WorkGroupsService
 		}
 
 		$senderPrivilegeType = $senderPrivilegeTypeResult->value;
-		$this->logger->debug("getPrivileges(workGroupsId: {workGroupsId}) userPrivilegeType: {userPrivilegeType}", [
-			'workGroupsId' => $workGroupsId,
+		$this->logger->debug("getPrivileges(projectsId: {projectsId}) userPrivilegeType: {userPrivilegeType}", [
+			'projectsId' => $projectsId,
 			'userPrivilegeType' => $senderPrivilegeType,
 		]);
 
 		if (!$senderPrivilegeType->hasPrivilege(InviteKeyPrivilegeType::read)) {
-			return Utils::errWorkGroupNotFound();
+			return Utils::errProjectNotFound();
 		}
 
 		if ($senderUserId === $targetUserId) {
@@ -534,15 +415,8 @@ final class WorkGroupsService
 			);
 		}
 
-		// Project = 権限ルート: 権限の書き込みは所属Projectの projects_privileges に対して行う
-		$projectsIdResult = $this->workGroupsRepo->selectProjectsIdByWorkGroupsId($workGroupsId);
-		if ($projectsIdResult->isError) {
-			return $projectsIdResult;
-		}
-		$projectsIdForWrite = $projectsIdResult->value;
-
 		$changePrivilegeResult = $this->projectsPrivilegesRepo->changeType(
-			projectsId: $projectsIdForWrite,
+			projectsId: $projectsId,
 			newPrivilegeType: $newPrivilegeType,
 			userId: $targetUserId,
 		);
@@ -559,7 +433,7 @@ final class WorkGroupsService
 			}
 
 			$insertPrivilegeResult = $this->projectsPrivilegesRepo->insert(
-				projectsId: $projectsIdForWrite,
+				projectsId: $projectsId,
 				userId: $targetUserId,
 				privilegeType: $newPrivilegeType,
 			);
@@ -576,8 +450,8 @@ final class WorkGroupsService
 			}
 		}
 
-		return $this->workGroupsPrivilegesRepo->selectPrivilegeTypeObject(
-			workGroupsId: $workGroupsId,
+		return $this->projectsPrivilegesRepo->selectPrivilegeTypeObject(
+			projectsId: $projectsId,
 			userId: $targetUserId,
 			includeAnonymous: false,
 		);
