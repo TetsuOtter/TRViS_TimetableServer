@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
+import { exists, mapValues } from '../runtime';
 /**
  * トークンの発行をリクエストする際に使用するオブジェクト
  * @export
@@ -36,9 +36,11 @@ export interface TokenRequest {
 /**
  * Check if a given object implements the TokenRequest interface.
  */
-export function instanceOfTokenRequest(value: object): value is TokenRequest {
-    if (!('apiKey' in value) || value['apiKey'] === undefined) return false;
-    return true;
+export function instanceOfTokenRequest(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "apiKey" in value;
+
+    return isInstance;
 }
 
 export function TokenRequestFromJSON(json: any): TokenRequest {
@@ -46,24 +48,27 @@ export function TokenRequestFromJSON(json: any): TokenRequest {
 }
 
 export function TokenRequestFromJSONTyped(json: any, ignoreDiscriminator: boolean): TokenRequest {
-    if (json == null) {
+    if ((json === undefined) || (json === null)) {
         return json;
     }
     return {
         
         'apiKey': json['api_key'],
-        'clientId': json['client_id'] == null ? undefined : json['client_id'],
+        'clientId': !exists(json, 'client_id') ? undefined : json['client_id'],
     };
 }
 
 export function TokenRequestToJSON(value?: TokenRequest | null): any {
-    if (value == null) {
-        return value;
+    if (value === undefined) {
+        return undefined;
+    }
+    if (value === null) {
+        return null;
     }
     return {
         
-        'api_key': value['apiKey'],
-        'client_id': value['clientId'],
+        'api_key': value.apiKey,
+        'client_id': value.clientId,
     };
 }
 

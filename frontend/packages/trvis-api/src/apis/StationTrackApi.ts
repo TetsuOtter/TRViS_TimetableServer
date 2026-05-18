@@ -27,7 +27,7 @@ import {
 
 export interface CreateStationTrackRequest {
     stationId: string;
-    stationTrack: Omit<StationTrack, 'station_tracks_id'|'stations_id'|'created_at'>;
+    stationTrack: StationTrack;
 }
 
 export interface DeleteStationTrackRequest {
@@ -47,7 +47,7 @@ export interface GetStationTrackListRequest {
 
 export interface UpdateStationTrackRequest {
     stationTrackId: string;
-    stationTrack: Omit<StationTrack, 'station_tracks_id'|'stations_id'|'created_at'>;
+    stationTrack: StationTrack;
 }
 
 /**
@@ -154,18 +154,12 @@ export class StationTrackApi extends runtime.BaseAPI implements StationTrackApiI
      * 作成する
      */
     async createStationTrackRaw(requestParameters: CreateStationTrackRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<StationTrack>> {
-        if (requestParameters['stationId'] == null) {
-            throw new runtime.RequiredError(
-                'stationId',
-                'Required parameter "stationId" was null or undefined when calling createStationTrack().'
-            );
+        if (requestParameters.stationId === null || requestParameters.stationId === undefined) {
+            throw new runtime.RequiredError('stationId','Required parameter requestParameters.stationId was null or undefined when calling createStationTrack.');
         }
 
-        if (requestParameters['stationTrack'] == null) {
-            throw new runtime.RequiredError(
-                'stationTrack',
-                'Required parameter "stationTrack" was null or undefined when calling createStationTrack().'
-            );
+        if (requestParameters.stationTrack === null || requestParameters.stationTrack === undefined) {
+            throw new runtime.RequiredError('stationTrack','Required parameter requestParameters.stationTrack was null or undefined when calling createStationTrack.');
         }
 
         const queryParameters: any = {};
@@ -183,11 +177,11 @@ export class StationTrackApi extends runtime.BaseAPI implements StationTrackApiI
             }
         }
         const response = await this.request({
-            path: `/stations/{stationId}/tracks`.replace(`{${"stationId"}}`, encodeURIComponent(String(requestParameters['stationId']))),
+            path: `/stations/{stationId}/tracks`.replace(`{${"stationId"}}`, encodeURIComponent(String(requestParameters.stationId))),
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: StationTrackToJSON(requestParameters['stationTrack']),
+            body: StationTrackToJSON(requestParameters.stationTrack),
         }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => StationTrackFromJSON(jsonValue));
@@ -207,11 +201,8 @@ export class StationTrackApi extends runtime.BaseAPI implements StationTrackApiI
      * 削除する
      */
     async deleteStationTrackRaw(requestParameters: DeleteStationTrackRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        if (requestParameters['stationTrackId'] == null) {
-            throw new runtime.RequiredError(
-                'stationTrackId',
-                'Required parameter "stationTrackId" was null or undefined when calling deleteStationTrack().'
-            );
+        if (requestParameters.stationTrackId === null || requestParameters.stationTrackId === undefined) {
+            throw new runtime.RequiredError('stationTrackId','Required parameter requestParameters.stationTrackId was null or undefined when calling deleteStationTrack.');
         }
 
         const queryParameters: any = {};
@@ -227,7 +218,7 @@ export class StationTrackApi extends runtime.BaseAPI implements StationTrackApiI
             }
         }
         const response = await this.request({
-            path: `/tracks/{stationTrackId}`.replace(`{${"stationTrackId"}}`, encodeURIComponent(String(requestParameters['stationTrackId']))),
+            path: `/tracks/{stationTrackId}`.replace(`{${"stationTrackId"}}`, encodeURIComponent(String(requestParameters.stationTrackId))),
             method: 'DELETE',
             headers: headerParameters,
             query: queryParameters,
@@ -249,11 +240,8 @@ export class StationTrackApi extends runtime.BaseAPI implements StationTrackApiI
      * 1件取得する
      */
     async getStationTrackRaw(requestParameters: GetStationTrackRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<StationTrack>> {
-        if (requestParameters['stationTrackId'] == null) {
-            throw new runtime.RequiredError(
-                'stationTrackId',
-                'Required parameter "stationTrackId" was null or undefined when calling getStationTrack().'
-            );
+        if (requestParameters.stationTrackId === null || requestParameters.stationTrackId === undefined) {
+            throw new runtime.RequiredError('stationTrackId','Required parameter requestParameters.stationTrackId was null or undefined when calling getStationTrack.');
         }
 
         const queryParameters: any = {};
@@ -269,7 +257,7 @@ export class StationTrackApi extends runtime.BaseAPI implements StationTrackApiI
             }
         }
         const response = await this.request({
-            path: `/tracks/{stationTrackId}`.replace(`{${"stationTrackId"}}`, encodeURIComponent(String(requestParameters['stationTrackId']))),
+            path: `/tracks/{stationTrackId}`.replace(`{${"stationTrackId"}}`, encodeURIComponent(String(requestParameters.stationTrackId))),
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -292,25 +280,22 @@ export class StationTrackApi extends runtime.BaseAPI implements StationTrackApiI
      * 複数件取得する
      */
     async getStationTrackListRaw(requestParameters: GetStationTrackListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<StationTrack>>> {
-        if (requestParameters['stationId'] == null) {
-            throw new runtime.RequiredError(
-                'stationId',
-                'Required parameter "stationId" was null or undefined when calling getStationTrackList().'
-            );
+        if (requestParameters.stationId === null || requestParameters.stationId === undefined) {
+            throw new runtime.RequiredError('stationId','Required parameter requestParameters.stationId was null or undefined when calling getStationTrackList.');
         }
 
         const queryParameters: any = {};
 
-        if (requestParameters['p'] != null) {
-            queryParameters['p'] = requestParameters['p'];
+        if (requestParameters.p !== undefined) {
+            queryParameters['p'] = requestParameters.p;
         }
 
-        if (requestParameters['limit'] != null) {
-            queryParameters['limit'] = requestParameters['limit'];
+        if (requestParameters.limit !== undefined) {
+            queryParameters['limit'] = requestParameters.limit;
         }
 
-        if (requestParameters['top'] != null) {
-            queryParameters['top'] = requestParameters['top'];
+        if (requestParameters.top !== undefined) {
+            queryParameters['top'] = requestParameters.top;
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -324,7 +309,7 @@ export class StationTrackApi extends runtime.BaseAPI implements StationTrackApiI
             }
         }
         const response = await this.request({
-            path: `/stations/{stationId}/tracks`.replace(`{${"stationId"}}`, encodeURIComponent(String(requestParameters['stationId']))),
+            path: `/stations/{stationId}/tracks`.replace(`{${"stationId"}}`, encodeURIComponent(String(requestParameters.stationId))),
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -347,18 +332,12 @@ export class StationTrackApi extends runtime.BaseAPI implements StationTrackApiI
      * 更新する
      */
     async updateStationTrackRaw(requestParameters: UpdateStationTrackRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<StationTrack>> {
-        if (requestParameters['stationTrackId'] == null) {
-            throw new runtime.RequiredError(
-                'stationTrackId',
-                'Required parameter "stationTrackId" was null or undefined when calling updateStationTrack().'
-            );
+        if (requestParameters.stationTrackId === null || requestParameters.stationTrackId === undefined) {
+            throw new runtime.RequiredError('stationTrackId','Required parameter requestParameters.stationTrackId was null or undefined when calling updateStationTrack.');
         }
 
-        if (requestParameters['stationTrack'] == null) {
-            throw new runtime.RequiredError(
-                'stationTrack',
-                'Required parameter "stationTrack" was null or undefined when calling updateStationTrack().'
-            );
+        if (requestParameters.stationTrack === null || requestParameters.stationTrack === undefined) {
+            throw new runtime.RequiredError('stationTrack','Required parameter requestParameters.stationTrack was null or undefined when calling updateStationTrack.');
         }
 
         const queryParameters: any = {};
@@ -376,11 +355,11 @@ export class StationTrackApi extends runtime.BaseAPI implements StationTrackApiI
             }
         }
         const response = await this.request({
-            path: `/tracks/{stationTrackId}`.replace(`{${"stationTrackId"}}`, encodeURIComponent(String(requestParameters['stationTrackId']))),
+            path: `/tracks/{stationTrackId}`.replace(`{${"stationTrackId"}}`, encodeURIComponent(String(requestParameters.stationTrackId))),
             method: 'PUT',
             headers: headerParameters,
             query: queryParameters,
-            body: StationTrackToJSON(requestParameters['stationTrack']),
+            body: StationTrackToJSON(requestParameters.stationTrack),
         }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => StationTrackFromJSON(jsonValue));

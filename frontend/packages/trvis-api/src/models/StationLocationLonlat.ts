@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
+import { exists, mapValues } from '../runtime';
 /**
  * 駅の位置 (緯度経度)
  * @export
@@ -36,10 +36,12 @@ export interface StationLocationLonlat {
 /**
  * Check if a given object implements the StationLocationLonlat interface.
  */
-export function instanceOfStationLocationLonlat(value: object): value is StationLocationLonlat {
-    if (!('longitude' in value) || value['longitude'] === undefined) return false;
-    if (!('latitude' in value) || value['latitude'] === undefined) return false;
-    return true;
+export function instanceOfStationLocationLonlat(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "longitude" in value;
+    isInstance = isInstance && "latitude" in value;
+
+    return isInstance;
 }
 
 export function StationLocationLonlatFromJSON(json: any): StationLocationLonlat {
@@ -47,7 +49,7 @@ export function StationLocationLonlatFromJSON(json: any): StationLocationLonlat 
 }
 
 export function StationLocationLonlatFromJSONTyped(json: any, ignoreDiscriminator: boolean): StationLocationLonlat {
-    if (json == null) {
+    if ((json === undefined) || (json === null)) {
         return json;
     }
     return {
@@ -58,13 +60,16 @@ export function StationLocationLonlatFromJSONTyped(json: any, ignoreDiscriminato
 }
 
 export function StationLocationLonlatToJSON(value?: StationLocationLonlat | null): any {
-    if (value == null) {
-        return value;
+    if (value === undefined) {
+        return undefined;
+    }
+    if (value === null) {
+        return null;
     }
     return {
         
-        'longitude': value['longitude'],
-        'latitude': value['latitude'],
+        'longitude': value.longitude,
+        'latitude': value.latitude,
     };
 }
 

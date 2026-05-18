@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
+import { exists, mapValues } from '../runtime';
 /**
  * 
  * @export
@@ -37,6 +37,12 @@ export interface WorkGroup {
      * @memberof WorkGroup
      */
     readonly workGroupsId?: string;
+    /**
+     * 所属するProjectのID (UUID)
+     * @type {string}
+     * @memberof WorkGroup
+     */
+    readonly projectsId?: string;
     /**
      * 作成日時
      * @type {Date}
@@ -66,10 +72,12 @@ export type WorkGroupPrivilegeTypeEnum = typeof WorkGroupPrivilegeTypeEnum[keyof
 /**
  * Check if a given object implements the WorkGroup interface.
  */
-export function instanceOfWorkGroup(value: object): value is WorkGroup {
-    if (!('description' in value) || value['description'] === undefined) return false;
-    if (!('name' in value) || value['name'] === undefined) return false;
-    return true;
+export function instanceOfWorkGroup(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "description" in value;
+    isInstance = isInstance && "name" in value;
+
+    return isInstance;
 }
 
 export function WorkGroupFromJSON(json: any): WorkGroup {
@@ -77,27 +85,31 @@ export function WorkGroupFromJSON(json: any): WorkGroup {
 }
 
 export function WorkGroupFromJSONTyped(json: any, ignoreDiscriminator: boolean): WorkGroup {
-    if (json == null) {
+    if ((json === undefined) || (json === null)) {
         return json;
     }
     return {
         
         'description': json['description'],
         'name': json['name'],
-        'workGroupsId': json['work_groups_id'] == null ? undefined : json['work_groups_id'],
-        'createdAt': json['created_at'] == null ? undefined : (new Date(json['created_at'])),
-        'privilegeType': json['privilege_type'] == null ? undefined : json['privilege_type'],
+        'workGroupsId': !exists(json, 'work_groups_id') ? undefined : json['work_groups_id'],
+        'projectsId': !exists(json, 'projects_id') ? undefined : json['projects_id'],
+        'createdAt': !exists(json, 'created_at') ? undefined : (new Date(json['created_at'])),
+        'privilegeType': !exists(json, 'privilege_type') ? undefined : json['privilege_type'],
     };
 }
 
-export function WorkGroupToJSON(value?: Omit<WorkGroup, 'work_groups_id'|'created_at'|'privilege_type'> | null): any {
-    if (value == null) {
-        return value;
+export function WorkGroupToJSON(value?: WorkGroup | null): any {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (value === null) {
+        return null;
     }
     return {
         
-        'description': value['description'],
-        'name': value['name'],
+        'description': value.description,
+        'name': value.name,
     };
 }
 

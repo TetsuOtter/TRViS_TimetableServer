@@ -5,16 +5,19 @@ import { useRef, useState } from "react";
 import { ContextMenu } from "./EntityDialogs";
 
 import type { Strings } from "../i18n/strings";
-import type { Project } from "../types/model";
+import type { Project } from "../types/entities";
 
-interface MenuState {
+type MenuState = {
 	x: number;
 	y: number;
 	project: Project;
-}
+};
 
-interface ProjectListScreenProps {
+type ProjectListScreenProps = {
 	projects: Project[];
+	isLoading: boolean;
+	error: Error | null;
+	onRetry: () => void;
 	onOpen: (id: string) => void;
 	onNew: () => void;
 	onEdit: (p: Project) => void;
@@ -22,10 +25,13 @@ interface ProjectListScreenProps {
 	onImport: (json: unknown) => void;
 	onExport: (id?: string) => void;
 	t: Strings;
-}
+};
 
-export function ProjectListScreen({
+export const ProjectListScreen = ({
 	projects,
+	isLoading,
+	error,
+	onRetry,
 	onOpen,
 	onNew,
 	onEdit,
@@ -33,7 +39,7 @@ export function ProjectListScreen({
 	onImport,
 	onExport,
 	t,
-}: ProjectListScreenProps) {
+}: ProjectListScreenProps) => {
 	const [menu, setMenu] = useState<MenuState | null>(null);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -91,19 +97,42 @@ export function ProjectListScreen({
 					＋ {t.newProject}
 				</button>
 			</div>
-			<div className="card-grid" style={{ padding: 0 }}>
-				{projects.map((p) => {
-					const wgCount = p.workGroups?.length || 0;
-					const trainCount = (p.workGroups || []).reduce(
-						(acc, wg) =>
-							acc +
-							(wg.works || []).reduce(
-								(a, w) => a + (w.trains?.length || 0),
-								0
-							),
-						0
-					);
-					return (
+			{isLoading && projects.length === 0 && (
+				<div
+					style={{
+						display: "flex",
+						justifyContent: "center",
+						padding: "40px 0",
+						color: "var(--color-text-muted)",
+					}}>
+					読み込み中...
+				</div>
+			)}
+			{error !== null && (
+				<div
+					style={{
+						padding: "12px 16px",
+						marginBottom: 16,
+						background: "var(--color-danger-bg, #fef2f2)",
+						border: "1px solid var(--color-danger, #ef4444)",
+						borderRadius: 6,
+						color: "var(--color-danger, #ef4444)",
+						display: "flex",
+						alignItems: "center",
+						gap: 12,
+					}}>
+					<span style={{ flex: 1 }}>{error.message}</span>
+					<button
+						type="button"
+						className="btn btn-secondary btn-sm"
+						onClick={onRetry}>
+						再試行
+					</button>
+				</div>
+			)}
+			{(isLoading === false || projects.length > 0) && error === null && (
+				<div className="card-grid" style={{ padding: 0 }}>
+					{projects.map((p) => (
 						<div
 							key={p.id}
 							className="card project-card"
@@ -148,7 +177,11 @@ export function ProjectListScreen({
 									onClick={(e) => {
 										e.stopPropagation();
 										const r = e.currentTarget.getBoundingClientRect();
-										setMenu({ x: r.right - 4, y: r.bottom + 4, project: p });
+										setMenu({
+											x: r.right - 4,
+											y: r.bottom + 4,
+											project: p,
+										});
 									}}
 									title="メニュー"
 									style={{
@@ -161,28 +194,18 @@ export function ProjectListScreen({
 								</button>
 							</div>
 							<p style={{ marginBottom: 12, minHeight: 32 }}>
-								{p.description || "—"}
+								{p.description !== "" ? p.description : "—"}
 							</p>
-							<div
-								style={{
-									display: "flex",
-									gap: 8,
-									fontSize: 11,
-									color: "var(--color-text-muted)",
-								}}>
-								<span className="chip gray">WG {wgCount}</span>
-								<span className="chip gray">列車 {trainCount}</span>
-							</div>
 						</div>
-					);
-				})}
-				<div className="card-add" onClick={onNew}>
-					<div className="card-add-icon">＋</div>
-					<div>{t.newProject}</div>
+					))}
+					<div className="card-add" onClick={onNew}>
+						<div className="card-add-icon">＋</div>
+						<div>{t.newProject}</div>
+					</div>
 				</div>
-			</div>
+			)}
 
-			{menu && (
+			{menu !== null && (
 				<ContextMenu
 					x={menu.x}
 					y={menu.y}
@@ -193,7 +216,11 @@ export function ProjectListScreen({
 							label: "開く",
 							onClick: () => onOpen(menu.project.id),
 						},
-						{ icon: "✏️", label: t.edit, onClick: () => onEdit(menu.project) },
+						{
+							icon: "✏️",
+							label: t.edit,
+							onClick: () => onEdit(menu.project),
+						},
 						{
 							icon: "📤",
 							label: "JSONとしてエクスポート",
@@ -210,4 +237,4 @@ export function ProjectListScreen({
 			)}
 		</div>
 	);
-}
+};

@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
+import { exists, mapValues } from '../runtime';
 import type { StationLocationLonlat } from './StationLocationLonlat';
 import {
     StationLocationLonlatFromJSON,
@@ -85,12 +85,14 @@ export interface Station {
 /**
  * Check if a given object implements the Station interface.
  */
-export function instanceOfStation(value: object): value is Station {
-    if (!('description' in value) || value['description'] === undefined) return false;
-    if (!('name' in value) || value['name'] === undefined) return false;
-    if (!('locationKm' in value) || value['locationKm'] === undefined) return false;
-    if (!('recordType' in value) || value['recordType'] === undefined) return false;
-    return true;
+export function instanceOfStation(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "description" in value;
+    isInstance = isInstance && "name" in value;
+    isInstance = isInstance && "locationKm" in value;
+    isInstance = isInstance && "recordType" in value;
+
+    return isInstance;
 }
 
 export function StationFromJSON(json: any): Station {
@@ -98,7 +100,7 @@ export function StationFromJSON(json: any): Station {
 }
 
 export function StationFromJSONTyped(json: any, ignoreDiscriminator: boolean): Station {
-    if (json == null) {
+    if ((json === undefined) || (json === null)) {
         return json;
     }
     return {
@@ -107,26 +109,29 @@ export function StationFromJSONTyped(json: any, ignoreDiscriminator: boolean): S
         'name': json['name'],
         'locationKm': json['location_km'],
         'recordType': json['record_type'],
-        'stationsId': json['stations_id'] == null ? undefined : json['stations_id'],
-        'workGroupsId': json['work_groups_id'] == null ? undefined : json['work_groups_id'],
-        'createdAt': json['created_at'] == null ? undefined : (new Date(json['created_at'])),
-        'locationLonlat': json['location_lonlat'] == null ? undefined : StationLocationLonlatFromJSON(json['location_lonlat']),
-        'onStationDetectRadiusM': json['on_station_detect_radius_m'] == null ? undefined : json['on_station_detect_radius_m'],
+        'stationsId': !exists(json, 'stations_id') ? undefined : json['stations_id'],
+        'workGroupsId': !exists(json, 'work_groups_id') ? undefined : json['work_groups_id'],
+        'createdAt': !exists(json, 'created_at') ? undefined : (new Date(json['created_at'])),
+        'locationLonlat': !exists(json, 'location_lonlat') ? undefined : StationLocationLonlatFromJSON(json['location_lonlat']),
+        'onStationDetectRadiusM': !exists(json, 'on_station_detect_radius_m') ? undefined : json['on_station_detect_radius_m'],
     };
 }
 
-export function StationToJSON(value?: Omit<Station, 'stations_id'|'work_groups_id'|'created_at'> | null): any {
-    if (value == null) {
-        return value;
+export function StationToJSON(value?: Station | null): any {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (value === null) {
+        return null;
     }
     return {
         
-        'description': value['description'],
-        'name': value['name'],
-        'location_km': value['locationKm'],
-        'record_type': value['recordType'],
-        'location_lonlat': StationLocationLonlatToJSON(value['locationLonlat']),
-        'on_station_detect_radius_m': value['onStationDetectRadiusM'],
+        'description': value.description,
+        'name': value.name,
+        'location_km': value.locationKm,
+        'record_type': value.recordType,
+        'location_lonlat': StationLocationLonlatToJSON(value.locationLonlat),
+        'on_station_detect_radius_m': value.onStationDetectRadiusM,
     };
 }
 

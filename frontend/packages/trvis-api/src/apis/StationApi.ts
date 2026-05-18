@@ -27,7 +27,7 @@ import {
 
 export interface CreateStationRequest {
     workGroupId: string;
-    station: Omit<Station, 'stations_id'|'work_groups_id'|'created_at'>;
+    station: Station;
 }
 
 export interface DeleteStationRequest {
@@ -47,7 +47,7 @@ export interface GetStationListRequest {
 
 export interface UpdateStationRequest {
     stationId: string;
-    station: Omit<Station, 'stations_id'|'work_groups_id'|'created_at'>;
+    station: Station;
 }
 
 /**
@@ -154,18 +154,12 @@ export class StationApi extends runtime.BaseAPI implements StationApiInterface {
      * 作成する
      */
     async createStationRaw(requestParameters: CreateStationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Station>> {
-        if (requestParameters['workGroupId'] == null) {
-            throw new runtime.RequiredError(
-                'workGroupId',
-                'Required parameter "workGroupId" was null or undefined when calling createStation().'
-            );
+        if (requestParameters.workGroupId === null || requestParameters.workGroupId === undefined) {
+            throw new runtime.RequiredError('workGroupId','Required parameter requestParameters.workGroupId was null or undefined when calling createStation.');
         }
 
-        if (requestParameters['station'] == null) {
-            throw new runtime.RequiredError(
-                'station',
-                'Required parameter "station" was null or undefined when calling createStation().'
-            );
+        if (requestParameters.station === null || requestParameters.station === undefined) {
+            throw new runtime.RequiredError('station','Required parameter requestParameters.station was null or undefined when calling createStation.');
         }
 
         const queryParameters: any = {};
@@ -183,11 +177,11 @@ export class StationApi extends runtime.BaseAPI implements StationApiInterface {
             }
         }
         const response = await this.request({
-            path: `/work_groups/{workGroupId}/stations`.replace(`{${"workGroupId"}}`, encodeURIComponent(String(requestParameters['workGroupId']))),
+            path: `/work_groups/{workGroupId}/stations`.replace(`{${"workGroupId"}}`, encodeURIComponent(String(requestParameters.workGroupId))),
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: StationToJSON(requestParameters['station']),
+            body: StationToJSON(requestParameters.station),
         }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => StationFromJSON(jsonValue));
@@ -207,11 +201,8 @@ export class StationApi extends runtime.BaseAPI implements StationApiInterface {
      * 削除する
      */
     async deleteStationRaw(requestParameters: DeleteStationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        if (requestParameters['stationId'] == null) {
-            throw new runtime.RequiredError(
-                'stationId',
-                'Required parameter "stationId" was null or undefined when calling deleteStation().'
-            );
+        if (requestParameters.stationId === null || requestParameters.stationId === undefined) {
+            throw new runtime.RequiredError('stationId','Required parameter requestParameters.stationId was null or undefined when calling deleteStation.');
         }
 
         const queryParameters: any = {};
@@ -227,7 +218,7 @@ export class StationApi extends runtime.BaseAPI implements StationApiInterface {
             }
         }
         const response = await this.request({
-            path: `/stations/{stationId}`.replace(`{${"stationId"}}`, encodeURIComponent(String(requestParameters['stationId']))),
+            path: `/stations/{stationId}`.replace(`{${"stationId"}}`, encodeURIComponent(String(requestParameters.stationId))),
             method: 'DELETE',
             headers: headerParameters,
             query: queryParameters,
@@ -249,11 +240,8 @@ export class StationApi extends runtime.BaseAPI implements StationApiInterface {
      * 1件取得する
      */
     async getStationRaw(requestParameters: GetStationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Station>> {
-        if (requestParameters['stationId'] == null) {
-            throw new runtime.RequiredError(
-                'stationId',
-                'Required parameter "stationId" was null or undefined when calling getStation().'
-            );
+        if (requestParameters.stationId === null || requestParameters.stationId === undefined) {
+            throw new runtime.RequiredError('stationId','Required parameter requestParameters.stationId was null or undefined when calling getStation.');
         }
 
         const queryParameters: any = {};
@@ -269,7 +257,7 @@ export class StationApi extends runtime.BaseAPI implements StationApiInterface {
             }
         }
         const response = await this.request({
-            path: `/stations/{stationId}`.replace(`{${"stationId"}}`, encodeURIComponent(String(requestParameters['stationId']))),
+            path: `/stations/{stationId}`.replace(`{${"stationId"}}`, encodeURIComponent(String(requestParameters.stationId))),
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -292,25 +280,22 @@ export class StationApi extends runtime.BaseAPI implements StationApiInterface {
      * 複数件取得する
      */
     async getStationListRaw(requestParameters: GetStationListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Station>>> {
-        if (requestParameters['workGroupId'] == null) {
-            throw new runtime.RequiredError(
-                'workGroupId',
-                'Required parameter "workGroupId" was null or undefined when calling getStationList().'
-            );
+        if (requestParameters.workGroupId === null || requestParameters.workGroupId === undefined) {
+            throw new runtime.RequiredError('workGroupId','Required parameter requestParameters.workGroupId was null or undefined when calling getStationList.');
         }
 
         const queryParameters: any = {};
 
-        if (requestParameters['p'] != null) {
-            queryParameters['p'] = requestParameters['p'];
+        if (requestParameters.p !== undefined) {
+            queryParameters['p'] = requestParameters.p;
         }
 
-        if (requestParameters['limit'] != null) {
-            queryParameters['limit'] = requestParameters['limit'];
+        if (requestParameters.limit !== undefined) {
+            queryParameters['limit'] = requestParameters.limit;
         }
 
-        if (requestParameters['top'] != null) {
-            queryParameters['top'] = requestParameters['top'];
+        if (requestParameters.top !== undefined) {
+            queryParameters['top'] = requestParameters.top;
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -324,7 +309,7 @@ export class StationApi extends runtime.BaseAPI implements StationApiInterface {
             }
         }
         const response = await this.request({
-            path: `/work_groups/{workGroupId}/stations`.replace(`{${"workGroupId"}}`, encodeURIComponent(String(requestParameters['workGroupId']))),
+            path: `/work_groups/{workGroupId}/stations`.replace(`{${"workGroupId"}}`, encodeURIComponent(String(requestParameters.workGroupId))),
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -347,18 +332,12 @@ export class StationApi extends runtime.BaseAPI implements StationApiInterface {
      * 更新する
      */
     async updateStationRaw(requestParameters: UpdateStationRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Station>> {
-        if (requestParameters['stationId'] == null) {
-            throw new runtime.RequiredError(
-                'stationId',
-                'Required parameter "stationId" was null or undefined when calling updateStation().'
-            );
+        if (requestParameters.stationId === null || requestParameters.stationId === undefined) {
+            throw new runtime.RequiredError('stationId','Required parameter requestParameters.stationId was null or undefined when calling updateStation.');
         }
 
-        if (requestParameters['station'] == null) {
-            throw new runtime.RequiredError(
-                'station',
-                'Required parameter "station" was null or undefined when calling updateStation().'
-            );
+        if (requestParameters.station === null || requestParameters.station === undefined) {
+            throw new runtime.RequiredError('station','Required parameter requestParameters.station was null or undefined when calling updateStation.');
         }
 
         const queryParameters: any = {};
@@ -376,11 +355,11 @@ export class StationApi extends runtime.BaseAPI implements StationApiInterface {
             }
         }
         const response = await this.request({
-            path: `/stations/{stationId}`.replace(`{${"stationId"}}`, encodeURIComponent(String(requestParameters['stationId']))),
+            path: `/stations/{stationId}`.replace(`{${"stationId"}}`, encodeURIComponent(String(requestParameters.stationId))),
             method: 'PUT',
             headers: headerParameters,
             query: queryParameters,
-            body: StationToJSON(requestParameters['station']),
+            body: StationToJSON(requestParameters.station),
         }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => StationFromJSON(jsonValue));

@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
+import { exists, mapValues } from '../runtime';
 /**
  * エラーコードとエラーメッセージ
  * @export
@@ -36,8 +36,10 @@ export interface Schema {
 /**
  * Check if a given object implements the Schema interface.
  */
-export function instanceOfSchema(value: object): value is Schema {
-    return true;
+export function instanceOfSchema(value: object): boolean {
+    let isInstance = true;
+
+    return isInstance;
 }
 
 export function SchemaFromJSON(json: any): Schema {
@@ -45,24 +47,27 @@ export function SchemaFromJSON(json: any): Schema {
 }
 
 export function SchemaFromJSONTyped(json: any, ignoreDiscriminator: boolean): Schema {
-    if (json == null) {
+    if ((json === undefined) || (json === null)) {
         return json;
     }
     return {
         
-        'code': json['code'] == null ? undefined : json['code'],
-        'message': json['message'] == null ? undefined : json['message'],
+        'code': !exists(json, 'code') ? undefined : json['code'],
+        'message': !exists(json, 'message') ? undefined : json['message'],
     };
 }
 
 export function SchemaToJSON(value?: Schema | null): any {
-    if (value == null) {
-        return value;
+    if (value === undefined) {
+        return undefined;
+    }
+    if (value === null) {
+        return null;
     }
     return {
         
-        'code': value['code'],
-        'message': value['message'],
+        'code': value.code,
+        'message': value.message,
     };
 }
 

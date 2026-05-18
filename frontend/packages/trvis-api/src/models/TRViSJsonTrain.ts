@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
+import { exists, mapValues } from '../runtime';
 import type { TRViSJsonTimetableRow } from './TRViSJsonTimetableRow';
 import {
     TRViSJsonTimetableRowFromJSON,
@@ -127,11 +127,13 @@ export interface TRViSJsonTrain {
 /**
  * Check if a given object implements the TRViSJsonTrain interface.
  */
-export function instanceOfTRViSJsonTrain(value: object): value is TRViSJsonTrain {
-    if (!('trainNumber' in value) || value['trainNumber'] === undefined) return false;
-    if (!('direction' in value) || value['direction'] === undefined) return false;
-    if (!('timetableRows' in value) || value['timetableRows'] === undefined) return false;
-    return true;
+export function instanceOfTRViSJsonTrain(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "trainNumber" in value;
+    isInstance = isInstance && "direction" in value;
+    isInstance = isInstance && "timetableRows" in value;
+
+    return isInstance;
 }
 
 export function TRViSJsonTrainFromJSON(json: any): TRViSJsonTrain {
@@ -139,7 +141,7 @@ export function TRViSJsonTrainFromJSON(json: any): TRViSJsonTrain {
 }
 
 export function TRViSJsonTrainFromJSONTyped(json: any, ignoreDiscriminator: boolean): TRViSJsonTrain {
-    if (json == null) {
+    if ((json === undefined) || (json === null)) {
         return json;
     }
     return {
@@ -147,44 +149,47 @@ export function TRViSJsonTrainFromJSONTyped(json: any, ignoreDiscriminator: bool
         'trainNumber': json['TrainNumber'],
         'direction': json['Direction'],
         'timetableRows': ((json['TimetableRows'] as Array<any>).map(TRViSJsonTimetableRowFromJSON)),
-        'maxSpeed': json['MaxSpeed'] == null ? undefined : json['MaxSpeed'],
-        'speedType': json['SpeedType'] == null ? undefined : json['SpeedType'],
-        'nominalTractiveCapacity': json['NominalTractiveCapacity'] == null ? undefined : json['NominalTractiveCapacity'],
-        'carCount': json['CarCount'] == null ? undefined : json['CarCount'],
-        'destination': json['Destination'] == null ? undefined : json['Destination'],
-        'beginRemarks': json['BeginRemarks'] == null ? undefined : json['BeginRemarks'],
-        'afterRemarks': json['AfterRemarks'] == null ? undefined : json['AfterRemarks'],
-        'remarks': json['Remarks'] == null ? undefined : json['Remarks'],
-        'beforeDeparture': json['BeforeDeparture'] == null ? undefined : json['BeforeDeparture'],
-        'trainInfo': json['TrainInfo'] == null ? undefined : json['TrainInfo'],
-        'afterArrive': json['AfterArrive'] == null ? undefined : json['AfterArrive'],
-        'dayCount': json['DayCount'] == null ? undefined : json['DayCount'],
-        'isRideOnMoving': json['IsRideOnMoving'] == null ? undefined : json['IsRideOnMoving'],
+        'maxSpeed': !exists(json, 'MaxSpeed') ? undefined : json['MaxSpeed'],
+        'speedType': !exists(json, 'SpeedType') ? undefined : json['SpeedType'],
+        'nominalTractiveCapacity': !exists(json, 'NominalTractiveCapacity') ? undefined : json['NominalTractiveCapacity'],
+        'carCount': !exists(json, 'CarCount') ? undefined : json['CarCount'],
+        'destination': !exists(json, 'Destination') ? undefined : json['Destination'],
+        'beginRemarks': !exists(json, 'BeginRemarks') ? undefined : json['BeginRemarks'],
+        'afterRemarks': !exists(json, 'AfterRemarks') ? undefined : json['AfterRemarks'],
+        'remarks': !exists(json, 'Remarks') ? undefined : json['Remarks'],
+        'beforeDeparture': !exists(json, 'BeforeDeparture') ? undefined : json['BeforeDeparture'],
+        'trainInfo': !exists(json, 'TrainInfo') ? undefined : json['TrainInfo'],
+        'afterArrive': !exists(json, 'AfterArrive') ? undefined : json['AfterArrive'],
+        'dayCount': !exists(json, 'DayCount') ? undefined : json['DayCount'],
+        'isRideOnMoving': !exists(json, 'IsRideOnMoving') ? undefined : json['IsRideOnMoving'],
     };
 }
 
 export function TRViSJsonTrainToJSON(value?: TRViSJsonTrain | null): any {
-    if (value == null) {
-        return value;
+    if (value === undefined) {
+        return undefined;
+    }
+    if (value === null) {
+        return null;
     }
     return {
         
-        'TrainNumber': value['trainNumber'],
-        'Direction': value['direction'],
-        'TimetableRows': ((value['timetableRows'] as Array<any>).map(TRViSJsonTimetableRowToJSON)),
-        'MaxSpeed': value['maxSpeed'],
-        'SpeedType': value['speedType'],
-        'NominalTractiveCapacity': value['nominalTractiveCapacity'],
-        'CarCount': value['carCount'],
-        'Destination': value['destination'],
-        'BeginRemarks': value['beginRemarks'],
-        'AfterRemarks': value['afterRemarks'],
-        'Remarks': value['remarks'],
-        'BeforeDeparture': value['beforeDeparture'],
-        'TrainInfo': value['trainInfo'],
-        'AfterArrive': value['afterArrive'],
-        'DayCount': value['dayCount'],
-        'IsRideOnMoving': value['isRideOnMoving'],
+        'TrainNumber': value.trainNumber,
+        'Direction': value.direction,
+        'TimetableRows': ((value.timetableRows as Array<any>).map(TRViSJsonTimetableRowToJSON)),
+        'MaxSpeed': value.maxSpeed,
+        'SpeedType': value.speedType,
+        'NominalTractiveCapacity': value.nominalTractiveCapacity,
+        'CarCount': value.carCount,
+        'Destination': value.destination,
+        'BeginRemarks': value.beginRemarks,
+        'AfterRemarks': value.afterRemarks,
+        'Remarks': value.remarks,
+        'BeforeDeparture': value.beforeDeparture,
+        'TrainInfo': value.trainInfo,
+        'AfterArrive': value.afterArrive,
+        'DayCount': value.dayCount,
+        'IsRideOnMoving': value.isRideOnMoving,
     };
 }
 

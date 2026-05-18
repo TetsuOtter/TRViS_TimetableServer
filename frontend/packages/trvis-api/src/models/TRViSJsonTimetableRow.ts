@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
+import { exists, mapValues } from '../runtime';
 /**
  * 
  * @export
@@ -156,10 +156,12 @@ export interface TRViSJsonTimetableRow {
 /**
  * Check if a given object implements the TRViSJsonTimetableRow interface.
  */
-export function instanceOfTRViSJsonTimetableRow(value: object): value is TRViSJsonTimetableRow {
-    if (!('stationName' in value) || value['stationName'] === undefined) return false;
-    if (!('locationM' in value) || value['locationM'] === undefined) return false;
-    return true;
+export function instanceOfTRViSJsonTimetableRow(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "stationName" in value;
+    isInstance = isInstance && "locationM" in value;
+
+    return isInstance;
 }
 
 export function TRViSJsonTimetableRowFromJSON(json: any): TRViSJsonTimetableRow {
@@ -167,64 +169,67 @@ export function TRViSJsonTimetableRowFromJSON(json: any): TRViSJsonTimetableRow 
 }
 
 export function TRViSJsonTimetableRowFromJSONTyped(json: any, ignoreDiscriminator: boolean): TRViSJsonTimetableRow {
-    if (json == null) {
+    if ((json === undefined) || (json === null)) {
         return json;
     }
     return {
         
         'stationName': json['StationName'],
         'locationM': json['Location_m'],
-        'longitudeDeg': json['Longitude_deg'] == null ? undefined : json['Longitude_deg'],
-        'latitudeDeg': json['Latitude_deg'] == null ? undefined : json['Latitude_deg'],
-        'onStationDetectRadiusM': json['OnStationDetectRadius_m'] == null ? undefined : json['OnStationDetectRadius_m'],
-        'fullName': json['FullName'] == null ? undefined : json['FullName'],
-        'recordType': json['RecordType'] == null ? undefined : json['RecordType'],
-        'trackName': json['TrackName'] == null ? undefined : json['TrackName'],
-        'driveTimeMM': json['DriveTime_MM'] == null ? undefined : json['DriveTime_MM'],
-        'driveTimeSS': json['DriveTime_SS'] == null ? undefined : json['DriveTime_SS'],
-        'isOperationOnlyStop': json['IsOperationOnlyStop'] == null ? undefined : json['IsOperationOnlyStop'],
-        'isPass': json['IsPass'] == null ? undefined : json['IsPass'],
-        'hasBracket': json['HasBracket'] == null ? undefined : json['HasBracket'],
-        'isLastStop': json['IsLastStop'] == null ? undefined : json['IsLastStop'],
-        'arrive': json['Arrive'] == null ? undefined : json['Arrive'],
-        'departure': json['Departure'] == null ? undefined : json['Departure'],
-        'runInLimit': json['RunInLimit'] == null ? undefined : json['RunInLimit'],
-        'runOutLimit': json['RunOutLimit'] == null ? undefined : json['RunOutLimit'],
-        'remarks': json['Remarks'] == null ? undefined : json['Remarks'],
-        'markerColor': json['MarkerColor'] == null ? undefined : json['MarkerColor'],
-        'markerText': json['MarkerText'] == null ? undefined : json['MarkerText'],
-        'workType': json['WorkType'] == null ? undefined : json['WorkType'],
+        'longitudeDeg': !exists(json, 'Longitude_deg') ? undefined : json['Longitude_deg'],
+        'latitudeDeg': !exists(json, 'Latitude_deg') ? undefined : json['Latitude_deg'],
+        'onStationDetectRadiusM': !exists(json, 'OnStationDetectRadius_m') ? undefined : json['OnStationDetectRadius_m'],
+        'fullName': !exists(json, 'FullName') ? undefined : json['FullName'],
+        'recordType': !exists(json, 'RecordType') ? undefined : json['RecordType'],
+        'trackName': !exists(json, 'TrackName') ? undefined : json['TrackName'],
+        'driveTimeMM': !exists(json, 'DriveTime_MM') ? undefined : json['DriveTime_MM'],
+        'driveTimeSS': !exists(json, 'DriveTime_SS') ? undefined : json['DriveTime_SS'],
+        'isOperationOnlyStop': !exists(json, 'IsOperationOnlyStop') ? undefined : json['IsOperationOnlyStop'],
+        'isPass': !exists(json, 'IsPass') ? undefined : json['IsPass'],
+        'hasBracket': !exists(json, 'HasBracket') ? undefined : json['HasBracket'],
+        'isLastStop': !exists(json, 'IsLastStop') ? undefined : json['IsLastStop'],
+        'arrive': !exists(json, 'Arrive') ? undefined : json['Arrive'],
+        'departure': !exists(json, 'Departure') ? undefined : json['Departure'],
+        'runInLimit': !exists(json, 'RunInLimit') ? undefined : json['RunInLimit'],
+        'runOutLimit': !exists(json, 'RunOutLimit') ? undefined : json['RunOutLimit'],
+        'remarks': !exists(json, 'Remarks') ? undefined : json['Remarks'],
+        'markerColor': !exists(json, 'MarkerColor') ? undefined : json['MarkerColor'],
+        'markerText': !exists(json, 'MarkerText') ? undefined : json['MarkerText'],
+        'workType': !exists(json, 'WorkType') ? undefined : json['WorkType'],
     };
 }
 
 export function TRViSJsonTimetableRowToJSON(value?: TRViSJsonTimetableRow | null): any {
-    if (value == null) {
-        return value;
+    if (value === undefined) {
+        return undefined;
+    }
+    if (value === null) {
+        return null;
     }
     return {
         
-        'StationName': value['stationName'],
-        'Location_m': value['locationM'],
-        'Longitude_deg': value['longitudeDeg'],
-        'Latitude_deg': value['latitudeDeg'],
-        'OnStationDetectRadius_m': value['onStationDetectRadiusM'],
-        'FullName': value['fullName'],
-        'RecordType': value['recordType'],
-        'TrackName': value['trackName'],
-        'DriveTime_MM': value['driveTimeMM'],
-        'DriveTime_SS': value['driveTimeSS'],
-        'IsOperationOnlyStop': value['isOperationOnlyStop'],
-        'IsPass': value['isPass'],
-        'HasBracket': value['hasBracket'],
-        'IsLastStop': value['isLastStop'],
-        'Arrive': value['arrive'],
-        'Departure': value['departure'],
-        'RunInLimit': value['runInLimit'],
-        'RunOutLimit': value['runOutLimit'],
-        'Remarks': value['remarks'],
-        'MarkerColor': value['markerColor'],
-        'MarkerText': value['markerText'],
-        'WorkType': value['workType'],
+        'StationName': value.stationName,
+        'Location_m': value.locationM,
+        'Longitude_deg': value.longitudeDeg,
+        'Latitude_deg': value.latitudeDeg,
+        'OnStationDetectRadius_m': value.onStationDetectRadiusM,
+        'FullName': value.fullName,
+        'RecordType': value.recordType,
+        'TrackName': value.trackName,
+        'DriveTime_MM': value.driveTimeMM,
+        'DriveTime_SS': value.driveTimeSS,
+        'IsOperationOnlyStop': value.isOperationOnlyStop,
+        'IsPass': value.isPass,
+        'HasBracket': value.hasBracket,
+        'IsLastStop': value.isLastStop,
+        'Arrive': value.arrive,
+        'Departure': value.departure,
+        'RunInLimit': value.runInLimit,
+        'RunOutLimit': value.runOutLimit,
+        'Remarks': value.remarks,
+        'MarkerColor': value.markerColor,
+        'MarkerText': value.markerText,
+        'WorkType': value.workType,
     };
 }
 

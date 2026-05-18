@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
+import { exists, mapValues } from '../runtime';
 /**
  * 
  * @export
@@ -138,12 +138,14 @@ export interface Train {
 /**
  * Check if a given object implements the Train interface.
  */
-export function instanceOfTrain(value: object): value is Train {
-    if (!('description' in value) || value['description'] === undefined) return false;
-    if (!('trainNumber' in value) || value['trainNumber'] === undefined) return false;
-    if (!('direction' in value) || value['direction'] === undefined) return false;
-    if (!('dayCount' in value) || value['dayCount'] === undefined) return false;
-    return true;
+export function instanceOfTrain(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "description" in value;
+    isInstance = isInstance && "trainNumber" in value;
+    isInstance = isInstance && "direction" in value;
+    isInstance = isInstance && "dayCount" in value;
+
+    return isInstance;
 }
 
 export function TrainFromJSON(json: any): Train {
@@ -151,7 +153,7 @@ export function TrainFromJSON(json: any): Train {
 }
 
 export function TrainFromJSONTyped(json: any, ignoreDiscriminator: boolean): Train {
-    if (json == null) {
+    if ((json === undefined) || (json === null)) {
         return json;
     }
     return {
@@ -160,46 +162,49 @@ export function TrainFromJSONTyped(json: any, ignoreDiscriminator: boolean): Tra
         'trainNumber': json['train_number'],
         'direction': json['direction'],
         'dayCount': json['day_count'],
-        'trainsId': json['trains_id'] == null ? undefined : json['trains_id'],
-        'worksId': json['works_id'] == null ? undefined : json['works_id'],
-        'createdAt': json['created_at'] == null ? undefined : (new Date(json['created_at'])),
-        'maxSpeed': json['max_speed'] == null ? undefined : json['max_speed'],
-        'speedType': json['speed_type'] == null ? undefined : json['speed_type'],
-        'nominalTractiveCapacity': json['nominal_tractive_capacity'] == null ? undefined : json['nominal_tractive_capacity'],
-        'carCount': json['car_count'] == null ? undefined : json['car_count'],
-        'destination': json['destination'] == null ? undefined : json['destination'],
-        'beginRemarks': json['begin_remarks'] == null ? undefined : json['begin_remarks'],
-        'afterRemarks': json['after_remarks'] == null ? undefined : json['after_remarks'],
-        'remarks': json['remarks'] == null ? undefined : json['remarks'],
-        'beforeDeparture': json['before_departure'] == null ? undefined : json['before_departure'],
-        'afterArrive': json['after_arrive'] == null ? undefined : json['after_arrive'],
-        'trainInfo': json['train_info'] == null ? undefined : json['train_info'],
-        'isRideOnMoving': json['is_ride_on_moving'] == null ? undefined : json['is_ride_on_moving'],
+        'trainsId': !exists(json, 'trains_id') ? undefined : json['trains_id'],
+        'worksId': !exists(json, 'works_id') ? undefined : json['works_id'],
+        'createdAt': !exists(json, 'created_at') ? undefined : (new Date(json['created_at'])),
+        'maxSpeed': !exists(json, 'max_speed') ? undefined : json['max_speed'],
+        'speedType': !exists(json, 'speed_type') ? undefined : json['speed_type'],
+        'nominalTractiveCapacity': !exists(json, 'nominal_tractive_capacity') ? undefined : json['nominal_tractive_capacity'],
+        'carCount': !exists(json, 'car_count') ? undefined : json['car_count'],
+        'destination': !exists(json, 'destination') ? undefined : json['destination'],
+        'beginRemarks': !exists(json, 'begin_remarks') ? undefined : json['begin_remarks'],
+        'afterRemarks': !exists(json, 'after_remarks') ? undefined : json['after_remarks'],
+        'remarks': !exists(json, 'remarks') ? undefined : json['remarks'],
+        'beforeDeparture': !exists(json, 'before_departure') ? undefined : json['before_departure'],
+        'afterArrive': !exists(json, 'after_arrive') ? undefined : json['after_arrive'],
+        'trainInfo': !exists(json, 'train_info') ? undefined : json['train_info'],
+        'isRideOnMoving': !exists(json, 'is_ride_on_moving') ? undefined : json['is_ride_on_moving'],
     };
 }
 
-export function TrainToJSON(value?: Omit<Train, 'trains_id'|'works_id'|'created_at'> | null): any {
-    if (value == null) {
-        return value;
+export function TrainToJSON(value?: Train | null): any {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (value === null) {
+        return null;
     }
     return {
         
-        'description': value['description'],
-        'train_number': value['trainNumber'],
-        'direction': value['direction'],
-        'day_count': value['dayCount'],
-        'max_speed': value['maxSpeed'],
-        'speed_type': value['speedType'],
-        'nominal_tractive_capacity': value['nominalTractiveCapacity'],
-        'car_count': value['carCount'],
-        'destination': value['destination'],
-        'begin_remarks': value['beginRemarks'],
-        'after_remarks': value['afterRemarks'],
-        'remarks': value['remarks'],
-        'before_departure': value['beforeDeparture'],
-        'after_arrive': value['afterArrive'],
-        'train_info': value['trainInfo'],
-        'is_ride_on_moving': value['isRideOnMoving'],
+        'description': value.description,
+        'train_number': value.trainNumber,
+        'direction': value.direction,
+        'day_count': value.dayCount,
+        'max_speed': value.maxSpeed,
+        'speed_type': value.speedType,
+        'nominal_tractive_capacity': value.nominalTractiveCapacity,
+        'car_count': value.carCount,
+        'destination': value.destination,
+        'begin_remarks': value.beginRemarks,
+        'after_remarks': value.afterRemarks,
+        'remarks': value.remarks,
+        'before_departure': value.beforeDeparture,
+        'after_arrive': value.afterArrive,
+        'train_info': value.trainInfo,
+        'is_ride_on_moving': value.isRideOnMoving,
     };
 }
 

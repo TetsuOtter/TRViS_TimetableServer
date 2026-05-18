@@ -27,7 +27,7 @@ import {
 
 export interface CreateTrainRequest {
     workId: string;
-    train: Omit<Train, 'trains_id'|'works_id'|'created_at'>;
+    train: Train;
 }
 
 export interface DeleteTrainRequest {
@@ -47,7 +47,7 @@ export interface GetTrainListRequest {
 
 export interface UpdateTrainRequest {
     trainId: string;
-    train: Omit<Train, 'trains_id'|'works_id'|'created_at'>;
+    train: Train;
 }
 
 /**
@@ -154,18 +154,12 @@ export class TrainApi extends runtime.BaseAPI implements TrainApiInterface {
      * 作成する
      */
     async createTrainRaw(requestParameters: CreateTrainRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Train>> {
-        if (requestParameters['workId'] == null) {
-            throw new runtime.RequiredError(
-                'workId',
-                'Required parameter "workId" was null or undefined when calling createTrain().'
-            );
+        if (requestParameters.workId === null || requestParameters.workId === undefined) {
+            throw new runtime.RequiredError('workId','Required parameter requestParameters.workId was null or undefined when calling createTrain.');
         }
 
-        if (requestParameters['train'] == null) {
-            throw new runtime.RequiredError(
-                'train',
-                'Required parameter "train" was null or undefined when calling createTrain().'
-            );
+        if (requestParameters.train === null || requestParameters.train === undefined) {
+            throw new runtime.RequiredError('train','Required parameter requestParameters.train was null or undefined when calling createTrain.');
         }
 
         const queryParameters: any = {};
@@ -183,11 +177,11 @@ export class TrainApi extends runtime.BaseAPI implements TrainApiInterface {
             }
         }
         const response = await this.request({
-            path: `/works/{workId}/trains`.replace(`{${"workId"}}`, encodeURIComponent(String(requestParameters['workId']))),
+            path: `/works/{workId}/trains`.replace(`{${"workId"}}`, encodeURIComponent(String(requestParameters.workId))),
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: TrainToJSON(requestParameters['train']),
+            body: TrainToJSON(requestParameters.train),
         }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => TrainFromJSON(jsonValue));
@@ -207,11 +201,8 @@ export class TrainApi extends runtime.BaseAPI implements TrainApiInterface {
      * 削除する
      */
     async deleteTrainRaw(requestParameters: DeleteTrainRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        if (requestParameters['trainId'] == null) {
-            throw new runtime.RequiredError(
-                'trainId',
-                'Required parameter "trainId" was null or undefined when calling deleteTrain().'
-            );
+        if (requestParameters.trainId === null || requestParameters.trainId === undefined) {
+            throw new runtime.RequiredError('trainId','Required parameter requestParameters.trainId was null or undefined when calling deleteTrain.');
         }
 
         const queryParameters: any = {};
@@ -227,7 +218,7 @@ export class TrainApi extends runtime.BaseAPI implements TrainApiInterface {
             }
         }
         const response = await this.request({
-            path: `/trains/{trainId}`.replace(`{${"trainId"}}`, encodeURIComponent(String(requestParameters['trainId']))),
+            path: `/trains/{trainId}`.replace(`{${"trainId"}}`, encodeURIComponent(String(requestParameters.trainId))),
             method: 'DELETE',
             headers: headerParameters,
             query: queryParameters,
@@ -249,11 +240,8 @@ export class TrainApi extends runtime.BaseAPI implements TrainApiInterface {
      * 1件取得する
      */
     async getTrainRaw(requestParameters: GetTrainRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Train>> {
-        if (requestParameters['trainId'] == null) {
-            throw new runtime.RequiredError(
-                'trainId',
-                'Required parameter "trainId" was null or undefined when calling getTrain().'
-            );
+        if (requestParameters.trainId === null || requestParameters.trainId === undefined) {
+            throw new runtime.RequiredError('trainId','Required parameter requestParameters.trainId was null or undefined when calling getTrain.');
         }
 
         const queryParameters: any = {};
@@ -269,7 +257,7 @@ export class TrainApi extends runtime.BaseAPI implements TrainApiInterface {
             }
         }
         const response = await this.request({
-            path: `/trains/{trainId}`.replace(`{${"trainId"}}`, encodeURIComponent(String(requestParameters['trainId']))),
+            path: `/trains/{trainId}`.replace(`{${"trainId"}}`, encodeURIComponent(String(requestParameters.trainId))),
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -292,25 +280,22 @@ export class TrainApi extends runtime.BaseAPI implements TrainApiInterface {
      * 複数件取得する
      */
     async getTrainListRaw(requestParameters: GetTrainListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<Train>>> {
-        if (requestParameters['workId'] == null) {
-            throw new runtime.RequiredError(
-                'workId',
-                'Required parameter "workId" was null or undefined when calling getTrainList().'
-            );
+        if (requestParameters.workId === null || requestParameters.workId === undefined) {
+            throw new runtime.RequiredError('workId','Required parameter requestParameters.workId was null or undefined when calling getTrainList.');
         }
 
         const queryParameters: any = {};
 
-        if (requestParameters['p'] != null) {
-            queryParameters['p'] = requestParameters['p'];
+        if (requestParameters.p !== undefined) {
+            queryParameters['p'] = requestParameters.p;
         }
 
-        if (requestParameters['limit'] != null) {
-            queryParameters['limit'] = requestParameters['limit'];
+        if (requestParameters.limit !== undefined) {
+            queryParameters['limit'] = requestParameters.limit;
         }
 
-        if (requestParameters['top'] != null) {
-            queryParameters['top'] = requestParameters['top'];
+        if (requestParameters.top !== undefined) {
+            queryParameters['top'] = requestParameters.top;
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -324,7 +309,7 @@ export class TrainApi extends runtime.BaseAPI implements TrainApiInterface {
             }
         }
         const response = await this.request({
-            path: `/works/{workId}/trains`.replace(`{${"workId"}}`, encodeURIComponent(String(requestParameters['workId']))),
+            path: `/works/{workId}/trains`.replace(`{${"workId"}}`, encodeURIComponent(String(requestParameters.workId))),
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -347,18 +332,12 @@ export class TrainApi extends runtime.BaseAPI implements TrainApiInterface {
      * 更新する
      */
     async updateTrainRaw(requestParameters: UpdateTrainRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Train>> {
-        if (requestParameters['trainId'] == null) {
-            throw new runtime.RequiredError(
-                'trainId',
-                'Required parameter "trainId" was null or undefined when calling updateTrain().'
-            );
+        if (requestParameters.trainId === null || requestParameters.trainId === undefined) {
+            throw new runtime.RequiredError('trainId','Required parameter requestParameters.trainId was null or undefined when calling updateTrain.');
         }
 
-        if (requestParameters['train'] == null) {
-            throw new runtime.RequiredError(
-                'train',
-                'Required parameter "train" was null or undefined when calling updateTrain().'
-            );
+        if (requestParameters.train === null || requestParameters.train === undefined) {
+            throw new runtime.RequiredError('train','Required parameter requestParameters.train was null or undefined when calling updateTrain.');
         }
 
         const queryParameters: any = {};
@@ -376,11 +355,11 @@ export class TrainApi extends runtime.BaseAPI implements TrainApiInterface {
             }
         }
         const response = await this.request({
-            path: `/trains/{trainId}`.replace(`{${"trainId"}}`, encodeURIComponent(String(requestParameters['trainId']))),
+            path: `/trains/{trainId}`.replace(`{${"trainId"}}`, encodeURIComponent(String(requestParameters.trainId))),
             method: 'PUT',
             headers: headerParameters,
             query: queryParameters,
-            body: TrainToJSON(requestParameters['train']),
+            body: TrainToJSON(requestParameters.train),
         }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => TrainFromJSON(jsonValue));

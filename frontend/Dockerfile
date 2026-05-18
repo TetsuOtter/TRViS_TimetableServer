@@ -1,8 +1,8 @@
-FROM node:21.5.0-alpine as build
+FROM node:24.15.0-alpine as build
 
 WORKDIR /app
-COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile
+COPY package.json yarn.lock .yarnrc.yml ./
+RUN corepack enable && yarn install --frozen-lockfile
 COPY \
   ./.env \
   ./index.html \

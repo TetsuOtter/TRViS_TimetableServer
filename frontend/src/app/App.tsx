@@ -3,6 +3,74 @@
 // via SettingsContext. Layout is fixed to the design's default ("sidebar").
 import { useEffect, useMemo, useState } from "react";
 
+import { useQueryClient } from "@tanstack/react-query";
+
+import {
+	fromApiStopPattern,
+	fromApiStopPatternRow,
+	fromApiTrain,
+} from "../api/adapters";
+import {
+	useCreateLine,
+	useDeleteLine,
+	useLines,
+	useUpdateLine,
+} from "../api/hooks/useLines";
+import {
+	useCreateProject,
+	useDeleteProject,
+	useProjects,
+	useUpdateProject,
+} from "../api/hooks/useProjects";
+import {
+	useCreateProjectStation,
+	useDeleteProjectStation,
+	useProjectStations,
+	useUpdateProjectStation,
+} from "../api/hooks/useProjectStations";
+import {
+	useCreateStationOnLine,
+	useDeleteStationOnLine,
+	useStationsOnLine,
+	useUpdateStationOnLine,
+} from "../api/hooks/useStationsOnLine";
+import {
+	useCreateStopPatternRows,
+	useDeleteStopPatternRow,
+	useStopPatternRows,
+} from "../api/hooks/useStopPatternRows";
+import {
+	useCreateStopPattern,
+	useDeleteStopPattern,
+	useStopPatterns,
+	useUpdateStopPattern,
+} from "../api/hooks/useStopPatterns";
+import {
+	fetchTimetableRows,
+	useCreateTimetableRow,
+	useDeleteTimetableRow,
+	useTimetableRows,
+} from "../api/hooks/useTimetableRows";
+import {
+	useCreateTrain,
+	useDeleteTrain,
+	useTrains,
+	useUpdateTrain,
+} from "../api/hooks/useTrains";
+import {
+	useCreateWorkGroup,
+	useDeleteWorkGroup,
+	useUpdateWorkGroup,
+	useWorkGroups,
+} from "../api/hooks/useWorkGroups";
+import {
+	useCreateWork,
+	useDeleteWork,
+	useUpdateWork,
+	useWorks,
+} from "../api/hooks/useWorks";
+import { stopPatternRowApi } from "../api/instances";
+import { queryKeys } from "../api/queryKeys";
 import { AppShell } from "../components/AppShell";
 import AuthControls from "../components/auth/AuthControls";
 import {
@@ -20,16 +88,217 @@ import { createInitialData } from "../data/sampleData";
 
 import { useSettings } from "./SettingsContext";
 
+import type { AppliedRow } from "../components/ApplyPatternDialog";
 import type { ContextMenuItem } from "../components/EntityDialogs";
+import type {
+	Line as EntityLine,
+	Project as EntityProject,
+	ProjectStation as EntityProjectStation,
+	StationOnLine as EntityStationOnLine,
+	StopPattern as EntityStopPattern,
+	StopPatternRow as EntityStopPatternRow,
+	TimetableRow as EntityTimetableRow,
+	Train as EntityTrain,
+	Work as EntityWork,
+} from "../types/entities";
 import type {
 	AppData,
 	Line,
 	Project,
+	Station,
 	StationOnLine,
 	StopPattern,
+	StopPatternRow as ModelStopPatternRow,
+	TimetableRow as ModelTimetableRow,
+	Train as ModelTrain,
 	Work,
 	WorkGroup,
 } from "../types/model";
+
+function entityTimetableRowToModel(
+	row: EntityTimetableRow,
+	stationsById: Map<string, Station>
+): ModelTimetableRow {
+	const pad2 = (n: number) => String(n).padStart(2, "0");
+	const toTimeStr = (
+		hh: number | undefined,
+		mm: number | undefined,
+		ss: number | undefined
+	): string => {
+		if (hh === undefined || mm === undefined || ss === undefined) return "";
+		return `${pad2(hh)}:${pad2(mm)}:${pad2(ss)}`;
+	};
+	const station =
+		row.stationId !== undefined ? stationsById.get(row.stationId) : undefined;
+	return {
+		id: row.id,
+		stationName: station?.stationName ?? "",
+		fullName: station?.fullName ?? "",
+		arrive: toTimeStr(row.arriveTimeHh, row.arriveTimeMm, row.arriveTimeSs),
+		departure: toTimeStr(
+			row.departureTimeHh,
+			row.departureTimeMm,
+			row.departureTimeSs
+		),
+		arriveDisplayText: row.arriveStr,
+		departureDisplayText: row.departureStr,
+		trackName: "",
+		isPass: row.isPass ?? false,
+		isOperationOnlyStop: row.isOperationOnlyStop ?? false,
+		isLastStop: row.isLastStop,
+		hasBracket: row.hasBracket,
+		recordType: "station",
+		driveTime_MM: row.driveTimeMm ?? 0,
+		driveTime_SS: row.driveTimeSs ?? 0,
+		runInLimit: row.runInLimit ?? "",
+		runOutLimit: row.runOutLimit ?? "",
+		remarks: row.remarks ?? "",
+		workType: row.workType ?? "",
+	};
+}
+
+function entityTrainToModel(
+	train: EntityTrain,
+	timetableRows: ModelTimetableRow[]
+): ModelTrain {
+	return {
+		id: train.id,
+		trainNumber: train.trainNumber,
+		direction: train.direction === -1 ? -1 : 1,
+		destination: train.destination ?? "",
+		maxSpeed: train.maxSpeed ?? "",
+		speedType: train.speedType ?? "",
+		nominalTractiveCapacity: train.nominalTractiveCapacity ?? "",
+		carCount: train.carCount ?? 0,
+		workType: "",
+		dayCount: train.dayCount,
+		isRideOnMoving: train.isRideOnMoving ?? false,
+		beginRemarks: train.beginRemarks ?? "",
+		afterRemarks: train.afterRemarks ?? "",
+		remarks: train.remarks ?? "",
+		beforeDeparture: train.beforeDeparture ?? "",
+		afterArrive: train.afterArrive ?? "",
+		trainInfo: train.trainInfo ?? "",
+		nextTrainId: "",
+		timetableRows,
+	};
+}
+
+function entityWorkToModel(work: EntityWork, trains: ModelTrain[]): Work {
+	return {
+		id: work.id,
+		name: work.name,
+		affectDate:
+			work.affectDate !== undefined
+				? work.affectDate.toISOString().slice(0, 10)
+				: "",
+		remarks: work.remarks ?? "",
+		trains,
+	};
+}
+
+function entityLineToModel(line: EntityLine): Line {
+	return {
+		id: line.id,
+		name: line.name,
+		description: line.description,
+	};
+}
+
+function entityProjectStationToModel(ps: EntityProjectStation): Station {
+	return {
+		id: ps.id,
+		stationName: ps.name,
+		fullName: ps.fullName ?? "",
+		longitude_deg: ps.longitude,
+		latitude_deg: ps.latitude,
+		onStationDetectRadius_m: ps.onStationDetectRadiusM,
+		alwaysShowHH: ps.alwaysShowHh,
+	};
+}
+
+function entityStationOnLineToModel(sol: EntityStationOnLine): StationOnLine {
+	return {
+		id: sol.id,
+		lineId: sol.lineId,
+		stationId: sol.projectStationId,
+		location_m: sol.locationM,
+		longitude_deg: sol.longitude,
+		latitude_deg: sol.latitude,
+		trackHiddenByDefault: sol.trackHiddenByDefault,
+	};
+}
+
+function entityStopRowToModel(r: EntityStopPatternRow): ModelStopPatternRow {
+	return {
+		stationId: r.projectStationId,
+		trackName: r.trackName,
+		trackHidden: r.trackHidden,
+		driveTime_MM: r.driveTimeMm,
+		driveTime_SS: r.driveTimeSs,
+		dwellTime_MM: r.dwellTimeMm,
+		dwellTime_SS: r.dwellTimeSs,
+		isOperationOnlyStop: r.isOperationOnlyStop,
+		isPass: r.isPass,
+		showArrive: r.showArrive,
+		showDeparture: r.showDeparture,
+		arrive: r.arriveStr,
+		departure: r.departureStr,
+		runInLimit: r.runInLimit,
+		runOutLimit: r.runOutLimit,
+		remarks: r.remarks,
+		alwaysShowHH: r.alwaysShowHh,
+	};
+}
+
+function entityStopPatternToModel(
+	sp: EntityStopPattern,
+	rows: ModelStopPatternRow[]
+): StopPattern {
+	return {
+		id: sp.id,
+		name: sp.name,
+		lineId: sp.lineId,
+		fromStationId: sp.fromProjectStationId ?? "",
+		toStationId: sp.toProjectStationId ?? "",
+		direction: sp.direction === -1 ? -1 : 1,
+		rows,
+		stopRows: rows,
+	};
+}
+
+function modelStopRowToEntityDraft(
+	r: ModelStopPatternRow
+): Omit<
+	EntityStopPatternRow,
+	"id" | "projectId" | "stopPatternId" | "createdAt"
+> {
+	return {
+		projectStationId: r.stationId,
+		trackName: r.trackName,
+		trackHidden: r.trackHidden,
+		driveTimeMm: r.driveTime_MM,
+		driveTimeSs: r.driveTime_SS,
+		dwellTimeMm: r.dwellTime_MM,
+		dwellTimeSs: r.dwellTime_SS,
+		isOperationOnlyStop: r.isOperationOnlyStop,
+		isPass: r.isPass,
+		showArrive: r.showArrive,
+		showDeparture: r.showDeparture,
+		arriveStr: r.arrive,
+		departureStr: r.departure,
+		runInLimit:
+			r.runInLimit === "" || r.runInLimit === undefined
+				? undefined
+				: r.runInLimit,
+		runOutLimit:
+			r.runOutLimit === "" || r.runOutLimit === undefined
+				? undefined
+				: r.runOutLimit,
+		remarks: r.remarks,
+		alwaysShowHh: r.alwaysShowHH,
+	};
+}
 
 function uid(prefix: string): string {
 	return (
@@ -248,15 +517,73 @@ export function App() {
 	const { theme, toggleTheme, lang, toggleLang, density, t } =
 		useSettings();
 
+	const {
+		data: apiProjects,
+		isLoading: projectsLoading,
+		error: projectsError,
+		refetch: refetchProjects,
+	} = useProjects();
+	const createProjectMutation = useCreateProject();
+	const updateProjectMutation = useUpdateProject();
+	const deleteProjectMutation = useDeleteProject();
+
 	const [data, setData] = useState<AppData>(() => createInitialData());
 	const [projectId, setProjectId] = useState<string | null>(null);
+
+	const { data: apiWorkGroups } = useWorkGroups(projectId ?? "");
+	const createWGMutation = useCreateWorkGroup(projectId ?? "");
+	const updateWGMutation = useUpdateWorkGroup(projectId ?? "");
+	const deleteWGMutation = useDeleteWorkGroup(projectId ?? "");
 	const [currentWG, setCurrentWG] = useState<string | null>(null);
 	const [currentWork, setCurrentWork] = useState<string | null>(null);
+	const [currentTrain, setCurrentTrain] = useState<string | null>(null);
 	const [screen, setScreen] = useState<Screen>("projects");
+
+	const { data: apiWorks } = useWorks(currentWG ?? "");
+	const createWorkMutation = useCreateWork(currentWG ?? "");
+	const updateWorkMutation = useUpdateWork(currentWG ?? "");
+	const deleteWorkMutation = useDeleteWork(currentWG ?? "");
+
+	const { data: apiTrains } = useTrains(currentWork ?? "");
+	const createTrainMutation = useCreateTrain(currentWork ?? "");
+	const updateTrainMutation = useUpdateTrain(currentWork ?? "");
+	const deleteTrainMutation = useDeleteTrain(currentWork ?? "");
+
+	const { data: apiTimetableRows } = useTimetableRows(currentTrain ?? "");
+	const createTimetableRowMutation = useCreateTimetableRow();
+	const deleteTimetableRowMutation = useDeleteTimetableRow();
+
+	const [currentLine, setCurrentLine] = useState<string | null>(null);
+	const { data: apiLines } = useLines(projectId ?? "");
+	const createLineMutation = useCreateLine(projectId ?? "");
+	const updateLineMutation = useUpdateLine(projectId ?? "");
+	const deleteLineMutation = useDeleteLine(projectId ?? "");
+
+	const { data: apiProjectStations } = useProjectStations(projectId ?? "");
+	const createProjectStationMutation = useCreateProjectStation(projectId ?? "");
+	const updateProjectStationMutation = useUpdateProjectStation(projectId ?? "");
+	const deleteProjectStationMutation = useDeleteProjectStation(projectId ?? "");
+
+	const { data: apiStationsOnLine } = useStationsOnLine(currentLine ?? "");
+	const createStationOnLineMutation = useCreateStationOnLine(currentLine ?? "");
+	const updateStationOnLineMutation = useUpdateStationOnLine(currentLine ?? "");
+	const deleteStationOnLineMutation = useDeleteStationOnLine(currentLine ?? "");
+
 	const [showStopPattern, setShowStopPattern] = useState(false);
 	const [editingPattern, setEditingPattern] = useState<StopPattern | null>(
 		null
 	);
+
+	const { data: apiStopPatterns } = useStopPatterns(projectId ?? "");
+	const createStopPatternMutation = useCreateStopPattern(projectId ?? "");
+	const updateStopPatternMutation = useUpdateStopPattern(projectId ?? "");
+	const deleteStopPatternMutation = useDeleteStopPattern(projectId ?? "");
+	const createStopPatternRowsMutation = useCreateStopPatternRows();
+	const deleteStopPatternRowMutation = useDeleteStopPatternRow();
+
+	const { data: apiEditingRows } = useStopPatternRows(editingPattern?.id ?? "");
+
+	const queryClient = useQueryClient();
 
 	const [editingProject, setEditingProject] = useState<{
 		project?: Project;
@@ -278,9 +605,62 @@ export function App() {
 		null
 	);
 
-	const project = data.projects.find((p) => p.id === projectId);
+	const baseProject = apiProjects?.find((p) => p.id === projectId);
+
+	const modelProjectStations = (apiProjectStations ?? []).map(
+		entityProjectStationToModel
+	);
+
+	const stationsById = new Map<string, Station>(
+		modelProjectStations.map((s) => [s.id, s])
+	);
+
+	const modelTimetableRows = (apiTimetableRows ?? []).map((r) =>
+		entityTimetableRowToModel(r, stationsById)
+	);
+
+	const project: Project | undefined =
+		baseProject !== undefined
+			? {
+					id: baseProject.id,
+					name: baseProject.name,
+					description: baseProject.description,
+					workGroups: (apiWorkGroups ?? []).map((wg) => ({
+						id: wg.id,
+						name: wg.name,
+						description: wg.description,
+						works: (apiWorks ?? [])
+							.filter((w) => w.workGroupId === wg.id)
+							.map((w) => {
+								if (w.id !== currentWork) {
+									return entityWorkToModel(w, []);
+								}
+								const trains = (apiTrains ?? []).map((tr) => {
+									if (tr.id !== currentTrain) {
+										return entityTrainToModel(tr, []);
+									}
+									return entityTrainToModel(tr, modelTimetableRows);
+								});
+								return entityWorkToModel(w, trains);
+							}),
+					})),
+				}
+			: undefined;
 	const wg = project?.workGroups.find((g) => g.id === currentWG);
 	const work = wg?.works.find((w) => w.id === currentWork);
+
+	const modelLines = (apiLines ?? []).map(entityLineToModel);
+	const modelStationsOnLine = (apiStationsOnLine ?? []).map(
+		entityStationOnLineToModel
+	);
+	const modelStopPatterns = (apiStopPatterns ?? []).map((sp) =>
+		entityStopPatternToModel(
+			sp,
+			sp.id === (editingPattern?.id ?? "")
+				? (apiEditingRows ?? []).map(entityStopRowToModel)
+				: []
+		)
+	);
 
 	useEffect(() => {
 		if (
@@ -301,30 +681,17 @@ export function App() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [screen, projectId]);
 
-	const updateProject = (updated: Project) => {
-		setData((d) => ({
-			...d,
-			projects: d.projects.map((p) =>
-				p.id === updated.id ? updated : p
-			),
-		}));
-	};
-	const updateWork = (updatedWork: Work) => {
-		if (!project || !wg) return;
-		const newWG: WorkGroup = {
-			...wg,
-			works: wg.works.map((w) =>
-				w.id === updatedWork.id ? updatedWork : w
-			),
-		};
-		const newProject: Project = {
-			...project,
-			workGroups: project.workGroups.map((g) =>
-				g.id === wg.id ? newWG : g
-			),
-		};
-		updateProject(newProject);
-	};
+	// Auto-select first line when navigating to the lines screen with no line selected.
+	useEffect(() => {
+		if (
+			screen === "lines" &&
+			currentLine === null &&
+			(apiLines ?? []).length > 0
+		) {
+			setCurrentLine((apiLines ?? [])[0]?.id ?? null);
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [screen, apiLines]);
 
 	const breadcrumbs = useMemo(() => {
 		const bc = [
@@ -354,11 +721,6 @@ export function App() {
 
 	const handleOpenProject = (pid: string) => {
 		setProjectId(pid);
-		const p = data.projects.find((x) => x.id === pid);
-		const firstWG = p?.workGroups[0];
-		const firstWork = firstWG?.works[0];
-		setCurrentWG(firstWG?.id || null);
-		setCurrentWork(firstWork?.id || null);
 		setScreen("work");
 	};
 
@@ -367,22 +729,23 @@ export function App() {
 		draft: Partial<Pick<Project, "id">> &
 			Pick<Project, "name" | "description">
 	) => {
-		if (draft.id) {
-			updateProject(draft as Project);
+		const onError = (e: Error) => alert(e.message);
+		if (draft.id !== undefined && draft.id !== "") {
+			updateProjectMutation.mutate(
+				{ id: draft.id, name: draft.name, description: draft.description },
+				{ onError }
+			);
 		} else {
-			const newP: Project = {
-				...draft,
-				id: uid("p"),
-				workGroups: [],
-			};
-			setData((d) => ({ ...d, projects: [...d.projects, newP] }));
+			createProjectMutation.mutate(
+				{ name: draft.name, description: draft.description },
+				{ onError }
+			);
 		}
 	};
-	const deleteProject = (p: Project) => {
-		setData((d) => ({
-			...d,
-			projects: d.projects.filter((x) => x.id !== p.id),
-		}));
+	const deleteProject = (p: EntityProject) => {
+		deleteProjectMutation.mutate(p.id, {
+			onError: (e) => alert(e.message),
+		});
 		if (projectId === p.id) {
 			setProjectId(null);
 			setScreen("projects");
@@ -394,38 +757,27 @@ export function App() {
 		draft: Partial<Pick<WorkGroup, "id">> &
 			Pick<WorkGroup, "name" | "description">
 	) => {
-		if (!project) return;
-		let newProj: Project;
-		if (draft.id) {
-			newProj = {
-				...project,
-				workGroups: project.workGroups.map((g) =>
-					g.id === draft.id ? { ...g, ...draft } : g
-				),
-			};
+		if (project === undefined) return;
+		if (draft.id !== undefined && draft.id !== "") {
+			updateWGMutation.mutate(
+				{ id: draft.id, name: draft.name, description: draft.description },
+				{ onError: (e: Error) => alert(e.message) }
+			);
 		} else {
-			const newWG: WorkGroup = {
-				...draft,
-				id: uid("wg"),
-				works: [],
-			};
-			newProj = {
-				...project,
-				workGroups: [...project.workGroups, newWG],
-			};
+			createWGMutation.mutate(
+				{ name: draft.name, description: draft.description },
+				{ onError: (e: Error) => alert(e.message) }
+			);
 		}
-		updateProject(newProj);
 	};
 	const deleteWG = (wgId: string) => {
-		if (!project) return;
-		const newProj: Project = {
-			...project,
-			workGroups: project.workGroups.filter((g) => g.id !== wgId),
-		};
-		updateProject(newProj);
+		deleteWGMutation.mutate(wgId, {
+			onError: (e: Error) => alert(e.message),
+		});
 		if (currentWG === wgId) {
 			setCurrentWG(null);
 			setCurrentWork(null);
+			setCurrentTrain(null);
 		}
 	};
 
@@ -435,58 +787,367 @@ export function App() {
 		draft: Partial<Pick<Work, "id">> &
 			Pick<Work, "name" | "affectDate" | "remarks">
 	) => {
-		if (!project) return;
-		const targetWG = project.workGroups.find((g) => g.id === wgId);
-		if (!targetWG) return;
-		let newWG: WorkGroup;
-		if (draft.id) {
-			newWG = {
-				...targetWG,
-				works: targetWG.works.map((w) =>
-					w.id === draft.id ? { ...w, ...draft } : w
-				),
-			};
+		if (project === undefined) return;
+		const onError = (e: Error) => alert(e.message);
+		if (draft.id !== undefined && draft.id !== "") {
+			const existing = (apiWorks ?? []).find((w) => w.id === draft.id);
+			updateWorkMutation.mutate(
+				{
+					id: draft.id,
+					name: draft.name,
+					description: existing?.description ?? "",
+					affectDate:
+						draft.affectDate !== undefined && draft.affectDate !== ""
+							? new Date(draft.affectDate)
+							: undefined,
+					affixContentType: existing?.affixContentType,
+					affixContent: existing?.affixContent,
+					remarks: draft.remarks,
+					hasETrainTimetable: existing?.hasETrainTimetable,
+					eTrainTimetableContentType:
+						existing?.eTrainTimetableContentType,
+					eTrainTimetableContent: existing?.eTrainTimetableContent,
+				},
+				{ onError }
+			);
 		} else {
-			const newW: Work = { ...draft, id: uid("w"), trains: [] };
-			newWG = { ...targetWG, works: [...targetWG.works, newW] };
-			setCurrentWG(wgId);
-			setCurrentWork(newW.id);
-			setScreen("work");
+			createWorkMutation.mutate(
+				{
+					name: draft.name,
+					description: "",
+					affectDate:
+						draft.affectDate !== undefined && draft.affectDate !== ""
+							? new Date(draft.affectDate)
+							: undefined,
+					remarks: draft.remarks,
+				},
+				{
+					onError,
+					onSuccess: (created) => {
+						const newId: string =
+							(created as { worksId?: string }).worksId ?? "";
+						setCurrentWG(wgId);
+						if (newId !== "") {
+							setCurrentWork(newId);
+						}
+						setScreen("work");
+					},
+				}
+			);
 		}
-		const newProj: Project = {
-			...project,
-			workGroups: project.workGroups.map((g) =>
-				g.id === wgId ? newWG : g
-			),
-		};
-		updateProject(newProj);
 	};
-	const deleteWork = (wgId: string, workId: string) => {
-		if (!project) return;
-		const targetWG = project.workGroups.find((g) => g.id === wgId);
-		if (!targetWG) return;
-		const newWG: WorkGroup = {
-			...targetWG,
-			works: targetWG.works.filter((w) => w.id !== workId),
-		};
-		const newProj: Project = {
-			...project,
-			workGroups: project.workGroups.map((g) =>
-				g.id === wgId ? newWG : g
-			),
-		};
-		updateProject(newProj);
-		if (currentWork === workId) setCurrentWork(null);
+	const deleteWork = (workId: string) => {
+		deleteWorkMutation.mutate(workId, {
+			onError: (e: Error) => alert(e.message),
+		});
+		if (currentWork === workId) {
+			setCurrentWork(null);
+			setCurrentTrain(null);
+		}
 	};
 
-	/* ─── Train delete (called from WorkBrowser dialog) ─── */
-	const deleteTrain = (trainId: string) => {
-		if (!work) return;
-		const newWork: Work = {
-			...work,
-			trains: work.trains.filter((tr) => tr.id !== trainId),
-		};
-		updateWork(newWork);
+	/* ─── Train CRUD (wired from WorkBrowser) ─── */
+	const handleCreateTrain = (
+		draft: Omit<EntityTrain, "id" | "workId" | "createdAt">
+	) => {
+		createTrainMutation.mutate(draft, {
+			onError: (e: Error) => alert(e.message),
+		});
+	};
+	const handleUpdateTrain = (
+		vars: Pick<EntityTrain, "id"> &
+			Omit<EntityTrain, "id" | "workId" | "createdAt">
+	) => {
+		const existing = (apiTrains ?? []).find((t) => t.id === vars.id);
+		updateTrainMutation.mutate(
+			{ ...vars, description: existing?.description ?? "" },
+			{ onError: (e: Error) => alert(e.message) }
+		);
+	};
+	const handleDeleteTrain = (trainId: string) => {
+		deleteTrainMutation.mutate(trainId, {
+			onError: (e: Error) => alert(e.message),
+		});
+		if (currentTrain === trainId) {
+			setCurrentTrain(null);
+		}
+	};
+
+	/* ─── ApplyPattern handler ─── */
+
+	// Parse "HH:MM:SS" string into a time component at position index (0=HH, 1=MM, 2=SS).
+	// Returns undefined when the string is empty (open-end stations have no departure).
+	const parseTimePart = (t: string, idx: number): number | undefined =>
+		t !== "" ? parseInt(t.split(":")[idx] ?? "0", 10) : undefined;
+
+	const buildRowDraft = (r: AppliedRow) => ({
+		stationId: r.stationId,
+		driveTimeMm: r.driveTime_MM,
+		driveTimeSs: r.driveTime_SS,
+		isPass: r.isPass,
+		isOperationOnlyStop: r.isOperationOnlyStop,
+		hasBracket: r.hasBracket,
+		isLastStop: r.isLastStop,
+		arriveTimeHh: parseTimePart(r.arrive, 0),
+		arriveTimeMm: parseTimePart(r.arrive, 1),
+		arriveTimeSs: parseTimePart(r.arrive, 2),
+		departureTimeHh: parseTimePart(r.departure, 0),
+		departureTimeMm: parseTimePart(r.departure, 1),
+		departureTimeSs: parseTimePart(r.departure, 2),
+		remarks: r.remarks !== "" ? r.remarks : undefined,
+		workType: r.workType !== "" ? r.workType : undefined,
+	});
+
+	const handleApplyPattern = async ({
+		rows,
+		direction,
+		destination,
+		existingTrain,
+	}: {
+		rows: AppliedRow[];
+		direction: number;
+		destination: string;
+		existingTrain: { id: string } | null;
+	}) => {
+		try {
+			if (existingTrain !== null) {
+				// Existing train: delete all current rows, then create new ones
+				const existingRows = await fetchTimetableRows(
+					queryClient,
+					existingTrain.id
+				);
+				for (const row of existingRows) {
+					await deleteTimetableRowMutation.mutateAsync({
+						trainId: existingTrain.id,
+						rowId: row.id,
+					});
+				}
+				for (const r of rows) {
+					await createTimetableRowMutation.mutateAsync({
+						trainId: existingTrain.id,
+						draft: buildRowDraft(r),
+					});
+				}
+			} else {
+				// No existing train: create a new train, then create rows
+				const apiTrain = await createTrainMutation.mutateAsync({
+					description: "",
+					trainNumber: "0000M",
+					direction,
+					destination: destination !== "" ? destination : undefined,
+					maxSpeed: "100",
+					speedType: "近郊型",
+					nominalTractiveCapacity: undefined,
+					carCount: 10,
+					dayCount: 0,
+					isRideOnMoving: false,
+					beginRemarks: undefined,
+					afterRemarks: undefined,
+					remarks: undefined,
+					beforeDeparture: undefined,
+					afterArrive: undefined,
+					trainInfo: undefined,
+				});
+				const newTrainId = fromApiTrain(apiTrain).id;
+				for (const r of rows) {
+					await createTimetableRowMutation.mutateAsync({
+						trainId: newTrainId,
+						draft: buildRowDraft(r),
+					});
+				}
+			}
+		} catch (e) {
+			alert(e instanceof Error ? e.message : String(e));
+		}
+	};
+
+	/* ─── Line CRUD (wired from LineManager) ─── */
+	const handleCreateLine = (
+		draft: Omit<EntityLine, "id" | "projectId" | "createdAt">
+	) => {
+		createLineMutation.mutate(draft, {
+			onError: (e: Error) => alert(e.message),
+		});
+	};
+	const handleUpdateLine = (
+		vars: Pick<EntityLine, "id"> &
+			Omit<EntityLine, "id" | "projectId" | "createdAt">
+	) => {
+		updateLineMutation.mutate(vars, {
+			onError: (e: Error) => alert(e.message),
+		});
+	};
+	const handleDeleteLine = (lineId: string) => {
+		deleteLineMutation.mutate(lineId, {
+			onError: (e: Error) => alert(e.message),
+		});
+		if (currentLine === lineId) {
+			setCurrentLine(null);
+		}
+	};
+
+	/* ─── ProjectStation CRUD (wired from LineManager) ─── */
+	const handleCreateStation = (
+		draft: Omit<EntityProjectStation, "id" | "projectId" | "createdAt">
+	) => {
+		createProjectStationMutation.mutate(draft, {
+			onError: (e: Error) => alert(e.message),
+		});
+	};
+	const handleUpdateStation = (
+		vars: Pick<EntityProjectStation, "id"> &
+			Omit<EntityProjectStation, "id" | "projectId" | "createdAt">
+	) => {
+		updateProjectStationMutation.mutate(vars, {
+			onError: (e: Error) => alert(e.message),
+		});
+	};
+	const handleDeleteStation = (stationId: string) => {
+		deleteProjectStationMutation.mutate(stationId, {
+			onError: (e: Error) => alert(e.message),
+		});
+	};
+
+	/* ─── StationOnLine CRUD (wired from LineManager) ─── */
+	const handleCreateStationOnLine = (
+		draft: Omit<EntityStationOnLine, "id" | "projectId" | "createdAt">
+	) => {
+		createStationOnLineMutation.mutate(draft, {
+			onError: (e: Error) => alert(e.message),
+		});
+	};
+	const handleUpdateStationOnLine = (
+		vars: Pick<EntityStationOnLine, "id"> &
+			Omit<EntityStationOnLine, "id" | "projectId" | "createdAt">
+	) => {
+		updateStationOnLineMutation.mutate(vars, {
+			onError: (e: Error) => alert(e.message),
+		});
+	};
+	const handleDeleteStationOnLine = (stationOnLineId: string) => {
+		deleteStationOnLineMutation.mutate(stationOnLineId, {
+			onError: (e: Error) => alert(e.message),
+		});
+	};
+	const handleReorderStationsOnLine = (
+		updates: (Pick<EntityStationOnLine, "id"> &
+			Omit<EntityStationOnLine, "id" | "projectId" | "createdAt">)[]
+	) => {
+		updates.forEach((vars) => {
+			updateStationOnLineMutation.mutate(vars, {
+				onError: (e: Error) => alert(e.message),
+			});
+		});
+	};
+
+	/* ─── StopPattern CRUD (wired from LineManager / StopPatternWizard) ─── */
+	const handleSaveStopPattern = async (sp: StopPattern) => {
+		try {
+			const rowDrafts = (sp.stopRows ?? sp.rows ?? []).map((r, idx) => ({
+				...modelStopRowToEntityDraft(r),
+				sortKey: idx,
+			}));
+			const patternDraft = {
+				lineId: sp.lineId,
+				name: sp.name,
+				fromProjectStationId:
+					sp.fromStationId !== "" ? sp.fromStationId : undefined,
+				toProjectStationId: sp.toStationId !== "" ? sp.toStationId : undefined,
+				direction: sp.direction as number | undefined,
+			};
+			if (editingPattern !== null) {
+				await updateStopPatternMutation.mutateAsync({
+					id: sp.id,
+					...patternDraft,
+				});
+				const existing = apiEditingRows ?? [];
+				for (const r of existing) {
+					await deleteStopPatternRowMutation.mutateAsync({
+						stopPatternId: sp.id,
+						id: r.id,
+					});
+				}
+				if (rowDrafts.length > 0) {
+					await createStopPatternRowsMutation.mutateAsync({
+						stopPatternId: sp.id,
+						drafts: rowDrafts,
+					});
+				}
+			} else {
+				const created =
+					await createStopPatternMutation.mutateAsync(patternDraft);
+				const newId = fromApiStopPattern(created).id;
+				if (rowDrafts.length > 0) {
+					await createStopPatternRowsMutation.mutateAsync({
+						stopPatternId: newId,
+						drafts: rowDrafts,
+					});
+				}
+			}
+			void queryClient.invalidateQueries({
+				queryKey: queryKeys.stopPatterns(projectId ?? ""),
+			});
+			void queryClient.invalidateQueries({ queryKey: ["stopPatterns"] });
+			setShowStopPattern(false);
+			setEditingPattern(null);
+		} catch (e) {
+			alert(e instanceof Error ? e.message : String(e));
+		}
+	};
+
+	const handleDeleteStopPattern = (id: string) => {
+		deleteStopPatternMutation.mutate(id, {
+			onError: (e: Error) => alert(e.message),
+		});
+	};
+
+	const handleDuplicateStopPattern = async (p: StopPattern) => {
+		try {
+			const rows = await queryClient.fetchQuery({
+				queryKey: queryKeys.stopPatternRows(p.id),
+				queryFn: () =>
+					stopPatternRowApi
+						.getStopPatternRowList({ stopPatternId: p.id })
+						.then((l) => l.map(fromApiStopPatternRow)),
+			});
+			const created = await createStopPatternMutation.mutateAsync({
+				lineId: p.lineId,
+				name: p.name + " (コピー)",
+				fromProjectStationId:
+					p.fromStationId !== "" ? p.fromStationId : undefined,
+				toProjectStationId: p.toStationId !== "" ? p.toStationId : undefined,
+				direction: p.direction as number | undefined,
+			});
+			const newId = fromApiStopPattern(created).id;
+			const drafts = rows.map((r, idx) => ({
+				projectStationId: r.projectStationId,
+				sortKey: idx,
+				trackName: r.trackName,
+				trackHidden: r.trackHidden,
+				isOperationOnlyStop: r.isOperationOnlyStop,
+				isPass: r.isPass,
+				driveTimeMm: r.driveTimeMm,
+				driveTimeSs: r.driveTimeSs,
+				dwellTimeMm: r.dwellTimeMm,
+				dwellTimeSs: r.dwellTimeSs,
+				showArrive: r.showArrive,
+				showDeparture: r.showDeparture,
+				arriveStr: r.arriveStr,
+				departureStr: r.departureStr,
+				runInLimit: r.runInLimit,
+				runOutLimit: r.runOutLimit,
+				remarks: r.remarks,
+				alwaysShowHh: r.alwaysShowHh,
+			}));
+			if (drafts.length > 0) {
+				await createStopPatternRowsMutation.mutateAsync({
+					stopPatternId: newId,
+					drafts,
+				});
+			}
+		} catch (e) {
+			alert(e instanceof Error ? e.message : String(e));
+		}
 	};
 
 	/* ─── JSON Import / Export ─── */
@@ -581,6 +1242,15 @@ export function App() {
 		}
 	};
 
+	// Provide live rows to the wizard after the rows query settles.
+	// editingPattern is a frozen snapshot; liveEditingPattern tracks
+	// the live modelStopPatterns entry (including loaded rows).
+	const liveEditingPattern =
+		editingPattern !== null
+			? (modelStopPatterns.find((sp) => sp.id === editingPattern.id) ??
+				editingPattern)
+			: null;
+
 	const sidebarContent = projectId ? (
 		<SidebarTree
 			project={project}
@@ -594,7 +1264,10 @@ export function App() {
 			}}
 			onSelectLines={() => setScreen("lines")}
 			onAddWG={() => setEditingWG({ new: true })}
-			onAddWork={(w) => setEditingWork({ wgId: w.id, new: true })}
+			onAddWork={(w) => {
+					setCurrentWG(w.id);
+					setEditingWork({ wgId: w.id, new: true });
+				}}
 			onWGContext={(x, y, wgRef) =>
 				setContextMenu({
 					x,
@@ -608,8 +1281,13 @@ export function App() {
 						{
 							icon: "＋",
 							label: t.newWork,
-							onClick: () =>
-								setEditingWork({ wgId: wgRef.id, new: true }),
+							onClick: () => {
+								setCurrentWG(wgRef.id);
+								setEditingWork({
+									wgId: wgRef.id,
+									new: true,
+								});
+							},
 						},
 						{
 							icon: "🗑",
@@ -645,7 +1323,7 @@ export function App() {
 									title: "ワークを削除",
 									message: `「${w.name}」を削除します。配下の ${w.trains?.length || 0} 列車も削除されます。`,
 									onConfirm: () =>
-										deleteWork(wgRef.id, w.id),
+										deleteWork(w.id),
 								}),
 						},
 					],
@@ -672,10 +1350,24 @@ export function App() {
 				t={t}>
 				{!projectId && (
 					<ProjectListScreen
-						projects={data.projects}
+						projects={apiProjects ?? []}
+						isLoading={projectsLoading}
+						error={projectsError}
+						onRetry={() => {
+							void refetchProjects();
+						}}
 						onOpen={handleOpenProject}
 						onNew={() => setEditingProject({ new: true })}
-						onEdit={(p) => setEditingProject({ project: p })}
+						onEdit={(p) =>
+							setEditingProject({
+								project: {
+									id: p.id,
+									name: p.name,
+									description: p.description,
+									workGroups: [],
+								},
+							})
+						}
 						onDelete={(p) =>
 							setConfirmDialog({
 								title: "プロジェクトを削除",
@@ -685,7 +1377,7 @@ export function App() {
 						}
 						onImport={importJson}
 						onExport={(pid) =>
-							pid ? exportProject(pid) : exportAll()
+							pid !== undefined ? exportProject(pid) : exportAll()
 						}
 						t={t}
 					/>
@@ -693,12 +1385,17 @@ export function App() {
 				{projectId && screen === "work" && work && (
 					<WorkBrowser
 						work={work}
-						onUpdateWork={updateWork}
-						onDeleteTrain={deleteTrain}
+						onCreateTrain={handleCreateTrain}
+						onUpdateTrain={handleUpdateTrain}
+						onDeleteTrain={handleDeleteTrain}
+						onSelectTrain={setCurrentTrain}
 						onOpenStopPatternWizard={() =>
 							setShowStopPattern(true)
 						}
-						stopPatterns={data.stopPatterns}
+						onApplyPattern={(args) => {
+							void handleApplyPattern(args);
+						}}
+						stopPatterns={modelStopPatterns}
 						stations={data.stations}
 						stationsOnLine={data.stationsOnLine}
 						lines={data.lines}
@@ -731,13 +1428,22 @@ export function App() {
 				)}
 				{projectId && screen === "lines" && (
 					<LineManager
-						lines={data.lines}
-						stations={data.stations}
-						stationsOnLine={data.stationsOnLine}
-						stopPatterns={data.stopPatterns}
-						onUpdate={(patch) =>
-							setData((d) => ({ ...d, ...patch }))
-						}
+						lines={modelLines}
+						stations={modelProjectStations}
+						stationsOnLine={modelStationsOnLine}
+						stopPatterns={modelStopPatterns}
+						activeLineId={currentLine ?? ""}
+						onSelectLine={setCurrentLine}
+						onCreateLine={handleCreateLine}
+						onUpdateLine={handleUpdateLine}
+						onDeleteLine={handleDeleteLine}
+						onCreateStation={handleCreateStation}
+						onUpdateStation={handleUpdateStation}
+						onDeleteStation={handleDeleteStation}
+						onCreateStationOnLine={handleCreateStationOnLine}
+						onUpdateStationOnLine={handleUpdateStationOnLine}
+						onDeleteStationOnLine={handleDeleteStationOnLine}
+						onReorderStationsOnLine={handleReorderStationsOnLine}
 						onOpenStopPatternWizard={() => {
 							setEditingPattern(null);
 							setShowStopPattern(true);
@@ -746,34 +1452,33 @@ export function App() {
 							setEditingPattern(p);
 							setShowStopPattern(true);
 						}}
+						onDeleteStopPattern={handleDeleteStopPattern}
+						onDuplicateStopPattern={(p) => {
+							void handleDuplicateStopPattern(p);
+						}}
 						t={t}
 					/>
 				)}
 			</AppShell>
 
-			{showStopPattern && (
-				<StopPatternWizard
-					lines={data.lines}
-					stations={data.stations}
-					stationsOnLine={data.stationsOnLine}
-					t={t}
-					editPattern={editingPattern}
-					onSave={(sp) =>
-						setData((d) => ({
-							...d,
-							stopPatterns: editingPattern
-								? d.stopPatterns.map((p) =>
-										p.id === sp.id ? sp : p
-									)
-								: [...d.stopPatterns, sp],
-						}))
-					}
-					onClose={() => {
-						setShowStopPattern(false);
-						setEditingPattern(null);
-					}}
-				/>
-			)}
+			{showStopPattern &&
+				(editingPattern === null || apiEditingRows !== undefined) && (
+					<StopPatternWizard
+						key={editingPattern?.id ?? "new"}
+						lines={modelLines}
+						stations={modelProjectStations}
+						stationsOnLine={modelStationsOnLine}
+						t={t}
+						editPattern={liveEditingPattern}
+						onSave={(sp) => {
+							void handleSaveStopPattern(sp);
+						}}
+						onClose={() => {
+							setShowStopPattern(false);
+							setEditingPattern(null);
+						}}
+					/>
+				)}
 
 			{/* Entity dialogs */}
 			{editingProject && (

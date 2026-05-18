@@ -29,7 +29,12 @@ import {
 } from '../models/index';
 
 export interface CreateWorkGroupRequest {
-    workGroup: Omit<WorkGroup, 'work_groups_id'|'created_at'|'privilege_type'>;
+    workGroup: WorkGroup;
+}
+
+export interface CreateWorkGroupInProjectRequest {
+    projectId: string;
+    workGroup: WorkGroup;
 }
 
 export interface DeleteWorkGroupRequest {
@@ -52,16 +57,23 @@ export interface GetWorkGroupListRequest {
     top?: string;
 }
 
+export interface GetWorkGroupListByProjectRequest {
+    projectId: string;
+    p?: number;
+    limit?: number;
+    top?: string;
+}
+
 export interface UpdatePrivilegeRequest {
     workGroupId: string;
-    workGroupsPrivilege: Omit<WorkGroupsPrivilege, 'uid'|'work_groups_id'|'invite_keys_id'|'created_at'|'updated_at'>;
+    workGroupsPrivilege: WorkGroupsPrivilege;
     uid?: string;
     uidAnonymous?: boolean;
 }
 
 export interface UpdateWorkGroupRequest {
     workGroupId: string;
-    workGroup: Omit<WorkGroup, 'work_groups_id'|'created_at'|'privilege_type'>;
+    workGroup: WorkGroup;
 }
 
 /**
@@ -86,6 +98,23 @@ export interface WorkGroupApiInterface {
      * 作成する
      */
     createWorkGroup(requestParameters: CreateWorkGroupRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<WorkGroup>;
+
+    /**
+     * 指定のProjectに属する WorkGroup を新しく作成する  このProjectへのWRITE権限が必要です。 
+     * @summary 作成する
+     * @param {string} projectId ProjectのID
+     * @param {WorkGroup} workGroup 作成するWorkGroupの情報
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof WorkGroupApiInterface
+     */
+    createWorkGroupInProjectRaw(requestParameters: CreateWorkGroupInProjectRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<WorkGroup>>;
+
+    /**
+     * 指定のProjectに属する WorkGroup を新しく作成する  このProjectへのWRITE権限が必要です。 
+     * 作成する
+     */
+    createWorkGroupInProject(requestParameters: CreateWorkGroupInProjectRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<WorkGroup>;
 
     /**
      * 既存の「Workのまとまり (WorkGroup)」を削除する  このデータが属するWorkGroupへのADMIN権限が必要です。 
@@ -156,6 +185,25 @@ export interface WorkGroupApiInterface {
     getWorkGroupList(requestParameters: GetWorkGroupListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<WorkGroup>>;
 
     /**
+     * 指定のProjectに属する WorkGroup の情報を複数件取得する  このProjectへのREAD権限が必要です。 
+     * @summary 複数件取得する
+     * @param {string} projectId ProjectのID
+     * @param {number} [p] ページングを行う場合のページ番号
+     * @param {number} [limit] ページングを行う場合の1ページあたりの件数
+     * @param {string} [top] ページングを行う場合の一番上に表示するID
+     * @param {*} [options] Override http request option.
+     * @throws {RequiredError}
+     * @memberof WorkGroupApiInterface
+     */
+    getWorkGroupListByProjectRaw(requestParameters: GetWorkGroupListByProjectRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<WorkGroup>>>;
+
+    /**
+     * 指定のProjectに属する WorkGroup の情報を複数件取得する  このProjectへのREAD権限が必要です。 
+     * 複数件取得する
+     */
+    getWorkGroupListByProject(requestParameters: GetWorkGroupListByProjectRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<WorkGroup>>;
+
+    /**
      * このWorkGroupに対する自身の権限を更新する。(現在の権限以下の権限のみ設定可能)  管理者の場合は、指定のユーザの権限を追加・更新することも可能。(invite_key_idはNULLになります) 
      * @summary 権限を更新する
      * @param {string} workGroupId WorkGroupのID
@@ -203,11 +251,8 @@ export class WorkGroupApi extends runtime.BaseAPI implements WorkGroupApiInterfa
      * 作成する
      */
     async createWorkGroupRaw(requestParameters: CreateWorkGroupRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<WorkGroup>> {
-        if (requestParameters['workGroup'] == null) {
-            throw new runtime.RequiredError(
-                'workGroup',
-                'Required parameter "workGroup" was null or undefined when calling createWorkGroup().'
-            );
+        if (requestParameters.workGroup === null || requestParameters.workGroup === undefined) {
+            throw new runtime.RequiredError('workGroup','Required parameter requestParameters.workGroup was null or undefined when calling createWorkGroup.');
         }
 
         const queryParameters: any = {};
@@ -229,7 +274,7 @@ export class WorkGroupApi extends runtime.BaseAPI implements WorkGroupApiInterfa
             method: 'POST',
             headers: headerParameters,
             query: queryParameters,
-            body: WorkGroupToJSON(requestParameters['workGroup']),
+            body: WorkGroupToJSON(requestParameters.workGroup),
         }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => WorkGroupFromJSON(jsonValue));
@@ -245,15 +290,59 @@ export class WorkGroupApi extends runtime.BaseAPI implements WorkGroupApiInterfa
     }
 
     /**
+     * 指定のProjectに属する WorkGroup を新しく作成する  このProjectへのWRITE権限が必要です。 
+     * 作成する
+     */
+    async createWorkGroupInProjectRaw(requestParameters: CreateWorkGroupInProjectRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<WorkGroup>> {
+        if (requestParameters.projectId === null || requestParameters.projectId === undefined) {
+            throw new runtime.RequiredError('projectId','Required parameter requestParameters.projectId was null or undefined when calling createWorkGroupInProject.');
+        }
+
+        if (requestParameters.workGroup === null || requestParameters.workGroup === undefined) {
+            throw new runtime.RequiredError('workGroup','Required parameter requestParameters.workGroup was null or undefined when calling createWorkGroupInProject.');
+        }
+
+        const queryParameters: any = {};
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        headerParameters['Content-Type'] = 'application/json';
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/projects/{projectId}/work_groups`.replace(`{${"projectId"}}`, encodeURIComponent(String(requestParameters.projectId))),
+            method: 'POST',
+            headers: headerParameters,
+            query: queryParameters,
+            body: WorkGroupToJSON(requestParameters.workGroup),
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => WorkGroupFromJSON(jsonValue));
+    }
+
+    /**
+     * 指定のProjectに属する WorkGroup を新しく作成する  このProjectへのWRITE権限が必要です。 
+     * 作成する
+     */
+    async createWorkGroupInProject(requestParameters: CreateWorkGroupInProjectRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<WorkGroup> {
+        const response = await this.createWorkGroupInProjectRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
      * 既存の「Workのまとまり (WorkGroup)」を削除する  このデータが属するWorkGroupへのADMIN権限が必要です。 
      * 削除する
      */
     async deleteWorkGroupRaw(requestParameters: DeleteWorkGroupRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        if (requestParameters['workGroupId'] == null) {
-            throw new runtime.RequiredError(
-                'workGroupId',
-                'Required parameter "workGroupId" was null or undefined when calling deleteWorkGroup().'
-            );
+        if (requestParameters.workGroupId === null || requestParameters.workGroupId === undefined) {
+            throw new runtime.RequiredError('workGroupId','Required parameter requestParameters.workGroupId was null or undefined when calling deleteWorkGroup.');
         }
 
         const queryParameters: any = {};
@@ -269,7 +358,7 @@ export class WorkGroupApi extends runtime.BaseAPI implements WorkGroupApiInterfa
             }
         }
         const response = await this.request({
-            path: `/work_groups/{workGroupId}`.replace(`{${"workGroupId"}}`, encodeURIComponent(String(requestParameters['workGroupId']))),
+            path: `/work_groups/{workGroupId}`.replace(`{${"workGroupId"}}`, encodeURIComponent(String(requestParameters.workGroupId))),
             method: 'DELETE',
             headers: headerParameters,
             query: queryParameters,
@@ -291,21 +380,18 @@ export class WorkGroupApi extends runtime.BaseAPI implements WorkGroupApiInterfa
      * 権限情報を取得する
      */
     async getPrivilegeRaw(requestParameters: GetPrivilegeRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<WorkGroupsPrivilege>> {
-        if (requestParameters['workGroupId'] == null) {
-            throw new runtime.RequiredError(
-                'workGroupId',
-                'Required parameter "workGroupId" was null or undefined when calling getPrivilege().'
-            );
+        if (requestParameters.workGroupId === null || requestParameters.workGroupId === undefined) {
+            throw new runtime.RequiredError('workGroupId','Required parameter requestParameters.workGroupId was null or undefined when calling getPrivilege.');
         }
 
         const queryParameters: any = {};
 
-        if (requestParameters['uid'] != null) {
-            queryParameters['uid'] = requestParameters['uid'];
+        if (requestParameters.uid !== undefined) {
+            queryParameters['uid'] = requestParameters.uid;
         }
 
-        if (requestParameters['uidAnonymous'] != null) {
-            queryParameters['uid-anonymous'] = requestParameters['uidAnonymous'];
+        if (requestParameters.uidAnonymous !== undefined) {
+            queryParameters['uid-anonymous'] = requestParameters.uidAnonymous;
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -319,7 +405,7 @@ export class WorkGroupApi extends runtime.BaseAPI implements WorkGroupApiInterfa
             }
         }
         const response = await this.request({
-            path: `/work_groups/{workGroupId}/privileges`.replace(`{${"workGroupId"}}`, encodeURIComponent(String(requestParameters['workGroupId']))),
+            path: `/work_groups/{workGroupId}/privileges`.replace(`{${"workGroupId"}}`, encodeURIComponent(String(requestParameters.workGroupId))),
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -342,11 +428,8 @@ export class WorkGroupApi extends runtime.BaseAPI implements WorkGroupApiInterfa
      * 1件取得する
      */
     async getWorkGroupRaw(requestParameters: GetWorkGroupRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<WorkGroup>> {
-        if (requestParameters['workGroupId'] == null) {
-            throw new runtime.RequiredError(
-                'workGroupId',
-                'Required parameter "workGroupId" was null or undefined when calling getWorkGroup().'
-            );
+        if (requestParameters.workGroupId === null || requestParameters.workGroupId === undefined) {
+            throw new runtime.RequiredError('workGroupId','Required parameter requestParameters.workGroupId was null or undefined when calling getWorkGroup.');
         }
 
         const queryParameters: any = {};
@@ -362,7 +445,7 @@ export class WorkGroupApi extends runtime.BaseAPI implements WorkGroupApiInterfa
             }
         }
         const response = await this.request({
-            path: `/work_groups/{workGroupId}`.replace(`{${"workGroupId"}}`, encodeURIComponent(String(requestParameters['workGroupId']))),
+            path: `/work_groups/{workGroupId}`.replace(`{${"workGroupId"}}`, encodeURIComponent(String(requestParameters.workGroupId))),
             method: 'GET',
             headers: headerParameters,
             query: queryParameters,
@@ -387,16 +470,16 @@ export class WorkGroupApi extends runtime.BaseAPI implements WorkGroupApiInterfa
     async getWorkGroupListRaw(requestParameters: GetWorkGroupListRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<WorkGroup>>> {
         const queryParameters: any = {};
 
-        if (requestParameters['p'] != null) {
-            queryParameters['p'] = requestParameters['p'];
+        if (requestParameters.p !== undefined) {
+            queryParameters['p'] = requestParameters.p;
         }
 
-        if (requestParameters['limit'] != null) {
-            queryParameters['limit'] = requestParameters['limit'];
+        if (requestParameters.limit !== undefined) {
+            queryParameters['limit'] = requestParameters.limit;
         }
 
-        if (requestParameters['top'] != null) {
-            queryParameters['top'] = requestParameters['top'];
+        if (requestParameters.top !== undefined) {
+            queryParameters['top'] = requestParameters.top;
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -429,32 +512,78 @@ export class WorkGroupApi extends runtime.BaseAPI implements WorkGroupApiInterfa
     }
 
     /**
-     * このWorkGroupに対する自身の権限を更新する。(現在の権限以下の権限のみ設定可能)  管理者の場合は、指定のユーザの権限を追加・更新することも可能。(invite_key_idはNULLになります) 
-     * 権限を更新する
+     * 指定のProjectに属する WorkGroup の情報を複数件取得する  このProjectへのREAD権限が必要です。 
+     * 複数件取得する
      */
-    async updatePrivilegeRaw(requestParameters: UpdatePrivilegeRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<WorkGroupsPrivilege>> {
-        if (requestParameters['workGroupId'] == null) {
-            throw new runtime.RequiredError(
-                'workGroupId',
-                'Required parameter "workGroupId" was null or undefined when calling updatePrivilege().'
-            );
-        }
-
-        if (requestParameters['workGroupsPrivilege'] == null) {
-            throw new runtime.RequiredError(
-                'workGroupsPrivilege',
-                'Required parameter "workGroupsPrivilege" was null or undefined when calling updatePrivilege().'
-            );
+    async getWorkGroupListByProjectRaw(requestParameters: GetWorkGroupListByProjectRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Array<WorkGroup>>> {
+        if (requestParameters.projectId === null || requestParameters.projectId === undefined) {
+            throw new runtime.RequiredError('projectId','Required parameter requestParameters.projectId was null or undefined when calling getWorkGroupListByProject.');
         }
 
         const queryParameters: any = {};
 
-        if (requestParameters['uid'] != null) {
-            queryParameters['uid'] = requestParameters['uid'];
+        if (requestParameters.p !== undefined) {
+            queryParameters['p'] = requestParameters.p;
         }
 
-        if (requestParameters['uidAnonymous'] != null) {
-            queryParameters['uid-anonymous'] = requestParameters['uidAnonymous'];
+        if (requestParameters.limit !== undefined) {
+            queryParameters['limit'] = requestParameters.limit;
+        }
+
+        if (requestParameters.top !== undefined) {
+            queryParameters['top'] = requestParameters.top;
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        if (this.configuration && this.configuration.accessToken) {
+            const token = this.configuration.accessToken;
+            const tokenString = await token("bearerAuth", []);
+
+            if (tokenString) {
+                headerParameters["Authorization"] = `Bearer ${tokenString}`;
+            }
+        }
+        const response = await this.request({
+            path: `/projects/{projectId}/work_groups`.replace(`{${"projectId"}}`, encodeURIComponent(String(requestParameters.projectId))),
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => jsonValue.map(WorkGroupFromJSON));
+    }
+
+    /**
+     * 指定のProjectに属する WorkGroup の情報を複数件取得する  このProjectへのREAD権限が必要です。 
+     * 複数件取得する
+     */
+    async getWorkGroupListByProject(requestParameters: GetWorkGroupListByProjectRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Array<WorkGroup>> {
+        const response = await this.getWorkGroupListByProjectRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     * このWorkGroupに対する自身の権限を更新する。(現在の権限以下の権限のみ設定可能)  管理者の場合は、指定のユーザの権限を追加・更新することも可能。(invite_key_idはNULLになります) 
+     * 権限を更新する
+     */
+    async updatePrivilegeRaw(requestParameters: UpdatePrivilegeRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<WorkGroupsPrivilege>> {
+        if (requestParameters.workGroupId === null || requestParameters.workGroupId === undefined) {
+            throw new runtime.RequiredError('workGroupId','Required parameter requestParameters.workGroupId was null or undefined when calling updatePrivilege.');
+        }
+
+        if (requestParameters.workGroupsPrivilege === null || requestParameters.workGroupsPrivilege === undefined) {
+            throw new runtime.RequiredError('workGroupsPrivilege','Required parameter requestParameters.workGroupsPrivilege was null or undefined when calling updatePrivilege.');
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters.uid !== undefined) {
+            queryParameters['uid'] = requestParameters.uid;
+        }
+
+        if (requestParameters.uidAnonymous !== undefined) {
+            queryParameters['uid-anonymous'] = requestParameters.uidAnonymous;
         }
 
         const headerParameters: runtime.HTTPHeaders = {};
@@ -470,11 +599,11 @@ export class WorkGroupApi extends runtime.BaseAPI implements WorkGroupApiInterfa
             }
         }
         const response = await this.request({
-            path: `/work_groups/{workGroupId}/privileges`.replace(`{${"workGroupId"}}`, encodeURIComponent(String(requestParameters['workGroupId']))),
+            path: `/work_groups/{workGroupId}/privileges`.replace(`{${"workGroupId"}}`, encodeURIComponent(String(requestParameters.workGroupId))),
             method: 'PUT',
             headers: headerParameters,
             query: queryParameters,
-            body: WorkGroupsPrivilegeToJSON(requestParameters['workGroupsPrivilege']),
+            body: WorkGroupsPrivilegeToJSON(requestParameters.workGroupsPrivilege),
         }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => WorkGroupsPrivilegeFromJSON(jsonValue));
@@ -494,18 +623,12 @@ export class WorkGroupApi extends runtime.BaseAPI implements WorkGroupApiInterfa
      * 更新する
      */
     async updateWorkGroupRaw(requestParameters: UpdateWorkGroupRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<WorkGroup>> {
-        if (requestParameters['workGroupId'] == null) {
-            throw new runtime.RequiredError(
-                'workGroupId',
-                'Required parameter "workGroupId" was null or undefined when calling updateWorkGroup().'
-            );
+        if (requestParameters.workGroupId === null || requestParameters.workGroupId === undefined) {
+            throw new runtime.RequiredError('workGroupId','Required parameter requestParameters.workGroupId was null or undefined when calling updateWorkGroup.');
         }
 
-        if (requestParameters['workGroup'] == null) {
-            throw new runtime.RequiredError(
-                'workGroup',
-                'Required parameter "workGroup" was null or undefined when calling updateWorkGroup().'
-            );
+        if (requestParameters.workGroup === null || requestParameters.workGroup === undefined) {
+            throw new runtime.RequiredError('workGroup','Required parameter requestParameters.workGroup was null or undefined when calling updateWorkGroup.');
         }
 
         const queryParameters: any = {};
@@ -523,11 +646,11 @@ export class WorkGroupApi extends runtime.BaseAPI implements WorkGroupApiInterfa
             }
         }
         const response = await this.request({
-            path: `/work_groups/{workGroupId}`.replace(`{${"workGroupId"}}`, encodeURIComponent(String(requestParameters['workGroupId']))),
+            path: `/work_groups/{workGroupId}`.replace(`{${"workGroupId"}}`, encodeURIComponent(String(requestParameters.workGroupId))),
             method: 'PUT',
             headers: headerParameters,
             query: queryParameters,
-            body: WorkGroupToJSON(requestParameters['workGroup']),
+            body: WorkGroupToJSON(requestParameters.workGroup),
         }, initOverrides);
 
         return new runtime.JSONApiResponse(response, (jsonValue) => WorkGroupFromJSON(jsonValue));

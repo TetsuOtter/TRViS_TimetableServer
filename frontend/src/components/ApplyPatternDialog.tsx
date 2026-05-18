@@ -44,6 +44,9 @@ interface PreviewRow extends ChainRow {
 
 type ApplyMode = "new" | "replace" | "append" | "prepend";
 
+/** AppliedRow extends TimetableRow with the stationId that must be sent to the API. */
+export type AppliedRow = TimetableRow & { stationId: string };
+
 /* ── Build flat station row list from one pattern ─────────────────────────── */
 function patternStations(
 	pattern: StopPattern,
@@ -296,7 +299,7 @@ export interface ApplyPatternDialogProps {
 	t: Strings;
 	existingTrain: Train | null;
 	onApply: (r: {
-		rows: TimetableRow[];
+		rows: AppliedRow[];
 		direction: Direction;
 		destination: string;
 		mode?: "replace" | "append" | "prepend";
@@ -420,9 +423,10 @@ export function ApplyPatternDialog({
 
 	const handleApply = () => {
 		if (previewRows.length === 0) return;
-		const rows: TimetableRow[] = previewRows.map((r, i) => {
-			const tr: TimetableRow = {
+		const rows: AppliedRow[] = previewRows.map((r, i) => {
+			const tr: AppliedRow = {
 				id: "r" + Date.now() + i,
+				stationId: r.stationId,
 				stationName: r.stationName,
 				fullName: r.fullName,
 				arrive: r.arrive,
@@ -448,7 +452,7 @@ export function ApplyPatternDialog({
 		const destination =
 			previewRows[previewRows.length - 1]?.stationName || "";
 		const result: {
-			rows: TimetableRow[];
+			rows: AppliedRow[];
 			direction: Direction;
 			destination: string;
 			mode?: "replace" | "append" | "prepend";
@@ -1014,7 +1018,9 @@ export function ApplyPatternDialog({
 									>
 										適用方法:
 									</span>
-									{(
+									{/* append/prepend disabled: server re-sorts rows by stations.location_km,
+								    so positional append/prepend is incoherent under the API — deferred to task #26 */}
+								{(
 										[
 											["replace", "既存の行を置き換え"],
 											["append", "末尾に追加"],
@@ -1028,13 +1034,15 @@ export function ApplyPatternDialog({
 												alignItems: "center",
 												gap: 4,
 												fontSize: 12,
-												cursor: "pointer",
+												cursor: v === "replace" ? "pointer" : "not-allowed",
+												opacity: v === "replace" ? 1 : 0.4,
 											}}
 										>
 											<input
 												type="radio"
 												value={v}
 												checked={applyMode === v}
+												disabled={v !== "replace"}
 												onChange={() =>
 													setApplyMode(v)
 												}

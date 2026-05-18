@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
+import { exists, mapValues } from '../runtime';
 /**
  * 
  * @export
@@ -42,8 +42,10 @@ export interface TokenResponse {
 /**
  * Check if a given object implements the TokenResponse interface.
  */
-export function instanceOfTokenResponse(value: object): value is TokenResponse {
-    return true;
+export function instanceOfTokenResponse(value: object): boolean {
+    let isInstance = true;
+
+    return isInstance;
 }
 
 export function TokenResponseFromJSON(json: any): TokenResponse {
@@ -51,26 +53,29 @@ export function TokenResponseFromJSON(json: any): TokenResponse {
 }
 
 export function TokenResponseFromJSONTyped(json: any, ignoreDiscriminator: boolean): TokenResponse {
-    if (json == null) {
+    if ((json === undefined) || (json === null)) {
         return json;
     }
     return {
         
-        'clientId': json['client_id'] == null ? undefined : json['client_id'],
-        'token': json['token'] == null ? undefined : json['token'],
-        'expires': json['expires'] == null ? undefined : json['expires'],
+        'clientId': !exists(json, 'client_id') ? undefined : json['client_id'],
+        'token': !exists(json, 'token') ? undefined : json['token'],
+        'expires': !exists(json, 'expires') ? undefined : json['expires'],
     };
 }
 
 export function TokenResponseToJSON(value?: TokenResponse | null): any {
-    if (value == null) {
-        return value;
+    if (value === undefined) {
+        return undefined;
+    }
+    if (value === null) {
+        return null;
     }
     return {
         
-        'client_id': value['clientId'],
-        'token': value['token'],
-        'expires': value['expires'],
+        'client_id': value.clientId,
+        'token': value.token,
+        'expires': value.expires,
     };
 }
 

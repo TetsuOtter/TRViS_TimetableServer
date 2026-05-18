@@ -12,19 +12,19 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
-import type { ColorReal } from './ColorReal';
-import {
-    ColorRealFromJSON,
-    ColorRealFromJSONTyped,
-    ColorRealToJSON,
-} from './ColorReal';
+import { exists, mapValues } from '../runtime';
 import type { Color8bit } from './Color8bit';
 import {
     Color8bitFromJSON,
     Color8bitFromJSONTyped,
     Color8bitToJSON,
 } from './Color8bit';
+import type { ColorReal } from './ColorReal';
+import {
+    ColorRealFromJSON,
+    ColorRealFromJSONTyped,
+    ColorRealToJSON,
+} from './ColorReal';
 
 /**
  * 
@@ -85,11 +85,13 @@ export interface Color {
 /**
  * Check if a given object implements the Color interface.
  */
-export function instanceOfColor(value: object): value is Color {
-    if (!('description' in value) || value['description'] === undefined) return false;
-    if (!('name' in value) || value['name'] === undefined) return false;
-    if (!('color8bit' in value) || value['color8bit'] === undefined) return false;
-    return true;
+export function instanceOfColor(value: object): boolean {
+    let isInstance = true;
+    isInstance = isInstance && "description" in value;
+    isInstance = isInstance && "name" in value;
+    isInstance = isInstance && "color8bit" in value;
+
+    return isInstance;
 }
 
 export function ColorFromJSON(json: any): Color {
@@ -97,7 +99,7 @@ export function ColorFromJSON(json: any): Color {
 }
 
 export function ColorFromJSONTyped(json: any, ignoreDiscriminator: boolean): Color {
-    if (json == null) {
+    if ((json === undefined) || (json === null)) {
         return json;
     }
     return {
@@ -105,24 +107,27 @@ export function ColorFromJSONTyped(json: any, ignoreDiscriminator: boolean): Col
         'description': json['description'],
         'name': json['name'],
         'color8bit': Color8bitFromJSON(json['color_8bit']),
-        'colorsId': json['colors_id'] == null ? undefined : json['colors_id'],
-        'workGroupsId': json['work_groups_id'] == null ? undefined : json['work_groups_id'],
-        'createdAt': json['created_at'] == null ? undefined : (new Date(json['created_at'])),
-        'updatedAt': json['updated_at'] == null ? undefined : (new Date(json['updated_at'])),
-        'colorReal': json['color_real'] == null ? undefined : ColorRealFromJSON(json['color_real']),
+        'colorsId': !exists(json, 'colors_id') ? undefined : json['colors_id'],
+        'workGroupsId': !exists(json, 'work_groups_id') ? undefined : json['work_groups_id'],
+        'createdAt': !exists(json, 'created_at') ? undefined : (new Date(json['created_at'])),
+        'updatedAt': !exists(json, 'updated_at') ? undefined : (new Date(json['updated_at'])),
+        'colorReal': !exists(json, 'color_real') ? undefined : ColorRealFromJSON(json['color_real']),
     };
 }
 
-export function ColorToJSON(value?: Omit<Color, 'colors_id'|'work_groups_id'|'created_at'|'updated_at'> | null): any {
-    if (value == null) {
-        return value;
+export function ColorToJSON(value?: Color | null): any {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (value === null) {
+        return null;
     }
     return {
         
-        'description': value['description'],
-        'name': value['name'],
-        'color_8bit': Color8bitToJSON(value['color8bit']),
-        'color_real': ColorRealToJSON(value['colorReal']),
+        'description': value.description,
+        'name': value.name,
+        'color_8bit': Color8bitToJSON(value.color8bit),
+        'color_real': ColorRealToJSON(value.colorReal),
     };
 }
 

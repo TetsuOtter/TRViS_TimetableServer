@@ -12,7 +12,7 @@
  * Do not edit the class manually.
  */
 
-import { mapValues } from '../runtime';
+import { exists, mapValues } from '../runtime';
 /**
  * 
  * @export
@@ -36,8 +36,10 @@ export interface ApiInfo {
 /**
  * Check if a given object implements the ApiInfo interface.
  */
-export function instanceOfApiInfo(value: object): value is ApiInfo {
-    return true;
+export function instanceOfApiInfo(value: object): boolean {
+    let isInstance = true;
+
+    return isInstance;
 }
 
 export function ApiInfoFromJSON(json: any): ApiInfo {
@@ -45,19 +47,22 @@ export function ApiInfoFromJSON(json: any): ApiInfo {
 }
 
 export function ApiInfoFromJSONTyped(json: any, ignoreDiscriminator: boolean): ApiInfo {
-    if (json == null) {
+    if ((json === undefined) || (json === null)) {
         return json;
     }
     return {
         
-        'serverName': json['server_name'] == null ? undefined : json['server_name'],
-        'version': json['version'] == null ? undefined : json['version'],
+        'serverName': !exists(json, 'server_name') ? undefined : json['server_name'],
+        'version': !exists(json, 'version') ? undefined : json['version'],
     };
 }
 
-export function ApiInfoToJSON(value?: Omit<ApiInfo, 'server_name'|'version'> | null): any {
-    if (value == null) {
-        return value;
+export function ApiInfoToJSON(value?: ApiInfo | null): any {
+    if (value === undefined) {
+        return undefined;
+    }
+    if (value === null) {
+        return null;
     }
     return {
         
