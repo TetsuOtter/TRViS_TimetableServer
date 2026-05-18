@@ -19,8 +19,20 @@ tags:
     description: 認証/認可関連のAPI (トークン発行など)
   - name: invite_key
     description: 招待キー関係の操作を行う
+  - name: project
+    description: Project (権限の最上位単位) の操作を行う
   - name: work_group
     description: Work Groupの操作を行う
+  - name: line
+    description: Line (路線) の操作を行う
+  - name: project_station
+    description: Project Station (Project内共通の駅) の操作を行う
+  - name: station_on_line
+    description: StationOnLine (路線上の駅) の操作を行う
+  - name: stop_pattern
+    description: StopPattern (停車パターン) の操作を行う
+  - name: stop_pattern_row
+    description: StopPatternRow (停車パターンの1行) の操作を行う
   - name: station
     description: Stationの操作を行う
   - name: station_track
@@ -42,6 +54,40 @@ paths:
 
   /auths:
     $ref: "./paths/auth/index.yaml#/path"
+
+  /projects:
+    $ref: "./paths/projects/index.yaml#/path"
+  /projects/{projectId}:
+    $ref: "./paths/projects/id.yaml#/path"
+  /projects/{projectId}/privileges:
+    $ref: "./paths/projects/id_privileges.yaml#/path"
+  /projects/{projectId}/work_groups:
+    $ref: "./paths/projects/id_work_groups.yaml#/path"
+
+  /projects/{projectId}/lines:
+    $ref: "./paths/lines/index.yaml#/path"
+  /lines/{lineId}:
+    $ref: "./paths/lines/id.yaml#/path"
+
+  /projects/{projectId}/project_stations:
+    $ref: "./paths/project_stations/index.yaml#/path"
+  /project_stations/{projectStationId}:
+    $ref: "./paths/project_stations/id.yaml#/path"
+
+  /lines/{lineId}/stations_on_line:
+    $ref: "./paths/stations_on_line/index.yaml#/path"
+  /stations_on_line/{stationOnLineId}:
+    $ref: "./paths/stations_on_line/id.yaml#/path"
+
+  /projects/{projectId}/stop_patterns:
+    $ref: "./paths/stop_patterns/index.yaml#/path"
+  /stop_patterns/{stopPatternId}:
+    $ref: "./paths/stop_patterns/id.yaml#/path"
+
+  /stop_patterns/{stopPatternId}/rows:
+    $ref: "./paths/stop_pattern_rows/index.yaml#/path"
+  /stop_pattern_rows/{stopPatternRowId}:
+    $ref: "./paths/stop_pattern_rows/id.yaml#/path"
 
   /work_groups:
     $ref: "./paths/work_groups/index.yaml#/path"
@@ -151,6 +197,38 @@ components:
     WorkGroupsPrivilege:
       $ref: "./objects/WorkGroupsPrivilege.yaml#/WorkGroupsPrivilege"
 
+    Project:
+      $ref: "./objects/Project.yaml#/Project"
+    ProjectArray:
+      $ref: "./objects/Project.yaml#/ProjectArray"
+    ProjectsPrivilege:
+      $ref: "./objects/ProjectsPrivilege.yaml#/ProjectsPrivilege"
+
+    Line:
+      $ref: "./objects/Line.yaml#/Line"
+    LineArray:
+      $ref: "./objects/Line.yaml#/LineArray"
+
+    ProjectStation:
+      $ref: "./objects/ProjectStation.yaml#/ProjectStation"
+    ProjectStationArray:
+      $ref: "./objects/ProjectStation.yaml#/ProjectStationArray"
+
+    StationOnLine:
+      $ref: "./objects/StationOnLine.yaml#/StationOnLine"
+    StationOnLineArray:
+      $ref: "./objects/StationOnLine.yaml#/StationOnLineArray"
+
+    StopPattern:
+      $ref: "./objects/StopPattern.yaml#/StopPattern"
+    StopPatternArray:
+      $ref: "./objects/StopPattern.yaml#/StopPatternArray"
+
+    StopPatternRow:
+      $ref: "./objects/StopPatternRow.yaml#/StopPatternRow"
+    StopPatternRowArray:
+      $ref: "./objects/StopPatternRow.yaml#/StopPatternRowArray"
+
   parameters:
     WorkGroupId:
       $ref: "./parameters/id.yaml#/WorkGroupId"
@@ -168,6 +246,18 @@ components:
       $ref: "./parameters/id.yaml#/StationTrackId"
     ColorId:
       $ref: "./parameters/id.yaml#/ColorId"
+    ProjectId:
+      $ref: "./parameters/id.yaml#/ProjectId"
+    LineId:
+      $ref: "./parameters/id.yaml#/LineId"
+    ProjectStationId:
+      $ref: "./parameters/id.yaml#/ProjectStationId"
+    StationOnLineId:
+      $ref: "./parameters/id.yaml#/StationOnLineId"
+    StopPatternId:
+      $ref: "./parameters/id.yaml#/StopPatternId"
+    StopPatternRowId:
+      $ref: "./parameters/id.yaml#/StopPatternRowId"
     UidQuery:
       $ref: "./parameters/id.yaml#/UidQuery"
     UidAnonymousQuery:

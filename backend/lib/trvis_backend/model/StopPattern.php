@@ -24,13 +24,13 @@ namespace dev_t0r\trvis_backend\model;
 use dev_t0r\BaseModel;
 
 /**
- * WorkGroup
+ * StopPattern
  *
  * @package dev_t0r\trvis_backend\model
  * @author  OpenAPI Generator team
  * @link    https://github.com/openapitools/openapi-generator
  */
-class WorkGroup extends BaseModel
+class StopPattern extends BaseModel
 {
     /**
      * @var string Models namespace.
@@ -44,21 +44,26 @@ class WorkGroup extends BaseModel
      */
     protected const MODEL_SCHEMA = <<<'SCHEMA'
 {
-  "title" : "WorkGroup",
-  "required" : [ "description", "name" ],
+  "title" : "StopPattern",
+  "required" : [ "lines_id", "name" ],
   "type" : "object",
   "properties" : {
-    "work_groups_id" : {
+    "stop_patterns_id" : {
       "type" : "string",
-      "description" : "WorkGroupのID (UUID)",
+      "description" : "StopPatternのID (UUID)",
       "format" : "uuid",
       "readOnly" : true
     },
     "projects_id" : {
       "type" : "string",
-      "description" : "所属するProjectのID (UUID)",
+      "description" : "ProjectのID (UUID)",
       "format" : "uuid",
       "readOnly" : true
+    },
+    "lines_id" : {
+      "type" : "string",
+      "description" : "紐づくLineのID (UUID)",
+      "format" : "uuid"
     },
     "created_at" : {
       "type" : "string",
@@ -66,22 +71,26 @@ class WorkGroup extends BaseModel
       "format" : "date-time",
       "readOnly" : true
     },
-    "description" : {
-      "type" : "string",
-      "description" : "WorkGroupの説明",
-      "example" : "WorkGroupの説明が入ります"
-    },
     "name" : {
       "type" : "string",
-      "description" : "WorkGroupの名前",
-      "example" : "AAA乗務員区"
+      "description" : "停車パターンの名前",
+      "example" : "各駅停車"
     },
-    "privilege_type" : {
+    "from_project_stations_id" : {
       "type" : "string",
-      "description" : "権限の種類",
-      "readOnly" : true,
-      "example" : "admin",
-      "enum" : [ "read", "write", "admin" ]
+      "description" : "始点のProject StationのID (UUID)",
+      "format" : "uuid"
+    },
+    "to_project_stations_id" : {
+      "type" : "string",
+      "description" : "終点のProject StationのID (UUID)",
+      "format" : "uuid"
+    },
+    "direction" : {
+      "type" : "integer",
+      "description" : "進行方向 (1=下り, -1=上り)",
+      "example" : 1,
+      "enum" : [ 1, -1 ]
     }
   }
 }

@@ -167,16 +167,48 @@ Class | Method | HTTP request | Description
 *AbstractInviteKeyApi* | **getInviteKeyList** | **GET** /work_groups/{workGroupId}/invite_keys | 一覧を取得する
 *AbstractInviteKeyApi* | **updateInviteKey** | **PUT** /invite_keys/{inviteKeyId} | (未実装) 更新する
 *AbstractInviteKeyApi* | **useInviteKey** | **POST** /invite_keys/{inviteKeyId} | 使用する
+*AbstractLineApi* | **createLine** | **POST** /projects/{projectId}/lines | 作成する
+*AbstractLineApi* | **deleteLine** | **DELETE** /lines/{lineId} | 削除する
+*AbstractLineApi* | **getLine** | **GET** /lines/{lineId} | 1件取得する
+*AbstractLineApi* | **getLineList** | **GET** /projects/{projectId}/lines | 複数件取得する
+*AbstractLineApi* | **updateLine** | **PUT** /lines/{lineId} | 更新する
+*AbstractProjectApi* | **createProject** | **POST** /projects | 作成する
+*AbstractProjectApi* | **getProjectList** | **GET** /projects | 複数件取得する
+*AbstractProjectApi* | **deleteProject** | **DELETE** /projects/{projectId} | 削除する
+*AbstractProjectApi* | **getProject** | **GET** /projects/{projectId} | 1件取得する
+*AbstractProjectApi* | **getProjectPrivilege** | **GET** /projects/{projectId}/privileges | 権限情報を取得する
+*AbstractProjectApi* | **updateProject** | **PUT** /projects/{projectId} | 更新する
+*AbstractProjectApi* | **updateProjectPrivilege** | **PUT** /projects/{projectId}/privileges | 権限を更新する
+*AbstractProjectStationApi* | **createProjectStation** | **POST** /projects/{projectId}/project_stations | 作成する
+*AbstractProjectStationApi* | **deleteProjectStation** | **DELETE** /project_stations/{projectStationId} | 削除する
+*AbstractProjectStationApi* | **getProjectStation** | **GET** /project_stations/{projectStationId} | 1件取得する
+*AbstractProjectStationApi* | **getProjectStationList** | **GET** /projects/{projectId}/project_stations | 複数件取得する
+*AbstractProjectStationApi* | **updateProjectStation** | **PUT** /project_stations/{projectStationId} | 更新する
 *AbstractStationApi* | **createStation** | **POST** /work_groups/{workGroupId}/stations | 作成する
 *AbstractStationApi* | **deleteStation** | **DELETE** /stations/{stationId} | 削除する
 *AbstractStationApi* | **getStation** | **GET** /stations/{stationId} | 1件取得する
 *AbstractStationApi* | **getStationList** | **GET** /work_groups/{workGroupId}/stations | 複数件取得する
 *AbstractStationApi* | **updateStation** | **PUT** /stations/{stationId} | 更新する
+*AbstractStationOnLineApi* | **createStationOnLine** | **POST** /lines/{lineId}/stations_on_line | 作成する
+*AbstractStationOnLineApi* | **deleteStationOnLine** | **DELETE** /stations_on_line/{stationOnLineId} | 削除する
+*AbstractStationOnLineApi* | **getStationOnLine** | **GET** /stations_on_line/{stationOnLineId} | 1件取得する
+*AbstractStationOnLineApi* | **getStationOnLineList** | **GET** /lines/{lineId}/stations_on_line | 複数件取得する
+*AbstractStationOnLineApi* | **updateStationOnLine** | **PUT** /stations_on_line/{stationOnLineId} | 更新する
 *AbstractStationTrackApi* | **createStationTrack** | **POST** /stations/{stationId}/tracks | 作成する
 *AbstractStationTrackApi* | **deleteStationTrack** | **DELETE** /tracks/{stationTrackId} | 削除する
 *AbstractStationTrackApi* | **getStationTrack** | **GET** /tracks/{stationTrackId} | 1件取得する
 *AbstractStationTrackApi* | **getStationTrackList** | **GET** /stations/{stationId}/tracks | 複数件取得する
 *AbstractStationTrackApi* | **updateStationTrack** | **PUT** /tracks/{stationTrackId} | 更新する
+*AbstractStopPatternApi* | **createStopPattern** | **POST** /projects/{projectId}/stop_patterns | 作成する
+*AbstractStopPatternApi* | **deleteStopPattern** | **DELETE** /stop_patterns/{stopPatternId} | 削除する
+*AbstractStopPatternApi* | **getStopPattern** | **GET** /stop_patterns/{stopPatternId} | 1件取得する
+*AbstractStopPatternApi* | **getStopPatternList** | **GET** /projects/{projectId}/stop_patterns | 複数件取得する
+*AbstractStopPatternApi* | **updateStopPattern** | **PUT** /stop_patterns/{stopPatternId} | 更新する
+*AbstractStopPatternRowApi* | **createStopPatternRow** | **POST** /stop_patterns/{stopPatternId}/rows | 作成する
+*AbstractStopPatternRowApi* | **deleteStopPatternRow** | **DELETE** /stop_pattern_rows/{stopPatternRowId} | 削除する
+*AbstractStopPatternRowApi* | **getStopPatternRow** | **GET** /stop_pattern_rows/{stopPatternRowId} | 1件取得する
+*AbstractStopPatternRowApi* | **getStopPatternRowList** | **GET** /stop_patterns/{stopPatternId}/rows | 複数件取得する
+*AbstractStopPatternRowApi* | **updateStopPatternRow** | **PUT** /stop_pattern_rows/{stopPatternRowId} | 更新する
 *AbstractTimetableRowApi* | **createTimetableRow** | **POST** /trains/{trainId}/timetable_rows | 作成する
 *AbstractTimetableRowApi* | **deleteTimetableRow** | **DELETE** /timetable_rows/{timetableRowId} | 削除する
 *AbstractTimetableRowApi* | **getTimetableRow** | **GET** /timetable_rows/{timetableRowId} | 1件取得する
@@ -194,9 +226,11 @@ Class | Method | HTTP request | Description
 *AbstractWorkApi* | **updateWork** | **PUT** /works/{workId} | 更新する
 *AbstractWorkGroupApi* | **createWorkGroup** | **POST** /work_groups | 作成する
 *AbstractWorkGroupApi* | **getWorkGroupList** | **GET** /work_groups | 複数件取得する
+*AbstractWorkGroupApi* | **createWorkGroupInProject** | **POST** /projects/{projectId}/work_groups | 作成する
 *AbstractWorkGroupApi* | **deleteWorkGroup** | **DELETE** /work_groups/{workGroupId} | 削除する
 *AbstractWorkGroupApi* | **getPrivilege** | **GET** /work_groups/{workGroupId}/privileges | 権限情報を取得する
 *AbstractWorkGroupApi* | **getWorkGroup** | **GET** /work_groups/{workGroupId} | 1件取得する
+*AbstractWorkGroupApi* | **getWorkGroupListByProject** | **GET** /projects/{projectId}/work_groups | 複数件取得する
 *AbstractWorkGroupApi* | **updatePrivilege** | **PUT** /work_groups/{workGroupId}/privileges | 権限を更新する
 *AbstractWorkGroupApi* | **updateWorkGroup** | **PUT** /work_groups/{workGroupId} | 更新する
 
@@ -208,10 +242,19 @@ Class | Method | HTTP request | Description
 * dev_t0r\trvis_backend\model\Color8bit
 * dev_t0r\trvis_backend\model\ColorReal
 * dev_t0r\trvis_backend\model\InviteKey
+* dev_t0r\trvis_backend\model\Line
+* dev_t0r\trvis_backend\model\Project
+* dev_t0r\trvis_backend\model\ProjectStation
+* dev_t0r\trvis_backend\model\ProjectStationLocationLonlat
+* dev_t0r\trvis_backend\model\ProjectsPrivilege
 * dev_t0r\trvis_backend\model\Schema
 * dev_t0r\trvis_backend\model\Station
 * dev_t0r\trvis_backend\model\StationLocationLonlat
+* dev_t0r\trvis_backend\model\StationOnLine
+* dev_t0r\trvis_backend\model\StationOnLineLocationLonlat
 * dev_t0r\trvis_backend\model\StationTrack
+* dev_t0r\trvis_backend\model\StopPattern
+* dev_t0r\trvis_backend\model\StopPatternRow
 * dev_t0r\trvis_backend\model\TRViSJsonTimetableRow
 * dev_t0r\trvis_backend\model\TRViSJsonTrain
 * dev_t0r\trvis_backend\model\TRViSJsonWork

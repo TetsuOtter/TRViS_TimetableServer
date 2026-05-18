@@ -70,6 +70,60 @@ ColorId:
     format: uuid
   description: ColorのID
 
+ProjectId:
+  in: path
+  name: projectId
+  required: true
+  schema:
+    type: string
+    format: uuid
+  description: ProjectのID
+
+LineId:
+  in: path
+  name: lineId
+  required: true
+  schema:
+    type: string
+    format: uuid
+  description: LineのID
+
+ProjectStationId:
+  in: path
+  name: projectStationId
+  required: true
+  schema:
+    type: string
+    format: uuid
+  description: Project StationのID
+
+StationOnLineId:
+  in: path
+  name: stationOnLineId
+  required: true
+  schema:
+    type: string
+    format: uuid
+  description: StationOnLineのID
+
+StopPatternId:
+  in: path
+  name: stopPatternId
+  required: true
+  schema:
+    type: string
+    format: uuid
+  description: StopPatternのID
+
+StopPatternRowId:
+  in: path
+  name: stopPatternRowId
+  required: true
+  schema:
+    type: string
+    format: uuid
+  description: StopPatternRowのID
+
 UidQuery:
   in: query
   name: uid

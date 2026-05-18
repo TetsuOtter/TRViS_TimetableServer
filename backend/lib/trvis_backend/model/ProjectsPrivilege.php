@@ -24,13 +24,13 @@ namespace dev_t0r\trvis_backend\model;
 use dev_t0r\BaseModel;
 
 /**
- * WorkGroup
+ * ProjectsPrivilege
  *
  * @package dev_t0r\trvis_backend\model
  * @author  OpenAPI Generator team
  * @link    https://github.com/openapitools/openapi-generator
  */
-class WorkGroup extends BaseModel
+class ProjectsPrivilege extends BaseModel
 {
     /**
      * @var string Models namespace.
@@ -44,19 +44,24 @@ class WorkGroup extends BaseModel
      */
     protected const MODEL_SCHEMA = <<<'SCHEMA'
 {
-  "title" : "WorkGroup",
-  "required" : [ "description", "name" ],
+  "title" : "ProjectsPrivilege",
+  "required" : [ "privilege_type" ],
   "type" : "object",
   "properties" : {
-    "work_groups_id" : {
+    "uid" : {
       "type" : "string",
-      "description" : "WorkGroupのID (UUID)",
-      "format" : "uuid",
+      "description" : "UserID",
       "readOnly" : true
     },
     "projects_id" : {
       "type" : "string",
-      "description" : "所属するProjectのID (UUID)",
+      "description" : "ProjectのID (UUID)",
+      "format" : "uuid",
+      "readOnly" : true
+    },
+    "invite_keys_id" : {
+      "type" : "string",
+      "description" : "InviteKeyのID (UUID)",
       "format" : "uuid",
       "readOnly" : true
     },
@@ -66,20 +71,15 @@ class WorkGroup extends BaseModel
       "format" : "date-time",
       "readOnly" : true
     },
-    "description" : {
+    "updated_at" : {
       "type" : "string",
-      "description" : "WorkGroupの説明",
-      "example" : "WorkGroupの説明が入ります"
-    },
-    "name" : {
-      "type" : "string",
-      "description" : "WorkGroupの名前",
-      "example" : "AAA乗務員区"
+      "description" : "更新日時",
+      "format" : "date-time",
+      "readOnly" : true
     },
     "privilege_type" : {
       "type" : "string",
       "description" : "権限の種類",
-      "readOnly" : true,
       "example" : "admin",
       "enum" : [ "read", "write", "admin" ]
     }
