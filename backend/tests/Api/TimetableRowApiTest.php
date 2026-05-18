@@ -111,8 +111,9 @@ class TimetableRowApiTest extends IntegrationTestCase
 			// repo binds $d->stations_id->getBytes(): pass the UuidInterface
 			// (NOT NULL FK), not a string
 			'stations_id' => $this->stationsId,
-			// these 4 are BOOLEAN NOT NULL (DB default exists, but the repo
-			// INSERT binds the model value explicitly -> null violates NOT NULL)
+			// these 4 are optional (BOOLEAN NOT NULL DEFAULT FALSE); the repo
+			// coalesces null -> false. Passed explicitly here for determinism;
+			// testCreateTimetableRowDefaults covers the omitted path.
 			'is_operation_only_stop' => false,
 			'is_pass' => false,
 			'has_bracket' => false,
@@ -135,6 +136,34 @@ class TimetableRowApiTest extends IntegrationTestCase
 		$this->assertTrue(Uuid::isValid((string)$o->timetable_rows_id));
 		$this->assertSame((string)$train, (string)$o->trains_id);
 		$this->assertSame((string)$this->stationsId, (string)$o->stations_id);
+	}
+
+	/**
+	 * Recommended-spec regression: the 4 boolean flags may be omitted by
+	 * the client; the repo must coalesce null -> DB DEFAULT (false), not 500.
+	 *
+	 * @covers ::createTimetableRow
+	 */
+	public function testCreateTimetableRowDefaults()
+	{
+		$train = $this->newTrain();
+		$data = [
+			'description' => 'd',
+			'stations_id' => $this->stationsId, // required FK
+			// is_operation_only_stop / is_pass / has_bracket / is_last_stop omitted
+		];
+		$r = $this->svc()->create($train, $this->userId, [$this->makeModel(TimetableRow::class, $data)]);
+		$this->assertOk($r, 'createTimetableRow (boolean flags omitted)');
+		$rowId = $r->value[0]->timetable_rows_id;
+		$this->register('timetable_rows', 'timetable_rows_id', (string)$rowId);
+
+		$g = $this->svc()->getOne($this->userId, $rowId);
+		$this->assertOk($g, 'getOne');
+		// MySQL BOOLEAN is TINYINT(1): getOne maps it back as int 0/1.
+		$this->assertFalse((bool)$g->value->is_operation_only_stop, 'omitted is_operation_only_stop -> DB DEFAULT false');
+		$this->assertFalse((bool)$g->value->is_pass, 'omitted is_pass -> DB DEFAULT false');
+		$this->assertFalse((bool)$g->value->has_bracket, 'omitted has_bracket -> DB DEFAULT false');
+		$this->assertFalse((bool)$g->value->is_last_stop, 'omitted is_last_stop -> DB DEFAULT false');
 	}
 
 	/**

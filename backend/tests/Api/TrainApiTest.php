@@ -67,9 +67,9 @@ class TrainApiTest extends IntegrationTestCase
 			'train_number' => 'T1',
 			'direction' => 1,
 			'day_count' => 0,
-			// is_ride_on_moving is BOOLEAN NOT NULL (has a DB default, but the
-			// repo INSERT lists it explicitly and binds the model value, so a
-			// null would violate NOT NULL); pass it explicitly.
+			// is_ride_on_moving is optional (BOOLEAN NOT NULL DEFAULT FALSE);
+			// the repo coalesces null -> false. Passed explicitly here for
+			// determinism; testCreateTrainDefaults covers the omitted path.
 			'is_ride_on_moving' => false,
 		], $over);
 		$r = $this->svc()->create($worksId, $this->userId, [$this->makeModel(Train::class, $data)]);
@@ -89,6 +89,33 @@ class TrainApiTest extends IntegrationTestCase
 		$this->assertTrue(Uuid::isValid((string)$o->trains_id));
 		$this->assertSame((string)$work, (string)$o->works_id);
 		$this->assertSame('T1', $o->train_number);
+	}
+
+	/**
+	 * Recommended-spec regression: is_ride_on_moving may be omitted by the
+	 * client; the repo must coalesce null -> DB DEFAULT (false), not 500.
+	 *
+	 * @covers ::createTrain
+	 */
+	public function testCreateTrainDefaults()
+	{
+		$work = $this->newWork();
+		$data = [
+			'description' => 'd',
+			'train_number' => 'T-default',
+			'direction' => 1,
+			'day_count' => 0,
+			// is_ride_on_moving intentionally omitted
+		];
+		$r = $this->svc()->create($work, $this->userId, [$this->makeModel(Train::class, $data)]);
+		$this->assertOk($r, 'createTrain (is_ride_on_moving omitted)');
+		$trainsId = $r->value[0]->trains_id;
+		$this->register('trains', 'trains_id', (string)$trainsId);
+
+		$g = $this->svc()->getOne($this->userId, $trainsId);
+		$this->assertOk($g, 'getOne');
+		// MySQL BOOLEAN is TINYINT(1): getOne maps it back as int 0/1.
+		$this->assertFalse((bool)$g->value->is_ride_on_moving, 'omitted is_ride_on_moving must persist as DB DEFAULT false');
 	}
 
 	/**

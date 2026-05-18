@@ -74,7 +74,9 @@ class InviteKeyApiTest extends IntegrationTestCase
 			$this->userId,
 			$this->makeModel(InviteKey::class, [
 				'description' => 'k',
-				// valid_from is NOT NULL in schema; the insert always lists it
+				// valid_from is optional (NOT NULL DEFAULT CURRENT_TIMESTAMP);
+				// the repo coalesces null -> "now". Passed explicitly here for
+				// determinism; testCreateInviteKeyDefaults covers the omitted path.
 				'valid_from' => new \DateTime('2020-01-01T00:00:00+00:00'),
 				'privilege_type' => $priv,
 			]),
@@ -124,6 +126,46 @@ class InviteKeyApiTest extends IntegrationTestCase
 		);
 		$this->assertTrue($c->isError, 'read-only createInviteKey must be rejected');
 		$this->assertSame(403, $c->statusCode);
+	}
+
+	/**
+	 * Recommended-spec regression: valid_from may be omitted by the client;
+	 * the repo must coalesce null -> "now" (DB DEFAULT CURRENT_TIMESTAMP),
+	 * not bind explicit NULL into the NOT NULL column (23000 / 500).
+	 *
+	 * @covers ::createInviteKey
+	 */
+	public function testCreateInviteKeyDefaults()
+	{
+		$wgId = $this->newWorkGroup();
+
+		$before = new \DateTime('now', new \DateTimeZone('UTC'));
+		$before->modify('-5 seconds');
+		$r = $this->ikSvc()->createInviteKey(
+			$wgId,
+			$this->userId,
+			$this->makeModel(InviteKey::class, [
+				'description' => 'no-valid-from',
+				// valid_from intentionally omitted
+				'privilege_type' => InviteKeyPrivilegeType::read,
+			]),
+		);
+		$this->assertOk($r, 'createInviteKey (valid_from omitted)');
+		$keyId = $r->value->invite_keys_id;
+		$this->register('invite_keys', 'invite_keys_id', (string)$keyId);
+		$this->register('projects_privileges', 'projects_id', (string)$this->projectId);
+		$after = new \DateTime('now', new \DateTimeZone('UTC'));
+		$after->modify('+5 seconds');
+
+		$st = $this->db->prepare(
+			"SELECT valid_from FROM invite_keys WHERE invite_keys_id = :id"
+		);
+		$st->execute([':id' => $keyId->getBytes()]);
+		$persisted = (string)$st->fetchColumn();
+		$this->assertNotSame('', $persisted, 'valid_from must be persisted (NOT NULL)');
+		$vf = new \DateTime($persisted . ' UTC');
+		$this->assertGreaterThanOrEqual($before, $vf, 'omitted valid_from must default to ~now');
+		$this->assertLessThanOrEqual($after, $vf, 'omitted valid_from must default to ~now');
 	}
 
 	/**
