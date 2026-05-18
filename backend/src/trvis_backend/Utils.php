@@ -178,6 +178,13 @@ final class Utils
 		return is_null($value) ? null : floatval($value);
 	}
 
+	// 権限チェック失敗時など、対象エンティティ種別に依存しない汎用 NotFound。
+	// メッセージは意図的にエンティティ名を含めない (存在情報を漏らさないため・
+	// MyServiceBase の汎用権限チェックは具象エンティティ種別を知らないため)。
+	// 安易にエンティティ別ヘルパへ「改善」しないこと。
+	public static function errContentNotFound(): RetValueOrError {
+		return RetValueOrError::withError(Constants::HTTP_NOT_FOUND, "Content not found");
+	}
 	public static function errWorkGroupNotFound(): RetValueOrError {
 		return RetValueOrError::withError(Constants::HTTP_NOT_FOUND, "WorkGroup not found");
 	}

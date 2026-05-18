@@ -66,7 +66,7 @@ abstract class MyServiceBase implements IMyServiceBase
 			],
 		);
 		if (!$senderPrivilege->hasPrivilege(InviteKeyPrivilegeType::read)) {
-			return Utils::errWorkGroupNotFound();
+			return Utils::errContentNotFound();
 		}
 		return RetValueOrError::withValue(null);
 	}
@@ -102,7 +102,7 @@ abstract class MyServiceBase implements IMyServiceBase
 			],
 		);
 		if (!$senderPrivilege->hasPrivilege(InviteKeyPrivilegeType::read)) {
-			return Utils::errWorkGroupNotFound();
+			return Utils::errContentNotFound();
 		}
 		if (!$senderPrivilege->hasPrivilege(InviteKeyPrivilegeType::write)) {
 			$this->logger->warning(
@@ -114,7 +114,7 @@ abstract class MyServiceBase implements IMyServiceBase
 			);
 			// read権限しか持たない主体 (匿名を含む) に作成/更新/削除を許してはならない。
 			// 存在情報を漏らさないため、checkPrivilegeToRead と同様に NotFound を返す。
-			return Utils::errWorkGroupNotFound();
+			return Utils::errContentNotFound();
 		}
 		return RetValueOrError::withValue(null);
 	}

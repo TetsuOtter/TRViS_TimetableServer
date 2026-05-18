@@ -175,7 +175,7 @@ class LineApiTest extends IntegrationTestCase
 	{
 		$readUser = $this->grantReadOnlyUser();
 
-		// create as read-only user -> 404 errWorkGroupNotFound (not success)
+		// create as read-only user -> 404 errContentNotFound (not success)
 		$c = $this->svc()->create(
 			$this->projectId,
 			$readUser,
