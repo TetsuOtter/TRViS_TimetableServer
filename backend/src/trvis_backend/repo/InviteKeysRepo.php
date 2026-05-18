@@ -101,7 +101,7 @@ final class InviteKeysRepo
 		$query->bindValue(':work_groups_id', $workGroupId->getBytes(), PDO::PARAM_STR);
 		$query->bindValue(':owner', $owner, PDO::PARAM_STR);
 		$query->bindValue(':description', $inviteKey->description, PDO::PARAM_STR);
-		$query->bindValue(':valid_from', Utils::utcDateStrOrNull($inviteKey->valid_from), PDO::PARAM_STR);
+		$query->bindValue(':valid_from', Utils::utcDateStrOrNull($inviteKey->valid_from ?? Utils::getUtcNow()), PDO::PARAM_STR);
 		$query->bindValue(':expires_at', Utils::utcDateStrOrNull($inviteKey->expires_at), PDO::PARAM_STR);
 		$query->bindValue(':use_limit', $inviteKey->use_limit, PDO::PARAM_INT);
 		$query->bindValue(':privilege_type', $inviteKey->privilege_type->value, PDO::PARAM_INT);
@@ -355,7 +355,6 @@ final class InviteKeysRepo
 				SQL
 			);
 			$query->bindValue(':invite_keys_id', $inviteKeyId->getBytes(), PDO::PARAM_STR);
-			$query->bindValue(':user_id', $userId, PDO::PARAM_STR);
 
 			if ($query->execute()) {
 				$rowCount = $query->rowCount();

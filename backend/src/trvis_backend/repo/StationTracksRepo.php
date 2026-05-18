@@ -77,7 +77,6 @@ final class StationTracksRepo extends MyRepoBase
 				:description_{$i},
 				{$this->PLACEHOLDER_OWNER},
 				:name_{$i},
-				:name_{$i},
 				:run_in_limit_{$i},
 				:run_out_limit_{$i}
 			)

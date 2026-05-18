@@ -146,6 +146,11 @@ final class WorksRepo extends MyRepoBase
 		);
 
 		$parentIdCount = count($parentIdList);
+		if ($parentIdCount === 0) {
+			// 親IDが空のとき IN () となり MySQL 構文エラー(42000)になるため、
+			// クエリを組み立てず空結果を返す（親が無ければ子も無い）。
+			return RetValueOrError::withValue([]);
+		}
 		$parentIdListPlaceholder = implode(', ', array_fill(0, $parentIdCount, '?'));
 		try
 		{

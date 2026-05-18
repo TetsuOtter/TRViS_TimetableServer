@@ -42,6 +42,7 @@ services:
     networks:
       - back-db
       - proxy-back
+      - back-firebase
     ports:
       - "8080:80"
     volumes:
@@ -64,6 +65,8 @@ services:
       dockerfile: Dockerfile
     container_name: webmon-firebase
     hostname: webmon-firebase
+    networks:
+      - back-firebase
     ports:
       - "9099:9099"
       - "4000:4000"
@@ -95,9 +98,26 @@ services:
         target: /var/lib/mysql
     env_file:
       - mysql/.env
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: webmon-phpmyadmin
+    hostname: webmon-phpmyadmin
+    ports:
+      - "81:80"
+    networks:
+      - back-db
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    env_file:
+      - mysql/.env
+    depends_on:
+      - mysql
 volumes:
   webmon-db:
 networks:
   proxy-front:
   proxy-back:
   back-db:
+  back-firebase:

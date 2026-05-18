@@ -786,11 +786,18 @@ abstract class MyRepoBase implements IMyRepoBase
 			],
 		);
 
-		if ($userId === Constants::UID_ANONYMOUS)
-		{
-			// リクエスト対象自体がAnonymousの場合は、わざわざOR条件にする必要はない
-			$includeAnonymous = false;
-		}
+		// 自テーブル(および親チェーン)から所属 work_groups_id を解決し、
+		// 権限判定は WorkGroupsPrivilegesRepo へ委譲する。
+		// WorkGroupsPrivilegesRepo は work_groups.projects_id を辿って
+		// projects_privileges (= 現行の権限ルート) へ委譲し、projects_id
+		// 未割当のレガシー行に限り従来の work_groups_privileges を参照する。
+		//
+		// 旧実装は work_groups_privileges を直接 JOIN していたが、
+		// project-root 権限移行後は WorkGroupsService が権限を
+		// projects_privileges にのみ付与するため、この表は新規 WorkGroup
+		// には一切書き込まれず、admin を含む全ユーザが 404 になっていた。
+		// (MyProjectRootedRepoBase / WorkGroupsPrivilegesRepo と同じ
+		//  resolve-then-delegate パターンへ揃える)
 		$JOIN_QUERY = implode(
 			' ',
 			array_map(
@@ -818,71 +825,33 @@ abstract class MyRepoBase implements IMyRepoBase
 			$query = $this->db->prepare(
 				<<<SQL
 				SELECT
-					work_groups_privileges.privilege_type,
-					work_groups_privileges.uid,
-					work_groups_privileges.invite_keys_id
+					work_groups_id
 				FROM
 					{$this->TABLE_NAME}
 
 				{$JOIN_QUERY}
 
-				INNER JOIN
-					work_groups_privileges
-				USING
-					(work_groups_id)
 				WHERE
 					{$this->TABLE_NAME}_id = :id
 				AND
 					{$this->TABLE_NAME}.deleted_at IS NULL
 
 				{$PARENTS_WHERE_DELETED_AT_IS_NULL}
-
-				AND
 				SQL
-				.
-				($includeAnonymous ? ' uid IN (:userId, \'\')' : ' uid = :userId')
 				.
 				($selectForUpdate ? ' FOR UPDATE' : '')
 			);
 
-			$query->bindValue(':userId', $userId, PDO::PARAM_STR);
 			$query->bindValue(':id', $id->getBytes(), PDO::PARAM_STR);
 
 			$query->execute();
 			if ($query->rowCount() === 0)
 			{
-				$this->logger->warning('selectWorkGroupsId - rowCount is 0');
+				$this->logger->warning('selectPrivilegeType - target row not found (rowCount is 0)');
 				return Utils::errWorkGroupNotFound();
 			}
 
-			$privilegeTypeList = $query->fetchAll(PDO::FETCH_ASSOC);
-			$maximumPrivilegeTypeValue = InviteKeyPrivilegeType::none->value;
-			foreach ($privilegeTypeList as $row)
-			{
-				$privilegeTypeValue = intval($row['privilege_type']);
-				$inviteKeysId = $row['invite_keys_id'];
-				$this->logger->debug(
-					'privilege type: {privilegeType} (UID:{uid}, InviteKey:{inviteKeysId})',
-					[
-						'privilegeType' => $privilegeTypeValue,
-						'uid' => $row['uid'],
-						'inviteKeysId' => is_null($inviteKeysId) ? null : Uuid::fromBytes($inviteKeysId),
-					]
-				);
-				if ($maximumPrivilegeTypeValue < $privilegeTypeValue)
-				{
-					$maximumPrivilegeTypeValue = $privilegeTypeValue;
-				}
-			}
-			$this->logger->debug(
-				'maximum privilege type: {privilegeType}',
-				[
-					'privilegeType' => $maximumPrivilegeTypeValue,
-				]
-			);
-			return RetValueOrError::withValue(
-				InviteKeyPrivilegeType::fromInt($maximumPrivilegeTypeValue)
-			);
+			$workGroupsIdBytes = $query->fetchColumn();
 		}
 		catch (\PDOException $ex)
 		{
@@ -900,6 +869,15 @@ abstract class MyRepoBase implements IMyRepoBase
 				"Failed to execute SQL - " . $errCode,
 			);
 		}
+
+		// 解決した work_groups_id を起点に、移行後の権限解決
+		// (projects_privileges / レガシー fallback) を委譲する
+		return (new WorkGroupsPrivilegesRepo($this->db, $this->logger))->selectPrivilegeType(
+			id: Uuid::fromBytes($workGroupsIdBytes),
+			userId: $userId,
+			includeAnonymous: $includeAnonymous,
+			selectForUpdate: $selectForUpdate,
+		);
 	}
 
 	/**

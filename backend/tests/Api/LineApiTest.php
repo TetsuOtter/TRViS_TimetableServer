@@ -16,6 +16,7 @@ use dev_t0r\trvis_backend\model\InviteKeyPrivilegeType;
 use dev_t0r\trvis_backend\model\Line;
 use dev_t0r\trvis_backend\repo\LineRepo;
 use dev_t0r\trvis_backend\service\LineService;
+use dev_t0r\trvis_backend\service\ProjectsService;
 use dev_t0r\trvis_backend\tests\integration\IntegrationTestCase;
 use Ramsey\Uuid\Uuid;
 
@@ -42,6 +43,24 @@ class LineApiTest extends IntegrationTestCase
 		$line = $r->value[0];
 		$this->register('project_lines', 'project_lines_id', (string)$line->lines_id);
 		return $line;
+	}
+
+	/**
+	 * Grant a brand-new user exactly `read` privilege on the fixture project
+	 * and return its uid. The projects_privileges row is keyed by projects_id,
+	 * which IntegrationTestCase::setUp already registered for teardown.
+	 */
+	private function grantReadOnlyUser(): string
+	{
+		$uid = 'it-R-' . bin2hex(random_bytes(4));
+		$r = (new ProjectsService($this->db, $this->logger))->updatePrivilege(
+			$this->projectId,
+			$this->userId,
+			$uid,
+			InviteKeyPrivilegeType::read,
+		);
+		$this->assertOk($r, 'grant read privilege');
+		return $uid;
 	}
 
 	/**
@@ -139,6 +158,75 @@ class LineApiTest extends IntegrationTestCase
 		$g = $this->svc()->getOne($this->userId, $line->lines_id);
 		$this->assertTrue($g->isError);
 		$this->assertSame(404, $g->statusCode);
+	}
+
+	/**
+	 * Security regression: a principal holding only `read` privilege must NOT
+	 * be able to create / update / delete. Before the fix,
+	 * MyServiceBase::checkPrivilegeToWrite only logged a warning for the
+	 * read-but-not-write case and fell through to success (write bypass).
+	 * Driven via LineService, this covers every MyServiceBase subclass.
+	 *
+	 * @covers ::createLine
+	 * @covers ::updateLine
+	 * @covers ::deleteLine
+	 */
+	public function testReadOnlyUserCannotWrite()
+	{
+		$readUser = $this->grantReadOnlyUser();
+
+		// create as read-only user -> 404 errWorkGroupNotFound (not success)
+		$c = $this->svc()->create(
+			$this->projectId,
+			$readUser,
+			[$this->makeModel(Line::class, ['name' => 'X', 'description' => 'd'])],
+		);
+		$this->assertTrue($c->isError, 'read-only create must be rejected');
+		$this->assertSame(404, $c->statusCode);
+
+		// admin-owned row that the read-only user will try to tamper with
+		$line = $this->createOne('owned');
+
+		$u = $this->svc()->update(
+			$readUser,
+			$line->lines_id,
+			$this->makeModel(Line::class, ['name' => 'hacked']),
+			['name' => 'hacked'],
+		);
+		$this->assertTrue($u->isError, 'read-only update must be rejected');
+		$this->assertSame(404, $u->statusCode);
+
+		$d = $this->svc()->delete($readUser, $line->lines_id);
+		$this->assertTrue($d->isError, 'read-only delete must be rejected');
+		$this->assertSame(404, $d->statusCode);
+
+		// the row must remain intact and unmodified
+		$g = $this->svc()->getOne($this->userId, $line->lines_id);
+		$this->assertOk($g, 'line survived the rejected writes');
+		$this->assertSame('owned', $g->value->name);
+	}
+
+	/**
+	 * Security regression: getOne / getPage now use checkPrivilegeToRead, so a
+	 * read-only user (who must be denied writes) can still read. Guards against
+	 * the getOne write->read change accidentally over-restricting reads.
+	 *
+	 * @covers ::getLine
+	 * @covers ::getLineList
+	 */
+	public function testReadOnlyUserCanRead()
+	{
+		$readUser = $this->grantReadOnlyUser();
+		$line = $this->createOne('readable');
+
+		$g = $this->svc()->getOne($readUser, $line->lines_id);
+		$this->assertOk($g, 'read-only user getOne must succeed');
+		$this->assertSame((string)$line->lines_id, (string)$g->value->lines_id);
+
+		$p = $this->svc()->getPage($readUser, $this->projectId, 1, 50, null);
+		$this->assertOk($p, 'read-only user getPage must succeed');
+		$ids = array_map(fn($x) => (string)$x->lines_id, $p->value);
+		$this->assertContains((string)$line->lines_id, $ids);
 	}
 
 	private function fetchUpdatedAt(string $lineId): string
