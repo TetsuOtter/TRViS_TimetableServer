@@ -29,6 +29,14 @@ $ composer install
 2. `config/$env/config.inc.php` (user config, excluded from vcs, can contain sensitive values, passwords etc.)
 3. `lib/App/RegisterDependencies.php`
 
+When running via `docker compose`, copy the tracked docker template to the
+(gitignored) user config before bringing the stack up:
+```bash
+$ cp backend/config/prod/config.docker.inc.php backend/config/prod/config.inc.php
+```
+This template points the DB at `webmon-db` and the Firebase Auth Emulator at
+`webmon-firebase:9099` (the in-compose hostnames).
+
 ## Start devserver
 
 Run the following command in terminal to start localhost web server, assuming `./php-slim-server/public/` is public-accessible directory with `index.php` file:
