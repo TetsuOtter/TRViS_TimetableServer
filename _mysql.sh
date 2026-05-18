@@ -1,5 +1,7 @@
 #!/bin/sh
 
+cd $(dirname $0)
+
 . ./mysql/.env
 
 DOCKER_EXEC_FLAGS=""

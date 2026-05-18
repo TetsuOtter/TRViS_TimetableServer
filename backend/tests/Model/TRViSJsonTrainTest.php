@@ -22,6 +22,8 @@
  */
 namespace dev_t0r\trvis_backend\model;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversMethod;
 use PHPUnit\Framework\TestCase;
 use dev_t0r\trvis_backend\model\TRViSJsonTrain;
 
@@ -31,9 +33,9 @@ use dev_t0r\trvis_backend\model\TRViSJsonTrain;
  * @package dev_t0r\trvis_backend\model
  * @author  OpenAPI Generator team
  * @link    https://github.com/openapitools/openapi-generator
- *
- * @coversDefaultClass \dev_t0r\trvis_backend\model\TRViSJsonTrain
  */
+#[CoversClass(\dev_t0r\trvis_backend\model\TRViSJsonTrain::class)]
+#[CoversMethod(\dev_t0r\trvis_backend\model\TRViSJsonTrain::class, 'getOpenApiSchema')]
 class TRViSJsonTrainTest extends TestCase
 {
 
@@ -165,10 +167,10 @@ class TRViSJsonTrainTest extends TestCase
     /**
      * Test attribute "begionRemarks"
      */
-    public function testPropertyBegionRemarks()
+    public function testPropertyBeginRemarks()
     {
         $this->markTestIncomplete(
-            'Test of "begionRemarks" property in "TRViSJsonTrain" model has not been implemented yet.'
+            'Test of "beginRemarks" property in "TRViSJsonTrain" model has not been implemented yet.'
         );
     }
 
@@ -244,7 +246,6 @@ class TRViSJsonTrainTest extends TestCase
 
     /**
      * Test getOpenApiSchema static method
-     * @covers ::getOpenApiSchema
      */
     public function testGetOpenApiSchema()
     {

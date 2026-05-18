@@ -1,11 +1,48 @@
 version: "3.8"
 services:
+  proxy:
+    image: nginx:1.25.3-alpine-slim
+    container_name: webmon-proxy
+    hostname: webmon-proxy
+    ports:
+      - "80:80"
+    networks:
+      - proxy-front
+      - proxy-back
+    volumes:
+      - type: bind
+        read_only: true
+        source: ./proxy/conf.d
+        target: /etc/nginx/conf.d
+      - type: bind
+        source: ./proxy/logs
+        target: /var/log/nginx
+    depends_on:
+      - front
+      - php
+  front:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: webmon-front
+    hostname: webmon-front
+    networks:
+      - proxy-front
+    volumes:
+      - type: bind
+        read_only: true
+        source: ./frontend/docker_conf/httpd.conf
+        target: /usr/local/apache2/conf/httpd.conf
   php:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: webmon-php
     hostname: webmon-php
+    networks:
+      - back-db
+      - proxy-back
+      - back-firebase
     ports:
       - "8080:80"
     volumes:
@@ -20,12 +57,16 @@ services:
         read_only: true
         source: ./my_apache2.conf
         target: /etc/apache2/mods-enabled/my_apache2.conf
+    depends_on:
+      - mysql
   firebase:
     build:
       context: ./firebase
       dockerfile: Dockerfile
     container_name: webmon-firebase
     hostname: webmon-firebase
+    networks:
+      - back-firebase
     ports:
       - "9099:9099"
       - "4000:4000"
@@ -34,10 +75,12 @@ services:
         source: ./firebase/data
         target: /emulator/data
   mysql:
-    image: mysql:5.7-oracle
+    image: mysql:8.0-oracle
     platform: linux/amd64
     container_name: webmon-db
     hostname: webmon-db
+    networks:
+      - back-db
     volumes:
       - type: bind
         read_only: true
@@ -55,8 +98,26 @@ services:
         target: /var/lib/mysql
     env_file:
       - mysql/.env
+  phpmyadmin:
+    image: phpmyadmin:5.2.1
+    container_name: webmon-phpmyadmin
+    hostname: webmon-phpmyadmin
     ports:
-      - "3306:3306"
+      - "81:80"
+    networks:
+      - back-db
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: root
+      PMA_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    env_file:
+      - mysql/.env
+    depends_on:
+      - mysql
 volumes:
   webmon-db:
-
+networks:
+  proxy-front:
+  proxy-back:
+  back-db:
+  back-firebase:

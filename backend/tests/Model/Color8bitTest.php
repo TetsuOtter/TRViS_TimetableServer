@@ -22,6 +22,8 @@
  */
 namespace dev_t0r\trvis_backend\model;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversMethod;
 use PHPUnit\Framework\TestCase;
 use dev_t0r\trvis_backend\model\Color8bit;
 
@@ -31,9 +33,9 @@ use dev_t0r\trvis_backend\model\Color8bit;
  * @package dev_t0r\trvis_backend\model
  * @author  OpenAPI Generator team
  * @link    https://github.com/openapitools/openapi-generator
- *
- * @coversDefaultClass \dev_t0r\trvis_backend\model\Color8bit
  */
+#[CoversClass(\dev_t0r\trvis_backend\model\Color8bit::class)]
+#[CoversMethod(\dev_t0r\trvis_backend\model\Color8bit::class, 'getOpenApiSchema')]
 class Color8bitTest extends TestCase
 {
 
@@ -114,7 +116,6 @@ class Color8bitTest extends TestCase
 
     /**
      * Test getOpenApiSchema static method
-     * @covers ::getOpenApiSchema
      */
     public function testGetOpenApiSchema()
     {

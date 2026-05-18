@@ -178,6 +178,13 @@ final class Utils
 		return is_null($value) ? null : floatval($value);
 	}
 
+	// 権限チェック失敗時など、対象エンティティ種別に依存しない汎用 NotFound。
+	// メッセージは意図的にエンティティ名を含めない (存在情報を漏らさないため・
+	// MyServiceBase の汎用権限チェックは具象エンティティ種別を知らないため)。
+	// 安易にエンティティ別ヘルパへ「改善」しないこと。
+	public static function errContentNotFound(): RetValueOrError {
+		return RetValueOrError::withError(Constants::HTTP_NOT_FOUND, "Content not found");
+	}
 	public static function errWorkGroupNotFound(): RetValueOrError {
 		return RetValueOrError::withError(Constants::HTTP_NOT_FOUND, "WorkGroup not found");
 	}
@@ -195,5 +202,23 @@ final class Utils
 	}
 	public static function errTimetableRowNotFound(): RetValueOrError {
 		return RetValueOrError::withError(Constants::HTTP_NOT_FOUND, "TimetableRow not found");
+	}
+	public static function errProjectNotFound(): RetValueOrError {
+		return RetValueOrError::withError(Constants::HTTP_NOT_FOUND, "Project not found");
+	}
+	public static function errLineNotFound(): RetValueOrError {
+		return RetValueOrError::withError(Constants::HTTP_NOT_FOUND, "Line not found");
+	}
+	public static function errProjectStationNotFound(): RetValueOrError {
+		return RetValueOrError::withError(Constants::HTTP_NOT_FOUND, "ProjectStation not found");
+	}
+	public static function errStationOnLineNotFound(): RetValueOrError {
+		return RetValueOrError::withError(Constants::HTTP_NOT_FOUND, "StationOnLine not found");
+	}
+	public static function errStopPatternNotFound(): RetValueOrError {
+		return RetValueOrError::withError(Constants::HTTP_NOT_FOUND, "StopPattern not found");
+	}
+	public static function errStopPatternRowNotFound(): RetValueOrError {
+		return RetValueOrError::withError(Constants::HTTP_NOT_FOUND, "StopPatternRow not found");
 	}
 }

@@ -1,4 +1,4 @@
-FROM node:21-alpine
+FROM node:24-alpine
 
 # ref: https://zenn.dev/cbcloud_blog/articles/6256f1a3d05a18
 

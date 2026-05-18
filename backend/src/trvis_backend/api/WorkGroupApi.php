@@ -255,4 +255,72 @@ class WorkGroupApi extends AbstractWorkGroupApi
 			newPrivilegeType: Utils::getValueOrNull($body, 'privilege_type'),
 		)->getResponseWithJson($response);
 	}
+
+	public function createWorkGroupInProject(
+		ServerRequestInterface $request,
+		ResponseInterface $response,
+		string $projectId
+	): ResponseInterface {
+		$userId = MyAuthMiddleware::getUserIdOrNull($request);
+		if ($userId === null)
+		{
+			$this->logger->warning("Token was not set");
+			return Utils::withError($response, Constants::HTTP_UNAUTHORIZED, "Token was not set");
+		}
+		if (!Uuid::isValid($projectId))
+		{
+			$this->logger->warning("Invalid UUID format ({projectId})", ['projectId' => $projectId]);
+			return Utils::withUuidError($response);
+		}
+
+		$body = $request->getParsedBody();
+		$validateResult = $this->bodyValidator->validate(
+			d: $body,
+			checkRequired: true,
+			allowNestedArray: false,
+		);
+		if ($validateResult->isError)
+		{
+			$this->logger->warning(
+				"Invalid request body: {msg}",
+				[
+					'msg' => $validateResult->errorMsg
+				],
+			);
+			return $validateResult->getResponseWithJson($response);
+		}
+
+		return $this->workGroupsService->createWorkGroupInProject(
+			projectsId: Uuid::fromString($projectId),
+			userId: $userId,
+			description: Utils::getValueOrNull($body, 'description'),
+			name: Utils::getValueOrNull($body, 'name'),
+		)->getResponseWithJson($response);
+	}
+
+	public function getWorkGroupListByProject(
+		ServerRequestInterface $request,
+		ResponseInterface $response,
+		string $projectId
+	): ResponseInterface {
+		$userId = MyAuthMiddleware::getUserIdOrAnonymous($request);
+		if (!Uuid::isValid($projectId))
+		{
+			$this->logger->warning("Invalid UUID format ({projectId})", ['projectId' => $projectId]);
+			return Utils::withUuidError($response);
+		}
+
+		$pagingParams = PagingQueryValidator::withRequest($request, $this->logger);
+		if ($pagingParams->isError) {
+			return $pagingParams->reqError->getResponseWithJson($response);
+		}
+
+		return $this->workGroupsService->selectWorkGroupListByProject(
+			projectsId: Uuid::fromString($projectId),
+			userId: $userId,
+			pageFrom1: $pagingParams->pageFrom1,
+			perPage: $pagingParams->perPage,
+			topId: $pagingParams->topId,
+		)->getResponseWithJson($response);
+	}
 }

@@ -15,6 +15,9 @@ path:
     responses:
       '200':
         description: 取得成功
+        headers:
+          X-Total-Count:
+            $ref: '#/components/headers/X-Total-Count'
         content:
           application/json:
             schema:

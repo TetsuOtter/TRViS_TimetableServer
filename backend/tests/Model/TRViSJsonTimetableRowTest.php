@@ -22,6 +22,8 @@
  */
 namespace dev_t0r\trvis_backend\model;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversMethod;
 use PHPUnit\Framework\TestCase;
 use dev_t0r\trvis_backend\model\TRViSJsonTimetableRow;
 
@@ -31,9 +33,9 @@ use dev_t0r\trvis_backend\model\TRViSJsonTimetableRow;
  * @package dev_t0r\trvis_backend\model
  * @author  OpenAPI Generator team
  * @link    https://github.com/openapitools/openapi-generator
- *
- * @coversDefaultClass \dev_t0r\trvis_backend\model\TRViSJsonTimetableRow
  */
+#[CoversClass(\dev_t0r\trvis_backend\model\TRViSJsonTimetableRow::class)]
+#[CoversMethod(\dev_t0r\trvis_backend\model\TRViSJsonTimetableRow::class, 'getOpenApiSchema')]
 class TRViSJsonTimetableRowTest extends TestCase
 {
 
@@ -304,7 +306,6 @@ class TRViSJsonTimetableRowTest extends TestCase
 
     /**
      * Test getOpenApiSchema static method
-     * @covers ::getOpenApiSchema
      */
     public function testGetOpenApiSchema()
     {

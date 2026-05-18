@@ -25,6 +25,7 @@ final class RetValueOrError
 		int $statusCode = null,
 		string $errorMsg = null,
 		int $errorCode = null,
+		private readonly ?int $totalCount = null,
 	) {
 		$this->isError = $isError;
 		$this->value = $value;
@@ -40,18 +41,42 @@ final class RetValueOrError
 	public static function withValue(
 		mixed $value,
 		int $statusCode = null,
-	): RetValueOrError {
-		return new RetValueOrError(
+	): self {
+		return new self(
 			value: $value,
 			statusCode: $statusCode,
 		);
 	}
+	/**
+	 * @template T
+	 * @param RetValueOrError<T> $value
+	 * @param RetValueOrError<number> $totalCount
+	 */
+	public static function withTotalCount(
+		RetValueOrError $value,
+		RetValueOrError $totalCount,
+		int $statusCode = null,
+	): self {
+		// selectPageTotalCount は PDO 経由で COUNT(*) を文字列として返すため、
+		// ?int $totalCount へ渡す前にここで一元的に int 化する
+		// (constructor へ到達する全経路をこの一箇所でカバー)。負値はあり得ないが念のため 0 下限。
+		$totalCountValue = $totalCount->isError ? null : max(0, (int)$totalCount->value);
+		return new self(
+			isError: $value->isError,
+			value: $value->value,
+			statusCode: $statusCode ?? $value->statusCode,
+			errorMsg: $value->errorMsg,
+			errorCode: $value->errorCode,
+			totalCount: $totalCountValue,
+		);
+	}
+
 	public static function withError(
 		int $statusCode,
 		string $errorMsg,
 		int $errorCode = null,
-	): RetValueOrError {
-		return new RetValueOrError(
+	): self {
+		return new self(
 			isError: true,
 			statusCode: $statusCode,
 			errorMsg: $errorMsg,
@@ -61,7 +86,7 @@ final class RetValueOrError
 	public static function withBadReq(
 		string $errorMsg,
 		int $errorCode = null,
-	): RetValueOrError {
+	): self {
 		return self::withError(
 			statusCode: Constants::HTTP_BAD_REQUEST,
 			errorMsg: $errorMsg,
@@ -74,6 +99,11 @@ final class RetValueOrError
 		if ($this->isError) {
 			return Utils::withError($response, $this->statusCode, $this->errorMsg, $this->errorCode);
 		} else if (!is_null($this->value)) {
+			if (!is_null($this->totalCount)) {
+				// PSR-7 ResponseInterface::withHeader() は string|string[] を要求するため明示的に文字列化
+				$response = $response->withHeader(Constants::HEADER_TOTAL_COUNT, (string)$this->totalCount);
+			}
+
 			return Utils::withJson($response, $this->value, $statusCode ?? $this->statusCode);
 		} else {
 			return $response->withStatus($this->statusCode);

@@ -1,0 +1,136 @@
+name: Backend Tests
+
+# PR のマージ可否判定ゲート。
+# 重要: パスフィルタは付けない。required status check として常に必ず実行させ、
+# 「対象ファイルに触れていないから skip → 緑」で merge gate が素通りするのを防ぐ。
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: backend-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  phpunit:
+    name: PHPUnit (PHP 8.2 / MySQL 8.0)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    # 統合テストとスモークチェックで同一の接続情報を使う（ジョブ単位で一元定義し
+    # ステップ間のドリフトを防ぐ）。
+    # 値は mysql/.env.sample 由来のダミー (test/test)。本物の資格情報は使わない。
+    env:
+      TEST_DB_DSN: "mysql:host=127.0.0.1;port=3306;dbname=test;charset=utf8mb4"
+      TEST_DB_USER: test
+      TEST_DB_PASS: test
+
+    services:
+      mysql:
+        # docker-compose.yaml と同じ 8.0-oracle。本番 DB が MySQL 8.0 のためパリティを取る。
+        image: mysql:8.0-oracle
+        ports:
+          - 3306:3306
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+
+      - name: Setup PHP 8.2
+        # 正準ランタイムは backend/Dockerfile の php:8.2-apache。
+        # ローカルの PHP 8.5 で出る implicit-nullable deprecation を CI に持ち込まない。
+        uses: shivammathur/setup-php@2.37.0
+        with:
+          php-version: "8.2"
+          extensions: mbstring, intl, pdo_mysql, bcmath
+          coverage: none
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        working-directory: backend
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Composer packages
+        uses: actions/cache@v5.0.5
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-${{ runner.os }}-php82-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: |
+            composer-${{ runner.os }}-php82-
+
+      - name: Install dependencies
+        working-directory: backend
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Install MySQL client
+        # ubuntu-latest のデフォルトイメージは mysql-client を同梱保証しない。
+        # 未インストールだと Wait/Initialize がスモークチェック前に落ち、
+        # 「skip-guard で嘘の緑」と「クライアント欠如」の切り分けが付かなくなる。
+        # MySQL 8.0 の root は caching_sha2_password 認証。MariaDB クライアントは
+        # これを TCP で扱えないため、Oracle MySQL 8.0 クライアントを明示指定する。
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends mysql-client-core-8.0
+
+      - name: Wait for MySQL
+        # MYSQL_PWD でパスワードを渡し、コマンドライン平文 (-p) の 8.0 警告を抑止。
+        env:
+          MYSQL_PWD: root
+        run: |
+          for i in $(seq 1 30); do
+            if mysqladmin ping -h 127.0.0.1 -P 3306 -uroot --silent; then
+              echo "MySQL is up."
+              exit 0
+            fi
+            echo "Waiting for MySQL... ($i/30)"
+            sleep 2
+          done
+          echo "MySQL did not become ready in time." >&2
+          exit 1
+
+      - name: Initialize test database
+        # 開発環境 (mysql/conf.d/my.cnf: character-set-server=utf8mb4) と
+        # パリティを取るため DB を utf8mb4 で作成。init_sql のテーブルは
+        # 明示 CHARSET を持たず DB 既定を継承するためここが効く。
+        env:
+          MYSQL_PWD: root
+        run: |
+          mysql -h 127.0.0.1 -P 3306 -uroot <<'SQL'
+          CREATE DATABASE IF NOT EXISTS test CHARACTER SET utf8mb4;
+          CREATE USER IF NOT EXISTS 'test'@'%' IDENTIFIED BY 'test';
+          GRANT ALL PRIVILEGES ON test.* TO 'test'@'%';
+          FLUSH PRIVILEGES;
+          SQL
+          mysql -h 127.0.0.1 -P 3306 -uroot test < mysql/init_sql/0_create_db.sql
+
+      - name: Smoke check - DB really reachable with test schema
+        # 統合テスト (IntegrationTestCase) は PDO 接続失敗時に markTestSkipped する。
+        # つまり DB 設定ミス/未到達でも phpunit は exit 0 → ゲートが嘘の緑になる。
+        # phpunit と完全に同じ env で実際に接続し、スキーマが投入済みか検証して
+        # 不足なら必ずジョブを落とす。
+        working-directory: backend
+        run: |
+          php -r '
+            $pdo = new PDO(getenv("TEST_DB_DSN"), getenv("TEST_DB_USER"), getenv("TEST_DB_PASS"), [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+            $n = (int)$pdo->query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = '\''test'\''")->fetchColumn();
+            fwrite(STDERR, "test schema table count: {$n}\n");
+            if ($n < 10) {
+              fwrite(STDERR, "Smoke check FAILED: expected the test schema to be populated, but found only {$n} tables. Integration tests would be silently skipped.\n");
+              exit(1);
+            }
+            fwrite(STDERR, "Smoke check passed.\n");
+          '
+
+      - name: Run PHPUnit
+        working-directory: backend
+        run: composer test

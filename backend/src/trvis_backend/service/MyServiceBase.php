@@ -66,7 +66,7 @@ abstract class MyServiceBase implements IMyServiceBase
 			],
 		);
 		if (!$senderPrivilege->hasPrivilege(InviteKeyPrivilegeType::read)) {
-			return Utils::errWorkGroupNotFound();
+			return Utils::errContentNotFound();
 		}
 		return RetValueOrError::withValue(null);
 	}
@@ -102,16 +102,19 @@ abstract class MyServiceBase implements IMyServiceBase
 			],
 		);
 		if (!$senderPrivilege->hasPrivilege(InviteKeyPrivilegeType::read)) {
-			return Utils::errWorkGroupNotFound();
+			return Utils::errContentNotFound();
 		}
 		if (!$senderPrivilege->hasPrivilege(InviteKeyPrivilegeType::write)) {
 			$this->logger->warning(
-				'User[{userId}] does not have permission to create {dataTypeName}',
+				'User[{userId}] does not have permission to write {dataTypeName}',
 				[
 					'userId' => $senderUserId,
 					'dataTypeName' => $this->dataTypeName,
 				],
 			);
+			// read権限しか持たない主体 (匿名を含む) に作成/更新/削除を許してはならない。
+			// 存在情報を漏らさないため、checkPrivilegeToRead と同様に NotFound を返す。
+			return Utils::errContentNotFound();
 		}
 		return RetValueOrError::withValue(null);
 	}
@@ -262,7 +265,7 @@ abstract class MyServiceBase implements IMyServiceBase
 
 			return RetValueOrError::withError(
 				statusCode: Constants::HTTP_INTERNAL_SERVER_ERROR,
-				errorMsg: "Unexpected error occurred during insert - {$e->getMessage()}",
+				errorMsg: "Unexpected error occurred during insert",
 				errorCode: $e->getCode(),
 			);
 		}
@@ -420,7 +423,7 @@ abstract class MyServiceBase implements IMyServiceBase
 
 			return RetValueOrError::withError(
 				statusCode: Constants::HTTP_INTERNAL_SERVER_ERROR,
-				errorMsg: "Unexpected error occurred during delete - {$e->getMessage()}",
+				errorMsg: "Unexpected error occurred during delete",
 				errorCode: $e->getCode(),
 			);
 		}
@@ -465,7 +468,9 @@ abstract class MyServiceBase implements IMyServiceBase
 			],
 		);
 
-		$senderPrivilegeCheckResult = $this->checkPrivilegeToWrite(
+		// getOne は読み取り操作。checkPrivilegeToWrite が write を強制するようになったため
+		// read 権限で個別取得できるよう read チェックを使う。
+		$senderPrivilegeCheckResult = $this->checkPrivilegeToRead(
 			id: $id,
 			repo: $this->targetRepo,
 			senderUserId: $senderUserId,
@@ -510,11 +515,30 @@ abstract class MyServiceBase implements IMyServiceBase
 			return $senderPrivilegeCheckResult;
 		}
 
-		return $this->targetRepo->selectPage(
+		$totalCountResult = $this->targetRepo->selectPageTotalCount(
+			parentId: $parentId,
+			topId: $topId,
+		);
+		if ($totalCountResult->isError) {
+			$this->logger->warning(
+				'getPage{dataTypeName} selectPageTotalCount failed: [{statusCode}] {errorMsg}',
+				[
+					'dataTypeName' => $this->dataTypeName,
+					'statusCode' => $totalCountResult->statusCode,
+					'errorMsg' => $totalCountResult->errorMsg,
+				],
+			);
+			return $totalCountResult;
+		}
+		$selectPageResult = $this->targetRepo->selectPage(
 			parentId: $parentId,
 			pageFrom1: $pageFrom1,
 			perPage: $perPage,
 			topId: $topId,
+		);
+		return RetValueOrError::withTotalCount(
+			value: $selectPageResult,
+			totalCount: $totalCountResult,
 		);
 	}
 
@@ -669,7 +693,7 @@ abstract class MyServiceBase implements IMyServiceBase
 
 			return RetValueOrError::withError(
 				statusCode: Constants::HTTP_INTERNAL_SERVER_ERROR,
-				errorMsg: "Unexpected error occurred during update - {$e->getMessage()}",
+				errorMsg: "Unexpected error occurred during update",
 				errorCode: $e->getCode(),
 			);
 		}

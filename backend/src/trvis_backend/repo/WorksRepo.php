@@ -123,7 +123,7 @@ final class WorksRepo extends MyRepoBase
 		// TODO: implement affix_content
 		$query->bindValue(":affix_file_name_$i", null, PDO::PARAM_STR);
 		$query->bindValue(":remarks_$i", $d->remarks, PDO::PARAM_STR);
-		$query->bindValue(":has_e_train_timetable_$i", $d->has_e_train_timetable, PDO::PARAM_BOOL);
+		$query->bindValue(":has_e_train_timetable_$i", $d->has_e_train_timetable ?? false, PDO::PARAM_BOOL);
 		$query->bindValue(":e_train_timetable_content_type_$i", $d->e_train_timetable_content_type?->value, PDO::PARAM_INT);
 		// TODO: implement e_train_timetable_content
 		$query->bindValue(":e_train_timetable_file_name_$i", null, PDO::PARAM_STR);
@@ -146,6 +146,11 @@ final class WorksRepo extends MyRepoBase
 		);
 
 		$parentIdCount = count($parentIdList);
+		if ($parentIdCount === 0) {
+			// 親IDが空のとき IN () となり MySQL 構文エラー(42000)になるため、
+			// クエリを組み立てず空結果を返す（親が無ければ子も無い）。
+			return RetValueOrError::withValue([]);
+		}
 		$parentIdListPlaceholder = implode(', ', array_fill(0, $parentIdCount, '?'));
 		try
 		{

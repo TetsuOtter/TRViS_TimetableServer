@@ -11,7 +11,6 @@ use InvalidArgumentException;
 use PDO;
 use PDOStatement;
 use Psr\Log\LoggerInterface;
-use Ramsey\Uuid\Type\Hexadecimal;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
@@ -330,6 +329,74 @@ abstract class MyRepoBase implements IMyRepoBase
 	}
 
 	/**
+	 * (親テーブルが存在しない場合はこのメソッドを使用できないので注意)
+	 * @return RetValueOrError<number>
+	 */
+	public function selectPageTotalCount(
+		UuidInterface $parentId,
+		?UuidInterface $topId,
+	): RetValueOrError {
+		$this->logger->debug(
+			'selectPageTotalCount parentId: {parentId}, topId: {topId}',
+			[
+				'parentsId' => $parentId,
+				'topId' => $topId,
+			],
+		);
+
+		$hasTopId = !is_null($topId);
+		try
+		{
+			$query = $this->db->prepare(<<<SQL
+				SELECT
+					COUNT(*) AS count
+				FROM
+					{$this->TABLE_NAME}
+				WHERE
+					{$this->parentTableName}_id = :parent_id
+				AND
+					deleted_at IS NULL
+				SQL
+				.
+				(!$hasTopId ? ' ' : " AND {$this->TABLE_NAME}_id <= :top_id ")
+			);
+
+			$query->bindValue(':parent_id', $parentId->getBytes(), PDO::PARAM_STR);
+			if ($hasTopId) {
+				$query->bindValue(':top_id', $topId);
+			}
+
+			$query->execute();
+			$this->logger->debug(
+				'rorCount: {rowCount}',
+				[
+					'rowCount' => $query->rowCount(),
+				],
+			);
+			// PDO は COUNT(*) を文字列で返すため int 化して型契約 (RetValueOrError<number>) を正す
+			$totalCount = (int)$query->fetch(PDO::FETCH_ASSOC)['count'];
+
+			return RetValueOrError::withValue($totalCount);
+		}
+		catch (\PDOException $ex)
+		{
+			$errCode = $ex->getCode();
+
+			$this->logger->error(
+				"Failed to execute SQL ({errorCode} -> {errorInfo})",
+				[
+					"errorCode" => $errCode,
+					"errorInfo" => $ex->getMessage(),
+				],
+			);
+			return RetValueOrError::withError(
+				Constants::HTTP_INTERNAL_SERVER_ERROR,
+				"Failed to execute SQL - " . $errCode,
+			);
+		}
+	}
+
+	/**
 	 * @return RetValueOrError<array<T>>
 	 */
 	public function selectList(
@@ -522,9 +589,9 @@ abstract class MyRepoBase implements IMyRepoBase
 					$paramType = PDO::PARAM_NULL;
 				} else if ($newValue instanceof UuidInterface) {
 					$newValue = $value->getBytes();
-				} else if ($$newValue instanceof DateTimeInterface) {
-					$newValue = Utils::utcDateStrOrNull($$newValue);
-				} else if ($$newValue instanceof BackedEnum) {
+				} else if ($newValue instanceof DateTimeInterface) {
+					$newValue = Utils::utcDateStrOrNull($newValue);
+				} else if ($newValue instanceof BackedEnum) {
 					$newValue = $newValue->value;
 					$paramType = PDO::PARAM_INT;
 				} else if (is_int($newValue)) {
@@ -720,11 +787,18 @@ abstract class MyRepoBase implements IMyRepoBase
 			],
 		);
 
-		if ($userId === Constants::UID_ANONYMOUS)
-		{
-			// リクエスト対象自体がAnonymousの場合は、わざわざOR条件にする必要はない
-			$includeAnonymous = false;
-		}
+		// 自テーブル(および親チェーン)から所属 work_groups_id を解決し、
+		// 権限判定は WorkGroupsPrivilegesRepo へ委譲する。
+		// WorkGroupsPrivilegesRepo は work_groups.projects_id を辿って
+		// projects_privileges (= 現行の権限ルート) へ委譲し、projects_id
+		// 未割当のレガシー行に限り従来の work_groups_privileges を参照する。
+		//
+		// 旧実装は work_groups_privileges を直接 JOIN していたが、
+		// project-root 権限移行後は WorkGroupsService が権限を
+		// projects_privileges にのみ付与するため、この表は新規 WorkGroup
+		// には一切書き込まれず、admin を含む全ユーザが 404 になっていた。
+		// (MyProjectRootedRepoBase / WorkGroupsPrivilegesRepo と同じ
+		//  resolve-then-delegate パターンへ揃える)
 		$JOIN_QUERY = implode(
 			' ',
 			array_map(
@@ -752,71 +826,33 @@ abstract class MyRepoBase implements IMyRepoBase
 			$query = $this->db->prepare(
 				<<<SQL
 				SELECT
-					work_groups_privileges.privilege_type,
-					work_groups_privileges.uid,
-					work_groups_privileges.invite_keys_id
+					work_groups_id
 				FROM
 					{$this->TABLE_NAME}
 
 				{$JOIN_QUERY}
 
-				INNER JOIN
-					work_groups_privileges
-				USING
-					(work_groups_id)
 				WHERE
 					{$this->TABLE_NAME}_id = :id
 				AND
 					{$this->TABLE_NAME}.deleted_at IS NULL
 
 				{$PARENTS_WHERE_DELETED_AT_IS_NULL}
-
-				AND
 				SQL
-				.
-				($includeAnonymous ? ' uid IN (:userId, \'\')' : ' uid = :userId')
 				.
 				($selectForUpdate ? ' FOR UPDATE' : '')
 			);
 
-			$query->bindValue(':userId', $userId, PDO::PARAM_STR);
 			$query->bindValue(':id', $id->getBytes(), PDO::PARAM_STR);
 
 			$query->execute();
 			if ($query->rowCount() === 0)
 			{
-				$this->logger->warning('selectWorkGroupsId - rowCount is 0');
+				$this->logger->warning('selectPrivilegeType - target row not found (rowCount is 0)');
 				return Utils::errWorkGroupNotFound();
 			}
 
-			$privilegeTypeList = $query->fetchAll(PDO::FETCH_ASSOC);
-			$maximumPrivilegeTypeValue = InviteKeyPrivilegeType::none->value;
-			foreach ($privilegeTypeList as $row)
-			{
-				$privilegeTypeValue = intval($row['privilege_type']);
-				$inviteKeysId = $row['invite_keys_id'];
-				$this->logger->debug(
-					'privilege type: {privilegeType} (UID:{uid}, InviteKey:{inviteKeysId})',
-					[
-						'privilegeType' => $privilegeTypeValue,
-						'uid' => $row['uid'],
-						'inviteKeysId' => is_null($inviteKeysId) ? null : Uuid::fromBytes($inviteKeysId),
-					]
-				);
-				if ($maximumPrivilegeTypeValue < $privilegeTypeValue)
-				{
-					$maximumPrivilegeTypeValue = $privilegeTypeValue;
-				}
-			}
-			$this->logger->debug(
-				'maximum privilege type: {privilegeType}',
-				[
-					'privilegeType' => $maximumPrivilegeTypeValue,
-				]
-			);
-			return RetValueOrError::withValue(
-				InviteKeyPrivilegeType::fromInt($maximumPrivilegeTypeValue)
-			);
+			$workGroupsIdBytes = $query->fetchColumn();
 		}
 		catch (\PDOException $ex)
 		{
@@ -834,6 +870,15 @@ abstract class MyRepoBase implements IMyRepoBase
 				"Failed to execute SQL - " . $errCode,
 			);
 		}
+
+		// 解決した work_groups_id を起点に、移行後の権限解決
+		// (projects_privileges / レガシー fallback) を委譲する
+		return (new WorkGroupsPrivilegesRepo($this->db, $this->logger))->selectPrivilegeType(
+			id: Uuid::fromBytes($workGroupsIdBytes),
+			userId: $userId,
+			includeAnonymous: $includeAnonymous,
+			selectForUpdate: $selectForUpdate,
+		);
 	}
 
 	/**

@@ -45,9 +45,9 @@ CREATE TABLE
 );
 
 CREATE TABLE
-  work_groups
+  projects
 (
-  work_groups_id
+  projects_id
     BINARY(16)
     NOT NULL
     COMMENT 'UUID v4'
@@ -88,7 +88,68 @@ CREATE TABLE
   ,
 
   PRIMARY KEY (
+    projects_id
+  )
+);
+
+CREATE TABLE
+  work_groups
+(
+  work_groups_id
+    BINARY(16)
+    NOT NULL
+    COMMENT 'UUID v4'
+  ,
+
+  projects_id
+    BINARY(16)
+    NOT NULL
+    COMMENT 'UUID v4 (所属するProject。未リリースのため常にNOT NULL)'
+  ,
+
+  created_at
+    DATETIME
+    NOT NULL
+    DEFAULT CURRENT_TIMESTAMP
+  ,
+
+  owner
+    VARCHAR(255)
+    CHARACTER SET ascii
+    COLLATE ascii_bin
+    NOT NULL
+  ,
+
+  updated_at
+    DATETIME
+    NOT NULL
+    DEFAULT CURRENT_TIMESTAMP
+    ON UPDATE CURRENT_TIMESTAMP
+  ,
+
+  deleted_at
+    DATETIME
+  ,
+
+  description
+    VARCHAR(255)
+    NOT NULL
+  ,
+
+  name
+    VARCHAR(255)
+    NOT NULL
+  ,
+
+  PRIMARY KEY (
     work_groups_id
+  ),
+
+  FOREIGN KEY (
+    projects_id
+  ) REFERENCES
+  projects (
+    projects_id
   )
 );
 
@@ -234,7 +295,6 @@ CREATE TABLE
 
   affect_date
     DATETIME
-    NOT NULL
   ,
 
   affix_content_type
@@ -355,7 +415,7 @@ CREATE TABLE
   remarks
     TEXT(65535)
   ,
-  
+
   before_departure
     VARCHAR(1023)
   ,
@@ -861,5 +921,581 @@ CREATE TABLE
   ) REFERENCES
   invite_keys (
     invite_keys_id
+  )
+);
+
+CREATE TABLE
+  projects_privileges
+(
+  uid
+    VARCHAR(255)
+    CHARACTER SET ascii
+    COLLATE ascii_bin
+    NOT NULL
+  ,
+
+  projects_id
+    BINARY(16)
+    NOT NULL
+    COMMENT 'UUID v4'
+  ,
+
+  invite_keys_id
+    BINARY(16)
+    COMMENT 'UUID v4'
+  ,
+
+  created_at
+    DATETIME
+    NOT NULL
+    DEFAULT CURRENT_TIMESTAMP
+  ,
+
+  updated_at
+    DATETIME
+    NOT NULL
+    DEFAULT CURRENT_TIMESTAMP
+    ON UPDATE CURRENT_TIMESTAMP
+  ,
+
+  deleted_at
+    DATETIME
+  ,
+
+  privilege_type
+    TINYINT
+    NOT NULL
+  ,
+
+  PRIMARY KEY (
+    uid,
+    projects_id
+  ),
+
+  FOREIGN KEY (
+    projects_id
+  ) REFERENCES
+  projects (
+    projects_id
+  ),
+
+  FOREIGN KEY (
+    invite_keys_id
+  ) REFERENCES
+  invite_keys (
+    invite_keys_id
+  )
+);
+
+-- NOTE: `lines` は MySQL の予約語 (LOAD DATA ... LINES) のため、テーブル名は
+-- `project_lines` / PK `project_lines_id` とする (バッククォート不使用の既存規約を維持)。
+-- API/OpenAPI 仕様上は `Line` / `lines_id` のまま。Repo層で別名マッピングする
+-- (WorksRepo の `works.affect_date AS AffectDate` と同様のパターン)。
+CREATE TABLE
+  project_lines
+(
+  project_lines_id
+    BINARY(16)
+    NOT NULL
+    COMMENT 'UUID v4'
+  ,
+
+  projects_id
+    BINARY(16)
+    NOT NULL
+    COMMENT 'UUID v4'
+  ,
+
+  description
+    VARCHAR(255)
+    NOT NULL
+  ,
+
+  owner
+    VARCHAR(255)
+    CHARACTER SET ascii
+    COLLATE ascii_bin
+    NOT NULL
+  ,
+
+  created_at
+    DATETIME
+    NOT NULL
+    DEFAULT CURRENT_TIMESTAMP
+  ,
+
+  updated_at
+    DATETIME
+    NOT NULL
+    DEFAULT CURRENT_TIMESTAMP
+    ON UPDATE CURRENT_TIMESTAMP
+  ,
+
+  deleted_at
+    DATETIME
+  ,
+
+  name
+    VARCHAR(255)
+    NOT NULL
+  ,
+
+  PRIMARY KEY (
+    project_lines_id
+  ),
+
+  FOREIGN KEY (
+    projects_id
+  ) REFERENCES
+  projects (
+    projects_id
+  )
+);
+
+CREATE TABLE
+  project_stations
+(
+  project_stations_id
+    BINARY(16)
+    NOT NULL
+    COMMENT 'UUID v4'
+  ,
+
+  projects_id
+    BINARY(16)
+    NOT NULL
+    COMMENT 'UUID v4'
+  ,
+
+  description
+    VARCHAR(255)
+    NOT NULL
+    DEFAULT ''
+  ,
+
+  owner
+    VARCHAR(255)
+    CHARACTER SET ascii
+    COLLATE ascii_bin
+    NOT NULL
+  ,
+
+  created_at
+    DATETIME
+    NOT NULL
+    DEFAULT CURRENT_TIMESTAMP
+  ,
+
+  updated_at
+    DATETIME
+    NOT NULL
+    DEFAULT CURRENT_TIMESTAMP
+    ON UPDATE CURRENT_TIMESTAMP
+  ,
+
+  deleted_at
+    DATETIME
+  ,
+
+  name
+    VARCHAR(255)
+    NOT NULL
+  ,
+
+  full_name
+    VARCHAR(255)
+  ,
+
+  location_lonlat
+    POINT
+  ,
+
+  on_station_detect_radius_m
+    DOUBLE PRECISION
+  ,
+
+  always_show_hh
+    BOOLEAN
+    NOT NULL
+    DEFAULT FALSE
+  ,
+
+  PRIMARY KEY (
+    project_stations_id
+  ),
+
+  FOREIGN KEY (
+    projects_id
+  ) REFERENCES
+  projects (
+    projects_id
+  )
+);
+
+CREATE TABLE
+  stations_on_line
+(
+  stations_on_line_id
+    BINARY(16)
+    NOT NULL
+    COMMENT 'UUID v4'
+  ,
+
+  projects_id
+    BINARY(16)
+    NOT NULL
+    COMMENT 'UUID v4'
+  ,
+
+  project_lines_id
+    BINARY(16)
+    NOT NULL
+    COMMENT 'UUID v4'
+  ,
+
+  project_stations_id
+    BINARY(16)
+    NOT NULL
+    COMMENT 'UUID v4'
+  ,
+
+  description
+    VARCHAR(255)
+    NOT NULL
+    DEFAULT ''
+  ,
+
+  owner
+    VARCHAR(255)
+    CHARACTER SET ascii
+    COLLATE ascii_bin
+    NOT NULL
+  ,
+
+  created_at
+    DATETIME
+    NOT NULL
+    DEFAULT CURRENT_TIMESTAMP
+  ,
+
+  updated_at
+    DATETIME
+    NOT NULL
+    DEFAULT CURRENT_TIMESTAMP
+    ON UPDATE CURRENT_TIMESTAMP
+  ,
+
+  deleted_at
+    DATETIME
+  ,
+
+  location_m
+    DOUBLE PRECISION
+    NOT NULL
+  ,
+
+  location_lonlat
+    POINT
+  ,
+
+  track_hidden_by_default
+    BOOLEAN
+    NOT NULL
+    DEFAULT FALSE
+  ,
+
+  PRIMARY KEY (
+    stations_on_line_id
+  ),
+
+  FOREIGN KEY (
+    projects_id
+  ) REFERENCES
+  projects (
+    projects_id
+  ),
+
+  FOREIGN KEY (
+    project_lines_id
+  ) REFERENCES
+  project_lines (
+    project_lines_id
+  ),
+
+  FOREIGN KEY (
+    project_stations_id
+  ) REFERENCES
+  project_stations (
+    project_stations_id
+  )
+);
+
+CREATE TABLE
+  stop_patterns
+(
+  stop_patterns_id
+    BINARY(16)
+    NOT NULL
+    COMMENT 'UUID v4'
+  ,
+
+  projects_id
+    BINARY(16)
+    NOT NULL
+    COMMENT 'UUID v4'
+  ,
+
+  project_lines_id
+    BINARY(16)
+    NOT NULL
+    COMMENT 'UUID v4'
+  ,
+
+  description
+    VARCHAR(255)
+    NOT NULL
+    DEFAULT ''
+  ,
+
+  owner
+    VARCHAR(255)
+    CHARACTER SET ascii
+    COLLATE ascii_bin
+    NOT NULL
+  ,
+
+  created_at
+    DATETIME
+    NOT NULL
+    DEFAULT CURRENT_TIMESTAMP
+  ,
+
+  updated_at
+    DATETIME
+    NOT NULL
+    DEFAULT CURRENT_TIMESTAMP
+    ON UPDATE CURRENT_TIMESTAMP
+  ,
+
+  deleted_at
+    DATETIME
+  ,
+
+  name
+    VARCHAR(255)
+    NOT NULL
+  ,
+
+  from_project_stations_id
+    BINARY(16)
+    COMMENT 'UUID v4'
+  ,
+
+  to_project_stations_id
+    BINARY(16)
+    COMMENT 'UUID v4'
+  ,
+
+  direction
+    TINYINT
+    NOT NULL
+    DEFAULT 1
+  ,
+
+  PRIMARY KEY (
+    stop_patterns_id
+  ),
+
+  FOREIGN KEY (
+    projects_id
+  ) REFERENCES
+  projects (
+    projects_id
+  ),
+
+  FOREIGN KEY (
+    project_lines_id
+  ) REFERENCES
+  project_lines (
+    project_lines_id
+  ),
+
+  FOREIGN KEY (
+    from_project_stations_id
+  ) REFERENCES
+  project_stations (
+    project_stations_id
+  ),
+
+  FOREIGN KEY (
+    to_project_stations_id
+  ) REFERENCES
+  project_stations (
+    project_stations_id
+  )
+);
+
+CREATE TABLE
+  stop_pattern_rows
+(
+  stop_pattern_rows_id
+    BINARY(16)
+    NOT NULL
+    COMMENT 'UUID v4'
+  ,
+
+  stop_patterns_id
+    BINARY(16)
+    NOT NULL
+    COMMENT 'UUID v4'
+  ,
+
+  projects_id
+    BINARY(16)
+    NOT NULL
+    COMMENT 'UUID v4'
+  ,
+
+  project_stations_id
+    BINARY(16)
+    NOT NULL
+    COMMENT 'UUID v4'
+  ,
+
+  description
+    VARCHAR(255)
+    NOT NULL
+    DEFAULT ''
+  ,
+
+  owner
+    VARCHAR(255)
+    CHARACTER SET ascii
+    COLLATE ascii_bin
+    NOT NULL
+  ,
+
+  created_at
+    DATETIME
+    NOT NULL
+    DEFAULT CURRENT_TIMESTAMP
+  ,
+
+  updated_at
+    DATETIME
+    NOT NULL
+    DEFAULT CURRENT_TIMESTAMP
+    ON UPDATE CURRENT_TIMESTAMP
+  ,
+
+  deleted_at
+    DATETIME
+  ,
+
+  sort_key
+    INTEGER
+    NOT NULL
+    DEFAULT 0
+  ,
+
+  track_name
+    VARCHAR(255)
+  ,
+
+  track_hidden
+    BOOLEAN
+    NOT NULL
+    DEFAULT FALSE
+  ,
+
+  is_operation_only_stop
+    BOOLEAN
+    NOT NULL
+    DEFAULT FALSE
+  ,
+
+  is_pass
+    BOOLEAN
+    NOT NULL
+    DEFAULT FALSE
+  ,
+
+  drive_time_mm
+    TINYINT(3) UNSIGNED
+  ,
+
+  drive_time_ss
+    TINYINT(2) UNSIGNED
+  ,
+
+  dwell_time_mm
+    TINYINT(3) UNSIGNED
+  ,
+
+  dwell_time_ss
+    TINYINT(2) UNSIGNED
+  ,
+
+  show_arrive
+    BOOLEAN
+    NOT NULL
+    DEFAULT TRUE
+  ,
+
+  show_departure
+    BOOLEAN
+    NOT NULL
+    DEFAULT TRUE
+  ,
+
+  arrive_str
+    VARCHAR(255)
+  ,
+
+  departure_str
+    VARCHAR(255)
+  ,
+
+  run_in_limit
+    SMALLINT
+  ,
+
+  run_out_limit
+    SMALLINT
+  ,
+
+  remarks
+    TEXT(65535)
+  ,
+
+  always_show_hh
+    BOOLEAN
+    NOT NULL
+    DEFAULT FALSE
+  ,
+
+  PRIMARY KEY (
+    stop_pattern_rows_id
+  ),
+
+  FOREIGN KEY (
+    stop_patterns_id
+  ) REFERENCES
+  stop_patterns (
+    stop_patterns_id
+  ),
+
+  FOREIGN KEY (
+    projects_id
+  ) REFERENCES
+  projects (
+    projects_id
+  ),
+
+  FOREIGN KEY (
+    project_stations_id
+  ) REFERENCES
+  project_stations (
+    project_stations_id
   )
 );

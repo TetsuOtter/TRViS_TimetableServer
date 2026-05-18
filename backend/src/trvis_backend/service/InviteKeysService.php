@@ -6,6 +6,8 @@ use dev_t0r\trvis_backend\Constants;
 use dev_t0r\trvis_backend\model\InviteKey;
 use dev_t0r\trvis_backend\model\InviteKeyPrivilegeType;
 use dev_t0r\trvis_backend\repo\InviteKeysRepo;
+use dev_t0r\trvis_backend\repo\ProjectsPrivilegesRepo;
+use dev_t0r\trvis_backend\repo\WorkGroupsRepo;
 use dev_t0r\trvis_backend\repo\WorkGroupsPrivilegesRepo;
 use dev_t0r\trvis_backend\RetValueOrError;
 use dev_t0r\trvis_backend\Utils;
@@ -18,6 +20,8 @@ final class InviteKeysService
 {
 	private readonly InviteKeysRepo $inviteKeysRepo;
 	private readonly WorkGroupsPrivilegesRepo $workGroupsPrivilegesRepo;
+	private readonly WorkGroupsRepo $workGroupsRepo;
+	private readonly ProjectsPrivilegesRepo $projectsPrivilegesRepo;
 
 	public function __construct(
 		private readonly PDO $db,
@@ -25,6 +29,8 @@ final class InviteKeysService
 	) {
 		$this->inviteKeysRepo = new InviteKeysRepo($db, $logger);
 		$this->workGroupsPrivilegesRepo = new WorkGroupsPrivilegesRepo($db, $logger);
+		$this->workGroupsRepo = new WorkGroupsRepo($db, $logger);
+		$this->projectsPrivilegesRepo = new ProjectsPrivilegesRepo($db, $logger);
 	}
 
 	public function createInviteKey(
@@ -108,10 +114,38 @@ final class InviteKeysService
 
 	public function selectInviteKey(
 		UuidInterface $inviteKeyId,
+		string $userId,
 	): RetValueOrError {
-		return $this->inviteKeysRepo->selectInviteKey(
+		$inviteKeyData = $this->inviteKeysRepo->selectInviteKey(
 			inviteKeyId: $inviteKeyId,
 		);
+		if ($inviteKeyData->isError) {
+			return $inviteKeyData;
+		}
+
+		// InviteKey は UUID を知っていれば使える bearer-capability 的な存在のため、
+		// 個別取得 (privilege_type / work_groups_id の開示) は所属WorkGroupの
+		// admin のみに限定する (disableInviteKey / selectInviteKeyListWithWorkGroupsId と同じゲート)。
+		$privilegeType = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
+			id: $inviteKeyData->value->work_groups_id,
+			userId: $userId,
+			includeAnonymous: true,
+			selectForUpdate: false,
+		);
+		if ($privilegeType->isError) {
+			return $privilegeType;
+		}
+		if (!$privilegeType->value->hasPrivilege(InviteKeyPrivilegeType::read)) {
+			return Utils::errWorkGroupNotFound();
+		}
+		if (!$privilegeType->value->hasPrivilege(InviteKeyPrivilegeType::admin)) {
+			return RetValueOrError::withError(
+				Constants::HTTP_FORBIDDEN,
+				"You don't have enough privilege to get InviteKey",
+			);
+		}
+
+		return $inviteKeyData;
 	}
 
 	public function selectInviteKeyListWithOwnerUid(
@@ -230,16 +264,25 @@ final class InviteKeysService
 					'currentPrivilegeType' => $currentPrivilegeType->value,
 				]
 			);
+			// Project = 権限ルート: 招待キーで付与する権限は所属Projectの
+			// projects_privileges に書き込む (Decision 2)
+			$projectsIdResult = $this->workGroupsRepo->selectProjectsIdByWorkGroupsId($workGroupId);
+			if ($projectsIdResult->isError) {
+				$this->db->rollBack();
+				return $projectsIdResult;
+			}
+			$projectsId = $projectsIdResult->value;
+
 			if ($isCreateNew) {
-				$execResult = $this->workGroupsPrivilegesRepo->insert(
-					workGroupsId: $workGroupId,
+				$execResult = $this->projectsPrivilegesRepo->insert(
+					projectsId: $projectsId,
 					privilegeType: $privilegeType,
 					userId: $userId,
 					inviteKeysId: $inviteKeyId,
 				);
 			} else {
-				$execResult = $this->workGroupsPrivilegesRepo->changeType(
-					workGroupsId: $workGroupId,
+				$execResult = $this->projectsPrivilegesRepo->changeType(
+					projectsId: $projectsId,
 					newPrivilegeType: $privilegeType,
 					userId: $userId,
 					inviteKeysId: $inviteKeyId,
@@ -385,6 +428,11 @@ final class InviteKeysService
 				inviteKeyId: $inviteKeyId,
 				userId: $userId,
 			);
+			if ($disableInviteKeyResult->isError) {
+				$this->db->rollBack();
+				return $disableInviteKeyResult;
+			}
+			$this->db->commit();
 			return $disableInviteKeyResult;
 		} catch (\Throwable $th) {
 			$this->db->rollBack();

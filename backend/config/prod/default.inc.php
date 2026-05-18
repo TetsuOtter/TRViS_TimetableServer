@@ -42,7 +42,11 @@ return [
 		86400, // preFlightCacheMaxAge
 		true, // isForceAddMethods
 		true, // isForceAddHeaders
-		true, // isUseCredentials
+		// 認証は Cookie ではなく Authorization: Bearer のみ。credentials を有効にすると
+		// neomerx が「リクエスト Origin の反射 + Access-Control-Allow-Credentials: true」を
+		// 返し、任意オリジン許可と組み合わさって CSRF 的悪用の踏み台になるため無効化する。
+		// オリジンを限定したい場合は config.inc.php で allowedOrigins / areAllOriginsAllowed を上書きする。
+		false, // isUseCredentials
 		true, // areAllOriginsAllowed
 		[], // allowedOrigins
 		true, // areAllMethodsAllowed
@@ -51,7 +55,7 @@ return [
 		true, // areAllHeadersAllowed
 		['content-type', 'authorization'], // allowedLcHeaders
 		'Content-Type,Authorization', // allowedHeadersList
-		'', // exposedHeadersList
+		'X-Total-Count', // exposedHeadersList
 		true, // isCheckHost
 	],
 
@@ -75,7 +79,7 @@ return [
 	'app.name' => 'trvis-backend',
 	'app.version' => '1.0.0',
 
-	'firebase.sa_file' => \realpath(__DIR__ . '/firebase-service-account.json'),
+	'firebase.sa_file' => \realpath(__DIR__)  . '/firebase-service-account.json',
 	'firebase.project_id' => 'trvis-app',
 
 	'firebase.api_token_cache_dir' => \realpath(__DIR__ . '/../../cache') . '/firebase/ApiToken',

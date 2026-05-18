@@ -22,6 +22,53 @@ final class WorkGroupsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 	}
 
 	/**
+	 * 指定WorkGroupが属するProjectのIDを取得する。
+	 *
+	 * Project = 権限ルート方式: WorkGroupの権限は所属Projectの権限から導出する。
+	 * projects_id が NULL のレガシーWG (旧 POST /work_groups で作成) は
+	 * 従来どおり work_groups_privileges を参照する (後方互換)。
+	 *
+	 * @return RetValueOrError<?UuidInterface> value=null は Project未割当(レガシー)
+	 */
+	private function _selectProjectsIdByWorkGroupsId(
+		UuidInterface $workGroupsId,
+		bool $selectForUpdate = false,
+	): RetValueOrError {
+		try
+		{
+			$query = $this->db->prepare(
+				'SELECT projects_id FROM work_groups WHERE work_groups_id = :workGroupsId AND deleted_at IS NULL'
+				. ($selectForUpdate ? ' FOR UPDATE' : '')
+				. ';'
+			);
+			$query->bindValue(':workGroupsId', $workGroupsId->getBytes(), PDO::PARAM_STR);
+			$query->execute();
+			if ($query->rowCount() === 0)
+			{
+				return Utils::errWorkGroupNotFound();
+			}
+			$row = $query->fetch(PDO::FETCH_ASSOC);
+			$projectsIdBytes = $row['projects_id'];
+			return RetValueOrError::withValue(
+				is_null($projectsIdBytes) ? null : Uuid::fromBytes($projectsIdBytes)
+			);
+		}
+		catch (\PDOException $e)
+		{
+			$errCode = $e->getCode();
+			$this->logger->error(
+				'failed to resolve projects_id for work group ({errorCode})',
+				[ "errorCode" => $errCode ],
+			);
+			return RetValueOrError::withError(
+				Constants::HTTP_INTERNAL_SERVER_ERROR,
+				"Failed to execute SQL - " . $errCode,
+				$errCode,
+			);
+		}
+	}
+
+	/**
 	 * @return RetValueOrError<null>
 	 */
 	public function insert(
@@ -182,6 +229,22 @@ final class WorkGroupsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 			// リクエスト対象自体がAnonymousの場合は、わざわざOR条件にする必要はない
 			$includeAnonymous = false;
 		}
+
+		$projectsIdResult = $this->_selectProjectsIdByWorkGroupsId($id, $selectForUpdate);
+		if ($projectsIdResult->isError) {
+			return $projectsIdResult;
+		}
+		$projectsId = $projectsIdResult->value;
+		if (!is_null($projectsId)) {
+			// Project = 権限ルート: 所属Projectの権限を導出して返す
+			return (new ProjectsPrivilegesRepo($this->db, $this->logger))->selectPrivilegeType(
+				id: $projectsId,
+				userId: $userId,
+				includeAnonymous: $includeAnonymous,
+				selectForUpdate: $selectForUpdate,
+			);
+		}
+		// projects_id 未割当(レガシー)の場合のみ、従来の work_groups_privileges を参照
 		try
 		{
 			$query = $this->db->prepare(
@@ -286,6 +349,37 @@ final class WorkGroupsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 			$this->logger->debug('userId is anonymous, so includeAnonymous is set to false');
 			$includeAnonymous = false;
 		}
+
+		$projectsIdResult = $this->_selectProjectsIdByWorkGroupsId($workGroupsId, $selectForUpdate);
+		if ($projectsIdResult->isError) {
+			return $projectsIdResult;
+		}
+		$projectsId = $projectsIdResult->value;
+		if (!is_null($projectsId)) {
+			// Project = 権限ルート: Projectの権限を導出し、WorkGroupsPrivilege形に詰め替えて返す
+			// (GET /work_groups/{id}/privileges のレスポンススキーマを維持するため)
+			$projObjResult = (new ProjectsPrivilegesRepo($this->db, $this->logger))->selectPrivilegeTypeObject(
+				projectsId: $projectsId,
+				userId: $userId,
+				includeAnonymous: $includeAnonymous,
+				selectForUpdate: $selectForUpdate,
+			);
+			if ($projObjResult->isError) {
+				return $projObjResult;
+			}
+			$pp = $projObjResult->value;
+			$wgp = new WorkGroupsPrivilege();
+			$wgp->setData([
+				'uid' => $pp->uid,
+				'work_groups_id' => $workGroupsId,
+				'invite_keys_id' => $pp->invite_keys_id,
+				'created_at' => $pp->created_at,
+				'updated_at' => $pp->updated_at,
+				'privilege_type' => $pp->privilege_type,
+			]);
+			return RetValueOrError::withValue($wgp);
+		}
+		// projects_id 未割当(レガシー)の場合のみ、従来の work_groups_privileges を参照
 		try
 		{
 			$query = $this->db->prepare(

@@ -13,6 +13,8 @@ composer.phar
 # Do not commit local PHPUnit config
 /phpunit.xml
 /.phpunit.result.cache
+# PHPUnit 10+ cache directory (cacheDirectory in phpunit.xml.dist)
+/.phpunit.cache/
 
 # Do not commit local PHP_CodeSniffer config
 /phpcs.xml

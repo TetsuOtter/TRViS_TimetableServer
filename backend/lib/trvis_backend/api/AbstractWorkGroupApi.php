@@ -59,6 +59,29 @@ abstract class AbstractWorkGroupApi
     }
 
     /**
+     * POST createWorkGroupInProject
+     * Summary: 作成する
+     * Notes: 指定のProjectに属する WorkGroup を新しく作成する  このProjectへのWRITE権限が必要です。
+     * Output-Formats: [application/json]
+     *
+     * @param ServerRequestInterface $request  Request
+     * @param ResponseInterface      $response Response
+     * @param string $projectId ProjectのID
+     *
+     * @return ResponseInterface
+     * @throws HttpNotImplementedException to force implementation class to override this method
+     */
+    public function createWorkGroupInProject(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        string $projectId
+    ): ResponseInterface {
+        $body = $request->getParsedBody();
+        $message = "How about implementing createWorkGroupInProject as a POST method in dev_t0r\trvis_backend\api\WorkGroupApi class?";
+        throw new HttpNotImplementedException($request, $message);
+    }
+
+    /**
      * DELETE deleteWorkGroup
      * Summary: 削除する
      * Notes: 既存の「Workのまとまり (WorkGroup)」を削除する  このデータが属するWorkGroupへのADMIN権限が必要です。
@@ -148,6 +171,32 @@ abstract class AbstractWorkGroupApi
         $limit = (key_exists('limit', $queryParams)) ? $queryParams['limit'] : null;
         $top = (key_exists('top', $queryParams)) ? $queryParams['top'] : null;
         $message = "How about implementing getWorkGroupList as a GET method in dev_t0r\trvis_backend\api\WorkGroupApi class?";
+        throw new HttpNotImplementedException($request, $message);
+    }
+
+    /**
+     * GET getWorkGroupListByProject
+     * Summary: 複数件取得する
+     * Notes: 指定のProjectに属する WorkGroup の情報を複数件取得する  このProjectへのREAD権限が必要です。
+     * Output-Formats: [application/json]
+     *
+     * @param ServerRequestInterface $request  Request
+     * @param ResponseInterface      $response Response
+     * @param string $projectId ProjectのID
+     *
+     * @return ResponseInterface
+     * @throws HttpNotImplementedException to force implementation class to override this method
+     */
+    public function getWorkGroupListByProject(
+        ServerRequestInterface $request,
+        ResponseInterface $response,
+        string $projectId
+    ): ResponseInterface {
+        $queryParams = $request->getQueryParams();
+        $p = (key_exists('p', $queryParams)) ? $queryParams['p'] : null;
+        $limit = (key_exists('limit', $queryParams)) ? $queryParams['limit'] : null;
+        $top = (key_exists('top', $queryParams)) ? $queryParams['top'] : null;
+        $message = "How about implementing getWorkGroupListByProject as a GET method in dev_t0r\trvis_backend\api\WorkGroupApi class?";
         throw new HttpNotImplementedException($request, $message);
     }
 

@@ -42,7 +42,10 @@ return [
 		0, // preFlightCacheMaxAge
 		false, // isForceAddMethods
 		false, // isForceAddHeaders
-		true, // isUseCredentials
+		// 認証は Cookie ではなく Authorization: Bearer のみ。credentials を有効にすると
+		// neomerx が「リクエスト Origin の反射 + Access-Control-Allow-Credentials: true」を
+		// 返し、任意オリジン許可と組み合わさって CSRF 的悪用の踏み台になるため無効化する。
+		false, // isUseCredentials
 		true, // areAllOriginsAllowed
 		[], // allowedOrigins
 		true, // areAllMethodsAllowed
@@ -51,7 +54,7 @@ return [
 		true, // areAllHeadersAllowed
 		[], // allowedLcHeaders
 		'authorization, content-type, x-requested-with', // allowedHeadersList
-		'', // exposedHeadersList
+		'X-Total-Count', // exposedHeadersList
 		true, // isCheckHost
 	],
 
