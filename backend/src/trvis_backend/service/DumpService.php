@@ -107,6 +107,7 @@ final class DumpService
 		}
 
 		$workGroupsResult = $this->workGroupsRepo->selectWorkGroupOne(
+			userId: $senderUserId,
 			workGroupId: $workGroupsId,
 		);
 		if ($workGroupsResult->isError) {
