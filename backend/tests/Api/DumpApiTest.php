@@ -6,15 +6,12 @@
  * NOTE: OpenAPI-Generator stub filled with DB integration tests for
  * DumpApi -> DumpService::dump. dump() is read-gated via
  * checkPrivilegeToRead (WorkGroupsPrivilegesRepo -> project ->
- * projects_privileges). The WG is populated (Work -> Train +
- * Station -> TimetableRow) so the admin happy path exercises the full
- * works/trains/timetable_rows dump chain.
- *
- * KNOWN PRE-EXISTING BUG (out of scope here, documented for follow-up):
- * dumping an EMPTY WorkGroup 500s with SQLSTATE 42000 -- worksIdList
- * is [] so trainsRepo->dump() builds `WHERE works_id IN ()`, which is
- * a MySQL syntax error. This test therefore populates the WG; the
- * empty-WG path is intentionally not asserted as success.
+ * projects_privileges). The populated WG (Work -> Train +
+ * Station -> TimetableRow) exercises the full works/trains/
+ * timetable_rows dump chain; testDumpEmptyWorkGroup covers the
+ * empty-WG path (previously 500 / SQLSTATE 42000 from
+ * `WHERE works_id IN ()`, fixed by the empty-parentIdList guard in
+ * Works/Trains/TimetableRowsRepo::dump).
  * @see tests/Integration/IntegrationTestCase.php
  */
 
@@ -137,5 +134,30 @@ class DumpApiTest extends IntegrationTestCase
 		$unknown = $this->svc()->dump(Uuid::uuid7(), $this->userId);
 		$this->assertTrue($unknown->isError, 'unknown WG must be 404');
 		$this->assertSame(404, $unknown->statusCode);
+	}
+
+	/**
+	 * Regression: an empty WorkGroup (no Work) must dump cleanly.
+	 * Previously worksIdList=[] made trainsRepo->dump() emit
+	 * `WHERE works_id IN ()` -> SQLSTATE 42000 / HTTP 500.
+	 *
+	 * @covers ::dumpTimetable
+	 */
+	public function testDumpEmptyWorkGroup()
+	{
+		$wg = (new WorkGroupsService($this->db, $this->logger))->createWorkGroupInProject(
+			$this->projectId,
+			$this->userId,
+			'Empty WG',
+			'desc',
+		);
+		$this->assertOk($wg, 'createWorkGroupInProject');
+		$wgId = $wg->value->work_groups_id;
+		$this->register('work_groups', 'work_groups_id', (string)$wgId);
+
+		$d = $this->svc()->dump($wgId, $this->userId);
+		$this->assertOk($d, 'dump (empty WG)');
+		$this->assertSame('Empty WG', $d->value->Name);
+		$this->assertSame([], $d->value->Works, 'empty WG must dump zero Works');
 	}
 }
