@@ -6,6 +6,7 @@ import { ApplyPatternDialog } from "./ApplyPatternDialog";
 import { BBCodeField } from "./BBCodeEditor";
 import { TimetableGrid } from "./TimetableGrid";
 
+import type { AppliedRow } from "./ApplyPatternDialog";
 import type { Strings } from "../i18n/strings";
 import type { Train as EntityTrain } from "../types/entities";
 import type {
@@ -14,7 +15,6 @@ import type {
 	Station,
 	StationOnLine,
 	StopPattern,
-	TimetableRow,
 	Train,
 	Work,
 } from "../types/model";
@@ -613,6 +613,12 @@ interface WorkBrowserProps {
 	onDeleteTrain: (id: string) => void;
 	onSelectTrain: (id: string | null) => void;
 	onOpenStopPatternWizard: () => void;
+	onApplyPattern: (args: {
+		rows: AppliedRow[];
+		direction: Direction;
+		destination: string;
+		existingTrain: Train | null;
+	}) => void;
 	stopPatterns: StopPattern[];
 	stations: Station[];
 	stationsOnLine: StationOnLine[];
@@ -626,6 +632,7 @@ export function WorkBrowser({
 	onUpdateTrain,
 	onDeleteTrain,
 	onSelectTrain,
+	onApplyPattern,
 	stopPatterns,
 	stations,
 	stationsOnLine,
@@ -656,34 +663,6 @@ export function WorkBrowser({
 			trainNumber: "0000M",
 			direction: 1,
 			destination: undefined,
-			maxSpeed: "100",
-			speedType: "近郊型",
-			nominalTractiveCapacity: undefined,
-			carCount: 10,
-			dayCount: 0,
-			isRideOnMoving: false,
-			beginRemarks: undefined,
-			afterRemarks: undefined,
-			remarks: undefined,
-			beforeDeparture: undefined,
-			afterArrive: undefined,
-			trainInfo: undefined,
-		};
-		onCreateTrain(draft);
-	};
-	const addTrainFromPattern = ({
-		direction,
-		destination,
-	}: {
-		rows: TimetableRow[];
-		direction: Direction;
-		destination: string;
-	}) => {
-		const draft: EntityTrainDraft = {
-			description: "",
-			trainNumber: "0000M",
-			direction,
-			destination: destination !== "" ? destination : undefined,
 			maxSpeed: "100",
 			speedType: "近郊型",
 			nominalTractiveCapacity: undefined,
@@ -791,27 +770,13 @@ export function WorkBrowser({
 					lines={lines || []}
 					t={t}
 					existingTrain={applyTargetTrain}
-					onApply={({ rows, direction, destination, mode }) => {
-						if (applyTargetTrain) {
-							let newRows: TimetableRow[];
-							if (mode === "replace") newRows = rows;
-							else if (mode === "append")
-								newRows = [
-									...(applyTargetTrain.timetableRows || []),
-									...rows,
-								];
-							else
-								newRows = [
-									...rows,
-									...(applyTargetTrain.timetableRows || []),
-								];
-							updateTrain({
-								...applyTargetTrain,
-								timetableRows: newRows,
-							});
-						} else {
-							addTrainFromPattern({ rows, direction, destination });
-						}
+					onApply={({ rows, direction, destination }) => {
+						onApplyPattern({
+							rows,
+							direction,
+							destination,
+							existingTrain: applyTargetTrain,
+						});
 					}}
 					onClose={() => {
 						setShowApplyPattern(false);

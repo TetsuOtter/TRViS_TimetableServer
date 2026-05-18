@@ -5,7 +5,11 @@ import { useEffect, useMemo, useState } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
 
-import { fromApiStopPattern, fromApiStopPatternRow } from "../api/adapters";
+import {
+	fromApiStopPattern,
+	fromApiStopPatternRow,
+	fromApiTrain,
+} from "../api/adapters";
 import {
 	useCreateLine,
 	useDeleteLine,
@@ -41,7 +45,12 @@ import {
 	useStopPatterns,
 	useUpdateStopPattern,
 } from "../api/hooks/useStopPatterns";
-import { useTimetableRows } from "../api/hooks/useTimetableRows";
+import {
+	fetchTimetableRows,
+	useCreateTimetableRow,
+	useDeleteTimetableRow,
+	useTimetableRows,
+} from "../api/hooks/useTimetableRows";
 import {
 	useCreateTrain,
 	useDeleteTrain,
@@ -79,6 +88,7 @@ import { createInitialData } from "../data/sampleData";
 
 import { useSettings } from "./SettingsContext";
 
+import type { AppliedRow } from "../components/ApplyPatternDialog";
 import type { ContextMenuItem } from "../components/EntityDialogs";
 import type {
 	Line as EntityLine,
@@ -105,7 +115,10 @@ import type {
 	WorkGroup,
 } from "../types/model";
 
-function entityTimetableRowToModel(row: EntityTimetableRow): ModelTimetableRow {
+function entityTimetableRowToModel(
+	row: EntityTimetableRow,
+	stationsById: Map<string, Station>
+): ModelTimetableRow {
 	const pad2 = (n: number) => String(n).padStart(2, "0");
 	const toTimeStr = (
 		hh: number | undefined,
@@ -115,9 +128,12 @@ function entityTimetableRowToModel(row: EntityTimetableRow): ModelTimetableRow {
 		if (hh === undefined || mm === undefined || ss === undefined) return "";
 		return `${pad2(hh)}:${pad2(mm)}:${pad2(ss)}`;
 	};
+	const station =
+		row.stationId !== undefined ? stationsById.get(row.stationId) : undefined;
 	return {
 		id: row.id,
-		stationName: "",
+		stationName: station?.stationName ?? "",
+		fullName: station?.fullName ?? "",
 		arrive: toTimeStr(row.arriveTimeHh, row.arriveTimeMm, row.arriveTimeSs),
 		departure: toTimeStr(
 			row.departureTimeHh,
@@ -534,6 +550,8 @@ export function App() {
 	const deleteTrainMutation = useDeleteTrain(currentWork ?? "");
 
 	const { data: apiTimetableRows } = useTimetableRows(currentTrain ?? "");
+	const createTimetableRowMutation = useCreateTimetableRow();
+	const deleteTimetableRowMutation = useDeleteTimetableRow();
 
 	const [currentLine, setCurrentLine] = useState<string | null>(null);
 	const { data: apiLines } = useLines(projectId ?? "");
@@ -589,8 +607,16 @@ export function App() {
 
 	const baseProject = apiProjects?.find((p) => p.id === projectId);
 
-	const modelTimetableRows = (apiTimetableRows ?? []).map(
-		entityTimetableRowToModel
+	const modelProjectStations = (apiProjectStations ?? []).map(
+		entityProjectStationToModel
+	);
+
+	const stationsById = new Map<string, Station>(
+		modelProjectStations.map((s) => [s.id, s])
+	);
+
+	const modelTimetableRows = (apiTimetableRows ?? []).map((r) =>
+		entityTimetableRowToModel(r, stationsById)
 	);
 
 	const project: Project | undefined =
@@ -624,9 +650,6 @@ export function App() {
 	const work = wg?.works.find((w) => w.id === currentWork);
 
 	const modelLines = (apiLines ?? []).map(entityLineToModel);
-	const modelProjectStations = (apiProjectStations ?? []).map(
-		entityProjectStationToModel
-	);
 	const modelStationsOnLine = (apiStationsOnLine ?? []).map(
 		entityStationOnLineToModel
 	);
@@ -847,6 +870,94 @@ export function App() {
 		});
 		if (currentTrain === trainId) {
 			setCurrentTrain(null);
+		}
+	};
+
+	/* ─── ApplyPattern handler ─── */
+
+	// Parse "HH:MM:SS" string into a time component at position index (0=HH, 1=MM, 2=SS).
+	// Returns undefined when the string is empty (open-end stations have no departure).
+	const parseTimePart = (t: string, idx: number): number | undefined =>
+		t !== "" ? parseInt(t.split(":")[idx] ?? "0", 10) : undefined;
+
+	const buildRowDraft = (r: AppliedRow) => ({
+		stationId: r.stationId,
+		driveTimeMm: r.driveTime_MM,
+		driveTimeSs: r.driveTime_SS,
+		isPass: r.isPass,
+		isOperationOnlyStop: r.isOperationOnlyStop,
+		hasBracket: r.hasBracket,
+		isLastStop: r.isLastStop,
+		arriveTimeHh: parseTimePart(r.arrive, 0),
+		arriveTimeMm: parseTimePart(r.arrive, 1),
+		arriveTimeSs: parseTimePart(r.arrive, 2),
+		departureTimeHh: parseTimePart(r.departure, 0),
+		departureTimeMm: parseTimePart(r.departure, 1),
+		departureTimeSs: parseTimePart(r.departure, 2),
+		remarks: r.remarks !== "" ? r.remarks : undefined,
+		workType: r.workType !== "" ? r.workType : undefined,
+	});
+
+	const handleApplyPattern = async ({
+		rows,
+		direction,
+		destination,
+		existingTrain,
+	}: {
+		rows: AppliedRow[];
+		direction: number;
+		destination: string;
+		existingTrain: { id: string } | null;
+	}) => {
+		try {
+			if (existingTrain !== null) {
+				// Existing train: delete all current rows, then create new ones
+				const existingRows = await fetchTimetableRows(
+					queryClient,
+					existingTrain.id
+				);
+				for (const row of existingRows) {
+					await deleteTimetableRowMutation.mutateAsync({
+						trainId: existingTrain.id,
+						rowId: row.id,
+					});
+				}
+				for (const r of rows) {
+					await createTimetableRowMutation.mutateAsync({
+						trainId: existingTrain.id,
+						draft: buildRowDraft(r),
+					});
+				}
+			} else {
+				// No existing train: create a new train, then create rows
+				const apiTrain = await createTrainMutation.mutateAsync({
+					description: "",
+					trainNumber: "0000M",
+					direction,
+					destination: destination !== "" ? destination : undefined,
+					maxSpeed: "100",
+					speedType: "近郊型",
+					nominalTractiveCapacity: undefined,
+					carCount: 10,
+					dayCount: 0,
+					isRideOnMoving: false,
+					beginRemarks: undefined,
+					afterRemarks: undefined,
+					remarks: undefined,
+					beforeDeparture: undefined,
+					afterArrive: undefined,
+					trainInfo: undefined,
+				});
+				const newTrainId = fromApiTrain(apiTrain).id;
+				for (const r of rows) {
+					await createTimetableRowMutation.mutateAsync({
+						trainId: newTrainId,
+						draft: buildRowDraft(r),
+					});
+				}
+			}
+		} catch (e) {
+			alert(e instanceof Error ? e.message : String(e));
 		}
 	};
 
@@ -1281,6 +1392,9 @@ export function App() {
 						onOpenStopPatternWizard={() =>
 							setShowStopPattern(true)
 						}
+						onApplyPattern={(args) => {
+							void handleApplyPattern(args);
+						}}
 						stopPatterns={modelStopPatterns}
 						stations={data.stations}
 						stationsOnLine={data.stationsOnLine}
