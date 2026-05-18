@@ -373,7 +373,8 @@ abstract class MyRepoBase implements IMyRepoBase
 					'rowCount' => $query->rowCount(),
 				],
 			);
-			$totalCount = $query->fetch(PDO::FETCH_ASSOC)['count'];
+			// PDO は COUNT(*) を文字列で返すため int 化して型契約 (RetValueOrError<number>) を正す
+			$totalCount = (int)$query->fetch(PDO::FETCH_ASSOC)['count'];
 
 			return RetValueOrError::withValue($totalCount);
 		}

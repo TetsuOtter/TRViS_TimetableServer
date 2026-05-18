@@ -57,7 +57,10 @@ final class RetValueOrError
 		RetValueOrError $totalCount,
 		int $statusCode = null,
 	): self {
-		$totalCountValue = $totalCount->isError ? null : $totalCount->value;
+		// selectPageTotalCount は PDO 経由で COUNT(*) を文字列として返すため、
+		// ?int $totalCount へ渡す前にここで一元的に int 化する
+		// (constructor へ到達する全経路をこの一箇所でカバー)。負値はあり得ないが念のため 0 下限。
+		$totalCountValue = $totalCount->isError ? null : max(0, (int)$totalCount->value);
 		return new self(
 			isError: $value->isError,
 			value: $value->value,
@@ -97,7 +100,8 @@ final class RetValueOrError
 			return Utils::withError($response, $this->statusCode, $this->errorMsg, $this->errorCode);
 		} else if (!is_null($this->value)) {
 			if (!is_null($this->totalCount)) {
-				$response = $response->withHeader(Constants::HEADER_TOTAL_COUNT, $this->totalCount);
+				// PSR-7 ResponseInterface::withHeader() は string|string[] を要求するため明示的に文字列化
+				$response = $response->withHeader(Constants::HEADER_TOTAL_COUNT, (string)$this->totalCount);
 			}
 
 			return Utils::withJson($response, $this->value, $statusCode ?? $this->statusCode);

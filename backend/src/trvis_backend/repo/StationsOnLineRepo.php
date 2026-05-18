@@ -131,6 +131,13 @@ final class StationsOnLineRepo extends MyProjectRootedRepoBase
 		mixed $value,
 	): mixed {
 		if ($key === 'location_lonlat') {
+			// location_lonlat は nullable。クライアントが null を送ると
+			// (座標クリア目的等) MyServiceBase::update がそのキーを含めるため
+			// null を明示処理しないと $value->longitude で fatal する。
+			// null を返すと UPDATE 側 ST_PointFromText(NULL) で列が NULL になる。
+			if (is_null($value)) {
+				return null;
+			}
 			return "POINT({$value->longitude} {$value->latitude})";
 		}
 		return parent::_kvpToValueToBind($key, $value);
