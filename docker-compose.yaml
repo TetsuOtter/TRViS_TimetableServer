@@ -1,4 +1,3 @@
-version: "3.8"
 services:
   proxy:
     image: nginx:1.25.3-alpine-slim
@@ -109,7 +108,9 @@ services:
     environment:
       PMA_HOST: mysql
       PMA_USER: root
-      PMA_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    # PMA_PASSWORD は mysql/.env から注入する。compose 補間 ${MYSQL_ROOT_PASSWORD}
+    # はプロジェクト直下 .env / シェル由来で mysql/.env (env_file) は効かず、
+    # 未設定警告 + 空パスワードになっていた。env_file を単一の出所にする。
     env_file:
       - mysql/.env
     depends_on:
