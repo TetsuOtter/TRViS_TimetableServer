@@ -12,6 +12,8 @@
 
 namespace dev_t0r\trvis_backend\api;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversMethod;
 use dev_t0r\trvis_backend\model\Line;
 use dev_t0r\trvis_backend\model\ProjectStation;
 use dev_t0r\trvis_backend\model\StopPattern;
@@ -26,9 +28,12 @@ use Ramsey\Uuid\UuidInterface;
 
 require_once __DIR__ . '/../Integration/IntegrationTestCase.php';
 
-/**
- * @coversDefaultClass \dev_t0r\trvis_backend\api\StopPatternRowApi
- */
+#[CoversClass(\dev_t0r\trvis_backend\api\StopPatternRowApi::class)]
+#[CoversMethod(\dev_t0r\trvis_backend\api\StopPatternRowApi::class, 'createStopPatternRow')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\StopPatternRowApi::class, 'getStopPatternRow')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\StopPatternRowApi::class, 'getStopPatternRowList')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\StopPatternRowApi::class, 'updateStopPatternRow')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\StopPatternRowApi::class, 'deleteStopPatternRow')]
 class StopPatternRowApiTest extends IntegrationTestCase
 {
 	private function svc(): StopPatternRowsService
@@ -87,9 +92,6 @@ class StopPatternRowApiTest extends IntegrationTestCase
 		return $o;
 	}
 
-	/**
-	 * @covers ::createStopPatternRow
-	 */
 	public function testCreateStopPatternRow()
 	{
 		$sp = $this->newStopPattern();
@@ -105,9 +107,6 @@ class StopPatternRowApiTest extends IntegrationTestCase
 		$this->assertSame('1', $o->track_name);
 	}
 
-	/**
-	 * @covers ::getStopPatternRow
-	 */
 	public function testGetStopPatternRow()
 	{
 		$o = $this->createOne($this->newStopPattern(), $this->newProjectStation());
@@ -119,9 +118,6 @@ class StopPatternRowApiTest extends IntegrationTestCase
 		$this->assertSame(404, $nm->statusCode);
 	}
 
-	/**
-	 * @covers ::getStopPatternRowList
-	 */
 	public function testGetStopPatternRowList()
 	{
 		$sp = $this->newStopPattern();
@@ -135,9 +131,6 @@ class StopPatternRowApiTest extends IntegrationTestCase
 		$this->assertContains((string)$b->stop_pattern_rows_id, $ids);
 	}
 
-	/**
-	 * @covers ::updateStopPatternRow
-	 */
 	public function testUpdateStopPatternRow()
 	{
 		$o = $this->createOne($this->newStopPattern(), $this->newProjectStation());
@@ -160,9 +153,6 @@ class StopPatternRowApiTest extends IntegrationTestCase
 		);
 	}
 
-	/**
-	 * @covers ::deleteStopPatternRow
-	 */
 	public function testDeleteStopPatternRow()
 	{
 		$o = $this->createOne($this->newStopPattern(), $this->newProjectStation());

@@ -22,6 +22,8 @@
  */
 namespace dev_t0r\trvis_backend\model;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversMethod;
 use PHPUnit\Framework\TestCase;
 use dev_t0r\trvis_backend\model\WorkGroupsPrivilege;
 
@@ -31,9 +33,9 @@ use dev_t0r\trvis_backend\model\WorkGroupsPrivilege;
  * @package dev_t0r\trvis_backend\model
  * @author  OpenAPI Generator team
  * @link    https://github.com/openapitools/openapi-generator
- *
- * @coversDefaultClass \dev_t0r\trvis_backend\model\WorkGroupsPrivilege
  */
+#[CoversClass(\dev_t0r\trvis_backend\model\WorkGroupsPrivilege::class)]
+#[CoversMethod(\dev_t0r\trvis_backend\model\WorkGroupsPrivilege::class, 'getOpenApiSchema')]
 class WorkGroupsPrivilegeTest extends TestCase
 {
 
@@ -144,7 +146,6 @@ class WorkGroupsPrivilegeTest extends TestCase
 
     /**
      * Test getOpenApiSchema static method
-     * @covers ::getOpenApiSchema
      */
     public function testGetOpenApiSchema()
     {

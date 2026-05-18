@@ -15,6 +15,8 @@
 
 namespace dev_t0r\trvis_backend\api;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversMethod;
 use dev_t0r\trvis_backend\model\Work;
 use dev_t0r\trvis_backend\service\WorksService;
 use dev_t0r\trvis_backend\service\WorkGroupsService;
@@ -24,9 +26,12 @@ use Ramsey\Uuid\UuidInterface;
 
 require_once __DIR__ . '/../Integration/IntegrationTestCase.php';
 
-/**
- * @coversDefaultClass \dev_t0r\trvis_backend\api\WorkApi
- */
+#[CoversClass(\dev_t0r\trvis_backend\api\WorkApi::class)]
+#[CoversMethod(\dev_t0r\trvis_backend\api\WorkApi::class, 'createWork')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\WorkApi::class, 'getWork')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\WorkApi::class, 'getWorkList')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\WorkApi::class, 'updateWork')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\WorkApi::class, 'deleteWork')]
 class WorkApiTest extends IntegrationTestCase
 {
 	private function svc(): WorksService
@@ -61,9 +66,6 @@ class WorkApiTest extends IntegrationTestCase
 		return $o;
 	}
 
-	/**
-	 * @covers ::createWork
-	 */
 	public function testCreateWork()
 	{
 		$wg = $this->newWorkGroup();
@@ -73,9 +75,6 @@ class WorkApiTest extends IntegrationTestCase
 		$this->assertSame('W', $o->name);
 	}
 
-	/**
-	 * @covers ::getWork
-	 */
 	public function testGetWork()
 	{
 		$o = $this->createOne($this->newWorkGroup());
@@ -89,9 +88,6 @@ class WorkApiTest extends IntegrationTestCase
 		$this->assertSame(404, $nm->statusCode);
 	}
 
-	/**
-	 * @covers ::getWorkList
-	 */
 	public function testGetWorkList()
 	{
 		$wg = $this->newWorkGroup();
@@ -104,9 +100,6 @@ class WorkApiTest extends IntegrationTestCase
 		$this->assertContains((string)$b->works_id, $ids);
 	}
 
-	/**
-	 * @covers ::updateWork
-	 */
 	public function testUpdateWork()
 	{
 		$o = $this->createOne($this->newWorkGroup(), ['name' => 'before']);
@@ -128,9 +121,6 @@ class WorkApiTest extends IntegrationTestCase
 		);
 	}
 
-	/**
-	 * @covers ::deleteWork
-	 */
 	public function testDeleteWork()
 	{
 		$o = $this->createOne($this->newWorkGroup());

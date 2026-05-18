@@ -12,6 +12,8 @@
 
 namespace dev_t0r\trvis_backend\api;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversMethod;
 use dev_t0r\trvis_backend\model\InviteKeyPrivilegeType;
 use dev_t0r\trvis_backend\model\Line;
 use dev_t0r\trvis_backend\repo\LineRepo;
@@ -22,9 +24,12 @@ use Ramsey\Uuid\Uuid;
 
 require_once __DIR__ . '/../Integration/IntegrationTestCase.php';
 
-/**
- * @coversDefaultClass \dev_t0r\trvis_backend\api\LineApi
- */
+#[CoversClass(\dev_t0r\trvis_backend\api\LineApi::class)]
+#[CoversMethod(\dev_t0r\trvis_backend\api\LineApi::class, 'createLine')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\LineApi::class, 'getLine')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\LineApi::class, 'getLineList')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\LineApi::class, 'updateLine')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\LineApi::class, 'deleteLine')]
 class LineApiTest extends IntegrationTestCase
 {
 	private function svc(): LineService
@@ -63,9 +68,6 @@ class LineApiTest extends IntegrationTestCase
 		return $uid;
 	}
 
-	/**
-	 * @covers ::createLine
-	 */
 	public function testCreateLine()
 	{
 		$line = $this->createOne('東海道本線', 'desc');
@@ -80,9 +82,6 @@ class LineApiTest extends IntegrationTestCase
 		$this->assertSame(1, (int)$st->fetchColumn());
 	}
 
-	/**
-	 * @covers ::getLine
-	 */
 	public function testGetLine()
 	{
 		$line = $this->createOne();
@@ -105,9 +104,6 @@ class LineApiTest extends IntegrationTestCase
 		$this->assertSame(InviteKeyPrivilegeType::admin, $priv->value);
 	}
 
-	/**
-	 * @covers ::getLineList
-	 */
 	public function testGetLineList()
 	{
 		$a = $this->createOne('A');
@@ -122,9 +118,6 @@ class LineApiTest extends IntegrationTestCase
 		}
 	}
 
-	/**
-	 * @covers ::updateLine
-	 */
 	public function testUpdateLine()
 	{
 		$line = $this->createOne('before');
@@ -147,9 +140,6 @@ class LineApiTest extends IntegrationTestCase
 		);
 	}
 
-	/**
-	 * @covers ::deleteLine
-	 */
 	public function testDeleteLine()
 	{
 		$line = $this->createOne();
@@ -161,17 +151,13 @@ class LineApiTest extends IntegrationTestCase
 	}
 
 	/**
-	 * Security regression: a principal holding only `read` privilege must NOT
-	 * be able to create / update / delete. Before the fix,
-	 * MyServiceBase::checkPrivilegeToWrite only logged a warning for the
-	 * read-but-not-write case and fell through to success (write bypass).
-	 * Driven via LineService, this covers every MyServiceBase subclass.
-	 *
-	 * @covers ::createLine
-	 * @covers ::updateLine
-	 * @covers ::deleteLine
-	 */
-	public function testReadOnlyUserCannotWrite()
+     * Security regression: a principal holding only `read` privilege must NOT
+     * be able to create / update / delete. Before the fix,
+     * MyServiceBase::checkPrivilegeToWrite only logged a warning for the
+     * read-but-not-write case and fell through to success (write bypass).
+     * Driven via LineService, this covers every MyServiceBase subclass.
+     */
+    public function testReadOnlyUserCannotWrite()
 	{
 		$readUser = $this->grantReadOnlyUser();
 
@@ -207,14 +193,11 @@ class LineApiTest extends IntegrationTestCase
 	}
 
 	/**
-	 * Security regression: getOne / getPage now use checkPrivilegeToRead, so a
-	 * read-only user (who must be denied writes) can still read. Guards against
-	 * the getOne write->read change accidentally over-restricting reads.
-	 *
-	 * @covers ::getLine
-	 * @covers ::getLineList
-	 */
-	public function testReadOnlyUserCanRead()
+     * Security regression: getOne / getPage now use checkPrivilegeToRead, so a
+     * read-only user (who must be denied writes) can still read. Guards against
+     * the getOne write->read change accidentally over-restricting reads.
+     */
+    public function testReadOnlyUserCanRead()
 	{
 		$readUser = $this->grantReadOnlyUser();
 		$line = $this->createOne('readable');

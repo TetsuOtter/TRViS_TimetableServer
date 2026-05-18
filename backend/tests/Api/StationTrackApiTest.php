@@ -16,6 +16,8 @@
 
 namespace dev_t0r\trvis_backend\api;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversMethod;
 use dev_t0r\trvis_backend\model\Station;
 use dev_t0r\trvis_backend\model\StationRecordType;
 use dev_t0r\trvis_backend\model\StationTrack;
@@ -28,9 +30,12 @@ use Ramsey\Uuid\UuidInterface;
 
 require_once __DIR__ . '/../Integration/IntegrationTestCase.php';
 
-/**
- * @coversDefaultClass \dev_t0r\trvis_backend\api\StationTrackApi
- */
+#[CoversClass(\dev_t0r\trvis_backend\api\StationTrackApi::class)]
+#[CoversMethod(\dev_t0r\trvis_backend\api\StationTrackApi::class, 'createStationTrack')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\StationTrackApi::class, 'getStationTrack')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\StationTrackApi::class, 'getStationTrackList')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\StationTrackApi::class, 'updateStationTrack')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\StationTrackApi::class, 'deleteStationTrack')]
 class StationTrackApiTest extends IntegrationTestCase
 {
 	private function svc(): StationTracksService
@@ -81,9 +86,6 @@ class StationTrackApiTest extends IntegrationTestCase
 		return $o;
 	}
 
-	/**
-	 * @covers ::createStationTrack
-	 */
 	public function testCreateStationTrack()
 	{
 		$station = $this->newStation();
@@ -93,9 +95,6 @@ class StationTrackApiTest extends IntegrationTestCase
 		$this->assertSame('TR', $o->name);
 	}
 
-	/**
-	 * @covers ::getStationTrack
-	 */
 	public function testGetStationTrack()
 	{
 		$o = $this->createOne($this->newStation());
@@ -109,9 +108,6 @@ class StationTrackApiTest extends IntegrationTestCase
 		$this->assertSame(404, $nm->statusCode);
 	}
 
-	/**
-	 * @covers ::getStationTrackList
-	 */
 	public function testGetStationTrackList()
 	{
 		$station = $this->newStation();
@@ -124,9 +120,6 @@ class StationTrackApiTest extends IntegrationTestCase
 		$this->assertContains((string)$b->station_tracks_id, $ids);
 	}
 
-	/**
-	 * @covers ::updateStationTrack
-	 */
 	public function testUpdateStationTrack()
 	{
 		$o = $this->createOne($this->newStation(), ['name' => 'before']);
@@ -148,9 +141,6 @@ class StationTrackApiTest extends IntegrationTestCase
 		);
 	}
 
-	/**
-	 * @covers ::deleteStationTrack
-	 */
 	public function testDeleteStationTrack()
 	{
 		$o = $this->createOne($this->newStation());

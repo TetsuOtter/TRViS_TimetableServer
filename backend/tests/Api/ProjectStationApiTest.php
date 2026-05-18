@@ -11,6 +11,8 @@
 
 namespace dev_t0r\trvis_backend\api;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversMethod;
 use dev_t0r\trvis_backend\model\ProjectStation;
 use dev_t0r\trvis_backend\model\ProjectStationLocationLonlat;
 use dev_t0r\trvis_backend\service\ProjectStationsService;
@@ -19,9 +21,16 @@ use Ramsey\Uuid\Uuid;
 
 require_once __DIR__ . '/../Integration/IntegrationTestCase.php';
 
-/**
- * @coversDefaultClass \dev_t0r\trvis_backend\api\ProjectStationApi
- */
+#[CoversClass(\dev_t0r\trvis_backend\api\ProjectStationApi::class)]
+#[CoversMethod(\dev_t0r\trvis_backend\api\ProjectStationApi::class, 'createProjectStation')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\ProjectStationApi::class, 'getProjectStation')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\ProjectStationApi::class, 'getProjectStationList')]
+#[CoversMethod('\dev_t0r\trvis_backend\api\ProjectStationApi::class::updateProjectStation
+Covers the lonlat UPDATE path (harness gap): _keyToUpdateQuerySetLine
++ _kvpToValueToBind overrides -> ST_PointFromText, re-read via ST_X/ST_Y.::class', 'updateProjectStation
+Covers the lonlat UPDATE path (harness gap): _keyToUpdateQuerySetLine
++ _kvpToValueToBind overrides -> ST_PointFromText, re-read via ST_X/ST_Y.')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\ProjectStationApi::class, 'deleteProjectStation')]
 class ProjectStationApiTest extends IntegrationTestCase
 {
 	private function svc(): ProjectStationsService
@@ -57,9 +66,6 @@ class ProjectStationApiTest extends IntegrationTestCase
 		return $o;
 	}
 
-	/**
-	 * @covers ::createProjectStation
-	 */
 	public function testCreateProjectStation()
 	{
 		$o = $this->createOne();
@@ -71,9 +77,6 @@ class ProjectStationApiTest extends IntegrationTestCase
 		$this->assertEqualsWithDelta(35.681111, $o->location_lonlat->latitude, 1e-6);
 	}
 
-	/**
-	 * @covers ::getProjectStation
-	 */
 	public function testGetProjectStation()
 	{
 		$o = $this->createOne();
@@ -85,9 +88,6 @@ class ProjectStationApiTest extends IntegrationTestCase
 		$this->assertSame(404, $nm->statusCode);
 	}
 
-	/**
-	 * @covers ::getProjectStationList
-	 */
 	public function testGetProjectStationList()
 	{
 		$a = $this->createOne(['name' => 'A']);
@@ -99,11 +99,6 @@ class ProjectStationApiTest extends IntegrationTestCase
 		$this->assertContains((string)$b->project_stations_id, $ids);
 	}
 
-	/**
-	 * @covers ::updateProjectStation
-	 * Covers the lonlat UPDATE path (harness gap): _keyToUpdateQuerySetLine
-	 * + _kvpToValueToBind overrides -> ST_PointFromText, re-read via ST_X/ST_Y.
-	 */
 	public function testUpdateProjectStation()
 	{
 		$o = $this->createOne();
@@ -128,9 +123,6 @@ class ProjectStationApiTest extends IntegrationTestCase
 		);
 	}
 
-	/**
-	 * @covers ::deleteProjectStation
-	 */
 	public function testDeleteProjectStation()
 	{
 		$o = $this->createOne();

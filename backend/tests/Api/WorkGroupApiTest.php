@@ -14,6 +14,8 @@
 
 namespace dev_t0r\trvis_backend\api;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversMethod;
 use dev_t0r\trvis_backend\service\WorkGroupsService;
 use dev_t0r\trvis_backend\tests\integration\IntegrationTestCase;
 use Ramsey\Uuid\Uuid;
@@ -21,9 +23,12 @@ use Ramsey\Uuid\UuidInterface;
 
 require_once __DIR__ . '/../Integration/IntegrationTestCase.php';
 
-/**
- * @coversDefaultClass \dev_t0r\trvis_backend\api\WorkGroupApi
- */
+#[CoversClass(\dev_t0r\trvis_backend\api\WorkGroupApi::class)]
+#[CoversMethod(\dev_t0r\trvis_backend\api\WorkGroupApi::class, 'createWorkGroup')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\WorkGroupApi::class, 'getWorkGroup')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\WorkGroupApi::class, 'getWorkGroupList')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\WorkGroupApi::class, 'updateWorkGroup')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\WorkGroupApi::class, 'deleteWorkGroup')]
 class WorkGroupApiTest extends IntegrationTestCase
 {
 	private function svc(): WorkGroupsService
@@ -45,9 +50,6 @@ class WorkGroupApiTest extends IntegrationTestCase
 		return $wgId;
 	}
 
-	/**
-	 * @covers ::createWorkGroup
-	 */
 	public function testCreateWorkGroup()
 	{
 		$wgId = $this->createOne('WG-create');
@@ -57,9 +59,6 @@ class WorkGroupApiTest extends IntegrationTestCase
 		$this->assertSame('WG-create', $g->value->name);
 	}
 
-	/**
-	 * @covers ::getWorkGroup
-	 */
 	public function testGetWorkGroup()
 	{
 		$wgId = $this->createOne();
@@ -73,9 +72,6 @@ class WorkGroupApiTest extends IntegrationTestCase
 		$this->assertSame(404, $nm->statusCode);
 	}
 
-	/**
-	 * @covers ::getWorkGroupList
-	 */
 	public function testGetWorkGroupList()
 	{
 		$a = $this->createOne('WG-A');
@@ -93,9 +89,6 @@ class WorkGroupApiTest extends IntegrationTestCase
 		$this->assertContains((string)$b, $ids);
 	}
 
-	/**
-	 * @covers ::updateWorkGroup
-	 */
 	public function testUpdateWorkGroup()
 	{
 		$wgId = $this->createOne('before');
@@ -112,9 +105,6 @@ class WorkGroupApiTest extends IntegrationTestCase
 		);
 	}
 
-	/**
-	 * @covers ::deleteWorkGroup
-	 */
 	public function testDeleteWorkGroup()
 	{
 		$wgId = $this->createOne();

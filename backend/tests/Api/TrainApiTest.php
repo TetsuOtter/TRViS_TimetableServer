@@ -15,6 +15,8 @@
 
 namespace dev_t0r\trvis_backend\api;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversMethod;
 use dev_t0r\trvis_backend\model\Train;
 use dev_t0r\trvis_backend\model\Work;
 use dev_t0r\trvis_backend\service\TrainsService;
@@ -26,9 +28,12 @@ use Ramsey\Uuid\UuidInterface;
 
 require_once __DIR__ . '/../Integration/IntegrationTestCase.php';
 
-/**
- * @coversDefaultClass \dev_t0r\trvis_backend\api\TrainApi
- */
+#[CoversClass(\dev_t0r\trvis_backend\api\TrainApi::class)]
+#[CoversMethod(\dev_t0r\trvis_backend\api\TrainApi::class, 'createTrain')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\TrainApi::class, 'getTrain')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\TrainApi::class, 'getTrainList')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\TrainApi::class, 'updateTrain')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\TrainApi::class, 'deleteTrain')]
 class TrainApiTest extends IntegrationTestCase
 {
 	private function svc(): TrainsService
@@ -79,9 +84,6 @@ class TrainApiTest extends IntegrationTestCase
 		return $o;
 	}
 
-	/**
-	 * @covers ::createTrain
-	 */
 	public function testCreateTrain()
 	{
 		$work = $this->newWork();
@@ -92,12 +94,10 @@ class TrainApiTest extends IntegrationTestCase
 	}
 
 	/**
-	 * Recommended-spec regression: is_ride_on_moving may be omitted by the
-	 * client; the repo must coalesce null -> DB DEFAULT (false), not 500.
-	 *
-	 * @covers ::createTrain
-	 */
-	public function testCreateTrainDefaults()
+     * Recommended-spec regression: is_ride_on_moving may be omitted by the
+     * client; the repo must coalesce null -> DB DEFAULT (false), not 500.
+     */
+    public function testCreateTrainDefaults()
 	{
 		$work = $this->newWork();
 		$data = [
@@ -120,9 +120,6 @@ class TrainApiTest extends IntegrationTestCase
 		$this->assertSame(0, (int)$g->value->is_ride_on_moving, 'omitted is_ride_on_moving must persist as DB DEFAULT false');
 	}
 
-	/**
-	 * @covers ::getTrain
-	 */
 	public function testGetTrain()
 	{
 		$o = $this->createOne($this->newWork());
@@ -136,9 +133,6 @@ class TrainApiTest extends IntegrationTestCase
 		$this->assertSame(404, $nm->statusCode);
 	}
 
-	/**
-	 * @covers ::getTrainList
-	 */
 	public function testGetTrainList()
 	{
 		$work = $this->newWork();
@@ -151,9 +145,6 @@ class TrainApiTest extends IntegrationTestCase
 		$this->assertContains((string)$b->trains_id, $ids);
 	}
 
-	/**
-	 * @covers ::updateTrain
-	 */
 	public function testUpdateTrain()
 	{
 		$o = $this->createOne($this->newWork(), ['train_number' => 'before']);
@@ -175,9 +166,6 @@ class TrainApiTest extends IntegrationTestCase
 		);
 	}
 
-	/**
-	 * @covers ::deleteTrain
-	 */
 	public function testDeleteTrain()
 	{
 		$o = $this->createOne($this->newWork());

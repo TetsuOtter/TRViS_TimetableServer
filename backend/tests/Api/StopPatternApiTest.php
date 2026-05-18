@@ -11,6 +11,8 @@
 
 namespace dev_t0r\trvis_backend\api;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversMethod;
 use dev_t0r\trvis_backend\model\Line;
 use dev_t0r\trvis_backend\model\StopPattern;
 use dev_t0r\trvis_backend\service\LineService;
@@ -21,9 +23,16 @@ use Ramsey\Uuid\UuidInterface;
 
 require_once __DIR__ . '/../Integration/IntegrationTestCase.php';
 
-/**
- * @coversDefaultClass \dev_t0r\trvis_backend\api\StopPatternApi
- */
+#[CoversClass(\dev_t0r\trvis_backend\api\StopPatternApi::class)]
+#[CoversMethod(\dev_t0r\trvis_backend\api\StopPatternApi::class, 'createStopPattern')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\StopPatternApi::class, 'getStopPattern')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\StopPatternApi::class, 'getStopPatternList')]
+#[CoversMethod('\dev_t0r\trvis_backend\api\StopPatternApi::class::updateStopPattern
+Covers the lines_id UPDATE alias (harness gap): _keyToUpdateQuerySetLine
+maps \'lines_id\' -> "project_lines_id = :lines_id".::class', 'updateStopPattern
+Covers the lines_id UPDATE alias (harness gap): _keyToUpdateQuerySetLine
+maps \'lines_id\' -> "project_lines_id = :lines_id".')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\StopPatternApi::class, 'deleteStopPattern')]
 class StopPatternApiTest extends IntegrationTestCase
 {
 	private function svc(): StopPatternsService
@@ -62,9 +71,6 @@ class StopPatternApiTest extends IntegrationTestCase
 		return $o;
 	}
 
-	/**
-	 * @covers ::createStopPattern
-	 */
 	public function testCreateStopPattern()
 	{
 		$line = $this->newLine();
@@ -74,9 +80,6 @@ class StopPatternApiTest extends IntegrationTestCase
 		$this->assertSame(1, $o->direction);
 	}
 
-	/**
-	 * @covers ::getStopPattern
-	 */
 	public function testGetStopPattern()
 	{
 		$o = $this->createOne($this->newLine());
@@ -88,9 +91,6 @@ class StopPatternApiTest extends IntegrationTestCase
 		$this->assertSame(404, $nm->statusCode);
 	}
 
-	/**
-	 * @covers ::getStopPatternList
-	 */
 	public function testGetStopPatternList()
 	{
 		$line = $this->newLine();
@@ -103,11 +103,6 @@ class StopPatternApiTest extends IntegrationTestCase
 		$this->assertContains((string)$b->stop_patterns_id, $ids);
 	}
 
-	/**
-	 * @covers ::updateStopPattern
-	 * Covers the lines_id UPDATE alias (harness gap): _keyToUpdateQuerySetLine
-	 * maps 'lines_id' -> "project_lines_id = :lines_id".
-	 */
 	public function testUpdateStopPattern()
 	{
 		$lineA = $this->newLine('A');
@@ -134,9 +129,6 @@ class StopPatternApiTest extends IntegrationTestCase
 		);
 	}
 
-	/**
-	 * @covers ::deleteStopPattern
-	 */
 	public function testDeleteStopPattern()
 	{
 		$o = $this->createOne($this->newLine());

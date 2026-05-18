@@ -22,6 +22,8 @@
  */
 namespace dev_t0r\trvis_backend\model;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversMethod;
 use PHPUnit\Framework\TestCase;
 use dev_t0r\trvis_backend\model\StationOnLineLocationLonlat;
 
@@ -31,9 +33,9 @@ use dev_t0r\trvis_backend\model\StationOnLineLocationLonlat;
  * @package dev_t0r\trvis_backend\model
  * @author  OpenAPI Generator team
  * @link    https://github.com/openapitools/openapi-generator
- *
- * @coversDefaultClass \dev_t0r\trvis_backend\model\StationOnLineLocationLonlat
  */
+#[CoversClass(\dev_t0r\trvis_backend\model\StationOnLineLocationLonlat::class)]
+#[CoversMethod(\dev_t0r\trvis_backend\model\StationOnLineLocationLonlat::class, 'getOpenApiSchema')]
 class StationOnLineLocationLonlatTest extends TestCase
 {
 
@@ -104,7 +106,6 @@ class StationOnLineLocationLonlatTest extends TestCase
 
     /**
      * Test getOpenApiSchema static method
-     * @covers ::getOpenApiSchema
      */
     public function testGetOpenApiSchema()
     {

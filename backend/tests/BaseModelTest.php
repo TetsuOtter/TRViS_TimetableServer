@@ -23,6 +23,9 @@
 
 namespace dev_t0r;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversMethod;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use dev_t0r\BaseModel;
 use OpenAPIServer\Mock\OpenApiModelInterface;
@@ -33,16 +36,22 @@ use StdClass;
  * BaseModelTest
  *
  * phpcs:disable Squiz.Commenting,Generic.Commenting,PEAR.Commenting
- * @coversDefaultClass \dev_t0r\BaseModel
  */
+#[CoversClass(\dev_t0r\BaseModel::class)]
+#[CoversMethod(\dev_t0r\BaseModel::class, '__construct')]
+#[CoversMethod(\dev_t0r\BaseModel::class, 'validateModelType')]
+#[CoversMethod(\dev_t0r\BaseModel::class, 'getOpenApiSchema')]
+#[CoversMethod(\dev_t0r\BaseModel::class, 'createFromData')]
+#[CoversMethod(\dev_t0r\BaseModel::class, '__set')]
+#[CoversMethod(\dev_t0r\BaseModel::class, '__get')]
+#[CoversMethod(\dev_t0r\BaseModel::class, 'setData')]
+#[CoversMethod(\dev_t0r\BaseModel::class, 'getData')]
+#[CoversMethod(\dev_t0r\BaseModel::class, 'jsonSerialize')]
+#[CoversMethod(\dev_t0r\BaseModel::class, 'getModelsNamespace')]
 class BaseModelTest extends TestCase
 {
 
-    /**
-     * @covers ::__construct
-     * @covers ::validateModelType
-     * @dataProvider provideClassesAndDefaultData
-     */
+    #[DataProvider('provideClassesAndDefaultData')]
     public function testConstructorAndDefaultData($className, $expectedJson)
     {
         $item = new $className();
@@ -62,11 +71,7 @@ class BaseModelTest extends TestCase
         ];
     }
 
-    /**
-     * @covers ::__construct
-     * @covers ::validateModelType
-     * @dataProvider provideInvalidClasses
-     */
+    #[DataProvider('provideInvalidClasses')]
     public function testConstructorWithInvalidTypes($className)
     {
         $this->expectException(InvalidArgumentException::class);
@@ -80,9 +85,6 @@ class BaseModelTest extends TestCase
         ];
     }
 
-    /**
-     * @covers ::getOpenApiSchema
-     */
     public function testGetOpenApiSchema()
     {
         foreach (
@@ -102,12 +104,7 @@ class BaseModelTest extends TestCase
         }
     }
 
-    /**
-     * @covers ::createFromData
-     * @covers ::__set
-     * @covers ::__get
-     * @dataProvider provideCreateFromDataArguments
-     */
+    #[DataProvider('provideCreateFromDataArguments')]
     public function testCreateFromData($modelClass, $data)
     {
         $item = $modelClass::createFromData($data);
@@ -140,11 +137,7 @@ class BaseModelTest extends TestCase
         ];
     }
 
-    /**
-     * @covers ::setData
-     * @covers ::getData
-     * @dataProvider provideScalarModels
-     */
+    #[DataProvider('provideScalarModels')]
     public function testSetDataScalar($className, array $setDataValues, array $expectedDataValues)
     {
         $item = new $className();
@@ -188,10 +181,6 @@ class BaseModelTest extends TestCase
         ];
     }
 
-    /**
-     * @covers ::setData
-     * @covers ::getData
-     */
     public function testSetDataOfArray()
     {
         $basic = new BasicArrayTestClass();
@@ -200,10 +189,7 @@ class BaseModelTest extends TestCase
         $this->assertEquals($data, $basic->getData());
     }
 
-    /**
-     * @covers ::setData
-     * @dataProvider provideInvalidDataForArrayModel
-     */
+    #[DataProvider('provideInvalidDataForArrayModel')]
     public function testSetDataOfArrayWithInvalidData($className, $data)
     {
         $this->expectException(InvalidArgumentException::class);
@@ -235,10 +221,6 @@ class BaseModelTest extends TestCase
         ];
     }
 
-    /**
-     * @covers ::setData
-     * @covers ::getData
-     */
     public function testSetDataOfObject()
     {
         $basic = new BasicObjectTestClass();
@@ -247,9 +229,6 @@ class BaseModelTest extends TestCase
         $this->assertSame('bar', $basic->foo);
     }
 
-    /**
-     * @covers ::getData
-     */
     public function testGetDataOfObject()
     {
         $catItem = new CatRefTestClass();
@@ -263,10 +242,6 @@ class BaseModelTest extends TestCase
         $this->assertSame(false, $data->declawed);
     }
 
-    /**
-     * @covers ::__set
-     * @covers ::__get
-     */
     public function testSetter()
     {
         $item = new CatRefTestClass();
@@ -278,10 +253,7 @@ class BaseModelTest extends TestCase
         $this->assertSame(false, $item->declawed);
     }
 
-    /**
-     * @covers ::__set
-     * @dataProvider provideScalarsAndArray
-     */
+    #[DataProvider('provideScalarsAndArray')]
     public function testSetterOfScalarAndArray($className)
     {
         $this->expectException(InvalidArgumentException::class);
@@ -300,9 +272,6 @@ class BaseModelTest extends TestCase
         ];
     }
 
-    /**
-     * @covers ::__set
-     */
     public function testSetterWithUnknownProp()
     {
         $this->expectException(InvalidArgumentException::class);
@@ -316,9 +285,6 @@ class BaseModelTest extends TestCase
         $item->unknownProp = 'foobar';
     }
 
-    /**
-     * @covers ::__get
-     */
     public function testGetterWithUnknownProp()
     {
         $this->expectException(InvalidArgumentException::class);
@@ -332,10 +298,7 @@ class BaseModelTest extends TestCase
         $unknownProp = $item->unknownProp;
     }
 
-    /**
-     * @covers ::__get
-     * @dataProvider provideScalarsAndArray
-     */
+    #[DataProvider('provideScalarsAndArray')]
     public function testGetterOfScalarAndArray($className)
     {
         $this->expectException(InvalidArgumentException::class);
@@ -343,10 +306,6 @@ class BaseModelTest extends TestCase
         $bar = $item->foo;
     }
 
-    /**
-     * @covers ::__set
-     * @covers ::__get
-     */
     public function testSetterAndGetterOfBasicObject()
     {
         $item = new BasicObjectTestClass();
@@ -354,10 +313,7 @@ class BaseModelTest extends TestCase
         $this->assertEquals('foo', $item->unknown);
     }
 
-    /**
-     * @covers ::jsonSerialize
-     * @dataProvider provideJsonSerializeArguments
-     */
+    #[DataProvider('provideJsonSerializeArguments')]
     public function testJsonSerialize($className, $data, $expectedJson)
     {
         $item = $className::createFromData($data);
@@ -445,10 +401,7 @@ class BaseModelTest extends TestCase
         ];
     }
 
-    /**
-     * @covers ::getModelsNamespace
-     * @dataProvider provideTestClasses
-     */
+    #[DataProvider('provideTestClasses')]
     public function testGetModelsNamespace($classname)
     {
         $this->assertTrue(method_exists($classname, 'getModelsNamespace'));

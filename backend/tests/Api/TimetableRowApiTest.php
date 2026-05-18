@@ -17,6 +17,8 @@
 
 namespace dev_t0r\trvis_backend\api;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversMethod;
 use dev_t0r\trvis_backend\model\Station;
 use dev_t0r\trvis_backend\model\StationRecordType;
 use dev_t0r\trvis_backend\model\TimetableRow;
@@ -33,9 +35,12 @@ use Ramsey\Uuid\UuidInterface;
 
 require_once __DIR__ . '/../Integration/IntegrationTestCase.php';
 
-/**
- * @coversDefaultClass \dev_t0r\trvis_backend\api\TimetableRowApi
- */
+#[CoversClass(\dev_t0r\trvis_backend\api\TimetableRowApi::class)]
+#[CoversMethod(\dev_t0r\trvis_backend\api\TimetableRowApi::class, 'createTimetableRow')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\TimetableRowApi::class, 'getTimetableRow')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\TimetableRowApi::class, 'getTimetableRowList')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\TimetableRowApi::class, 'updateTimetableRow')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\TimetableRowApi::class, 'deleteTimetableRow')]
 class TimetableRowApiTest extends IntegrationTestCase
 {
 	private function svc(): TimetableRowsService
@@ -126,9 +131,6 @@ class TimetableRowApiTest extends IntegrationTestCase
 		return $o;
 	}
 
-	/**
-	 * @covers ::createTimetableRow
-	 */
 	public function testCreateTimetableRow()
 	{
 		$train = $this->newTrain();
@@ -139,12 +141,10 @@ class TimetableRowApiTest extends IntegrationTestCase
 	}
 
 	/**
-	 * Recommended-spec regression: the 4 boolean flags may be omitted by
-	 * the client; the repo must coalesce null -> DB DEFAULT (false), not 500.
-	 *
-	 * @covers ::createTimetableRow
-	 */
-	public function testCreateTimetableRowDefaults()
+     * Recommended-spec regression: the 4 boolean flags may be omitted by
+     * the client; the repo must coalesce null -> DB DEFAULT (false), not 500.
+     */
+    public function testCreateTimetableRowDefaults()
 	{
 		$train = $this->newTrain();
 		$data = [
@@ -168,9 +168,6 @@ class TimetableRowApiTest extends IntegrationTestCase
 		$this->assertSame(0, (int)$g->value->is_last_stop, 'omitted is_last_stop -> DB DEFAULT false');
 	}
 
-	/**
-	 * @covers ::getTimetableRow
-	 */
 	public function testGetTimetableRow()
 	{
 		$o = $this->createOne($this->newTrain());
@@ -184,9 +181,6 @@ class TimetableRowApiTest extends IntegrationTestCase
 		$this->assertSame(404, $nm->statusCode);
 	}
 
-	/**
-	 * @covers ::getTimetableRowList
-	 */
 	public function testGetTimetableRowList()
 	{
 		$train = $this->newTrain();
@@ -199,9 +193,6 @@ class TimetableRowApiTest extends IntegrationTestCase
 		$this->assertContains((string)$b->timetable_rows_id, $ids);
 	}
 
-	/**
-	 * @covers ::updateTimetableRow
-	 */
 	public function testUpdateTimetableRow()
 	{
 		$o = $this->createOne($this->newTrain(), ['description' => 'before']);
@@ -223,9 +214,6 @@ class TimetableRowApiTest extends IntegrationTestCase
 		);
 	}
 
-	/**
-	 * @covers ::deleteTimetableRow
-	 */
 	public function testDeleteTimetableRow()
 	{
 		$o = $this->createOne($this->newTrain());

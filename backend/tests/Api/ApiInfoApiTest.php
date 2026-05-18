@@ -11,14 +11,15 @@
 
 namespace dev_t0r\trvis_backend\api;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversMethod;
 use DI\Container;
 use PHPUnit\Framework\TestCase;
 use Slim\Psr7\Factory\ResponseFactory;
 use Slim\Psr7\Factory\ServerRequestFactory;
 
-/**
- * @coversDefaultClass \dev_t0r\trvis_backend\api\ApiInfoApi
- */
+#[CoversClass(\dev_t0r\trvis_backend\api\ApiInfoApi::class)]
+#[CoversMethod(\dev_t0r\trvis_backend\api\ApiInfoApi::class, 'getApiInfo')]
 class ApiInfoApiTest extends TestCase
 {
 	private function invoke(Container $c): array
@@ -34,9 +35,6 @@ class ApiInfoApiTest extends TestCase
 		return $json;
 	}
 
-	/**
-	 * @covers ::getApiInfo
-	 */
 	public function testGetApiInfo()
 	{
 		// defaults when the container has no app.name / app.version

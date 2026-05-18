@@ -12,6 +12,8 @@
 
 namespace dev_t0r\trvis_backend\api;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversMethod;
 use dev_t0r\trvis_backend\model\Line;
 use dev_t0r\trvis_backend\model\ProjectStation;
 use dev_t0r\trvis_backend\model\StationOnLine;
@@ -24,9 +26,12 @@ use Ramsey\Uuid\UuidInterface;
 
 require_once __DIR__ . '/../Integration/IntegrationTestCase.php';
 
-/**
- * @coversDefaultClass \dev_t0r\trvis_backend\api\StationOnLineApi
- */
+#[CoversClass(\dev_t0r\trvis_backend\api\StationOnLineApi::class)]
+#[CoversMethod(\dev_t0r\trvis_backend\api\StationOnLineApi::class, 'createStationOnLine')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\StationOnLineApi::class, 'getStationOnLine')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\StationOnLineApi::class, 'getStationOnLineList')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\StationOnLineApi::class, 'updateStationOnLine')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\StationOnLineApi::class, 'deleteStationOnLine')]
 class StationOnLineApiTest extends IntegrationTestCase
 {
 	private function svc(): StationsOnLineService
@@ -74,9 +79,6 @@ class StationOnLineApiTest extends IntegrationTestCase
 		return $o;
 	}
 
-	/**
-	 * @covers ::createStationOnLine
-	 */
 	public function testCreateStationOnLine()
 	{
 		$line = $this->newLine();
@@ -89,9 +91,6 @@ class StationOnLineApiTest extends IntegrationTestCase
 		$this->assertEqualsWithDelta(12345.6, $o->location_m, 1e-6);
 	}
 
-	/**
-	 * @covers ::getStationOnLine
-	 */
 	public function testGetStationOnLine()
 	{
 		$o = $this->createOne($this->newLine(), $this->newProjectStation());
@@ -104,9 +103,6 @@ class StationOnLineApiTest extends IntegrationTestCase
 		$this->assertSame(404, $nm->statusCode);
 	}
 
-	/**
-	 * @covers ::getStationOnLineList
-	 */
 	public function testGetStationOnLineList()
 	{
 		$line = $this->newLine();
@@ -120,9 +116,6 @@ class StationOnLineApiTest extends IntegrationTestCase
 		$this->assertContains((string)$b->stations_on_line_id, $ids);
 	}
 
-	/**
-	 * @covers ::updateStationOnLine
-	 */
 	public function testUpdateStationOnLine()
 	{
 		$o = $this->createOne($this->newLine(), $this->newProjectStation());
@@ -144,9 +137,6 @@ class StationOnLineApiTest extends IntegrationTestCase
 		);
 	}
 
-	/**
-	 * @covers ::deleteStationOnLine
-	 */
 	public function testDeleteStationOnLine()
 	{
 		$o = $this->createOne($this->newLine(), $this->newProjectStation());

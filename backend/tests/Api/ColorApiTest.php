@@ -15,6 +15,8 @@
 
 namespace dev_t0r\trvis_backend\api;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversMethod;
 use dev_t0r\trvis_backend\model\Color;
 use dev_t0r\trvis_backend\model\Color8bit;
 use dev_t0r\trvis_backend\model\ColorReal;
@@ -26,9 +28,12 @@ use Ramsey\Uuid\UuidInterface;
 
 require_once __DIR__ . '/../Integration/IntegrationTestCase.php';
 
-/**
- * @coversDefaultClass \dev_t0r\trvis_backend\api\ColorApi
- */
+#[CoversClass(\dev_t0r\trvis_backend\api\ColorApi::class)]
+#[CoversMethod(\dev_t0r\trvis_backend\api\ColorApi::class, 'createColor')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\ColorApi::class, 'getColor')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\ColorApi::class, 'getColorList')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\ColorApi::class, 'updateColor')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\ColorApi::class, 'deleteColor')]
 class ColorApiTest extends IntegrationTestCase
 {
 	private function svc(): ColorsService
@@ -73,9 +78,6 @@ class ColorApiTest extends IntegrationTestCase
 		return $o;
 	}
 
-	/**
-	 * @covers ::createColor
-	 */
 	public function testCreateColor()
 	{
 		$wg = $this->newWorkGroup();
@@ -85,9 +87,6 @@ class ColorApiTest extends IntegrationTestCase
 		$this->assertSame('C', $o->name);
 	}
 
-	/**
-	 * @covers ::getColor
-	 */
 	public function testGetColor()
 	{
 		$o = $this->createOne($this->newWorkGroup());
@@ -101,9 +100,6 @@ class ColorApiTest extends IntegrationTestCase
 		$this->assertSame(404, $nm->statusCode);
 	}
 
-	/**
-	 * @covers ::getColorList
-	 */
 	public function testGetColorList()
 	{
 		$wg = $this->newWorkGroup();
@@ -116,9 +112,6 @@ class ColorApiTest extends IntegrationTestCase
 		$this->assertContains((string)$b->colors_id, $ids);
 	}
 
-	/**
-	 * @covers ::updateColor
-	 */
 	public function testUpdateColor()
 	{
 		$o = $this->createOne($this->newWorkGroup(), ['name' => 'before']);
@@ -140,9 +133,6 @@ class ColorApiTest extends IntegrationTestCase
 		);
 	}
 
-	/**
-	 * @covers ::deleteColor
-	 */
 	public function testDeleteColor()
 	{
 		$o = $this->createOne($this->newWorkGroup());

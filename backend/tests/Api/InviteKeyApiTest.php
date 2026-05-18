@@ -15,6 +15,8 @@
 
 namespace dev_t0r\trvis_backend\api;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversMethod;
 use dev_t0r\trvis_backend\model\InviteKey;
 use dev_t0r\trvis_backend\model\InviteKeyPrivilegeType;
 use dev_t0r\trvis_backend\service\InviteKeysService;
@@ -26,9 +28,14 @@ use Ramsey\Uuid\UuidInterface;
 
 require_once __DIR__ . '/../Integration/IntegrationTestCase.php';
 
-/**
- * @coversDefaultClass \dev_t0r\trvis_backend\api\InviteKeyApi
- */
+#[CoversClass(\dev_t0r\trvis_backend\api\InviteKeyApi::class)]
+#[CoversMethod(\dev_t0r\trvis_backend\api\InviteKeyApi::class, 'createInviteKey')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\InviteKeyApi::class, 'getInviteKey')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\InviteKeyApi::class, 'deleteInviteKey')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\InviteKeyApi::class, 'getInviteKeyList')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\InviteKeyApi::class, 'getMyInviteKeyList')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\InviteKeyApi::class, 'updateInviteKey')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\InviteKeyApi::class, 'useInviteKey')]
 class InviteKeyApiTest extends IntegrationTestCase
 {
 	private function ikSvc(): InviteKeysService
@@ -102,9 +109,6 @@ class InviteKeyApiTest extends IntegrationTestCase
 		return $uid;
 	}
 
-	/**
-	 * @covers ::createInviteKey
-	 */
 	public function testCreateInviteKey()
 	{
 		$wgId = $this->newWorkGroup();
@@ -129,13 +133,11 @@ class InviteKeyApiTest extends IntegrationTestCase
 	}
 
 	/**
-	 * Recommended-spec regression: valid_from may be omitted by the client;
-	 * the repo must coalesce null -> "now" (DB DEFAULT CURRENT_TIMESTAMP),
-	 * not bind explicit NULL into the NOT NULL column (23000 / 500).
-	 *
-	 * @covers ::createInviteKey
-	 */
-	public function testCreateInviteKeyDefaults()
+     * Recommended-spec regression: valid_from may be omitted by the client;
+     * the repo must coalesce null -> "now" (DB DEFAULT CURRENT_TIMESTAMP),
+     * not bind explicit NULL into the NOT NULL column (23000 / 500).
+     */
+    public function testCreateInviteKeyDefaults()
 	{
 		$wgId = $this->newWorkGroup();
 
@@ -169,12 +171,10 @@ class InviteKeyApiTest extends IntegrationTestCase
 	}
 
 	/**
-	 * Security regression (L-2): selectInviteKey discloses privilege_type /
-	 * work_groups_id and must therefore be gated behind WorkGroup `admin`.
-	 *
-	 * @covers ::getInviteKey
-	 */
-	public function testGetInviteKey()
+     * Security regression (L-2): selectInviteKey discloses privilege_type /
+     * work_groups_id and must therefore be gated behind WorkGroup `admin`.
+     */
+    public function testGetInviteKey()
 	{
 		$wgId = $this->newWorkGroup();
 		$key = $this->newInviteKey($wgId);
@@ -201,9 +201,6 @@ class InviteKeyApiTest extends IntegrationTestCase
 		$this->assertSame(404, $unknown->statusCode);
 	}
 
-	/**
-	 * @covers ::deleteInviteKey
-	 */
 	public function testDeleteInviteKey()
 	{
 		$wgId = $this->newWorkGroup();
@@ -235,9 +232,6 @@ class InviteKeyApiTest extends IntegrationTestCase
 		$this->assertSame(404, $unknown->statusCode);
 	}
 
-	/**
-	 * @covers ::getInviteKeyList
-	 */
 	public function testGetInviteKeyList()
 	{
 		$wgId = $this->newWorkGroup();
@@ -268,9 +262,6 @@ class InviteKeyApiTest extends IntegrationTestCase
 		$this->assertSame(403, $ro->statusCode);
 	}
 
-	/**
-	 * @covers ::getMyInviteKeyList
-	 */
 	public function testGetMyInviteKeyList()
 	{
 		$wgId = $this->newWorkGroup();
@@ -300,13 +291,11 @@ class InviteKeyApiTest extends IntegrationTestCase
 	}
 
 	/**
-	 * updateInviteKey is intentionally not implemented: InviteKeyApi
-	 * returns 501 Not Implemented and InviteKeysService has no
-	 * corresponding method. Documented as a deliberate contract.
-	 *
-	 * @covers ::updateInviteKey
-	 */
-	public function testUpdateInviteKey()
+     * updateInviteKey is intentionally not implemented: InviteKeyApi
+     * returns 501 Not Implemented and InviteKeysService has no
+     * corresponding method. Documented as a deliberate contract.
+     */
+    public function testUpdateInviteKey()
 	{
 		$this->assertFalse(
 			method_exists(InviteKeysService::class, 'updateInviteKey'),
@@ -314,9 +303,6 @@ class InviteKeyApiTest extends IntegrationTestCase
 		);
 	}
 
-	/**
-	 * @covers ::useInviteKey
-	 */
 	public function testUseInviteKey()
 	{
 		$wgId = $this->newWorkGroup();

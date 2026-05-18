@@ -17,6 +17,8 @@
 
 namespace dev_t0r\trvis_backend\api;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversMethod;
 use dev_t0r\trvis_backend\model\Station;
 use dev_t0r\trvis_backend\model\StationRecordType;
 use dev_t0r\trvis_backend\model\TimetableRow;
@@ -34,9 +36,8 @@ use Ramsey\Uuid\UuidInterface;
 
 require_once __DIR__ . '/../Integration/IntegrationTestCase.php';
 
-/**
- * @coversDefaultClass \dev_t0r\trvis_backend\api\DumpApi
- */
+#[CoversClass(\dev_t0r\trvis_backend\api\DumpApi::class)]
+#[CoversMethod(\dev_t0r\trvis_backend\api\DumpApi::class, 'dumpTimetable')]
 class DumpApiTest extends IntegrationTestCase
 {
 	private function svc(): DumpService
@@ -114,9 +115,6 @@ class DumpApiTest extends IntegrationTestCase
 		return $wgId;
 	}
 
-	/**
-	 * @covers ::dumpTimetable
-	 */
 	public function testDumpTimetable()
 	{
 		$wgId = $this->newPopulatedWorkGroup();
@@ -137,13 +135,11 @@ class DumpApiTest extends IntegrationTestCase
 	}
 
 	/**
-	 * Regression: an empty WorkGroup (no Work) must dump cleanly.
-	 * Previously worksIdList=[] made trainsRepo->dump() emit
-	 * `WHERE works_id IN ()` -> SQLSTATE 42000 / HTTP 500.
-	 *
-	 * @covers ::dumpTimetable
-	 */
-	public function testDumpEmptyWorkGroup()
+     * Regression: an empty WorkGroup (no Work) must dump cleanly.
+     * Previously worksIdList=[] made trainsRepo->dump() emit
+     * `WHERE works_id IN ()` -> SQLSTATE 42000 / HTTP 500.
+     */
+    public function testDumpEmptyWorkGroup()
 	{
 		$wg = (new WorkGroupsService($this->db, $this->logger))->createWorkGroupInProject(
 			$this->projectId,

@@ -22,6 +22,8 @@
  */
 namespace dev_t0r\trvis_backend\model;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversMethod;
 use PHPUnit\Framework\TestCase;
 use dev_t0r\trvis_backend\model\Schema;
 
@@ -31,9 +33,9 @@ use dev_t0r\trvis_backend\model\Schema;
  * @package dev_t0r\trvis_backend\model
  * @author  OpenAPI Generator team
  * @link    https://github.com/openapitools/openapi-generator
- *
- * @coversDefaultClass \dev_t0r\trvis_backend\model\Schema
  */
+#[CoversClass(\dev_t0r\trvis_backend\model\Schema::class)]
+#[CoversMethod(\dev_t0r\trvis_backend\model\Schema::class, 'getOpenApiSchema')]
 class SchemaTest extends TestCase
 {
 
@@ -104,7 +106,6 @@ class SchemaTest extends TestCase
 
     /**
      * Test getOpenApiSchema static method
-     * @covers ::getOpenApiSchema
      */
     public function testGetOpenApiSchema()
     {

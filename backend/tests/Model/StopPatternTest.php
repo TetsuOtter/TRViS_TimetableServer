@@ -22,6 +22,8 @@
  */
 namespace dev_t0r\trvis_backend\model;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversMethod;
 use PHPUnit\Framework\TestCase;
 use dev_t0r\trvis_backend\model\StopPattern;
 
@@ -31,9 +33,9 @@ use dev_t0r\trvis_backend\model\StopPattern;
  * @package dev_t0r\trvis_backend\model
  * @author  OpenAPI Generator team
  * @link    https://github.com/openapitools/openapi-generator
- *
- * @coversDefaultClass \dev_t0r\trvis_backend\model\StopPattern
  */
+#[CoversClass(\dev_t0r\trvis_backend\model\StopPattern::class)]
+#[CoversMethod(\dev_t0r\trvis_backend\model\StopPattern::class, 'getOpenApiSchema')]
 class StopPatternTest extends TestCase
 {
 
@@ -164,7 +166,6 @@ class StopPatternTest extends TestCase
 
     /**
      * Test getOpenApiSchema static method
-     * @covers ::getOpenApiSchema
      */
     public function testGetOpenApiSchema()
     {

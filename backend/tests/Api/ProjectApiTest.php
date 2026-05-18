@@ -10,6 +10,8 @@
 
 namespace dev_t0r\trvis_backend\api;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversMethod;
 use dev_t0r\trvis_backend\model\InviteKeyPrivilegeType;
 use dev_t0r\trvis_backend\service\ProjectsService;
 use dev_t0r\trvis_backend\tests\integration\IntegrationTestCase;
@@ -18,9 +20,14 @@ use Ramsey\Uuid\UuidInterface;
 
 require_once __DIR__ . '/../Integration/IntegrationTestCase.php';
 
-/**
- * @coversDefaultClass \dev_t0r\trvis_backend\api\ProjectApi
- */
+#[CoversClass(\dev_t0r\trvis_backend\api\ProjectApi::class)]
+#[CoversMethod(\dev_t0r\trvis_backend\api\ProjectApi::class, 'createProject')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\ProjectApi::class, 'getProject')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\ProjectApi::class, 'getProjectList')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\ProjectApi::class, 'updateProject')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\ProjectApi::class, 'deleteProject')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\ProjectApi::class, 'getProjectPrivilege')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\ProjectApi::class, 'updateProjectPrivilege')]
 class ProjectApiTest extends IntegrationTestCase
 {
 	private function svc(): ProjectsService
@@ -39,9 +46,6 @@ class ProjectApiTest extends IntegrationTestCase
 		return $pid;
 	}
 
-	/**
-	 * @covers ::createProject
-	 */
 	public function testCreateProject()
 	{
 		$r = $this->svc()->createProject($this->userId, 'My Project', 'desc');
@@ -59,9 +63,6 @@ class ProjectApiTest extends IntegrationTestCase
 		$this->assertSame(3, (int)$st->fetchColumn());
 	}
 
-	/**
-	 * @covers ::getProject
-	 */
 	public function testGetProject()
 	{
 		$pid = $this->newProject();
@@ -76,9 +77,6 @@ class ProjectApiTest extends IntegrationTestCase
 		$this->assertSame(404, $nm->statusCode);
 	}
 
-	/**
-	 * @covers ::getProjectList
-	 */
 	public function testGetProjectList()
 	{
 		$pid = $this->newProject('listed');
@@ -88,9 +86,6 @@ class ProjectApiTest extends IntegrationTestCase
 		$this->assertContains((string)$pid, $ids);
 	}
 
-	/**
-	 * @covers ::updateProject
-	 */
 	public function testUpdateProject()
 	{
 		$pid = $this->newProject('before');
@@ -103,9 +98,6 @@ class ProjectApiTest extends IntegrationTestCase
 		$this->assertGreaterThan($before, $this->fetchUpdatedAt($pid), 'updated_at must advance');
 	}
 
-	/**
-	 * @covers ::deleteProject
-	 */
 	public function testDeleteProject()
 	{
 		$pid = $this->newProject();
@@ -116,9 +108,6 @@ class ProjectApiTest extends IntegrationTestCase
 		$this->assertSame(404, $g->statusCode);
 	}
 
-	/**
-	 * @covers ::getProjectPrivilege
-	 */
 	public function testGetProjectPrivilege()
 	{
 		$pid = $this->newProject();
@@ -127,9 +116,6 @@ class ProjectApiTest extends IntegrationTestCase
 		$this->assertSame(InviteKeyPrivilegeType::admin, $g->value->privilege_type);
 	}
 
-	/**
-	 * @covers ::updateProjectPrivilege
-	 */
 	public function testUpdateProjectPrivilege()
 	{
 		$pid = $this->newProject();

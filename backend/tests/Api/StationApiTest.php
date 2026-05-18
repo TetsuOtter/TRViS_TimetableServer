@@ -13,6 +13,8 @@
 
 namespace dev_t0r\trvis_backend\api;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversMethod;
 use dev_t0r\trvis_backend\model\Station;
 use dev_t0r\trvis_backend\model\StationRecordType;
 use dev_t0r\trvis_backend\service\StationsService;
@@ -23,9 +25,12 @@ use Ramsey\Uuid\UuidInterface;
 
 require_once __DIR__ . '/../Integration/IntegrationTestCase.php';
 
-/**
- * @coversDefaultClass \dev_t0r\trvis_backend\api\StationApi
- */
+#[CoversClass(\dev_t0r\trvis_backend\api\StationApi::class)]
+#[CoversMethod(\dev_t0r\trvis_backend\api\StationApi::class, 'createStation')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\StationApi::class, 'getStation')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\StationApi::class, 'getStationList')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\StationApi::class, 'updateStation')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\StationApi::class, 'deleteStation')]
 class StationApiTest extends IntegrationTestCase
 {
 	private function svc(): StationsService
@@ -63,9 +68,6 @@ class StationApiTest extends IntegrationTestCase
 		return $o;
 	}
 
-	/**
-	 * @covers ::createStation
-	 */
 	public function testCreateStation()
 	{
 		$wg = $this->newWorkGroup();
@@ -75,9 +77,6 @@ class StationApiTest extends IntegrationTestCase
 		$this->assertSame('S', $o->name);
 	}
 
-	/**
-	 * @covers ::getStation
-	 */
 	public function testGetStation()
 	{
 		$o = $this->createOne($this->newWorkGroup());
@@ -90,9 +89,6 @@ class StationApiTest extends IntegrationTestCase
 		$this->assertSame(404, $nm->statusCode);
 	}
 
-	/**
-	 * @covers ::getStationList
-	 */
 	public function testGetStationList()
 	{
 		$wg = $this->newWorkGroup();
@@ -105,9 +101,6 @@ class StationApiTest extends IntegrationTestCase
 		$this->assertContains((string)$b->stations_id, $ids);
 	}
 
-	/**
-	 * @covers ::updateStation
-	 */
 	public function testUpdateStation()
 	{
 		$o = $this->createOne($this->newWorkGroup(), ['name' => 'before']);
@@ -129,9 +122,6 @@ class StationApiTest extends IntegrationTestCase
 		);
 	}
 
-	/**
-	 * @covers ::deleteStation
-	 */
 	public function testDeleteStation()
 	{
 		$o = $this->createOne($this->newWorkGroup());

@@ -14,28 +14,26 @@
 
 namespace dev_t0r\trvis_backend\api;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\CoversMethod;
 use PHPUnit\Framework\TestCase;
 use Slim\Exception\HttpNotImplementedException;
 
-/**
- * @coversDefaultClass \dev_t0r\trvis_backend\api\AuthApi
- */
+#[CoversClass(\dev_t0r\trvis_backend\api\AuthApi::class)]
+#[CoversMethod(\dev_t0r\trvis_backend\api\AuthApi::class, 'issueToken')]
 class AuthApiTest extends TestCase
 {
-	/**
-	 * @covers ::issueToken
-	 */
 	public function testIssueToken()
 	{
 		// No concrete AuthApi: the endpoint is deliberately unimplemented.
 		$this->assertFalse(
-			class_exists(\dev_t0r\trvis_backend\api\AuthApi::class),
+			class_exists(AuthApi::class),
 			'AuthApi must remain unimplemented (issueToken -> HTTP 501)',
 		);
 
 		// And the generated abstract still declares the 501 contract.
 		$rm = new \ReflectionMethod(
-			\dev_t0r\trvis_backend\api\AbstractAuthApi::class,
+			AbstractAuthApi::class,
 			'issueToken',
 		);
 		$this->assertFalse(
