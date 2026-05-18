@@ -2,11 +2,11 @@ import { createSlice } from "@reduxjs/toolkit";
 
 import type { PayloadAction } from "@reduxjs/toolkit";
 
-export interface SystemState {
+export type SystemState = {
 	isMessageDialogOpen: boolean;
 	messageTitle?: string;
 	messageBody?: string;
-}
+};
 
 const initialState: SystemState = {
 	isMessageDialogOpen: false,

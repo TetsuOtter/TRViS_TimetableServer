@@ -8,6 +8,8 @@ export const emailSelector: AppSelector<string> = (state) =>
 export const isEMailVerifiedSelector: AppSelector<boolean | undefined> = (
 	state
 ) => state.authInfo.isEMailVerified;
+export const jwtSelector: AppSelector<string | undefined> = (state) =>
+	state.authInfo.jwt;
 
 export const copyUserIdToClipboardStateSelector: AppSelector<
 	ActionStateType

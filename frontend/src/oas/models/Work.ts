@@ -64,10 +64,13 @@ export interface Work {
     affixContentType?: WorkAffixContentTypeEnum;
     /**
      * 「行路添付」に表示させる内容
-     * @type {}
+     * 
+     * ContentTypeに従って、Plain Text、URI、Binary のいずれかを使用する
+     * 
+     * @type {string}
      * @memberof Work
      */
-    affixContent?:  | null;
+    affixContent?: string;
     /**
      * 「注意事項」に表示させる内容
      * @type {string}
@@ -88,10 +91,13 @@ export interface Work {
     eTrainTimetableContentType?: WorkETrainTimetableContentTypeEnum;
     /**
      * 「E電時刻表」に表示させる内容
-     * @type {}
+     * 
+     * ContentTypeに従って、Plain Text、URI、Binary のいずれかを使用する
+     * 
+     * @type {string}
      * @memberof Work
      */
-    eTrainTimetableContent?:  | null;
+    eTrainTimetableContent?: string;
 }
 
 
@@ -148,11 +154,11 @@ export function WorkFromJSONTyped(json: any, ignoreDiscriminator: boolean): Work
         'createdAt': !exists(json, 'created_at') ? undefined : (new Date(json['created_at'])),
         'affectDate': !exists(json, 'affect_date') ? undefined : (new Date(json['affect_date'])),
         'affixContentType': !exists(json, 'affix_content_type') ? undefined : json['affix_content_type'],
-        'affixContent': !exists(json, 'affix_content') ? undefined : FromJSON(json['affix_content']),
+        'affixContent': !exists(json, 'affix_content') ? undefined : json['affix_content'],
         'remarks': !exists(json, 'remarks') ? undefined : json['remarks'],
         'hasETrainTimetable': !exists(json, 'has_e_train_timetable') ? undefined : json['has_e_train_timetable'],
         'eTrainTimetableContentType': !exists(json, 'e_train_timetable_content_type') ? undefined : json['e_train_timetable_content_type'],
-        'eTrainTimetableContent': !exists(json, 'e_train_timetable_content') ? undefined : FromJSON(json['e_train_timetable_content']),
+        'eTrainTimetableContent': !exists(json, 'e_train_timetable_content') ? undefined : json['e_train_timetable_content'],
     };
 }
 
@@ -169,11 +175,11 @@ export function WorkToJSON(value?: Work | null): any {
         'name': value.name,
         'affect_date': value.affectDate === undefined ? undefined : (value.affectDate.toISOString().substring(0,10)),
         'affix_content_type': value.affixContentType,
-        'affix_content': ToJSON(value.affixContent),
+        'affix_content': value.affixContent,
         'remarks': value.remarks,
         'has_e_train_timetable': value.hasETrainTimetable,
         'e_train_timetable_content_type': value.eTrainTimetableContentType,
-        'e_train_timetable_content': ToJSON(value.eTrainTimetableContent),
+        'e_train_timetable_content': value.eTrainTimetableContent,
     };
 }
 

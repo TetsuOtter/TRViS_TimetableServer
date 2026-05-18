@@ -44,7 +44,25 @@ export interface WorkGroup {
      * @memberof WorkGroup
      */
     readonly createdAt?: Date;
+    /**
+     * 権限の種類
+     * @type {string}
+     * @memberof WorkGroup
+     */
+    readonly privilegeType?: WorkGroupPrivilegeTypeEnum;
 }
+
+
+/**
+ * @export
+ */
+export const WorkGroupPrivilegeTypeEnum = {
+    Read: 'read',
+    Write: 'write',
+    Admin: 'admin'
+} as const;
+export type WorkGroupPrivilegeTypeEnum = typeof WorkGroupPrivilegeTypeEnum[keyof typeof WorkGroupPrivilegeTypeEnum];
+
 
 /**
  * Check if a given object implements the WorkGroup interface.
@@ -71,6 +89,7 @@ export function WorkGroupFromJSONTyped(json: any, ignoreDiscriminator: boolean):
         'name': json['name'],
         'workGroupsId': !exists(json, 'work_groups_id') ? undefined : json['work_groups_id'],
         'createdAt': !exists(json, 'created_at') ? undefined : (new Date(json['created_at'])),
+        'privilegeType': !exists(json, 'privilege_type') ? undefined : json['privilege_type'],
     };
 }
 

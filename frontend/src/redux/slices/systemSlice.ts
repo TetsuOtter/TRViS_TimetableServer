@@ -3,9 +3,9 @@ import { createSlice } from "@reduxjs/toolkit";
 import type { PaletteMode } from "@mui/material";
 import type { PayloadAction } from "@reduxjs/toolkit";
 
-export interface SystemState {
+export type SystemState = {
 	themeMode: PaletteMode | undefined;
-}
+};
 
 const initialState: SystemState = {
 	themeMode: undefined,

@@ -4,10 +4,22 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 import { ThemeProvider } from "@emotion/react";
 import { createTheme, CssBaseline } from "@mui/material";
+import { enUS as muiCoreEnUs, jaJP as muiCoreJaJp } from "@mui/material/locale";
+import {
+	enUS as muiDataGridEnUs,
+	jaJP as muiDataGridJaJp,
+} from "@mui/x-data-grid";
+import {
+	enUS as muiDatePickerEnUs,
+	jaJP as muiDatePickerJaJp,
+	LocalizationProvider as DatePickerLocalizationProvider,
+} from "@mui/x-date-pickers";
+import { AdapterDateFns } from "@mui/x-date-pickers/AdapterDateFnsV3";
+import { enUS as dateFnsEnUs, ja as dateFnsJa } from "date-fns/locale";
 import i18n, { changeLanguage } from "i18next";
 import I18nextBrowserLanguageDetector from "i18next-browser-languagedetector";
 import I18NextHttpBackend from "i18next-http-backend";
-import { initReactI18next } from "react-i18next";
+import { initReactI18next, useTranslation } from "react-i18next";
 import { Provider } from "react-redux";
 
 import App from "./App.tsx";
@@ -17,7 +29,19 @@ import { auth } from "./firebase/configure.ts";
 import { useAppThemeMode } from "./hooks/appThemeModeHook.ts";
 import { I18N_LANGUAGES, I18N_LANGUAGES_ARRAY } from "./i18n.ts";
 import ErrorPage from "./pages/ErrorPage.tsx";
+import StationsPage from "./pages/StationsPage.tsx";
+import TrainsPage from "./pages/TrainsPage.tsx";
+import WorkGroupsPage from "./pages/WorkGroupsPage.tsx";
+import WorksPage from "./pages/WorksPage.tsx";
 import { store } from "./redux/store.ts";
+import {
+	getPathToStationList,
+	getPathToTrainList,
+	getPathToWorkGroupList,
+	getPathToWorkList,
+	WORK_GROUPS_ID_PLACEHOLDER_KEY,
+	WORKS_ID_PLACEHOLDER_KEY,
+} from "./utils/getPathString.ts";
 
 import type { I18N_LANGUAGE_TYPE } from "./i18n.ts";
 
@@ -26,11 +50,37 @@ import "@fontsource/roboto/400.css";
 import "@fontsource/roboto/500.css";
 import "@fontsource/roboto/700.css";
 
+const rootNode = document.getElementById("root");
+if (rootNode == null) {
+	const message = "ERROR: rootNode is null";
+	const errorMsgElement = document.createElement("p");
+	errorMsgElement.textContent = message;
+	document.body.appendChild(errorMsgElement);
+	throw new Error(message);
+}
+
 const router = createBrowserRouter([
 	{
 		path: "/",
 		element: <App />,
 		errorElement: <ErrorPage />,
+	},
+	{
+		path: getPathToWorkGroupList(),
+		element: <WorkGroupsPage />,
+		errorElement: <ErrorPage />,
+	},
+	{
+		path: getPathToWorkList(`:${WORK_GROUPS_ID_PLACEHOLDER_KEY}`),
+		element: <WorksPage />,
+	},
+	{
+		path: getPathToTrainList(`:${WORKS_ID_PLACEHOLDER_KEY}`),
+		element: <TrainsPage />,
+	},
+	{
+		path: getPathToStationList(`:${WORK_GROUPS_ID_PLACEHOLDER_KEY}`),
+		element: <StationsPage />,
 	},
 ]);
 
@@ -77,28 +127,57 @@ i18n
 
 const RootComponentWithRedux = () => {
 	const appThemeMode = useAppThemeMode();
+	const {
+		i18n: { language },
+	} = useTranslation();
+
+	const [muiTranslations, muiDatePickerTranslations, dateFnsLocale] =
+		useMemo(() => {
+			switch (language) {
+				case I18N_LANGUAGES.Japanese:
+					return [[muiCoreJaJp, muiDataGridJaJp], muiDatePickerJaJp, dateFnsJa];
+				case I18N_LANGUAGES.English:
+				default:
+					return [
+						[muiCoreEnUs, muiDataGridEnUs],
+						muiDatePickerEnUs,
+						dateFnsEnUs,
+					];
+			}
+		}, [language]);
 
 	const theme = useMemo(
 		() =>
-			createTheme({
-				palette: {
-					mode: appThemeMode,
+			createTheme(
+				{
+					palette: {
+						mode: appThemeMode,
+					},
 				},
-			}),
-		[appThemeMode]
+				...muiTranslations
+			),
+		[appThemeMode, muiTranslations]
 	);
 
 	return (
 		<ThemeProvider theme={theme}>
-			<CssBaseline />
-			<MyAppBar />
-			<RouterProvider router={router} />
-			<MessageDialog />
+			<DatePickerLocalizationProvider
+				dateAdapter={AdapterDateFns}
+				adapterLocale={dateFnsLocale}
+				localeText={
+					muiDatePickerTranslations.components.MuiLocalizationProvider
+						.defaultProps.localeText
+				}>
+				<CssBaseline />
+				<MyAppBar />
+				<RouterProvider router={router} />
+				<MessageDialog />
+			</DatePickerLocalizationProvider>
 		</ThemeProvider>
 	);
 };
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
+ReactDOM.createRoot(rootNode).render(
 	<React.StrictMode>
 		<Provider store={store}>
 			<RootComponentWithRedux />

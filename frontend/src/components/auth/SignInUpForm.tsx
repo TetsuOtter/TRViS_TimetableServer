@@ -29,6 +29,7 @@ import {
 	signInWithEmailAndPasswordThunk,
 } from "../../redux/slices/authInfoSlice";
 import { openMessageDialog } from "../../redux/slices/messageDialogSlice";
+import { strHasValue } from "../../utils/strHasValue";
 
 import type { SubmitErrorHandler } from "react-hook-form";
 
@@ -168,7 +169,7 @@ const SignInUpForm = () => {
 						variant="outlined">
 						<InputLabel
 							htmlFor="password"
-							error={!!errors.password?.message}>
+							error={strHasValue(errors.password?.message)}>
 							{t("Password")}
 						</InputLabel>
 						<OutlinedInput
@@ -176,7 +177,7 @@ const SignInUpForm = () => {
 							id="password"
 							disabled={isProcessing}
 							type={isPasswordVisible ? "text" : "password"}
-							error={!!errors.password?.message}
+							error={strHasValue(errors.password?.message)}
 							autoComplete="current-password"
 							endAdornment={
 								<InputAdornment position="end">
@@ -193,7 +194,7 @@ const SignInUpForm = () => {
 						/>
 						<FormHelperText
 							id="password-helper-text"
-							error={true}>
+							error>
 							{errors.password?.message}
 						</FormHelperText>
 						<FormHelperText>
@@ -217,7 +218,7 @@ const SignInUpForm = () => {
 				value={isProcessing ? undefined : 0}
 			/>
 
-			{errorMessage && (
+			{strHasValue(errorMessage) && (
 				<Typography
 					variant="body2"
 					color="error"
