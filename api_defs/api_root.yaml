@@ -172,7 +172,7 @@ components:
       $ref: "./parameters/id.yaml#/UidQuery"
     UidAnonymousQuery:
       $ref: "./parameters/id.yaml#/UidAnonymousQuery"
-    
+
     PageNumber:
       $ref: "./parameters/paging.yaml#/PageNumber"
     PageSize:
@@ -182,3 +182,7 @@ components:
 
     Expired:
       $ref: "./parameters/expired.yaml#/Expired"
+
+  headers:
+    X-Total-Count:
+      $ref: "./parameters/paging.yaml#/X-Total-Count"

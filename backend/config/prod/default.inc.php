@@ -51,7 +51,7 @@ return [
 		true, // areAllHeadersAllowed
 		['content-type', 'authorization'], // allowedLcHeaders
 		'Content-Type,Authorization', // allowedHeadersList
-		'', // exposedHeadersList
+		'X-Total-Count', // exposedHeadersList
 		true, // isCheckHost
 	],
 
@@ -75,7 +75,7 @@ return [
 	'app.name' => 'trvis-backend',
 	'app.version' => '1.0.0',
 
-	'firebase.sa_file' => \realpath(__DIR__ . '/firebase-service-account.json'),
+	'firebase.sa_file' => \realpath(__DIR__)  . '/firebase-service-account.json',
 	'firebase.project_id' => 'trvis-app',
 
 	'firebase.api_token_cache_dir' => \realpath(__DIR__ . '/../../cache') . '/firebase/ApiToken',

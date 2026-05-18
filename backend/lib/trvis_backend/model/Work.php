@@ -89,10 +89,8 @@ class Work extends BaseModel
     },
     "affix_content" : {
       "type" : "string",
-      "description" : "「行路添付」に表示させる内容",
-      "nullable" : true,
-      "example" : "行路添付の内容が入ります",
-      "oneOf" : [ ]
+      "description" : "「行路添付」に表示させる内容\n\nContentTypeに従って、Plain Text、URI、Binary のいずれかを使用する\n",
+      "example" : "行路添付の内容が入ります"
     },
     "remarks" : {
       "type" : "string",
@@ -112,10 +110,8 @@ class Work extends BaseModel
     },
     "e_train_timetable_content" : {
       "type" : "string",
-      "description" : "「E電時刻表」に表示させる内容",
-      "nullable" : true,
-      "example" : "E電時刻表の内容が入ります",
-      "oneOf" : [ ]
+      "description" : "「E電時刻表」に表示させる内容\n\nContentTypeに従って、Plain Text、URI、Binary のいずれかを使用する\n",
+      "example" : "E電時刻表の内容が入ります"
     }
   }
 }

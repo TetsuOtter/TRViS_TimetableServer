@@ -1,0 +1,51 @@
+{
+	"editor.renderWhitespace": "all",
+	"editor.formatOnSave": true,
+	"editor.formatOnPaste": true,
+
+	"eslint.workingDirectories": ["./frontend"],
+	"prettier.configPath": "./frontend/.prettierrc.json",
+	"editor.codeActionsOnSave": {
+		"source.fixAll.eslint": "explicit"
+	},
+	"[json]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[typescript]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[typescriptreact]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode"
+	},
+	"[yaml]": {
+		"editor.insertSpaces": true,
+		"editor.tabSize": 2,
+		"editor.autoIndent": "keep",
+		"diffEditor.ignoreTrimWhitespace": false,
+		"editor.quickSuggestions": {
+			"other": true,
+			"comments": false,
+			"strings": true
+		}
+	},
+	"editor.defaultFormatter": "EditorConfig.EditorConfig",
+	"cSpell.words": [
+		"appspot",
+		"Classname",
+		"firebaseapp",
+		"fontawesome",
+		"fontsource",
+		"languagedetector",
+		"reduxjs",
+		"svgr",
+		"trvis",
+		"webmon"
+	],
+	"cSpell.enableFiletypes": [
+		"dockercompose",
+		"dockerfile",
+		"editorconfig",
+		"sql"
+	],
+	"prettier.requireConfig": true
+}

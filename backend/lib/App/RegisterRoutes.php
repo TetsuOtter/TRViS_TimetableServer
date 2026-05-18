@@ -469,6 +469,11 @@ class RegisterRoutes
                 '200' => [
                     'jsonSchema' => '{
   "description" : "取得成功",
+  "headers" : {
+    "X-Total-Count" : {
+      "$ref" : "#/components/headers/X-Total-Count"
+    }
+  },
   "content" : {
     "application/json" : {
       "schema" : {
@@ -778,6 +783,11 @@ class RegisterRoutes
                 '200' => [
                     'jsonSchema' => '{
   "description" : "取得成功",
+  "headers" : {
+    "X-Total-Count" : {
+      "$ref" : "#/components/headers/X-Total-Count"
+    }
+  },
   "content" : {
     "application/json" : {
       "schema" : {
@@ -1778,6 +1788,11 @@ class RegisterRoutes
                 '200' => [
                     'jsonSchema' => '{
   "description" : "取得成功",
+  "headers" : {
+    "X-Total-Count" : {
+      "$ref" : "#/components/headers/X-Total-Count"
+    }
+  },
   "content" : {
     "application/json" : {
       "schema" : {
@@ -2314,6 +2329,11 @@ class RegisterRoutes
                 '200' => [
                     'jsonSchema' => '{
   "description" : "取得成功",
+  "headers" : {
+    "X-Total-Count" : {
+      "$ref" : "#/components/headers/X-Total-Count"
+    }
+  },
   "content" : {
     "application/json" : {
       "schema" : {
@@ -2850,6 +2870,11 @@ class RegisterRoutes
                 '200' => [
                     'jsonSchema' => '{
   "description" : "取得成功",
+  "headers" : {
+    "X-Total-Count" : {
+      "$ref" : "#/components/headers/X-Total-Count"
+    }
+  },
   "content" : {
     "application/json" : {
       "schema" : {
@@ -3386,6 +3411,11 @@ class RegisterRoutes
                 '200' => [
                     'jsonSchema' => '{
   "description" : "取得成功",
+  "headers" : {
+    "X-Total-Count" : {
+      "$ref" : "#/components/headers/X-Total-Count"
+    }
+  },
   "content" : {
     "application/json" : {
       "schema" : {
@@ -3922,6 +3952,11 @@ class RegisterRoutes
                 '200' => [
                     'jsonSchema' => '{
   "description" : "取得成功",
+  "headers" : {
+    "X-Total-Count" : {
+      "$ref" : "#/components/headers/X-Total-Count"
+    }
+  },
   "content" : {
     "application/json" : {
       "schema" : {
@@ -4211,6 +4246,11 @@ class RegisterRoutes
                 '200' => [
                     'jsonSchema' => '{
   "description" : "取得成功",
+  "headers" : {
+    "X-Total-Count" : {
+      "$ref" : "#/components/headers/X-Total-Count"
+    }
+  },
   "content" : {
     "application/json" : {
       "schema" : {

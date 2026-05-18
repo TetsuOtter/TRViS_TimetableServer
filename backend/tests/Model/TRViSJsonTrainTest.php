@@ -165,10 +165,10 @@ class TRViSJsonTrainTest extends TestCase
     /**
      * Test attribute "begionRemarks"
      */
-    public function testPropertyBegionRemarks()
+    public function testPropertyBeginRemarks()
     {
         $this->markTestIncomplete(
-            'Test of "begionRemarks" property in "TRViSJsonTrain" model has not been implemented yet.'
+            'Test of "beginRemarks" property in "TRViSJsonTrain" model has not been implemented yet.'
         );
     }
 

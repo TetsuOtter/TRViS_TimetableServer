@@ -29,7 +29,8 @@ final class WorkGroupsRepo
 			'work_groups_id' => Uuid::fromBytes($data['work_groups_id']),
 			'created_at' => $data['created_at'],
 			'description' => $data['description'],
-			'name' => $data['name']
+			'name' => $data['name'],
+			'privilege_type' => InviteKeyPrivilegeType::fromInt($data['privilege_type']),
 		]);
 		return $workGroup;
 	}
@@ -38,24 +39,49 @@ final class WorkGroupsRepo
 	 * @return RetValueOrError<WorkGroup>
 	 */
 	public function selectWorkGroupOne(
+		string $userId,
 		UuidInterface $workGroupId
 	): RetValueOrError {
 		$this->logger->debug("selectOne workGroupId: {workGroupId}", ['workGroupId' => $workGroupId]);
+		$WHERE_USER_ID =
+			$userId === Constants::UID_ANONYMOUS
+				? ' uid = :userId '
+				: ' uid IN (:userId, \'\') ';
+		$WHERE_PRIVILEGE_TYPE = ' privilege_type >= ' . InviteKeyPrivilegeType::read->value . ' ';
 		$query = $this->db->prepare(<<<SQL
 			SELECT
-				work_groups_id,
-				created_at,
-				description,
-				name
+				work_groups.work_groups_id,
+				work_groups.created_at,
+				work_groups.description,
+				work_groups.name,
+				work_groups_privileges.privilege_type
 			FROM
 				work_groups
+			JOIN
+				(SELECT
+					work_groups_id,
+					MAX(privilege_type) AS privilege_type
+				FROM
+					work_groups_privileges
+				WHERE
+					work_groups_id = :work_groups_id
+				AND
+					deleted_at IS NULL
+				AND
+					$WHERE_USER_ID
+				AND
+					$WHERE_PRIVILEGE_TYPE
+				) AS work_groups_privileges
+			USING
+				(work_groups_id)
 			WHERE
-				work_groups_id = :work_groups_id
+				work_groups.work_groups_id = :work_groups_id
 			AND
-				deleted_at IS NULL
+				work_groups.deleted_at IS NULL
 			;
 			SQL
 		);
+		$query->bindValue(':userId', $userId, PDO::PARAM_STR);
 		$query->bindValue(':work_groups_id', $workGroupId->getBytes(), PDO::PARAM_STR);
 
 		$isSuccess = $query->execute();
@@ -89,6 +115,63 @@ final class WorkGroupsRepo
 		return RetValueOrError::withValue($workGroup);
 	}
 
+	private static function getSelectPageQuery(
+		string $userId,
+		bool $hasTopId,
+		bool $countOnly,
+	): string {
+		$WHERE_USER_ID =
+			$userId === Constants::UID_ANONYMOUS
+				? ' uid = :userId '
+				: ' uid IN (:userId, \'\') ';
+		$WHERE_PRIVILEGE_TYPE = ' privilege_type >= ' . InviteKeyPrivilegeType::read->value . ' ';
+		$WHERE_TOP_ID = $hasTopId ? ' work_groups.work_groups_id <= :top_id AND ' : ' ';
+		$COLUMNS = $countOnly ? ' COUNT(*) AS count ' : <<<SQL
+			work_groups_id,
+			work_groups.created_at AS created_at,
+			work_groups.description AS description,
+			name,
+			work_groups_privileges.privilege_type
+
+			SQL;
+		$PAGING_QUERY = $countOnly ? '' : <<<SQL
+
+			ORDER BY
+				work_groups_id DESC
+			LIMIT
+				:perPage
+			OFFSET
+				:offset
+			SQL;
+		return <<<SQL
+			SELECT
+				$COLUMNS
+			FROM
+				work_groups
+			JOIN
+				(SELECT
+					work_groups_id,
+					MAX(privilege_type) AS privilege_type
+				FROM
+					work_groups_privileges
+				WHERE
+					$WHERE_PRIVILEGE_TYPE
+				AND
+					deleted_at IS NULL
+				AND
+					$WHERE_USER_ID
+				GROUP BY
+					work_groups_id
+				) AS work_groups_privileges
+			USING
+				(work_groups_id)
+			WHERE
+				$WHERE_TOP_ID
+				work_groups.deleted_at IS NULL
+			$PAGING_QUERY
+			SQL;
+	}
+
 	/**
 	 * @return RetValueOrError<array<WorkGroup>>
 	 */
@@ -105,46 +188,7 @@ final class WorkGroupsRepo
 			'topId' => $topId,
 		]);
 		$hasTopId = !is_null($topId);
-		$query = $this->db->prepare(
-			<<<SQL
-			SELECT
-				work_groups_id,
-				work_groups.created_at AS created_at,
-				work_groups.description AS description,
-				name
-			FROM
-				work_groups
-			JOIN
-				work_groups_privileges
-			USING
-				(work_groups_id)
-			WHERE
-			SQL
-			.
-			($hasTopId ? ' work_groups_id <= :top_id AND ' : '')
-			.
-			(
-				$userId === Constants::UID_ANONYMOUS
-					? ' uid = :userId '
-					: ' uid IN (:userId, \'\') '
-			)
-			.
-			' AND work_groups.deleted_at IS NULL '
-			.
-			' AND work_groups_privileges.deleted_at IS NULL '
-			.
-			'AND privilege_type >= ' . InviteKeyPrivilegeType::read->value . ' '
-			.
-			<<<SQL
-			ORDER BY
-				work_groups_id DESC
-			LIMIT
-				:perPage
-			OFFSET
-				:offset
-			;
-			SQL
-		);
+		$query = $this->db->prepare(self::getSelectPageQuery($userId, $hasTopId, false));
 		if ($hasTopId) {
 			$query->bindValue(':top_id', $topId->getBytes(), PDO::PARAM_STR);
 		}
@@ -174,6 +218,44 @@ final class WorkGroupsRepo
 
 		$this->logger->debug("select result - workGroup: {workGroups}", ['workGroups' => $workGroups]);
 		return RetValueOrError::withValue($workGroups);
+	}
+
+	/**
+	 * @return RetValueOrError<number>
+	 */
+	public function selectWorkGroupPageTotalCount(
+		string $userId,
+		?UuidInterface $topId,
+	): RetValueOrError {
+		$this->logger->debug("selectPageTotalCount(userId:{userId}, topId:{topId})", [
+			'userId' => $userId,
+			'topId' => $topId,
+		]);
+		$hasTopId = !is_null($topId);
+		$query = $this->db->prepare(self::getSelectPageQuery($userId, $hasTopId, true));
+		if ($hasTopId) {
+			$query->bindValue(':top_id', $topId->getBytes(), PDO::PARAM_STR);
+		}
+		$query->bindValue(':userId', $userId, PDO::PARAM_STR);
+
+		$isSuccess = $query->execute();
+		if (!$isSuccess) {
+			$errCode = $query->errorCode();
+			$this->logger->error(
+				"Failed to execute SQL ({errorCode} -> {errorInfo})",
+				[
+					"errorCode" => $errCode,
+					"errorInfo" => implode('\n\t', $query->errorInfo()),
+				],
+			);
+			return RetValueOrError::withError(500, "Failed to execute SQL - " . $errCode);
+		}
+
+		$this->logger->debug("select success - rowCount: {rowCount}", ['rowCount' => $query->rowCount()]);
+		$totalCount = $query->fetch(PDO::FETCH_ASSOC)['count'];
+
+		$this->logger->debug("select result - totalCount: {totalCount}", ['totalCount' => $totalCount]);
+		return RetValueOrError::withValue($totalCount);
 	}
 
 	/**
