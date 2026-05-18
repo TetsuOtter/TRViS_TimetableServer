@@ -49,7 +49,7 @@ class BaseModelTest extends TestCase
         $this->assertEquals($expectedJson, json_encode($item->getData()));
     }
 
-    public function provideClassesAndDefaultData()
+    public static function provideClassesAndDefaultData()
     {
         return [
             'boolean model' => [BasicBooleanTestClass::class, json_encode(null)],
@@ -73,7 +73,7 @@ class BaseModelTest extends TestCase
         $item = new $className();
     }
 
-    public function provideInvalidClasses()
+    public static function provideInvalidClasses()
     {
         return [
             'unknown type model' => [UnknownTypeTestClass::class],
@@ -118,7 +118,7 @@ class BaseModelTest extends TestCase
         }
     }
 
-    public function provideCreateFromDataArguments()
+    public static function provideCreateFromDataArguments()
     {
         return [
             'CatRefTestClass' => [
@@ -162,7 +162,7 @@ class BaseModelTest extends TestCase
         }
     }
 
-    public function provideScalarModels()
+    public static function provideScalarModels()
     {
         return [
             'boolean model' => [
@@ -211,7 +211,7 @@ class BaseModelTest extends TestCase
         $item->setData($data);
     }
 
-    public function provideInvalidDataForArrayModel()
+    public static function provideInvalidDataForArrayModel()
     {
         $obj = new StdClass();
         $obj->foo = 'bar';
@@ -289,7 +289,7 @@ class BaseModelTest extends TestCase
         $item->foo = 'bar';
     }
 
-    public function provideScalarsAndArray()
+    public static function provideScalarsAndArray()
     {
         return [
             'boolean model' => [BasicBooleanTestClass::class],
@@ -364,7 +364,7 @@ class BaseModelTest extends TestCase
         $this->assertEquals($expectedJson, json_encode($item));
     }
 
-    public function provideJsonSerializeArguments()
+    public static function provideJsonSerializeArguments()
     {
         return [
             'model with all props' => [
@@ -457,7 +457,7 @@ class BaseModelTest extends TestCase
         $this->assertIsString($namespace);
     }
 
-    public function provideTestClasses()
+    public static function provideTestClasses()
     {
         return [
             [BasicArrayTestClass::class],
