@@ -54,7 +54,7 @@ return [
 		true, // areAllHeadersAllowed
 		[], // allowedLcHeaders
 		'authorization, content-type, x-requested-with', // allowedHeadersList
-		'', // exposedHeadersList
+		'X-Total-Count', // exposedHeadersList
 		true, // isCheckHost
 	],
 

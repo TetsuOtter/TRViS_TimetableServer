@@ -99,7 +99,7 @@ services:
     env_file:
       - mysql/.env
   phpmyadmin:
-    image: phpmyadmin:latest
+    image: phpmyadmin:5.2.1
     container_name: webmon-phpmyadmin
     hostname: webmon-phpmyadmin
     ports:

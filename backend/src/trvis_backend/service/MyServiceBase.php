@@ -519,6 +519,17 @@ abstract class MyServiceBase implements IMyServiceBase
 			parentId: $parentId,
 			topId: $topId,
 		);
+		if ($totalCountResult->isError) {
+			$this->logger->warning(
+				'getPage{dataTypeName} selectPageTotalCount failed: [{statusCode}] {errorMsg}',
+				[
+					'dataTypeName' => $this->dataTypeName,
+					'statusCode' => $totalCountResult->statusCode,
+					'errorMsg' => $totalCountResult->errorMsg,
+				],
+			);
+			return $totalCountResult;
+		}
 		$selectPageResult = $this->targetRepo->selectPage(
 			parentId: $parentId,
 			pageFrom1: $pageFrom1,
