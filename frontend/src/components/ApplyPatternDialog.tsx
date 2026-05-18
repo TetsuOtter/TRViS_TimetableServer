@@ -1018,8 +1018,13 @@ export function ApplyPatternDialog({
 									>
 										適用方法:
 									</span>
-									{/* append/prepend disabled: server re-sorts rows by stations.location_km,
-								    so positional append/prepend is incoherent under the API — deferred to task #26 */}
+									{/* append/prepend permanently disabled — not deferrable without a backend
+								    schema change. timetable_rows has no client-controlled sequence/order
+								    column: the server INNER-JOINs stations and ORDER BY
+								    stations.location_km, so a row's position is derived purely from its
+								    station km, never from insertion order. A positional append/prepend
+								    cannot round-trip through the API and would silently re-sort. Same
+								    root cause as the removed drag-reorder in TimetableGrid. */}
 								{(
 										[
 											["replace", "既存の行を置き換え"],
