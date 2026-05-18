@@ -21,5 +21,8 @@
 		"exactOptionalPropertyTypes": false,
 	},
 	"include": ["src"],
-	"references": [{ "path": "./tsconfig.node.json" }]
+	"references": [
+		{ "path": "./tsconfig.node.json" },
+		{ "path": "./packages/trvis-api/tsconfig.build.json" }
+	]
 }

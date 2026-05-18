@@ -59,6 +59,7 @@ cp .env.sample .env
 | `MYSQL_PASSWORD`      | `test` | 同パスワード               |
 | `MYSQL_DATABASE`      | `test` | データベース名             |
 | `MYSQL_ROOT_PASSWORD` | `test` | root パスワード            |
+| `PMA_PASSWORD`        | `test` | phpMyAdmin 自動ログイン用（root と同値） |
 
 バックエンドの接続先（Docker 構成）は
 `backend/config/prod/config.docker.inc.php` の DSN（`host=webmon-db;dbname=test`）と

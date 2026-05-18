@@ -4,9 +4,12 @@
 	"private": true,
 	"version": "0.0.0",
 	"type": "module",
+	"workspaces": [
+		"packages/*"
+	],
 	"scripts": {
 		"dev": "vite",
-		"build": "tsc && vite build",
+		"build": "tsc -b packages/trvis-api/tsconfig.build.json && tsc && vite build",
 		"lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
 		"i18n": "i18next --config ./i18next-parser.config.ts",
 		"preview": "vite preview"
@@ -33,7 +36,7 @@
 		"react-redux": "^9.1.0",
 		"react-router-dom": "^6.21.2",
 		"redux-thunk": "^3.1.0",
-		"trvis-api": "link:./packages/trvis-api"
+		"trvis-api": "workspace:^"
 	},
 	"devDependencies": {
 		"@tsconfig/strictest": "^2.0.2",
