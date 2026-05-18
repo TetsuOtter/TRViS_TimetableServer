@@ -1,0 +1,2330 @@
+// LineManager.tsx — Line & station management (inline editing)
+// Ported 1:1 from the design prototype LineManager.jsx.
+import {
+	useState,
+	useMemo,
+	useRef,
+	useEffect,
+	useCallback,
+} from "react";
+import type { CSSProperties, KeyboardEvent, RefObject } from "react";
+import type {
+	Line,
+	Station,
+	StationOnLine,
+	StopPattern,
+	AppData,
+} from "../types/model";
+import type { Strings } from "../i18n/strings";
+
+/* ─── helpers ─── */
+const genId = (prefix: string): string =>
+	prefix + Date.now() + Math.random().toString(36).slice(2, 6);
+
+/* A station-on-line joined with its station for display in LineStationsTab. */
+interface LineStationEntry extends StationOnLine {
+	station: Station;
+}
+
+/* Local draft shape for the global Stations tab (geo fields may be ''). */
+interface StationDraft {
+	stationName: string;
+	fullName: string;
+	longitude_deg: number | "";
+	latitude_deg: number | "";
+	onStationDetectRadius_m: number | "";
+	alwaysShowHH: boolean;
+}
+
+/* Local draft shape for the line-stations tab. */
+interface SolDraft {
+	stationId?: string;
+	location_m: number;
+	longitude_deg: number | "";
+	latitude_deg: number | "";
+	trackHiddenByDefault: boolean;
+}
+
+/* ─── Inline-editable cell ─── */
+interface ICellProps {
+	value: string | number;
+	onChange: (v: string | number) => void;
+	onKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void;
+	placeholder?: string;
+	type?: string;
+	step?: string;
+	style?: CSSProperties;
+	inputRef?: RefObject<HTMLInputElement>;
+	mono?: boolean;
+	alignRight?: boolean;
+}
+
+function ICell({
+	value,
+	onChange,
+	onKeyDown,
+	placeholder,
+	type = "text",
+	step,
+	style,
+	inputRef,
+	mono,
+	alignRight,
+}: ICellProps) {
+	return (
+		<input
+			ref={inputRef}
+			type={type}
+			step={step}
+			value={value}
+			onChange={e =>
+				onChange(
+					type === "number"
+						? e.target.value === ""
+							? ""
+							: +e.target.value
+						: e.target.value
+				)
+			}
+			onKeyDown={onKeyDown}
+			placeholder={placeholder}
+			style={{
+				width: "100%",
+				padding: "4px 6px",
+				border: "1px solid var(--color-accent)",
+				borderRadius: "var(--radius)",
+				fontSize: 12,
+				fontFamily: mono ? "var(--font-mono)" : "var(--font-main)",
+				background: "var(--color-content)",
+				color: "var(--color-text)",
+				outline: "none",
+				textAlign: alignRight ? "right" : "left",
+				...style,
+			}}
+		/>
+	);
+}
+
+/* ─── Global Stations Tab (inline editing) ─── */
+interface StationsTabProps {
+	stations: Station[];
+	stationsOnLine: StationOnLine[];
+	lines: Line[];
+	onUpdate: (patch: Partial<AppData>) => void;
+	t: Strings;
+}
+
+function StationsTab({
+	stations,
+	stationsOnLine,
+	lines,
+	onUpdate,
+}: StationsTabProps) {
+	const [editingId, setEditingId] = useState<string | null>(null); // station id or 'new'
+	const [draft, setDraft] = useState<StationDraft>({
+		stationName: "",
+		fullName: "",
+		longitude_deg: "",
+		latitude_deg: "",
+		onStationDetectRadius_m: 300,
+		alwaysShowHH: false,
+	});
+	const firstInputRef = useRef<HTMLInputElement>(null);
+
+	const linesForStation = useCallback(
+		(sid: string): Line[] =>
+			stationsOnLine
+				.filter(sol => sol.stationId === sid)
+				.map(sol => lines.find(l => l.id === sol.lineId))
+				.filter((l): l is Line => Boolean(l)),
+		[stationsOnLine, lines]
+	);
+
+	const startEdit = (s: Station) => {
+		setEditingId(s.id);
+		setDraft({
+			stationName: s.stationName || "",
+			fullName: s.fullName || "",
+			longitude_deg: s.longitude_deg ?? "",
+			latitude_deg: s.latitude_deg ?? "",
+			onStationDetectRadius_m: s.onStationDetectRadius_m ?? 300,
+			alwaysShowHH: s.alwaysShowHH || false,
+		});
+	};
+
+	const startNew = () => {
+		setEditingId("new");
+		setDraft({
+			stationName: "",
+			fullName: "",
+			longitude_deg: "",
+			latitude_deg: "",
+			onStationDetectRadius_m: 300,
+			alwaysShowHH: false,
+		});
+	};
+
+	useEffect(() => {
+		if (editingId) setTimeout(() => firstInputRef.current?.focus(), 30);
+	}, [editingId]);
+
+	// Convert the draft into a Station (drop '' geo fields → undefined).
+	const draftToStation = (id: string): Station => {
+		const st: Station = {
+			id,
+			stationName: draft.stationName,
+			fullName: draft.fullName,
+			alwaysShowHH: draft.alwaysShowHH,
+		};
+		if (draft.longitude_deg !== "") st.longitude_deg = draft.longitude_deg;
+		if (draft.latitude_deg !== "") st.latitude_deg = draft.latitude_deg;
+		if (draft.onStationDetectRadius_m !== "")
+			st.onStationDetectRadius_m = draft.onStationDetectRadius_m;
+		return st;
+	};
+
+	const commit = () => {
+		if (!draft.stationName?.trim()) {
+			cancelEdit();
+			return;
+		}
+		if (editingId === "new") {
+			onUpdate({ stations: [...stations, draftToStation(genId("s"))] });
+		} else {
+			onUpdate({
+				stations: stations.map(s =>
+					s.id === editingId ? { ...s, ...draftToStation(s.id) } : s
+				),
+			});
+		}
+		setEditingId(null);
+	};
+
+	const cancelEdit = () => setEditingId(null);
+
+	const deleteStation = (id: string) => {
+		const s = stations.find(x => x.id === id);
+		if (
+			!confirm(
+				`「${s?.stationName}」を削除しますか？\n路線の紐付けも削除されます。`
+			)
+		)
+			return;
+		onUpdate({
+			stations: stations.filter(s => s.id !== id),
+			stationsOnLine: stationsOnLine.filter(sol => sol.stationId !== id),
+		});
+		if (editingId === id) setEditingId(null);
+	};
+
+	const handleKeyDown = (
+		e: KeyboardEvent<HTMLInputElement>,
+		isLast: boolean
+	) => {
+		if (e.key === "Enter") {
+			e.preventDefault();
+			commit();
+		}
+		if (e.key === "Escape") {
+			e.preventDefault();
+			cancelEdit();
+		}
+		if (e.key === "Tab" && isLast) {
+			e.preventDefault();
+			commit();
+		}
+	};
+
+	const set = <K extends keyof StationDraft>(k: K, v: StationDraft[K]) =>
+		setDraft(p => ({ ...p, [k]: v }));
+
+	const COL_W = {
+		num: 36,
+		name: 120,
+		full: 150,
+		lon: 96,
+		lat: 96,
+		rad: 72,
+		hh: 56,
+		lines: 120,
+		act: 64,
+	};
+
+	const HeaderRow = () => (
+		<tr style={{ background: "var(--color-bg)" }}>
+			{(
+				[
+					["#", "", COL_W.num, "center"],
+					["駅名（短）", "", COL_W.name, "left"],
+					["フルネーム", "", COL_W.full, "left"],
+					["経度", "", COL_W.lon, "right"],
+					["緯度", "", COL_W.lat, "right"],
+					["検出半径", "", COL_W.rad, "right"],
+					["HH常表示", "", COL_W.hh, "center"],
+					["使用路線", "", COL_W.lines, "left"],
+					["", "", COL_W.act, "right"],
+				] as [string, string, number, CSSProperties["textAlign"]][]
+			).map(([h, , w, align], i) => (
+				<th
+					key={i}
+					style={{
+						padding: "7px 8px",
+						textAlign: align,
+						fontSize: 10,
+						fontWeight: 600,
+						color: "var(--color-text-muted)",
+						textTransform: "uppercase",
+						letterSpacing: "0.05em",
+						width: w,
+						whiteSpace: "nowrap",
+					}}
+				>
+					{h}
+				</th>
+			))}
+		</tr>
+	);
+
+	return (
+		<div style={{ flex: 1, overflow: "auto" }}>
+			{/* Quick-add bar at top */}
+			<div
+				style={{
+					display: "flex",
+					gap: 8,
+					padding: "10px 12px",
+					background: "var(--color-content)",
+					borderBottom: "1px solid var(--color-border)",
+					alignItems: "center",
+				}}
+			>
+				<span
+					style={{
+						fontSize: 12,
+						color: "var(--color-text-muted)",
+						whiteSpace: "nowrap",
+					}}
+				>
+					クイック追加:
+				</span>
+				<QuickAddBar
+					stations={stations}
+					onAdd={s => onUpdate({ stations: [...stations, s] })}
+				/>
+			</div>
+
+			<div
+				style={{
+					border: "1px solid var(--color-border)",
+					borderRadius: "var(--radius)",
+					margin: "12px",
+					overflow: "hidden",
+				}}
+			>
+				<table
+					style={{
+						width: "100%",
+						borderCollapse: "collapse",
+						fontSize: 13,
+					}}
+				>
+					<thead>
+						<HeaderRow />
+					</thead>
+					<tbody>
+						{stations.map((s, i) => {
+							const usedLines = linesForStation(s.id);
+							const isEditing = editingId === s.id;
+							const hasGeo =
+								s.longitude_deg != null &&
+								(s.longitude_deg as unknown) !== "" &&
+								s.latitude_deg != null &&
+								(s.latitude_deg as unknown) !== "";
+							return (
+								<tr
+									key={s.id}
+									onClick={() => {
+										if (!isEditing) startEdit(s);
+									}}
+									style={{
+										borderTop: "1px solid var(--color-border)",
+										background: isEditing
+											? "var(--color-accent-bg)"
+											: "transparent",
+										cursor: isEditing ? "default" : "pointer",
+										transition: "background .1s",
+									}}
+									onMouseEnter={e => {
+										if (!isEditing)
+											e.currentTarget.style.background = "var(--color-bg)";
+									}}
+									onMouseLeave={e => {
+										if (!isEditing)
+											e.currentTarget.style.background = "transparent";
+									}}
+								>
+									<td
+										style={{
+											padding: "6px 8px",
+											color: "var(--color-text-muted)",
+											fontFamily: "var(--font-mono)",
+											fontSize: 11,
+											textAlign: "center",
+										}}
+									>
+										{i + 1}
+									</td>
+
+									{isEditing ? (
+										<>
+											<td style={{ padding: "4px 4px" }}>
+												<ICell
+													inputRef={firstInputRef}
+													value={draft.stationName}
+													onChange={v => set("stationName", v as string)}
+													onKeyDown={e => handleKeyDown(e, false)}
+													placeholder="横浜"
+												/>
+											</td>
+											<td style={{ padding: "4px 4px" }}>
+												<ICell
+													value={draft.fullName}
+													onChange={v => set("fullName", v as string)}
+													onKeyDown={e => handleKeyDown(e, false)}
+													placeholder="横浜駅"
+												/>
+											</td>
+											<td style={{ padding: "4px 4px" }}>
+												<ICell
+													type="number"
+													step="0.000001"
+													value={draft.longitude_deg}
+													onChange={v =>
+														set("longitude_deg", v as number | "")
+													}
+													onKeyDown={e => handleKeyDown(e, false)}
+													placeholder="139.621"
+													mono
+													alignRight
+												/>
+											</td>
+											<td style={{ padding: "4px 4px" }}>
+												<ICell
+													type="number"
+													step="0.000001"
+													value={draft.latitude_deg}
+													onChange={v =>
+														set("latitude_deg", v as number | "")
+													}
+													onKeyDown={e => handleKeyDown(e, false)}
+													placeholder="35.466"
+													mono
+													alignRight
+												/>
+											</td>
+											<td style={{ padding: "4px 4px" }}>
+												<ICell
+													type="number"
+													value={draft.onStationDetectRadius_m}
+													onChange={v =>
+														set(
+															"onStationDetectRadius_m",
+															v as number | ""
+														)
+													}
+													onKeyDown={e => handleKeyDown(e, false)}
+													mono
+													alignRight
+												/>
+											</td>
+											<td
+												style={{
+													padding: "4px 8px",
+													textAlign: "center",
+												}}
+											>
+												<input
+													type="checkbox"
+													checked={!!draft.alwaysShowHH}
+													onChange={e =>
+														set("alwaysShowHH", e.target.checked)
+													}
+													style={{
+														accentColor: "var(--color-accent)",
+														width: 14,
+														height: 14,
+														cursor: "pointer",
+													}}
+												/>
+											</td>
+											<td
+												style={{
+													padding: "4px 8px",
+													fontSize: 11,
+													color: "var(--color-text-muted)",
+												}}
+												colSpan={1}
+											>
+												{usedLines.length === 0 ? (
+													<span>未使用</span>
+												) : (
+													usedLines.map(l => (
+														<span
+															key={l.id}
+															className="chip"
+															style={{
+																fontSize: 10,
+																padding: "1px 5px",
+																marginRight: 2,
+															}}
+														>
+															{l.name}
+														</span>
+													))
+												)}
+											</td>
+											<td
+												style={{
+													padding: "4px 6px",
+													textAlign: "right",
+													whiteSpace: "nowrap",
+												}}
+											>
+												<button
+													className="btn btn-primary btn-xs"
+													style={{ marginRight: 4 }}
+													onClick={e => {
+														e.stopPropagation();
+														commit();
+													}}
+												>
+													✓ 確定
+												</button>
+												<button
+													className="btn btn-ghost btn-xs"
+													onClick={e => {
+														e.stopPropagation();
+														cancelEdit();
+													}}
+												>
+													✕
+												</button>
+											</td>
+										</>
+									) : (
+										<>
+											<td
+												style={{
+													padding: "6px 8px",
+													fontWeight: 500,
+												}}
+											>
+												{s.stationName}
+											</td>
+											<td
+												style={{
+													padding: "6px 8px",
+													color: "var(--color-text-muted)",
+													fontSize: 12,
+												}}
+											>
+												{s.fullName}
+											</td>
+											<td
+												style={{
+													padding: "6px 8px",
+													textAlign: "right",
+													fontFamily: "var(--font-mono)",
+													fontSize: 12,
+													color: hasGeo
+														? "var(--color-text)"
+														: "var(--color-text-muted)",
+												}}
+											>
+												{hasGeo
+													? (+(s.longitude_deg as number)).toFixed(4)
+													: "—"}
+											</td>
+											<td
+												style={{
+													padding: "6px 8px",
+													textAlign: "right",
+													fontFamily: "var(--font-mono)",
+													fontSize: 12,
+													color: hasGeo
+														? "var(--color-text)"
+														: "var(--color-text-muted)",
+												}}
+											>
+												{hasGeo
+													? (+(s.latitude_deg as number)).toFixed(4)
+													: "—"}
+											</td>
+											<td
+												style={{
+													padding: "6px 8px",
+													textAlign: "right",
+													fontFamily: "var(--font-mono)",
+													fontSize: 12,
+													color: "var(--color-text-muted)",
+												}}
+											>
+												{s.onStationDetectRadius_m || 300} m
+											</td>
+											<td
+												style={{
+													padding: "6px 8px",
+													textAlign: "center",
+												}}
+											>
+												{s.alwaysShowHH ? (
+													<span
+														className="chip green"
+														style={{ fontSize: 10, padding: "1px 5px" }}
+													>
+														ON
+													</span>
+												) : (
+													<span
+														style={{
+															color: "var(--color-text-muted)",
+															fontSize: 12,
+														}}
+													>
+														—
+													</span>
+												)}
+											</td>
+											<td style={{ padding: "6px 8px" }}>
+												<div
+													style={{
+														display: "flex",
+														gap: 3,
+														flexWrap: "wrap",
+													}}
+												>
+													{usedLines.length === 0 ? (
+														<span
+															style={{
+																fontSize: 11,
+																color: "var(--color-text-muted)",
+															}}
+														>
+															未使用
+														</span>
+													) : (
+														usedLines.map(l => (
+															<span
+																key={l.id}
+																className="chip"
+																style={{
+																	fontSize: 10,
+																	padding: "1px 5px",
+																}}
+															>
+																{l.name}
+															</span>
+														))
+													)}
+												</div>
+											</td>
+											<td
+												style={{
+													padding: "4px 6px",
+													textAlign: "right",
+													whiteSpace: "nowrap",
+												}}
+											>
+												<button
+													className="btn btn-ghost btn-xs"
+													style={{
+														color: "var(--color-danger)",
+														opacity: 0.7,
+													}}
+													onClick={e => {
+														e.stopPropagation();
+														deleteStation(s.id);
+													}}
+												>
+													🗑
+												</button>
+											</td>
+										</>
+									)}
+								</tr>
+							);
+						})}
+
+						{/* New row */}
+						{editingId === "new" ? (
+							<tr
+								style={{
+									background: "var(--color-accent-bg)",
+									borderTop: "2px dashed var(--color-accent)",
+								}}
+							>
+								<td
+									style={{
+										padding: "4px 8px",
+										color: "var(--color-text-muted)",
+										fontSize: 11,
+										textAlign: "center",
+									}}
+								>
+									新
+								</td>
+								<td style={{ padding: "4px 4px" }}>
+									<ICell
+										inputRef={firstInputRef}
+										value={draft.stationName}
+										onChange={v => set("stationName", v as string)}
+										onKeyDown={e => handleKeyDown(e, false)}
+										placeholder="駅名（短）"
+									/>
+								</td>
+								<td style={{ padding: "4px 4px" }}>
+									<ICell
+										value={draft.fullName}
+										onChange={v => set("fullName", v as string)}
+										onKeyDown={e => handleKeyDown(e, false)}
+										placeholder="フルネーム"
+									/>
+								</td>
+								<td style={{ padding: "4px 4px" }}>
+									<ICell
+										type="number"
+										step="0.000001"
+										value={draft.longitude_deg}
+										onChange={v => set("longitude_deg", v as number | "")}
+										onKeyDown={e => handleKeyDown(e, false)}
+										placeholder="経度"
+										mono
+										alignRight
+									/>
+								</td>
+								<td style={{ padding: "4px 4px" }}>
+									<ICell
+										type="number"
+										step="0.000001"
+										value={draft.latitude_deg}
+										onChange={v => set("latitude_deg", v as number | "")}
+										onKeyDown={e => handleKeyDown(e, false)}
+										placeholder="緯度"
+										mono
+										alignRight
+									/>
+								</td>
+								<td style={{ padding: "4px 4px" }}>
+									<ICell
+										type="number"
+										value={draft.onStationDetectRadius_m}
+										onChange={v =>
+											set("onStationDetectRadius_m", v as number | "")
+										}
+										onKeyDown={e => handleKeyDown(e, true)}
+										mono
+										alignRight
+									/>
+								</td>
+								<td
+									style={{ padding: "4px 8px", textAlign: "center" }}
+								>
+									<input
+										type="checkbox"
+										checked={!!draft.alwaysShowHH}
+										onChange={e => set("alwaysShowHH", e.target.checked)}
+										style={{
+											accentColor: "var(--color-accent)",
+											width: 14,
+											height: 14,
+										}}
+									/>
+								</td>
+								<td
+									style={{
+										padding: "4px 8px",
+										fontSize: 11,
+										color: "var(--color-text-muted)",
+									}}
+								>
+									—
+								</td>
+								<td
+									style={{
+										padding: "4px 6px",
+										textAlign: "right",
+										whiteSpace: "nowrap",
+									}}
+								>
+									<button
+										className="btn btn-primary btn-xs"
+										style={{ marginRight: 4 }}
+										onClick={e => {
+											e.stopPropagation();
+											commit();
+										}}
+									>
+										✓ 確定
+									</button>
+									<button
+										className="btn btn-ghost btn-xs"
+										onClick={e => {
+											e.stopPropagation();
+											cancelEdit();
+										}}
+									>
+										✕
+									</button>
+								</td>
+							</tr>
+						) : (
+							<tr
+								style={{
+									borderTop: "1px dashed var(--color-border)",
+								}}
+							>
+								<td colSpan={9} style={{ padding: "6px 8px" }}>
+									<button
+										onClick={startNew}
+										style={{
+											display: "flex",
+											alignItems: "center",
+											gap: 6,
+											width: "100%",
+											padding: "4px 4px",
+											border: "none",
+											background: "transparent",
+											cursor: "pointer",
+											fontSize: 12,
+											color: "var(--color-text-muted)",
+											borderRadius: "var(--radius)",
+											transition: "color .1s",
+										}}
+										onMouseEnter={e =>
+											(e.currentTarget.style.color =
+												"var(--color-accent)")
+										}
+										onMouseLeave={e =>
+											(e.currentTarget.style.color =
+												"var(--color-text-muted)")
+										}
+									>
+										<span style={{ fontSize: 16, lineHeight: 1 }}>
+											＋
+										</span>{" "}
+										新しい駅を追加
+									</button>
+								</td>
+							</tr>
+						)}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	);
+}
+
+/* ─── Quick-add bar ─── */
+interface QuickAddBarProps {
+	stations: Station[];
+	onAdd: (s: Station) => void;
+}
+
+function QuickAddBar({ stations, onAdd }: QuickAddBarProps) {
+	const [name, setName] = useState("");
+	const ref = useRef<HTMLInputElement>(null);
+
+	const submit = () => {
+		const n = name.trim();
+		if (!n) return;
+		// auto fullName = name + '駅' if not already ending in 駅
+		const fullName = n.endsWith("駅") ? n : n + "駅";
+		onAdd({
+			id: genId("s"),
+			stationName: n,
+			fullName,
+			onStationDetectRadius_m: 300,
+			alwaysShowHH: false,
+		});
+		setName("");
+		ref.current?.focus();
+	};
+
+	return (
+		<div
+			style={{
+				display: "flex",
+				gap: 6,
+				flex: 1,
+				alignItems: "center",
+			}}
+		>
+			<input
+				ref={ref}
+				value={name}
+				onChange={e => setName(e.target.value)}
+				onKeyDown={e => {
+					if (e.key === "Enter") {
+						e.preventDefault();
+						submit();
+					}
+				}}
+				placeholder="駅名を入力してEnter — 複数連続で追加できます"
+				style={{
+					flex: 1,
+					padding: "5px 10px",
+					border: "1px solid var(--color-border)",
+					borderRadius: "var(--radius)",
+					fontSize: 13,
+					background: "var(--color-content)",
+					color: "var(--color-text)",
+					outline: "none",
+					fontFamily: "var(--font-main)",
+				}}
+				onFocus={e =>
+					(e.target.style.borderColor = "var(--color-accent)")
+				}
+				onBlur={e =>
+					(e.target.style.borderColor = "var(--color-border)")
+				}
+			/>
+			<button
+				className="btn btn-primary btn-sm"
+				onClick={submit}
+				disabled={!name.trim()}
+			>
+				追加
+			</button>
+			<span
+				style={{
+					fontSize: 11,
+					color: "var(--color-text-muted)",
+					whiteSpace: "nowrap",
+				}}
+			>
+				{stations.length}駅登録済み
+			</span>
+		</div>
+	);
+}
+
+/* ─── Line Stations Tab (inline editing with drag-reorder) ─── */
+interface LineStationsTabProps {
+	activeLine: Line;
+	lineStations: LineStationEntry[];
+	stations: Station[];
+	stationsOnLine: StationOnLine[];
+	onUpdate: (patch: Partial<AppData>) => void;
+	t: Strings;
+}
+
+function LineStationsTab({
+	activeLine,
+	lineStations,
+	stations,
+	stationsOnLine,
+	onUpdate,
+}: LineStationsTabProps) {
+	const [editingId, setEditingId] = useState<string | null>(null); // sol.id or 'new'
+	const [draft, setDraft] = useState<SolDraft>({
+		location_m: 0,
+		longitude_deg: "",
+		latitude_deg: "",
+		trackHiddenByDefault: false,
+	});
+	const [dragOver, setDragOver] = useState<string | null>(null);
+	const firstInputRef = useRef<HTMLInputElement>(null);
+	const firstSelectRef = useRef<HTMLSelectElement>(null);
+
+	// available stations not yet on this line
+	const usedIds = new Set(lineStations.map(s => s.stationId));
+	const available = stations.filter(s => !usedIds.has(s.id));
+
+	const startEditSol = (sol: LineStationEntry) => {
+		setEditingId(sol.id);
+		setDraft({
+			location_m: sol.location_m ?? 0,
+			longitude_deg: sol.longitude_deg ?? "",
+			latitude_deg: sol.latitude_deg ?? "",
+			trackHiddenByDefault: sol.trackHiddenByDefault ?? false,
+		});
+	};
+
+	const startNew = () => {
+		setEditingId("new");
+		// guess next km: last station + 5000 m
+		const lastKm =
+			lineStations.length > 0
+				? Math.max(...lineStations.map(s => s.location_m || 0))
+				: 0;
+		setDraft({
+			stationId: "",
+			location_m: lastKm + 5000,
+			longitude_deg: "",
+			latitude_deg: "",
+			trackHiddenByDefault: false,
+		});
+	};
+
+	useEffect(() => {
+		if (editingId)
+			setTimeout(() => {
+				firstInputRef.current?.focus();
+				firstSelectRef.current?.focus();
+			}, 30);
+	}, [editingId]);
+
+	// Build a StationOnLine from the draft (drop '' geo fields → undefined).
+	const buildSol = (
+		base: Pick<StationOnLine, "id" | "lineId" | "stationId">
+	): StationOnLine => {
+		const sol: StationOnLine = {
+			...base,
+			location_m: draft.location_m,
+			trackHiddenByDefault: draft.trackHiddenByDefault,
+		};
+		if (draft.longitude_deg !== "") sol.longitude_deg = draft.longitude_deg;
+		if (draft.latitude_deg !== "") sol.latitude_deg = draft.latitude_deg;
+		return sol;
+	};
+
+	const commitSol = () => {
+		if (editingId === "new") {
+			if (!draft.stationId) {
+				setEditingId(null);
+				return;
+			}
+			const id = genId("sol");
+			onUpdate({
+				stationsOnLine: [
+					...stationsOnLine,
+					buildSol({
+						id,
+						lineId: activeLine.id,
+						stationId: draft.stationId,
+					}),
+				],
+			});
+		} else {
+			onUpdate({
+				stationsOnLine: stationsOnLine.map(sol =>
+					sol.id === editingId
+						? buildSol({
+								id: sol.id,
+								lineId: sol.lineId,
+								stationId: sol.stationId,
+						  })
+						: sol
+				),
+			});
+		}
+		setEditingId(null);
+	};
+
+	const cancelEdit = () => setEditingId(null);
+
+	const removeSol = (solId: string, stName: string) => {
+		if (!confirm(`「${stName}」をこの路線から除外しますか？`)) return;
+		onUpdate({
+			stationsOnLine: stationsOnLine.filter(sol => sol.id !== solId),
+		});
+		if (editingId === solId) setEditingId(null);
+	};
+
+	const set = <K extends keyof SolDraft>(k: K, v: SolDraft[K]) =>
+		setDraft(p => ({ ...p, [k]: v }));
+
+	const handleKeyDown = (
+		e: KeyboardEvent<HTMLInputElement | HTMLSelectElement>
+	) => {
+		if (e.key === "Enter") {
+			e.preventDefault();
+			commitSol();
+		}
+		if (e.key === "Escape") {
+			e.preventDefault();
+			cancelEdit();
+		}
+	};
+
+	// Drag-to-reorder (reorder sol in this line only)
+	const dragItem = useRef<string | null>(null);
+	const onDragStart = (
+		e: React.DragEvent<HTMLTableRowElement>,
+		solId: string
+	) => {
+		dragItem.current = solId;
+		e.dataTransfer.effectAllowed = "move";
+	};
+	const onDrop = (
+		e: React.DragEvent<HTMLTableRowElement>,
+		targetId: string
+	) => {
+		e.preventDefault();
+		if (!dragItem.current || dragItem.current === targetId) {
+			setDragOver(null);
+			return;
+		}
+		const others = stationsOnLine.filter(
+			sol => sol.lineId !== activeLine.id
+		);
+		const mine = [
+			...stationsOnLine.filter(sol => sol.lineId === activeLine.id),
+		];
+		const fromIdx = mine.findIndex(s => s.id === dragItem.current);
+		const toIdx = mine.findIndex(s => s.id === targetId);
+		const [moved] = mine.splice(fromIdx, 1);
+		if (!moved) {
+			setDragOver(null);
+			return;
+		}
+		mine.splice(toIdx, 0, moved);
+		onUpdate({ stationsOnLine: [...others, ...mine] });
+		dragItem.current = null;
+		setDragOver(null);
+	};
+
+	return (
+		<div style={{ padding: 14, overflow: "auto", flex: 1 }}>
+			<div
+				style={{
+					display: "flex",
+					gap: 8,
+					marginBottom: 10,
+					alignItems: "center",
+				}}
+			>
+				<strong style={{ fontSize: 14 }}>{activeLine.name}</strong>
+				<span
+					style={{ fontSize: 11, color: "var(--color-text-muted)" }}
+				>
+					· キロ程順 · 行をクリックで編集 · ドラッグで並べ替え
+				</span>
+			</div>
+
+			<div
+				style={{
+					border: "1px solid var(--color-border)",
+					borderRadius: "var(--radius)",
+					overflow: "hidden",
+				}}
+			>
+				<table
+					style={{
+						width: "100%",
+						borderCollapse: "collapse",
+						fontSize: 13,
+					}}
+				>
+					<thead>
+						<tr style={{ background: "var(--color-bg)" }}>
+							{(
+								[
+									["", "28px", "center"],
+									["#", "32px", "center"],
+									["駅名", "", "left"],
+									["フルネーム", "120px", "left"],
+									["キロ程", "90px", "right"],
+									["番線非表示", "72px", "center"],
+									["位置上書き", "72px", "center"],
+									["", "64px", "right"],
+								] as [
+									string,
+									string,
+									CSSProperties["textAlign"]
+								][]
+							).map(([h, w, align], i) => (
+								<th
+									key={i}
+									style={{
+										padding: "7px 8px",
+										textAlign: align,
+										fontSize: 10,
+										fontWeight: 600,
+										color: "var(--color-text-muted)",
+										textTransform: "uppercase",
+										letterSpacing: "0.05em",
+										width: w || undefined,
+										whiteSpace: "nowrap",
+									}}
+								>
+									{h}
+								</th>
+							))}
+						</tr>
+					</thead>
+					<tbody>
+						{lineStations.map((sol, i) => {
+							const isEditing = editingId === sol.id;
+							const hasOverride =
+								(sol.longitude_deg !== undefined &&
+									(sol.longitude_deg as unknown) !== "" &&
+									sol.longitude_deg != null) ||
+								(sol.latitude_deg !== undefined &&
+									(sol.latitude_deg as unknown) !== "" &&
+									sol.latitude_deg != null);
+							return (
+								<tr
+									key={sol.id}
+									draggable={!isEditing}
+									onDragStart={e => onDragStart(e, sol.id)}
+									onDragOver={e => {
+										e.preventDefault();
+										setDragOver(sol.id);
+									}}
+									onDragLeave={() => setDragOver(null)}
+									onDrop={e => onDrop(e, sol.id)}
+									onClick={() => {
+										if (!isEditing) startEditSol(sol);
+									}}
+									style={{
+										borderTop:
+											dragOver === sol.id
+												? "2px solid var(--color-accent)"
+												: "1px solid var(--color-border)",
+										background: isEditing
+											? "var(--color-accent-bg)"
+											: "transparent",
+										cursor: isEditing ? "default" : "pointer",
+										transition: "background .1s",
+									}}
+									onMouseEnter={e => {
+										if (!isEditing)
+											e.currentTarget.style.background = "var(--color-bg)";
+									}}
+									onMouseLeave={e => {
+										if (!isEditing)
+											e.currentTarget.style.background = "transparent";
+									}}
+								>
+									{/* drag handle */}
+									<td
+										style={{
+											padding: "6px 6px",
+											textAlign: "center",
+											color: "var(--color-text-muted)",
+											fontSize: 12,
+											cursor: "grab",
+											userSelect: "none",
+										}}
+									>
+										⠿
+									</td>
+									<td
+										style={{
+											padding: "6px 8px",
+											color: "var(--color-text-muted)",
+											fontFamily: "var(--font-mono)",
+											fontSize: 11,
+											textAlign: "center",
+										}}
+									>
+										{i + 1}
+									</td>
+
+									{isEditing ? (
+										<>
+											{/* editing: show station name as read-only, edit km/flags */}
+											<td
+												style={{
+													padding: "6px 8px",
+													fontWeight: 500,
+												}}
+											>
+												{sol.station.stationName}
+											</td>
+											<td
+												style={{
+													padding: "4px 4px",
+													fontSize: 12,
+													color: "var(--color-text-muted)",
+												}}
+											>
+												{sol.station.fullName}
+											</td>
+											<td style={{ padding: "4px 4px" }}>
+												<div
+													style={{
+														display: "flex",
+														alignItems: "center",
+														gap: 4,
+													}}
+												>
+													<ICell
+														inputRef={firstInputRef}
+														type="number"
+														value={draft.location_m}
+														onChange={v =>
+															set(
+																"location_m",
+																v === "" ? 0 : (v as number)
+															)
+														}
+														onKeyDown={handleKeyDown}
+														mono
+														alignRight
+														style={{ width: 70 }}
+													/>
+													<span
+														style={{
+															fontSize: 11,
+															color: "var(--color-text-muted)",
+															whiteSpace: "nowrap",
+														}}
+													>
+														m
+													</span>
+												</div>
+											</td>
+											<td
+												style={{
+													padding: "4px 8px",
+													textAlign: "center",
+												}}
+											>
+												<input
+													type="checkbox"
+													checked={!!draft.trackHiddenByDefault}
+													onChange={e =>
+														set(
+															"trackHiddenByDefault",
+															e.target.checked
+														)
+													}
+													title="番線をデフォルトで非表示にする"
+													style={{
+														accentColor: "var(--color-accent)",
+														width: 14,
+														height: 14,
+														cursor: "pointer",
+													}}
+												/>
+											</td>
+											<td
+												style={{
+													padding: "4px 8px",
+													textAlign: "center",
+													fontSize: 11,
+													color: "var(--color-text-muted)",
+												}}
+											>
+												<span title="位置上書きはモーダルで設定">
+													—
+												</span>
+											</td>
+											<td
+												style={{
+													padding: "4px 6px",
+													textAlign: "right",
+													whiteSpace: "nowrap",
+												}}
+											>
+												<button
+													className="btn btn-primary btn-xs"
+													style={{ marginRight: 4 }}
+													onClick={e => {
+														e.stopPropagation();
+														commitSol();
+													}}
+												>
+													✓
+												</button>
+												<button
+													className="btn btn-ghost btn-xs"
+													style={{ marginRight: 4 }}
+													onClick={e => {
+														e.stopPropagation();
+														cancelEdit();
+													}}
+												>
+													✕
+												</button>
+												<button
+													className="btn btn-ghost btn-xs"
+													style={{ color: "var(--color-danger)" }}
+													onClick={e => {
+														e.stopPropagation();
+														removeSol(
+															sol.id,
+															sol.station.stationName
+														);
+													}}
+												>
+													🗑
+												</button>
+											</td>
+										</>
+									) : (
+										<>
+											<td
+												style={{
+													padding: "6px 8px",
+													fontWeight: 500,
+												}}
+											>
+												{sol.station.stationName}
+											</td>
+											<td
+												style={{
+													padding: "6px 8px",
+													color: "var(--color-text-muted)",
+													fontSize: 12,
+												}}
+											>
+												{sol.station.fullName}
+											</td>
+											<td
+												style={{
+													padding: "6px 8px",
+													textAlign: "right",
+													fontFamily: "var(--font-mono)",
+													fontSize: 12,
+												}}
+											>
+												{((sol.location_m || 0) / 1000).toFixed(1)} km
+											</td>
+											<td
+												style={{
+													padding: "6px 8px",
+													textAlign: "center",
+												}}
+											>
+												{sol.trackHiddenByDefault ? (
+													<span
+														className="chip amber"
+														style={{ fontSize: 10 }}
+													>
+														非表示
+													</span>
+												) : (
+													<span
+														style={{
+															color: "var(--color-text-muted)",
+															fontSize: 12,
+														}}
+													>
+														—
+													</span>
+												)}
+											</td>
+											<td
+												style={{
+													padding: "6px 8px",
+													textAlign: "center",
+												}}
+											>
+												{hasOverride ? (
+													<span
+														className="chip amber"
+														style={{ fontSize: 10 }}
+													>
+														上書き
+													</span>
+												) : (
+													<span
+														style={{
+															color: "var(--color-text-muted)",
+															fontSize: 12,
+														}}
+													>
+														—
+													</span>
+												)}
+											</td>
+											<td
+												style={{
+													padding: "4px 6px",
+													textAlign: "right",
+												}}
+											>
+												<button
+													className="btn btn-ghost btn-xs"
+													style={{
+														color: "var(--color-danger)",
+														opacity: 0.6,
+													}}
+													onClick={e => {
+														e.stopPropagation();
+														removeSol(
+															sol.id,
+															sol.station.stationName
+														);
+													}}
+												>
+													🗑
+												</button>
+											</td>
+										</>
+									)}
+								</tr>
+							);
+						})}
+
+						{/* Add new station to line row */}
+						{editingId === "new" ? (
+							<tr
+								style={{
+									background: "var(--color-accent-bg)",
+									borderTop: "2px dashed var(--color-accent)",
+								}}
+							>
+								<td
+									colSpan={2}
+									style={{
+										padding: "4px 8px",
+										color: "var(--color-text-muted)",
+										fontSize: 11,
+										textAlign: "center",
+									}}
+								>
+									新
+								</td>
+								<td colSpan={2} style={{ padding: "4px 6px" }}>
+									<select
+										ref={firstSelectRef}
+										value={draft.stationId}
+										onChange={e => set("stationId", e.target.value)}
+										onKeyDown={handleKeyDown}
+										style={{
+											width: "100%",
+											padding: "5px 8px",
+											border: "1px solid var(--color-accent)",
+											borderRadius: "var(--radius)",
+											fontSize: 12,
+											background: "var(--color-content)",
+											color: "var(--color-text)",
+											outline: "none",
+										}}
+									>
+										<option value="">── 駅を選択 ──</option>
+										{available.map(s => (
+											<option key={s.id} value={s.id}>
+												{s.stationName}（{s.fullName}）
+											</option>
+										))}
+									</select>
+									{available.length === 0 && (
+										<div
+											style={{
+												fontSize: 11,
+												color: "var(--color-text-muted)",
+												marginTop: 4,
+											}}
+										>
+											追加できる駅がありません。「駅（全体）」タブから先に登録してください。
+										</div>
+									)}
+								</td>
+								<td style={{ padding: "4px 4px" }}>
+									<div
+										style={{
+											display: "flex",
+											alignItems: "center",
+											gap: 4,
+										}}
+									>
+										<ICell
+											type="number"
+											value={draft.location_m}
+											onChange={v =>
+												set(
+													"location_m",
+													v === "" ? 0 : (v as number)
+												)
+											}
+											onKeyDown={handleKeyDown}
+											mono
+											alignRight
+											style={{ width: 70 }}
+										/>
+										<span
+											style={{
+												fontSize: 11,
+												color: "var(--color-text-muted)",
+											}}
+										>
+											m
+										</span>
+									</div>
+								</td>
+								<td
+									style={{
+										padding: "4px 8px",
+										textAlign: "center",
+									}}
+								>
+									<input
+										type="checkbox"
+										checked={!!draft.trackHiddenByDefault}
+										onChange={e =>
+											set("trackHiddenByDefault", e.target.checked)
+										}
+										style={{
+											accentColor: "var(--color-accent)",
+											width: 14,
+											height: 14,
+										}}
+									/>
+								</td>
+								<td />
+								<td
+									style={{
+										padding: "4px 6px",
+										textAlign: "right",
+										whiteSpace: "nowrap",
+									}}
+								>
+									<button
+										className="btn btn-primary btn-xs"
+										style={{ marginRight: 4 }}
+										onClick={e => {
+											e.stopPropagation();
+											commitSol();
+										}}
+									>
+										✓ 追加
+									</button>
+									<button
+										className="btn btn-ghost btn-xs"
+										onClick={e => {
+											e.stopPropagation();
+											cancelEdit();
+										}}
+									>
+										✕
+									</button>
+								</td>
+							</tr>
+						) : (
+							<tr
+								style={{
+									borderTop: "1px dashed var(--color-border)",
+								}}
+							>
+								<td colSpan={8} style={{ padding: "6px 8px" }}>
+									<button
+										onClick={startNew}
+										style={{
+											display: "flex",
+											alignItems: "center",
+											gap: 6,
+											width: "100%",
+											padding: "4px 4px",
+											border: "none",
+											background: "transparent",
+											cursor: "pointer",
+											fontSize: 12,
+											color: "var(--color-text-muted)",
+											borderRadius: "var(--radius)",
+											transition: "color .1s",
+										}}
+										onMouseEnter={e =>
+											(e.currentTarget.style.color =
+												"var(--color-accent)")
+										}
+										onMouseLeave={e =>
+											(e.currentTarget.style.color =
+												"var(--color-text-muted)")
+										}
+									>
+										<span style={{ fontSize: 16, lineHeight: 1 }}>
+											＋
+										</span>{" "}
+										既存の駅を路線に追加
+									</button>
+								</td>
+							</tr>
+						)}
+					</tbody>
+				</table>
+			</div>
+		</div>
+	);
+}
+
+/* ─── Stop pattern card ─── */
+interface StopPatternCardProps {
+	pattern: StopPattern;
+	lines: Line[];
+	stations: Station[];
+	onEdit: () => void;
+	onDuplicate: () => void;
+	onDelete: (id: string) => void;
+}
+
+function StopPatternCard({
+	pattern,
+	lines,
+	stations,
+	onEdit,
+	onDuplicate,
+	onDelete,
+}: StopPatternCardProps) {
+	const line = lines.find(l => l.id === pattern.lineId);
+	const fromSt = stations.find(s => s.id === pattern.fromStationId);
+	const toSt = stations.find(s => s.id === pattern.toStationId);
+	const stops = (pattern.stopRows || []).filter(r => !r.isPass).length;
+	const passes = (pattern.stopRows || []).filter(r => r.isPass).length;
+	return (
+		<div
+			className="card"
+			style={{
+				padding: 14,
+				display: "flex",
+				flexDirection: "column",
+				gap: 8,
+			}}
+		>
+			<div
+				style={{
+					display: "flex",
+					alignItems: "center",
+					gap: 6,
+				}}
+			>
+				<strong
+					style={{
+						fontSize: 14,
+						flex: 1,
+						overflow: "hidden",
+						textOverflow: "ellipsis",
+						whiteSpace: "nowrap",
+					}}
+				>
+					{pattern.name || "(無名)"}
+				</strong>
+				<span
+					className={`chip ${
+						pattern.direction === 1 ? "green" : "amber"
+					}`}
+				>
+					{pattern.direction === 1 ? "↓" : "↑"}
+				</span>
+			</div>
+			<div
+				style={{ fontSize: 12, color: "var(--color-text-muted)" }}
+			>
+				{line?.name}
+			</div>
+			<div
+				style={{
+					display: "flex",
+					alignItems: "center",
+					gap: 6,
+					fontSize: 13,
+				}}
+			>
+				<span style={{ fontWeight: 500 }}>
+					{fromSt?.stationName || "?"}
+				</span>
+				<span style={{ color: "var(--color-text-muted)" }}>→</span>
+				<span style={{ fontWeight: 500 }}>
+					{toSt?.stationName || "?"}
+				</span>
+			</div>
+			<div
+				style={{ fontSize: 11, color: "var(--color-text-muted)" }}
+			>
+				停車 {stops}駅 · 通過 {passes}駅
+			</div>
+			<div
+				style={{
+					display: "flex",
+					gap: 4,
+					marginTop: 4,
+					borderTop: "1px solid var(--color-border)",
+					paddingTop: 8,
+				}}
+			>
+				<button
+					className="btn btn-secondary btn-xs"
+					style={{ flex: 1 }}
+					onClick={onEdit}
+				>
+					✏ 編集
+				</button>
+				<button
+					className="btn btn-ghost btn-xs"
+					style={{ flex: 1 }}
+					onClick={onDuplicate}
+					title="複製"
+				>
+					⎘ 複製
+				</button>
+				<button
+					className="btn btn-ghost btn-xs"
+					onClick={() => {
+						if (confirm(`「${pattern.name}」を削除しますか？`))
+							onDelete(pattern.id);
+					}}
+					style={{ color: "var(--color-danger)" }}
+				>
+					🗑
+				</button>
+			</div>
+		</div>
+	);
+}
+
+/* ─── Line edit dialog (kept for line create/edit) ─── */
+interface LineDraft {
+	id?: string;
+	name: string;
+	description: string;
+}
+
+interface LineDialogProps {
+	line: Partial<Line>;
+	onSave: (line: LineDraft) => void;
+	onDelete: (id: string) => void;
+	onClose: () => void;
+	t: Strings;
+}
+
+function LineDialog({ line, onSave, onDelete, onClose, t }: LineDialogProps) {
+	const [d, setD] = useState<LineDraft>({
+		name: line?.name || "",
+		description: line?.description || "",
+	});
+	return (
+		<div
+			className="modal-backdrop"
+			onClick={e => e.target === e.currentTarget && onClose()}
+		>
+			<div className="modal" style={{ maxWidth: 460 }}>
+				<div className="modal-header">
+					<span className="modal-title">
+						🛤 {line?.id ? t.edit : t.addLine}
+					</span>
+					<button
+						className="btn btn-ghost btn-sm"
+						onClick={onClose}
+					>
+						✕
+					</button>
+				</div>
+				<div className="modal-body">
+					<div className="field" style={{ marginBottom: 12 }}>
+						<label>路線名</label>
+						<input
+							value={d.name}
+							onChange={e =>
+								setD(p => ({ ...p, name: e.target.value }))
+							}
+							placeholder="例: 東海道本線"
+							autoFocus
+						/>
+					</div>
+					<div className="field">
+						<label>{t.description}</label>
+						<textarea
+							value={d.description}
+							onChange={e =>
+								setD(p => ({ ...p, description: e.target.value }))
+							}
+							rows={3}
+							placeholder="例: 東京〜小田原間"
+							style={{
+								width: "100%",
+								padding: 8,
+								border: "1px solid var(--color-border)",
+								borderRadius: "var(--radius)",
+								background: "var(--color-content)",
+								color: "var(--color-text)",
+								fontFamily: "inherit",
+								fontSize: 13,
+								resize: "vertical",
+								outline: "none",
+								lineHeight: 1.5,
+							}}
+						/>
+					</div>
+				</div>
+				<div className="modal-footer">
+					{line?.id && (
+						<button
+							className="btn btn-danger btn-sm"
+							style={{ marginRight: "auto" }}
+							onClick={() => {
+								if (
+									confirm(`「${line.name}」を削除しますか？`)
+								) {
+									onDelete(line.id as string);
+									onClose();
+								}
+							}}
+						>
+							🗑 {t.delete}
+						</button>
+					)}
+					<button
+						className="btn btn-secondary"
+						onClick={onClose}
+					>
+						{t.cancel}
+					</button>
+					<button
+						className="btn btn-primary"
+						onClick={() => {
+							if (!d.name.trim()) return;
+							onSave(d);
+							onClose();
+						}}
+					>
+						{t.save}
+					</button>
+				</div>
+			</div>
+		</div>
+	);
+}
+
+/* ─── Main ─── */
+export interface LineManagerProps {
+	lines: Line[];
+	stations: Station[];
+	stationsOnLine: StationOnLine[];
+	stopPatterns: StopPattern[];
+	onUpdate: (patch: Partial<AppData>) => void;
+	onOpenStopPatternWizard: () => void;
+	onEditStopPattern: (p: StopPattern) => void;
+	t: Strings;
+}
+
+export function LineManager({
+	lines,
+	stations,
+	stationsOnLine,
+	stopPatterns,
+	onUpdate,
+	onOpenStopPatternWizard,
+	onEditStopPattern,
+	t,
+}: LineManagerProps) {
+	const [mainTab, setMainTab] = useState<"lines" | "stations">("lines");
+	const [activeLineId, setActiveLineId] = useState<string>(
+		lines[0]?.id || ""
+	);
+	const [lineTab, setLineTab] = useState<"stations" | "patterns">(
+		"stations"
+	);
+	const [lineDialog, setLineDialog] = useState<Partial<Line> | null>(null);
+
+	const activeLine = lines.find(l => l.id === activeLineId);
+	const lineStations = useMemo<LineStationEntry[]>(
+		() =>
+			activeLine
+				? stationsOnLine
+						.filter(sol => sol.lineId === activeLineId)
+						.map(sol => ({
+							...sol,
+							station: stations.find(s => s.id === sol.stationId),
+						}))
+						.filter(
+							(x): x is LineStationEntry => Boolean(x.station)
+						)
+						.sort(
+							(a, b) =>
+								(a.location_m || 0) - (b.location_m || 0)
+						)
+				: [],
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[activeLine, stationsOnLine, stations]
+	);
+
+	const linePatterns = stopPatterns.filter(
+		p => p.lineId === activeLineId
+	);
+
+	const saveLine = (line: LineDraft) => {
+		if (line.id) {
+			onUpdate({
+				lines: lines.map(l =>
+					l.id === line.id ? ({ ...l, ...line } as Line) : l
+				),
+			});
+		} else {
+			const id = genId("l");
+			onUpdate({
+				lines: [...lines, { ...line, id } as Line],
+			});
+			setActiveLineId(id);
+		}
+	};
+	const deleteLine = (id: string) => {
+		onUpdate({
+			lines: lines.filter(l => l.id !== id),
+			stationsOnLine: stationsOnLine.filter(
+				sol => sol.lineId !== id
+			),
+			stopPatterns: stopPatterns.filter(p => p.lineId !== id),
+		});
+		if (activeLineId === id)
+			setActiveLineId(lines.find(l => l.id !== id)?.id || "");
+	};
+	const duplicatePattern = (p: StopPattern) => {
+		const id = genId("sp");
+		onUpdate({
+			stopPatterns: [
+				...stopPatterns,
+				{ ...p, id, name: (p.name || "パターン") + " のコピー" },
+			],
+		});
+	};
+	const deletePattern = (id: string) =>
+		onUpdate({
+			stopPatterns: stopPatterns.filter(p => p.id !== id),
+		});
+
+	return (
+		<div
+			style={{
+				padding: "16px 20px",
+				display: "flex",
+				flexDirection: "column",
+				gap: 14,
+				minHeight: "100%",
+			}}
+		>
+			{/* Header */}
+			<div
+				style={{
+					display: "flex",
+					alignItems: "center",
+					gap: 12,
+				}}
+			>
+				<h2
+					style={{ fontSize: 18, fontWeight: 600, margin: 0 }}
+				>
+					{t.lineManager}
+				</h2>
+				<span
+					style={{ fontSize: 12, color: "var(--color-text-muted)" }}
+				>
+					路線・駅・停車パターンを管理します
+				</span>
+				<div style={{ flex: 1 }} />
+				{mainTab === "lines" && (
+					<button
+						className="btn btn-secondary btn-sm"
+						onClick={() => setLineDialog({})}
+					>
+						＋ {t.addLine}
+					</button>
+				)}
+			</div>
+
+			{/* Main tabs */}
+			<div
+				style={{
+					display: "flex",
+					gap: 0,
+					borderBottom: "1px solid var(--color-border)",
+				}}
+			>
+				{(
+					[
+						["lines", "🛤 路線"],
+						["stations", "🚉 駅（全体）"],
+					] as ["lines" | "stations", string][]
+				).map(([id, lbl]) => (
+					<button
+						key={id}
+						onClick={() => setMainTab(id)}
+						style={{
+							padding: "8px 20px",
+							fontSize: 13,
+							fontWeight: mainTab === id ? 600 : 400,
+							border: "none",
+							background: "transparent",
+							cursor: "pointer",
+							color:
+								mainTab === id
+									? "var(--color-accent)"
+									: "var(--color-text-muted)",
+							borderBottom:
+								mainTab === id
+									? `2px solid var(--color-accent)`
+									: "2px solid transparent",
+							marginBottom: -1,
+						}}
+					>
+						{lbl}
+					</button>
+				))}
+			</div>
+
+			{/* ── LINES tab ── */}
+			{mainTab === "lines" && (
+				<div
+					style={{
+						display: "grid",
+						gridTemplateColumns: "220px 1fr",
+						gap: 16,
+						flex: 1,
+						minHeight: 0,
+					}}
+				>
+					{/* line list */}
+					<div
+						className="card"
+						style={{ padding: 8, height: "fit-content" }}
+					>
+						<div
+							style={{
+								padding: "4px 8px 8px",
+								fontSize: 11,
+								fontWeight: 600,
+								color: "var(--color-text-muted)",
+								textTransform: "uppercase",
+								letterSpacing: "0.06em",
+							}}
+						>
+							路線一覧 ({lines.length})
+						</div>
+						{lines.length === 0 && (
+							<div
+								style={{
+									padding: "12px 8px",
+									fontSize: 12,
+									color: "var(--color-text-muted)",
+								}}
+							>
+								路線がありません。
+							</div>
+						)}
+						{lines.map(l => {
+							const sc = stationsOnLine.filter(
+								sol => sol.lineId === l.id
+							).length;
+							const pc = stopPatterns.filter(
+								p => p.lineId === l.id
+							).length;
+							return (
+								<div
+									key={l.id}
+									style={{ position: "relative" }}
+								>
+									<button
+										onClick={() => setActiveLineId(l.id)}
+										style={{
+											display: "block",
+											width: "100%",
+											textAlign: "left",
+											padding: "8px 32px 8px 10px",
+											borderRadius: "var(--radius)",
+											background:
+												activeLineId === l.id
+													? "var(--color-accent-bg)"
+													: "transparent",
+											color:
+												activeLineId === l.id
+													? "var(--color-accent)"
+													: "var(--color-text)",
+											fontWeight:
+												activeLineId === l.id ? 600 : 400,
+											fontSize: 13,
+											marginBottom: 2,
+											cursor: "pointer",
+											border: "none",
+										}}
+									>
+										<div
+											style={{
+												whiteSpace: "nowrap",
+												overflow: "hidden",
+												textOverflow: "ellipsis",
+											}}
+										>
+											{l.name}
+										</div>
+										<div
+											style={{
+												fontSize: 11,
+												color: "var(--color-text-muted)",
+												marginTop: 2,
+												display: "flex",
+												gap: 8,
+											}}
+										>
+											<span>🚉 {sc}</span>
+											<span>🧩 {pc}</span>
+										</div>
+									</button>
+									<button
+										className="btn btn-ghost btn-xs"
+										style={{
+											position: "absolute",
+											right: 4,
+											top: 6,
+										}}
+										onClick={e => {
+											e.stopPropagation();
+											setLineDialog(l);
+										}}
+									>
+										⚙
+									</button>
+								</div>
+							);
+						})}
+					</div>
+
+					{/* line detail */}
+					<div
+						className="card"
+						style={{
+							display: "flex",
+							flexDirection: "column",
+							overflow: "hidden",
+						}}
+					>
+						{!activeLine ? (
+							<div
+								className="empty-state"
+								style={{ padding: 60 }}
+							>
+								<p>路線を選択してください。</p>
+							</div>
+						) : (
+							<>
+								<div className="tabs">
+									<div
+										className={`tab ${
+											lineTab === "stations" ? "active" : ""
+										}`}
+										onClick={() => setLineTab("stations")}
+									>
+										🚉 経由駅 ({lineStations.length})
+									</div>
+									<div
+										className={`tab ${
+											lineTab === "patterns" ? "active" : ""
+										}`}
+										onClick={() => setLineTab("patterns")}
+									>
+										🧩 停車パターン ({linePatterns.length})
+									</div>
+								</div>
+
+								{lineTab === "stations" && (
+									<LineStationsTab
+										activeLine={activeLine}
+										lineStations={lineStations}
+										stations={stations}
+										stationsOnLine={stationsOnLine}
+										onUpdate={onUpdate}
+										t={t}
+									/>
+								)}
+
+								{lineTab === "patterns" && (
+									<div
+										style={{
+											padding: 16,
+											overflow: "auto",
+										}}
+									>
+										<div
+											style={{
+												display: "flex",
+												gap: 8,
+												marginBottom: 12,
+												alignItems: "center",
+											}}
+										>
+											<strong style={{ fontSize: 14 }}>
+												{activeLine.name} の停車パターン
+											</strong>
+											<div style={{ flex: 1 }} />
+											<button
+												className="btn btn-primary btn-sm"
+												onClick={onOpenStopPatternWizard}
+											>
+												🧩 ウィザードで作成
+											</button>
+										</div>
+										{linePatterns.length === 0 ? (
+											<div
+												className="empty-state"
+												style={{ padding: 40 }}
+											>
+												<svg
+													width="44"
+													height="44"
+													viewBox="0 0 24 24"
+													fill="none"
+													stroke="currentColor"
+													strokeWidth="1.5"
+												>
+													<rect
+														x="3"
+														y="3"
+														width="18"
+														height="18"
+														rx="2"
+													/>
+													<path d="M8 12h8M8 8h8M8 16h5" />
+												</svg>
+												<p>まだ停車パターンがありません。</p>
+											</div>
+										) : (
+											<div
+												style={{
+													display: "grid",
+													gridTemplateColumns:
+														"repeat(auto-fill,minmax(240px,1fr))",
+													gap: 12,
+												}}
+											>
+												{linePatterns.map(p => (
+													<StopPatternCard
+														key={p.id}
+														pattern={p}
+														lines={lines}
+														stations={stations}
+														onEdit={() =>
+															onEditStopPattern &&
+															onEditStopPattern(p)
+														}
+														onDuplicate={() =>
+															duplicatePattern(p)
+														}
+														onDelete={deletePattern}
+													/>
+												))}
+											</div>
+										)}
+									</div>
+								)}
+							</>
+						)}
+					</div>
+				</div>
+			)}
+
+			{/* ── STATIONS tab ── */}
+			{mainTab === "stations" && (
+				<StationsTab
+					stations={stations}
+					stationsOnLine={stationsOnLine}
+					lines={lines}
+					onUpdate={onUpdate}
+					t={t}
+				/>
+			)}
+
+			{/* ── Dialogs ── */}
+			{lineDialog !== null && (
+				<LineDialog
+					line={lineDialog}
+					onSave={saveLine}
+					onDelete={deleteLine}
+					onClose={() => setLineDialog(null)}
+					t={t}
+				/>
+			)}
+		</div>
+	);
+}

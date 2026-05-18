@@ -16,8 +16,8 @@
 	],
 	"ignorePatterns": [
 		"node_modules/",
+		"packages/",
 		"dist/",
-		"src/oas/",
 		"vite.config.ts",
 		"i18next-parser.config.ts"
 	],
