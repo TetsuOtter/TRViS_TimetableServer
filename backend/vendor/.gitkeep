@@ -1,0 +1,7 @@
+# このディレクトリは意図的に空のまま追跡しています。
+# docker-compose.yaml の php サービスは ./backend を read_only で bind し、
+# その内側の vendor/ に名前付きボリューム (webmon-php-vendor) を被せます。
+# read_only な親の中には Docker がマウントポイントを作れないため、
+# host 側に空の backend/vendor/ を常設してアンカーにする必要があります。
+# 実際の依存は backend/Dockerfile の `composer install` でイメージ内に入り、
+# 上記ボリューム経由でコンテナに供給されます（host のこのディレクトリは空のまま）。

@@ -1,7 +1,12 @@
 # ref: https://github.com/github/gitignore/blob/master/Composer.gitignore
 
 composer.phar
-/vendor/
+# vendor/ の中身は無視するが、ディレクトリ自体は残す。
+# docker-compose.yaml で ./backend を read_only bind した上に vendor/ へ
+# 名前付きボリュームを被せている。read_only な親の中にマウントポイントは
+# 作れないため、空の vendor/ を host 側に常設するアンカーが必要。
+/vendor/*
+!/vendor/.gitkeep
 
 # Commit your application's lock file https://getcomposer.org/doc/01-basic-usage.md#commit-your-composer-lock-file-to-version-control
 # You may choose to ignore a library lock file http://getcomposer.org/doc/02-libraries.md#lock-file

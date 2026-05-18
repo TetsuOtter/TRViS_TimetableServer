@@ -49,6 +49,13 @@ services:
         read_only: true
         source: ./backend
         target: /var/www/html
+      # ./backend は read_only bind。イメージビルド時に composer install した
+      # vendor/ を上書き（シャドウ）しないよう、ここだけ名前付きボリュームを被せる。
+      # 注意: composer.json/lock 変更後にイメージを作り直しても、このボリュームが
+      # 残っていると旧 vendor が居座る。`docker compose down -v` で作り直すこと。
+      - type: volume
+        source: webmon-php-vendor
+        target: /var/www/html/vendor
       - type: bind
         source: ./backend-logs
         target: /var/log/apache2
@@ -117,6 +124,7 @@ services:
       - mysql
 volumes:
   webmon-db:
+  webmon-php-vendor:
 networks:
   proxy-front:
   proxy-back:
