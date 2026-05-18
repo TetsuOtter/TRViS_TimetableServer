@@ -114,10 +114,38 @@ final class InviteKeysService
 
 	public function selectInviteKey(
 		UuidInterface $inviteKeyId,
+		string $userId,
 	): RetValueOrError {
-		return $this->inviteKeysRepo->selectInviteKey(
+		$inviteKeyData = $this->inviteKeysRepo->selectInviteKey(
 			inviteKeyId: $inviteKeyId,
 		);
+		if ($inviteKeyData->isError) {
+			return $inviteKeyData;
+		}
+
+		// InviteKey は UUID を知っていれば使える bearer-capability 的な存在のため、
+		// 個別取得 (privilege_type / work_groups_id の開示) は所属WorkGroupの
+		// admin のみに限定する (disableInviteKey / selectInviteKeyListWithWorkGroupsId と同じゲート)。
+		$privilegeType = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
+			id: $inviteKeyData->value->work_groups_id,
+			userId: $userId,
+			includeAnonymous: true,
+			selectForUpdate: false,
+		);
+		if ($privilegeType->isError) {
+			return $privilegeType;
+		}
+		if (!$privilegeType->value->hasPrivilege(InviteKeyPrivilegeType::read)) {
+			return Utils::errWorkGroupNotFound();
+		}
+		if (!$privilegeType->value->hasPrivilege(InviteKeyPrivilegeType::admin)) {
+			return RetValueOrError::withError(
+				Constants::HTTP_FORBIDDEN,
+				"You don't have enough privilege to get InviteKey",
+			);
+		}
+
+		return $inviteKeyData;
 	}
 
 	public function selectInviteKeyListWithOwnerUid(

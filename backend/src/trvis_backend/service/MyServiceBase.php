@@ -106,12 +106,15 @@ abstract class MyServiceBase implements IMyServiceBase
 		}
 		if (!$senderPrivilege->hasPrivilege(InviteKeyPrivilegeType::write)) {
 			$this->logger->warning(
-				'User[{userId}] does not have permission to create {dataTypeName}',
+				'User[{userId}] does not have permission to write {dataTypeName}',
 				[
 					'userId' => $senderUserId,
 					'dataTypeName' => $this->dataTypeName,
 				],
 			);
+			// read権限しか持たない主体 (匿名を含む) に作成/更新/削除を許してはならない。
+			// 存在情報を漏らさないため、checkPrivilegeToRead と同様に NotFound を返す。
+			return Utils::errWorkGroupNotFound();
 		}
 		return RetValueOrError::withValue(null);
 	}
@@ -262,7 +265,7 @@ abstract class MyServiceBase implements IMyServiceBase
 
 			return RetValueOrError::withError(
 				statusCode: Constants::HTTP_INTERNAL_SERVER_ERROR,
-				errorMsg: "Unexpected error occurred during insert - {$e->getMessage()}",
+				errorMsg: "Unexpected error occurred during insert",
 				errorCode: $e->getCode(),
 			);
 		}
@@ -420,7 +423,7 @@ abstract class MyServiceBase implements IMyServiceBase
 
 			return RetValueOrError::withError(
 				statusCode: Constants::HTTP_INTERNAL_SERVER_ERROR,
-				errorMsg: "Unexpected error occurred during delete - {$e->getMessage()}",
+				errorMsg: "Unexpected error occurred during delete",
 				errorCode: $e->getCode(),
 			);
 		}
@@ -465,7 +468,9 @@ abstract class MyServiceBase implements IMyServiceBase
 			],
 		);
 
-		$senderPrivilegeCheckResult = $this->checkPrivilegeToWrite(
+		// getOne は読み取り操作。checkPrivilegeToWrite が write を強制するようになったため
+		// read 権限で個別取得できるよう read チェックを使う。
+		$senderPrivilegeCheckResult = $this->checkPrivilegeToRead(
 			id: $id,
 			repo: $this->targetRepo,
 			senderUserId: $senderUserId,
@@ -677,7 +682,7 @@ abstract class MyServiceBase implements IMyServiceBase
 
 			return RetValueOrError::withError(
 				statusCode: Constants::HTTP_INTERNAL_SERVER_ERROR,
-				errorMsg: "Unexpected error occurred during update - {$e->getMessage()}",
+				errorMsg: "Unexpected error occurred during update",
 				errorCode: $e->getCode(),
 			);
 		}

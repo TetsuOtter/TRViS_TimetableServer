@@ -129,6 +129,8 @@ final class InviteKeyApi extends AbstractInviteKeyApi
 		ResponseInterface $response,
 		string $inviteKeyId
 	): ResponseInterface {
+		$userId = MyAuthMiddleware::getUserIdOrAnonymous($request);
+
 		if (!Uuid::isValid($inviteKeyId))
 		{
 			$this->logger->warning("Invalid UUID format ({inviteKeyId})", ['inviteKeyId' => $inviteKeyId]);
@@ -137,6 +139,7 @@ final class InviteKeyApi extends AbstractInviteKeyApi
 
 		return $this->inviteKeysService->selectInviteKey(
 			inviteKeyId: Uuid::fromString($inviteKeyId),
+			userId: $userId,
 		)->getResponseWithJson($response);
 	}
 
