@@ -30,9 +30,10 @@ export const queryKeys = {
 		["lines", lineId, "stationsOnLine"] as const,
 	stationOnLine: (lineId: string, id: string) =>
 		["lines", lineId, "stationsOnLine", id] as const,
-	stopPatterns: (lineId: string) => ["lines", lineId, "stopPatterns"] as const,
-	stopPattern: (lineId: string, id: string) =>
-		["lines", lineId, "stopPatterns", id] as const,
+	stopPatterns: (projectId: string) =>
+		["projects", projectId, "stopPatterns"] as const,
+	stopPattern: (projectId: string, id: string) =>
+		["projects", projectId, "stopPatterns", id] as const,
 	stopPatternRows: (stopPatternId: string) =>
 		["stopPatterns", stopPatternId, "stopPatternRows"] as const,
 	stopPatternRow: (stopPatternId: string, id: string) =>

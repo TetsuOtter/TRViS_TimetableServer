@@ -1951,6 +1951,8 @@ export interface LineManagerProps {
 	onReorderStationsOnLine: (updates: EntitySolUpdate[]) => void;
 	onOpenStopPatternWizard: () => void;
 	onEditStopPattern: (p: StopPattern) => void;
+	onDeleteStopPattern: (id: string) => void;
+	onDuplicateStopPattern: (p: StopPattern) => void;
 	t: Strings;
 }
 
@@ -1973,6 +1975,8 @@ export function LineManager({
 	onReorderStationsOnLine,
 	onOpenStopPatternWizard,
 	onEditStopPattern,
+	onDeleteStopPattern,
+	onDuplicateStopPattern,
 	t,
 }: LineManagerProps) {
 	const [mainTab, setMainTab] = useState<"lines" | "stations">("lines");
@@ -2021,11 +2025,8 @@ export function LineManager({
 			onSelectLine(nextLine !== undefined ? nextLine.id : "");
 		}
 	};
-	const duplicatePattern = () => {
-		// StopPattern duplication will be wired to API in P4-5
-	};
 	const deletePattern = (id: string) => {
-		void id; // StopPattern delete will be wired to API in P4-5
+		onDeleteStopPattern(id);
 	};
 
 	return (
@@ -2342,7 +2343,7 @@ export function LineManager({
 															onEditStopPattern &&
 															onEditStopPattern(p)
 														}
-														onDuplicate={duplicatePattern}
+														onDuplicate={() => onDuplicateStopPattern(p)}
 														onDelete={deletePattern}
 													/>
 												))}

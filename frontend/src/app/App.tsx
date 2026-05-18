@@ -3,6 +3,9 @@
 // via SettingsContext. Layout is fixed to the design's default ("sidebar").
 import { useEffect, useMemo, useState } from "react";
 
+import { useQueryClient } from "@tanstack/react-query";
+
+import { fromApiStopPattern, fromApiStopPatternRow } from "../api/adapters";
 import {
 	useCreateLine,
 	useDeleteLine,
@@ -27,6 +30,17 @@ import {
 	useStationsOnLine,
 	useUpdateStationOnLine,
 } from "../api/hooks/useStationsOnLine";
+import {
+	useCreateStopPatternRows,
+	useDeleteStopPatternRow,
+	useStopPatternRows,
+} from "../api/hooks/useStopPatternRows";
+import {
+	useCreateStopPattern,
+	useDeleteStopPattern,
+	useStopPatterns,
+	useUpdateStopPattern,
+} from "../api/hooks/useStopPatterns";
 import { useTimetableRows } from "../api/hooks/useTimetableRows";
 import {
 	useCreateTrain,
@@ -46,6 +60,8 @@ import {
 	useUpdateWork,
 	useWorks,
 } from "../api/hooks/useWorks";
+import { stopPatternRowApi } from "../api/instances";
+import { queryKeys } from "../api/queryKeys";
 import { AppShell } from "../components/AppShell";
 import AuthControls from "../components/auth/AuthControls";
 import {
@@ -69,6 +85,8 @@ import type {
 	Project as EntityProject,
 	ProjectStation as EntityProjectStation,
 	StationOnLine as EntityStationOnLine,
+	StopPattern as EntityStopPattern,
+	StopPatternRow as EntityStopPatternRow,
 	TimetableRow as EntityTimetableRow,
 	Train as EntityTrain,
 	Work as EntityWork,
@@ -80,6 +98,7 @@ import type {
 	Station,
 	StationOnLine,
 	StopPattern,
+	StopPatternRow as ModelStopPatternRow,
 	TimetableRow as ModelTimetableRow,
 	Train as ModelTrain,
 	Work,
@@ -191,6 +210,77 @@ function entityStationOnLineToModel(sol: EntityStationOnLine): StationOnLine {
 		longitude_deg: sol.longitude,
 		latitude_deg: sol.latitude,
 		trackHiddenByDefault: sol.trackHiddenByDefault,
+	};
+}
+
+function entityStopRowToModel(r: EntityStopPatternRow): ModelStopPatternRow {
+	return {
+		stationId: r.projectStationId,
+		trackName: r.trackName,
+		trackHidden: r.trackHidden,
+		driveTime_MM: r.driveTimeMm,
+		driveTime_SS: r.driveTimeSs,
+		dwellTime_MM: r.dwellTimeMm,
+		dwellTime_SS: r.dwellTimeSs,
+		isOperationOnlyStop: r.isOperationOnlyStop,
+		isPass: r.isPass,
+		showArrive: r.showArrive,
+		showDeparture: r.showDeparture,
+		arrive: r.arriveStr,
+		departure: r.departureStr,
+		runInLimit: r.runInLimit,
+		runOutLimit: r.runOutLimit,
+		remarks: r.remarks,
+		alwaysShowHH: r.alwaysShowHh,
+	};
+}
+
+function entityStopPatternToModel(
+	sp: EntityStopPattern,
+	rows: ModelStopPatternRow[]
+): StopPattern {
+	return {
+		id: sp.id,
+		name: sp.name,
+		lineId: sp.lineId,
+		fromStationId: sp.fromProjectStationId ?? "",
+		toStationId: sp.toProjectStationId ?? "",
+		direction: sp.direction === -1 ? -1 : 1,
+		rows,
+		stopRows: rows,
+	};
+}
+
+function modelStopRowToEntityDraft(
+	r: ModelStopPatternRow
+): Omit<
+	EntityStopPatternRow,
+	"id" | "projectId" | "stopPatternId" | "createdAt"
+> {
+	return {
+		projectStationId: r.stationId,
+		trackName: r.trackName,
+		trackHidden: r.trackHidden,
+		driveTimeMm: r.driveTime_MM,
+		driveTimeSs: r.driveTime_SS,
+		dwellTimeMm: r.dwellTime_MM,
+		dwellTimeSs: r.dwellTime_SS,
+		isOperationOnlyStop: r.isOperationOnlyStop,
+		isPass: r.isPass,
+		showArrive: r.showArrive,
+		showDeparture: r.showDeparture,
+		arriveStr: r.arrive,
+		departureStr: r.departure,
+		runInLimit:
+			r.runInLimit === "" || r.runInLimit === undefined
+				? undefined
+				: r.runInLimit,
+		runOutLimit:
+			r.runOutLimit === "" || r.runOutLimit === undefined
+				? undefined
+				: r.runOutLimit,
+		remarks: r.remarks,
+		alwaysShowHh: r.alwaysShowHH,
 	};
 }
 
@@ -466,6 +556,17 @@ export function App() {
 		null
 	);
 
+	const { data: apiStopPatterns } = useStopPatterns(projectId ?? "");
+	const createStopPatternMutation = useCreateStopPattern(projectId ?? "");
+	const updateStopPatternMutation = useUpdateStopPattern(projectId ?? "");
+	const deleteStopPatternMutation = useDeleteStopPattern(projectId ?? "");
+	const createStopPatternRowsMutation = useCreateStopPatternRows();
+	const deleteStopPatternRowMutation = useDeleteStopPatternRow();
+
+	const { data: apiEditingRows } = useStopPatternRows(editingPattern?.id ?? "");
+
+	const queryClient = useQueryClient();
+
 	const [editingProject, setEditingProject] = useState<{
 		project?: Project;
 		new?: boolean;
@@ -528,6 +629,14 @@ export function App() {
 	);
 	const modelStationsOnLine = (apiStationsOnLine ?? []).map(
 		entityStationOnLineToModel
+	);
+	const modelStopPatterns = (apiStopPatterns ?? []).map((sp) =>
+		entityStopPatternToModel(
+			sp,
+			sp.id === (editingPattern?.id ?? "")
+				? (apiEditingRows ?? []).map(entityStopRowToModel)
+				: []
+		)
 	);
 
 	useEffect(() => {
@@ -820,6 +929,116 @@ export function App() {
 		});
 	};
 
+	/* ─── StopPattern CRUD (wired from LineManager / StopPatternWizard) ─── */
+	const handleSaveStopPattern = async (sp: StopPattern) => {
+		try {
+			const rowDrafts = (sp.stopRows ?? sp.rows ?? []).map((r, idx) => ({
+				...modelStopRowToEntityDraft(r),
+				sortKey: idx,
+			}));
+			const patternDraft = {
+				lineId: sp.lineId,
+				name: sp.name,
+				fromProjectStationId:
+					sp.fromStationId !== "" ? sp.fromStationId : undefined,
+				toProjectStationId: sp.toStationId !== "" ? sp.toStationId : undefined,
+				direction: sp.direction as number | undefined,
+			};
+			if (editingPattern !== null) {
+				await updateStopPatternMutation.mutateAsync({
+					id: sp.id,
+					...patternDraft,
+				});
+				const existing = apiEditingRows ?? [];
+				for (const r of existing) {
+					await deleteStopPatternRowMutation.mutateAsync({
+						stopPatternId: sp.id,
+						id: r.id,
+					});
+				}
+				if (rowDrafts.length > 0) {
+					await createStopPatternRowsMutation.mutateAsync({
+						stopPatternId: sp.id,
+						drafts: rowDrafts,
+					});
+				}
+			} else {
+				const created =
+					await createStopPatternMutation.mutateAsync(patternDraft);
+				const newId = fromApiStopPattern(created).id;
+				if (rowDrafts.length > 0) {
+					await createStopPatternRowsMutation.mutateAsync({
+						stopPatternId: newId,
+						drafts: rowDrafts,
+					});
+				}
+			}
+			void queryClient.invalidateQueries({
+				queryKey: queryKeys.stopPatterns(projectId ?? ""),
+			});
+			void queryClient.invalidateQueries({ queryKey: ["stopPatterns"] });
+			setShowStopPattern(false);
+			setEditingPattern(null);
+		} catch (e) {
+			alert(e instanceof Error ? e.message : String(e));
+		}
+	};
+
+	const handleDeleteStopPattern = (id: string) => {
+		deleteStopPatternMutation.mutate(id, {
+			onError: (e: Error) => alert(e.message),
+		});
+	};
+
+	const handleDuplicateStopPattern = async (p: StopPattern) => {
+		try {
+			const rows = await queryClient.fetchQuery({
+				queryKey: queryKeys.stopPatternRows(p.id),
+				queryFn: () =>
+					stopPatternRowApi
+						.getStopPatternRowList({ stopPatternId: p.id })
+						.then((l) => l.map(fromApiStopPatternRow)),
+			});
+			const created = await createStopPatternMutation.mutateAsync({
+				lineId: p.lineId,
+				name: p.name + " (コピー)",
+				fromProjectStationId:
+					p.fromStationId !== "" ? p.fromStationId : undefined,
+				toProjectStationId: p.toStationId !== "" ? p.toStationId : undefined,
+				direction: p.direction as number | undefined,
+			});
+			const newId = fromApiStopPattern(created).id;
+			const drafts = rows.map((r, idx) => ({
+				projectStationId: r.projectStationId,
+				sortKey: idx,
+				trackName: r.trackName,
+				trackHidden: r.trackHidden,
+				isOperationOnlyStop: r.isOperationOnlyStop,
+				isPass: r.isPass,
+				driveTimeMm: r.driveTimeMm,
+				driveTimeSs: r.driveTimeSs,
+				dwellTimeMm: r.dwellTimeMm,
+				dwellTimeSs: r.dwellTimeSs,
+				showArrive: r.showArrive,
+				showDeparture: r.showDeparture,
+				arriveStr: r.arriveStr,
+				departureStr: r.departureStr,
+				runInLimit: r.runInLimit,
+				runOutLimit: r.runOutLimit,
+				remarks: r.remarks,
+				alwaysShowHh: r.alwaysShowHh,
+			}));
+			if (drafts.length > 0) {
+				await createStopPatternRowsMutation.mutateAsync({
+					stopPatternId: newId,
+					drafts,
+				});
+			}
+		} catch (e) {
+			alert(e instanceof Error ? e.message : String(e));
+		}
+	};
+
 	/* ─── JSON Import / Export ─── */
 	const exportProject = (pid: string) => {
 		const p = data.projects.find((x) => x.id === pid);
@@ -911,6 +1130,15 @@ export function App() {
 			);
 		}
 	};
+
+	// Provide live rows to the wizard after the rows query settles.
+	// editingPattern is a frozen snapshot; liveEditingPattern tracks
+	// the live modelStopPatterns entry (including loaded rows).
+	const liveEditingPattern =
+		editingPattern !== null
+			? (modelStopPatterns.find((sp) => sp.id === editingPattern.id) ??
+				editingPattern)
+			: null;
 
 	const sidebarContent = projectId ? (
 		<SidebarTree
@@ -1053,7 +1281,7 @@ export function App() {
 						onOpenStopPatternWizard={() =>
 							setShowStopPattern(true)
 						}
-						stopPatterns={data.stopPatterns}
+						stopPatterns={modelStopPatterns}
 						stations={data.stations}
 						stationsOnLine={data.stationsOnLine}
 						lines={data.lines}
@@ -1089,7 +1317,7 @@ export function App() {
 						lines={modelLines}
 						stations={modelProjectStations}
 						stationsOnLine={modelStationsOnLine}
-						stopPatterns={data.stopPatterns}
+						stopPatterns={modelStopPatterns}
 						activeLineId={currentLine ?? ""}
 						onSelectLine={setCurrentLine}
 						onCreateLine={handleCreateLine}
@@ -1110,34 +1338,33 @@ export function App() {
 							setEditingPattern(p);
 							setShowStopPattern(true);
 						}}
+						onDeleteStopPattern={handleDeleteStopPattern}
+						onDuplicateStopPattern={(p) => {
+							void handleDuplicateStopPattern(p);
+						}}
 						t={t}
 					/>
 				)}
 			</AppShell>
 
-			{showStopPattern && (
-				<StopPatternWizard
-					lines={data.lines}
-					stations={data.stations}
-					stationsOnLine={data.stationsOnLine}
-					t={t}
-					editPattern={editingPattern}
-					onSave={(sp) =>
-						setData((d) => ({
-							...d,
-							stopPatterns: editingPattern
-								? d.stopPatterns.map((p) =>
-										p.id === sp.id ? sp : p
-									)
-								: [...d.stopPatterns, sp],
-						}))
-					}
-					onClose={() => {
-						setShowStopPattern(false);
-						setEditingPattern(null);
-					}}
-				/>
-			)}
+			{showStopPattern &&
+				(editingPattern === null || apiEditingRows !== undefined) && (
+					<StopPatternWizard
+						key={editingPattern?.id ?? "new"}
+						lines={modelLines}
+						stations={modelProjectStations}
+						stationsOnLine={modelStationsOnLine}
+						t={t}
+						editPattern={liveEditingPattern}
+						onSave={(sp) => {
+							void handleSaveStopPattern(sp);
+						}}
+						onClose={() => {
+							setShowStopPattern(false);
+							setEditingPattern(null);
+						}}
+					/>
+				)}
 
 			{/* Entity dialogs */}
 			{editingProject && (

@@ -60,7 +60,7 @@ export const useDeleteLine = (projectId: string) => {
 				queryKey: queryKeys.stationsOnLine(lineId),
 			});
 			void queryClient.invalidateQueries({
-				queryKey: queryKeys.stopPatterns(lineId),
+				queryKey: queryKeys.stopPatterns(projectId),
 			});
 		},
 	});
