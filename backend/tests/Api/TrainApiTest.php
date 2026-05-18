@@ -115,7 +115,9 @@ class TrainApiTest extends IntegrationTestCase
 		$g = $this->svc()->getOne($this->userId, $trainsId);
 		$this->assertOk($g, 'getOne');
 		// MySQL BOOLEAN is TINYINT(1): getOne maps it back as int 0/1.
-		$this->assertFalse((bool)$g->value->is_ride_on_moving, 'omitted is_ride_on_moving must persist as DB DEFAULT false');
+		// assertSame(0, ...) (not (bool) cast) so a future null-mapping bug
+		// is not masked by null->false coercion.
+		$this->assertSame(0, (int)$g->value->is_ride_on_moving, 'omitted is_ride_on_moving must persist as DB DEFAULT false');
 	}
 
 	/**

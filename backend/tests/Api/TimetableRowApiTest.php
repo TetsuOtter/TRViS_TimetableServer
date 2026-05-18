@@ -160,10 +160,12 @@ class TimetableRowApiTest extends IntegrationTestCase
 		$g = $this->svc()->getOne($this->userId, $rowId);
 		$this->assertOk($g, 'getOne');
 		// MySQL BOOLEAN is TINYINT(1): getOne maps it back as int 0/1.
-		$this->assertFalse((bool)$g->value->is_operation_only_stop, 'omitted is_operation_only_stop -> DB DEFAULT false');
-		$this->assertFalse((bool)$g->value->is_pass, 'omitted is_pass -> DB DEFAULT false');
-		$this->assertFalse((bool)$g->value->has_bracket, 'omitted has_bracket -> DB DEFAULT false');
-		$this->assertFalse((bool)$g->value->is_last_stop, 'omitted is_last_stop -> DB DEFAULT false');
+		// assertSame(0, ...) (not (bool) cast) so a future null-mapping bug
+		// is not masked by null->false coercion.
+		$this->assertSame(0, (int)$g->value->is_operation_only_stop, 'omitted is_operation_only_stop -> DB DEFAULT false');
+		$this->assertSame(0, (int)$g->value->is_pass, 'omitted is_pass -> DB DEFAULT false');
+		$this->assertSame(0, (int)$g->value->has_bracket, 'omitted has_bracket -> DB DEFAULT false');
+		$this->assertSame(0, (int)$g->value->is_last_stop, 'omitted is_last_stop -> DB DEFAULT false');
 	}
 
 	/**
