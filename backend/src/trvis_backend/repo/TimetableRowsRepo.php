@@ -216,10 +216,10 @@ final class TimetableRowsRepo extends MyRepoBase
 		$query->bindValue(":drive_time_mm_$i", $d->drive_time_mm, PDO::PARAM_INT);
 		$query->bindValue(":drive_time_ss_$i", $d->drive_time_ss, PDO::PARAM_INT);
 
-		$query->bindValue(":is_operation_only_stop_$i", $d->is_operation_only_stop, PDO::PARAM_BOOL);
-		$query->bindValue(":is_pass_$i", $d->is_pass, PDO::PARAM_BOOL);
-		$query->bindValue(":has_bracket_$i", $d->has_bracket, PDO::PARAM_BOOL);
-		$query->bindValue(":is_last_stop_$i", $d->is_last_stop, PDO::PARAM_BOOL);
+		$query->bindValue(":is_operation_only_stop_$i", $d->is_operation_only_stop ?? false, PDO::PARAM_BOOL);
+		$query->bindValue(":is_pass_$i", $d->is_pass ?? false, PDO::PARAM_BOOL);
+		$query->bindValue(":has_bracket_$i", $d->has_bracket ?? false, PDO::PARAM_BOOL);
+		$query->bindValue(":is_last_stop_$i", $d->is_last_stop ?? false, PDO::PARAM_BOOL);
 
 		$query->bindValue(":arrive_time_hh_$i", $d->arrive_time_hh, PDO::PARAM_INT);
 		$query->bindValue(":arrive_time_mm_$i", $d->arrive_time_mm, PDO::PARAM_INT);

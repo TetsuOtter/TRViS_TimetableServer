@@ -156,7 +156,7 @@ final class TrainsRepo extends MyRepoBase
 		$query->bindValue(":train_info_$i", $d->train_info, PDO::PARAM_STR);
 		$query->bindValue(":direction_$i", $d->direction, PDO::PARAM_INT);
 		$query->bindValue(":day_count_$i", $d->day_count, PDO::PARAM_INT);
-		$query->bindValue(":is_ride_on_moving_$i", $d->is_ride_on_moving, PDO::PARAM_BOOL);
+		$query->bindValue(":is_ride_on_moving_$i", $d->is_ride_on_moving ?? false, PDO::PARAM_BOOL);
 	}
 
 	/**
