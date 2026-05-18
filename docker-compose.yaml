@@ -75,7 +75,7 @@ services:
         source: ./firebase/data
         target: /emulator/data
   mysql:
-    image: mysql:5.7-oracle
+    image: mysql:8.0-oracle
     platform: linux/amd64
     container_name: webmon-db
     hostname: webmon-db

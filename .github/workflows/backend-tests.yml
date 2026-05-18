@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   phpunit:
-    name: PHPUnit (PHP 8.2 / MySQL 5.7)
+    name: PHPUnit (PHP 8.2 / MySQL 8.0)
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -30,8 +30,8 @@ jobs:
 
     services:
       mysql:
-        # docker-compose.yaml と同じ 5.7-oracle で本番/開発とパリティを取る。
-        image: mysql:5.7-oracle
+        # docker-compose.yaml と同じ 8.0-oracle。本番 DB が MySQL 8.0 のためパリティを取る。
+        image: mysql:8.0-oracle
         ports:
           - 3306:3306
         env:
@@ -44,12 +44,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.2
 
       - name: Setup PHP 8.2
         # 正準ランタイムは backend/Dockerfile の php:8.2-apache。
         # ローカルの PHP 8.5 で出る implicit-nullable deprecation を CI に持ち込まない。
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@2.37.0
         with:
           php-version: "8.2"
           extensions: mbstring, intl, pdo_mysql, bcmath
@@ -61,7 +61,7 @@ jobs:
         run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
 
       - name: Cache Composer packages
-        uses: actions/cache@v4
+        uses: actions/cache@v5.0.5
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: composer-${{ runner.os }}-php82-${{ hashFiles('backend/composer.lock') }}
@@ -73,17 +73,22 @@ jobs:
         run: composer install --prefer-dist --no-progress --no-interaction
 
       - name: Install MySQL client
-        # ubuntu-latest (24.04) のデフォルトイメージは mysql-client を同梱保証しない。
+        # ubuntu-latest のデフォルトイメージは mysql-client を同梱保証しない。
         # 未インストールだと Wait/Initialize がスモークチェック前に落ち、
         # 「skip-guard で嘘の緑」と「クライアント欠如」の切り分けが付かなくなる。
+        # MySQL 8.0 の root は caching_sha2_password 認証。MariaDB クライアントは
+        # これを TCP で扱えないため、Oracle MySQL 8.0 クライアントを明示指定する。
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends mysql-client
+          sudo apt-get install -y --no-install-recommends mysql-client-core-8.0
 
       - name: Wait for MySQL
+        # MYSQL_PWD でパスワードを渡し、コマンドライン平文 (-p) の 8.0 警告を抑止。
+        env:
+          MYSQL_PWD: root
         run: |
           for i in $(seq 1 30); do
-            if mysqladmin ping -h 127.0.0.1 -P 3306 -uroot -proot --silent; then
+            if mysqladmin ping -h 127.0.0.1 -P 3306 -uroot --silent; then
               echo "MySQL is up."
               exit 0
             fi
@@ -97,14 +102,16 @@ jobs:
         # 開発環境 (mysql/conf.d/my.cnf: character-set-server=utf8mb4) と
         # パリティを取るため DB を utf8mb4 で作成。init_sql のテーブルは
         # 明示 CHARSET を持たず DB 既定を継承するためここが効く。
+        env:
+          MYSQL_PWD: root
         run: |
-          mysql -h 127.0.0.1 -P 3306 -uroot -proot <<'SQL'
+          mysql -h 127.0.0.1 -P 3306 -uroot <<'SQL'
           CREATE DATABASE IF NOT EXISTS test CHARACTER SET utf8mb4;
           CREATE USER IF NOT EXISTS 'test'@'%' IDENTIFIED BY 'test';
           GRANT ALL PRIVILEGES ON test.* TO 'test'@'%';
           FLUSH PRIVILEGES;
           SQL
-          mysql -h 127.0.0.1 -P 3306 -uroot -proot test < mysql/init_sql/0_create_db.sql
+          mysql -h 127.0.0.1 -P 3306 -uroot test < mysql/init_sql/0_create_db.sql
 
       - name: Smoke check - DB really reachable with test schema
         # 統合テスト (IntegrationTestCase) は PDO 接続失敗時に markTestSkipped する。
