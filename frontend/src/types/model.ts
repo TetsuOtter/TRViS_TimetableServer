@@ -12,6 +12,7 @@ export type ShowHH = boolean | undefined;
 
 export interface TimetableRow {
 	id: string;
+	stationId?: string;
 	stationName: string;
 	fullName?: string;
 	/** internal "HH:MM:SS" (or "" / free text) */

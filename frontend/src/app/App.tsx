@@ -50,6 +50,7 @@ import {
 	useCreateTimetableRow,
 	useDeleteTimetableRow,
 	useTimetableRows,
+	useUpdateTimetableRow,
 } from "../api/hooks/useTimetableRows";
 import {
 	useCreateTrain,
@@ -132,6 +133,7 @@ function entityTimetableRowToModel(
 		row.stationId !== undefined ? stationsById.get(row.stationId) : undefined;
 	return {
 		id: row.id,
+		stationId: row.stationId,
 		stationName: station?.stationName ?? "",
 		fullName: station?.fullName ?? "",
 		arrive: toTimeStr(row.arriveTimeHh, row.arriveTimeMm, row.arriveTimeSs),
@@ -551,6 +553,7 @@ export function App() {
 
 	const { data: apiTimetableRows } = useTimetableRows(currentTrain ?? "");
 	const createTimetableRowMutation = useCreateTimetableRow();
+	const updateTimetableRowMutation = useUpdateTimetableRow();
 	const deleteTimetableRowMutation = useDeleteTimetableRow();
 
 	const [currentLine, setCurrentLine] = useState<string | null>(null);
@@ -873,12 +876,51 @@ export function App() {
 		}
 	};
 
+	/* ─── TimetableRow CRUD (wired from WorkBrowser → TimetableGrid) ─── */
+	const handleCreateRow = (trainId: string, row: ModelTimetableRow) =>
+		createTimetableRowMutation.mutate(
+			{ trainId, draft: modelRowToEntityDraft(row) },
+			{ onError: (e: Error) => alert(e.message) }
+		);
+	const handleUpdateRow = (trainId: string, rowId: string, row: ModelTimetableRow) =>
+		updateTimetableRowMutation.mutate(
+			{ trainId, rowId, draft: modelRowToEntityDraft(row) },
+			{ onError: (e: Error) => alert(e.message) }
+		);
+	const handleDeleteRow = (trainId: string, rowId: string) =>
+		deleteTimetableRowMutation.mutate(
+			{ trainId, rowId },
+			{ onError: (e: Error) => alert(e.message) }
+		);
+
 	/* ─── ApplyPattern handler ─── */
 
 	// Parse "HH:MM:SS" string into a time component at position index (0=HH, 1=MM, 2=SS).
 	// Returns undefined when the string is empty (open-end stations have no departure).
 	const parseTimePart = (t: string, idx: number): number | undefined =>
 		t !== "" ? parseInt(t.split(":")[idx] ?? "0", 10) : undefined;
+
+	const modelRowToEntityDraft = (r: ModelTimetableRow): Omit<EntityTimetableRow, "id" | "trainId" | "createdAt" | "updatedAt"> => ({
+		stationId: r.stationId,
+		driveTimeMm: r.driveTime_MM,
+		driveTimeSs: r.driveTime_SS,
+		isPass: r.isPass,
+		isOperationOnlyStop: r.isOperationOnlyStop,
+		hasBracket: r.hasBracket,
+		isLastStop: r.isLastStop,
+		arriveTimeHh: parseTimePart(r.arrive, 0),
+		arriveTimeMm: parseTimePart(r.arrive, 1),
+		arriveTimeSs: parseTimePart(r.arrive, 2),
+		departureTimeHh: parseTimePart(r.departure, 0),
+		departureTimeMm: parseTimePart(r.departure, 1),
+		departureTimeSs: parseTimePart(r.departure, 2),
+		arriveStr: r.arriveDisplayText && r.arriveDisplayText !== "" ? r.arriveDisplayText : undefined,
+		departureStr: r.departureDisplayText && r.departureDisplayText !== "" ? r.departureDisplayText : undefined,
+		runInLimit: r.runInLimit !== "" ? r.runInLimit : undefined,
+		runOutLimit: r.runOutLimit !== "" ? r.runOutLimit : undefined,
+		remarks: r.remarks !== "" ? r.remarks : undefined,
+		workType: r.workType !== "" ? r.workType : undefined,
+	});
 
 	const buildRowDraft = (r: AppliedRow) => ({
 		stationId: r.stationId,
@@ -1396,9 +1438,12 @@ export function App() {
 							void handleApplyPattern(args);
 						}}
 						stopPatterns={modelStopPatterns}
-						stations={data.stations}
+						stations={modelProjectStations}
 						stationsOnLine={data.stationsOnLine}
 						lines={data.lines}
+						onCreateRow={handleCreateRow}
+						onUpdateRow={handleUpdateRow}
+						onDeleteRow={handleDeleteRow}
 						t={t}
 					/>
 				)}

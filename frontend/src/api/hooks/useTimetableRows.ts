@@ -43,6 +43,26 @@ export const useCreateTimetableRow = () => {
 	});
 };
 
+export const useUpdateTimetableRow = () => {
+	const queryClient = useQueryClient();
+	return useMutation({
+		mutationFn: (vars: {
+			trainId: string;
+			rowId: string;
+			draft: Omit<TimetableRow, "id" | "trainId" | "createdAt" | "updatedAt">;
+		}) =>
+			timetableRowApi.updateTimetableRow({
+				timetableRowId: vars.rowId,
+				timetableRow: toApiTimetableRow(vars.draft),
+			}),
+		onSuccess: (_data, vars) => {
+			void queryClient.invalidateQueries({
+				queryKey: queryKeys.timetableRows(vars.trainId),
+			});
+		},
+	});
+};
+
 export const useDeleteTimetableRow = () => {
 	const queryClient = useQueryClient();
 	return useMutation({

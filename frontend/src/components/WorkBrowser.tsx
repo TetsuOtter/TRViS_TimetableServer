@@ -15,6 +15,7 @@ import type {
 	Station,
 	StationOnLine,
 	StopPattern,
+	TimetableRow,
 	Train,
 	Work,
 } from "../types/model";
@@ -623,6 +624,9 @@ interface WorkBrowserProps {
 	stations: Station[];
 	stationsOnLine: StationOnLine[];
 	lines: Line[];
+	onCreateRow: (trainId: string, row: TimetableRow) => void;
+	onUpdateRow: (trainId: string, rowId: string, row: TimetableRow) => void;
+	onDeleteRow: (trainId: string, rowId: string) => void;
 	t: Strings;
 }
 
@@ -637,6 +641,9 @@ export function WorkBrowser({
 	stations,
 	stationsOnLine,
 	lines,
+	onCreateRow,
+	onUpdateRow,
+	onDeleteRow,
 	t,
 }: WorkBrowserProps) {
 	const [selectedTrainId, setSelectedTrainId] = useState<string | null>(
@@ -716,7 +723,10 @@ export function WorkBrowser({
 						<div style={{ flex: 1, overflow: "hidden" }}>
 							<TimetableGrid
 								train={selectedTrain}
-								onUpdateTrain={updateTrain}
+								stations={stations}
+								onCreateRow={(r) => onCreateRow(selectedTrain.id, r)}
+								onUpdateRow={(rowId, r) => onUpdateRow(selectedTrain.id, rowId, r)}
+								onDeleteRow={(rowId) => onDeleteRow(selectedTrain.id, rowId)}
 								t={t}
 							/>
 						</div>

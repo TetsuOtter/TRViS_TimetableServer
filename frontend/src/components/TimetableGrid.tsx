@@ -6,12 +6,11 @@ import { TRViSTime } from "../lib/timeUtils";
 import {
 	BBCodeEditButton,
 	BBCodeField,
-	BBCodeInlineLabel,
 } from "./BBCodeEditor";
 
 import type { RowFormat } from "../lib/timeUtils";
 import type { Strings } from "../i18n/strings";
-import type { ShowHH, TimetableRow, Train } from "../types/model";
+import type { ShowHH, Station, TimetableRow, Train } from "../types/model";
 import type { CSSProperties } from "react";
 
 interface ParsedTime {
@@ -317,8 +316,6 @@ function RowDetailModal({
 	const set = <K extends keyof TimetableRow>(k: K, v: TimetableRow[K]) =>
 		setData((d) => ({ ...d, [k]: v }));
 
-	const isInfoRow = data.recordType === 2 || data.recordType === "2";
-
 	const lastRowExclude = isLastIdx && data.isLastStop === false;
 
 	const { arrivePhPlaceholder, departurePhPlaceholder } = useMemo(() => {
@@ -406,90 +403,22 @@ function RowDetailModal({
 					</button>
 				</div>
 				<div className="modal-body">
-					{isInfoRow ? (
-						<BBCodeField
-							label="表示内容"
-							value={data.stationName || ""}
-							onChange={(v) => set("stationName", v)}
-							placeholder="情報テキストを入力…"
-							multiline={false}
-						/>
-					) : (
-						<>
-							{/* 駅名 */}
-							<div className="field-row" style={{ marginBottom: 12 }}>
-								<BBCodeField
-									label={t.stationName}
-									value={data.stationName || ""}
-									onChange={(v) => set("stationName", v)}
-									placeholder="例: 横浜"
-									multiline={false}
-									fieldStyle={{ flex: 2 }}
-								/>
-								<BBCodeField
-									label="駅名フルネーム"
-									value={data.fullName || ""}
-									onChange={(v) => set("fullName", v)}
-									placeholder="例: 横浜駅"
-									multiline={false}
-									fieldStyle={{ flex: 3 }}
-								/>
-								<div className="field" style={{ flex: "0 0 100px" }}>
-									<label
-										style={{
-											display: "flex",
-											alignItems: "center",
-											gap: 6,
-										}}>
-										{t.track}
-										<label
-											style={{
-												display: "flex",
-												alignItems: "center",
-												gap: 3,
-												fontWeight: 400,
-												fontSize: 11,
-												color: "var(--color-text-muted)",
-												cursor: "pointer",
-												marginLeft: "auto",
-												whiteSpace: "nowrap",
-											}}>
-											<input
-												type="checkbox"
-												checked={!!data.trackHidden}
-												onChange={(e) =>
-													set("trackHidden", e.target.checked)
-												}
-												style={{ accentColor: "var(--color-accent)" }}
-											/>
-											非表示
-										</label>
-									</label>
-									<div
-										style={{
-											display: "flex",
-											gap: 4,
-											alignItems: "center",
-										}}>
-										<input
-											value={data.trackName || ""}
-											onChange={(e) => set("trackName", e.target.value)}
-											placeholder="1"
-											style={{
-												flex: 1,
-												textAlign: "center",
-												fontFamily: "var(--font-mono)",
-											}}
-										/>
-										<BBCodeEditButton
-											title="番線名"
-											value={data.trackName || ""}
-											onChange={(v) => set("trackName", v)}
-											multiline={false}
-										/>
-									</div>
-								</div>
+					<>
+						{/* 駅名表示（読み取り専用） */}
+						<div className="field-row" style={{ marginBottom: 12 }}>
+							<div className="field" style={{ flex: 2 }}>
+								<label>{t.stationName}</label>
+								<span style={{ padding: "6px 0", display: "block", fontWeight: 500 }}>
+									{data.stationName || "(未設定)"}
+								</span>
 							</div>
+							<div className="field" style={{ flex: 3 }}>
+								<label>駅名フルネーム</label>
+								<span style={{ padding: "6px 0", display: "block" }}>
+									{data.fullName || "—"}
+								</span>
+							</div>
+						</div>
 
 							{/* 着時刻・発時刻・運転時分 */}
 							<div className="field-row" style={{ marginBottom: 12 }}>
@@ -876,8 +805,7 @@ function RowDetailModal({
 								multiline
 								rows={2}
 							/>
-						</>
-					)}
+					</>
 				</div>
 				<div className="modal-footer">
 					<button className="btn btn-secondary" onClick={onClose}>
@@ -897,41 +825,257 @@ function RowDetailModal({
 	);
 }
 
-interface TimetableGridProps {
-	train: Train;
-	onUpdateTrain: (t: Train) => void;
+// Per-row remarks input with local draft to avoid per-keystroke API writes.
+interface StationRowProps {
+	row: TimetableRow;
+	idx: number;
+	isLast: boolean;
+	fmt: Partial<RowFormat>;
+	onUpdateRow: <K extends keyof TimetableRow>(idx: number, key: K, val: TimetableRow[K]) => void;
+	onDeleteRow: (idx: number) => void;
+	onOpenDetail: () => void;
 	t: Strings;
 }
 
-export function TimetableGrid({ train, onUpdateTrain, t }: TimetableGridProps) {
-	const [rows, setRows] = useState<TimetableRow[]>(train.timetableRows || []);
-	const [detailRow, setDetailRow] = useState<TimetableRow | null>(null);
-	const [dragIdx, setDragIdx] = useState<number | null>(null);
-	const [dragOver, setDragOver] = useState<number | null>(null);
+function StationRow({ row, idx, isLast, fmt, onUpdateRow, onDeleteRow, onOpenDetail, t }: StationRowProps) {
+	const [remarksDraft, setRemarksDraft] = useState(row.remarks);
 
-	useEffect(() => {
-		setRows(train.timetableRows || []);
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [train.id]);
+	// Reseed when the row data changes (e.g. after a mutation refetch).
+	const prevRemarksRef = useRef(row.remarks);
+	if (prevRemarksRef.current !== row.remarks) {
+		prevRemarksRef.current = row.remarks;
+		setRemarksDraft(row.remarks);
+	}
+
+	const rowStyle: CSSProperties = row.isPass
+		? { background: "var(--color-pass-bg)" }
+		: row.isOperationOnlyStop
+			? { background: "var(--color-oponly-bg)" }
+			: isLast
+				? { background: "var(--color-laststop-bg)" }
+				: {};
+
+	return (
+		<tr key={row.id} style={rowStyle}>
+			<td className="row-num">
+				{idx + 1}
+				{isLast && (
+					<div
+						style={{
+							fontSize: 9,
+							color: "var(--color-success)",
+							fontWeight: 600,
+							marginTop: -2,
+						}}>
+						終
+					</div>
+				)}
+			</td>
+			<td>
+				<div
+					className="station-cell"
+					onDoubleClick={onOpenDetail}
+					title="ダブルクリックで詳細編集">
+					<span className={`station-name ${!row.stationName ? "empty" : ""}`}>
+						{row.stationName || "(駅名未設定)"}
+					</span>
+				</div>
+			</td>
+			<td style={row.isPass ? { color: "oklch(0.55 0.12 15)" } : {}}>
+				<TimeCell
+					value={row.arrive}
+					displayText={row.arriveDisplayText || undefined}
+					formattedValue={row.arriveDisplayText ? undefined : fmt.arriveFormatted}
+					onChange={(v) => onUpdateRow(idx, "arrive", v)}
+					onChangeText={(v) => onUpdateRow(idx, "arriveDisplayText", v)}
+					muted={!!row.arriveHidden}
+				/>
+			</td>
+			<td style={row.isPass ? { color: "oklch(0.55 0.12 15)" } : {}}>
+				{isLast && !row.departure && !row.departureDisplayText ? (
+					<span
+						className="time-display"
+						style={{
+							textAlign: "center",
+							justifyContent: "center",
+							opacity: 0.35,
+							fontFamily: "var(--font-mono)",
+							fontSize: 12,
+							cursor: "default",
+						}}>
+						{"=="}
+					</span>
+				) : (
+					<TimeCell
+						value={row.departure}
+						displayText={row.departureDisplayText || undefined}
+						formattedValue={row.departureDisplayText ? undefined : fmt.departureFormatted}
+						onChange={(v) => onUpdateRow(idx, "departure", v)}
+						onChangeText={(v) => onUpdateRow(idx, "departureDisplayText", v)}
+						muted={!!row.departureHidden}
+					/>
+				)}
+			</td>
+			<td className="toggle-cell">
+				<input
+					type="checkbox"
+					className="toggle-check"
+					checked={!!row.isPass}
+					onChange={(e) => onUpdateRow(idx, "isPass", e.target.checked)}
+				/>
+			</td>
+			<td>
+				<div style={{ display: "flex", alignItems: "center", gap: 3 }}>
+					<input
+						className="remarks-input"
+						value={remarksDraft || ""}
+						onChange={(e) => setRemarksDraft(e.target.value)}
+						onBlur={(e) => {
+							const v = e.target.value;
+							if (v !== row.remarks) {
+								onUpdateRow(idx, "remarks", v);
+							}
+						}}
+						placeholder="—"
+					/>
+					<BBCodeEditButton
+						title="記事"
+						value={remarksDraft || ""}
+						onChange={(v) => {
+							setRemarksDraft(v);
+							onUpdateRow(idx, "remarks", v);
+						}}
+						multiline={false}
+					/>
+				</div>
+			</td>
+			<td>
+				<div className="actions-cell">
+					<button
+						className="row-action-btn"
+						onClick={onOpenDetail}
+						title={t.detail}>
+						⚙
+					</button>
+					<button
+						className="row-action-btn del"
+						onClick={() => onDeleteRow(idx)}
+						title={t.delete}>
+						✕
+					</button>
+				</div>
+			</td>
+		</tr>
+	);
+}
+
+interface StationPickerModalProps {
+	stations: Station[];
+	usedStationIds: Set<string>;
+	onPick: (station: Station) => void;
+	onClose: () => void;
+}
+
+function StationPickerModal({ stations, usedStationIds, onPick, onClose }: StationPickerModalProps) {
+	const [filter, setFilter] = useState("");
+	const filtered = stations.filter((s) => {
+		if (usedStationIds.has(s.id)) return false;
+		if (filter === "") return true;
+		const q = filter.toLowerCase();
+		return (
+			s.stationName.toLowerCase().includes(q) ||
+			(s.fullName || "").toLowerCase().includes(q)
+		);
+	});
+
+	return (
+		<div
+			className="modal-backdrop"
+			onClick={(e) => e.target === e.currentTarget && onClose()}>
+			<div className="modal" style={{ maxWidth: 400, width: "100%" }}>
+				<div className="modal-header">
+					<span className="modal-title">駅を選択</span>
+					<button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button>
+				</div>
+				<div className="modal-body" style={{ padding: "8px 12px" }}>
+					<input
+						autoFocus
+						value={filter}
+						onChange={(e) => setFilter(e.target.value)}
+						placeholder="駅名で絞り込み…"
+						style={{
+							width: "100%",
+							padding: "6px 10px",
+							border: "1px solid var(--color-border)",
+							borderRadius: "var(--radius)",
+							background: "var(--color-content)",
+							color: "var(--color-text)",
+							fontFamily: "inherit",
+							fontSize: 13,
+							marginBottom: 8,
+						}}
+					/>
+					<div style={{ maxHeight: 320, overflowY: "auto" }}>
+						{filtered.length === 0 ? (
+							<div style={{ padding: "20px 0", textAlign: "center", color: "var(--color-text-muted)", fontSize: 12 }}>
+								{stations.length === 0
+									? "このプロジェクトには駅が登録されていません"
+									: "該当する駅がありません"}
+							</div>
+						) : (
+							filtered.map((s) => (
+								<button
+									key={s.id}
+									onClick={() => onPick(s)}
+									style={{
+										display: "block",
+										width: "100%",
+										padding: "8px 10px",
+										border: "none",
+										borderBottom: "1px solid var(--color-border)",
+										background: "transparent",
+										textAlign: "left",
+										cursor: "pointer",
+										color: "var(--color-text)",
+									}}>
+									<span style={{ fontWeight: 500 }}>{s.stationName}</span>
+									{s.fullName && s.fullName !== s.stationName && (
+										<span style={{ fontSize: 11, color: "var(--color-text-muted)", marginLeft: 6 }}>
+											{s.fullName}
+										</span>
+									)}
+								</button>
+							))
+						)}
+					</div>
+				</div>
+			</div>
+		</div>
+	);
+}
+
+interface TimetableGridProps {
+	train: Train;
+	stations: Station[];
+	onCreateRow: (row: TimetableRow) => void;
+	onUpdateRow: (rowId: string, row: TimetableRow) => void;
+	onDeleteRow: (rowId: string) => void;
+	t: Strings;
+}
+
+export function TimetableGrid({ train, stations, onCreateRow, onUpdateRow, onDeleteRow, t }: TimetableGridProps) {
+	const rows = train.timetableRows ?? [];
+	const [detailRow, setDetailRow] = useState<TimetableRow | null>(null);
+	const [showPicker, setShowPicker] = useState(false);
 
 	const rowFormats = useMemo(
 		() => TRViSTime.computeRowFormats(rows),
 		[rows]
 	);
 
-	const lastStationIdx = useMemo(() => {
-		for (let i = rows.length - 1; i >= 0; i--) {
-			const r = rows[i];
-			if (!r) continue;
-			const isInfo = r.recordType === 2 || r.recordType === "2";
-			if (!isInfo) return i;
-		}
-		return -1;
-	}, [rows]);
+	const lastStationIdx = rows.length - 1;
 
 	const effectiveLastStop = (row: TimetableRow, idx: number): boolean => {
-		const isInfo = row.recordType === 2 || row.recordType === "2";
-		if (isInfo) return false;
 		if (idx === lastStationIdx) return row.isLastStop !== false;
 		return !!row.isLastStop;
 	};
@@ -942,103 +1086,23 @@ export function TimetableGrid({ train, onUpdateTrain, t }: TimetableGridProps) {
 			key: K,
 			val: TimetableRow[K]
 		) => {
-			setRows((rs) => {
-				const next = rs.map((r, i) =>
-					i === idx ? { ...r, [key]: val } : r
-				);
-				onUpdateTrain({ ...train, timetableRows: next });
-				return next;
-			});
+			const row = rows[idx];
+			if (!row) return;
+			const updated = { ...row, [key]: val };
+			onUpdateRow(updated.id, updated);
 		},
-		[train, onUpdateTrain]
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[rows, onUpdateRow]
 	);
 
-	const addRow = () => {
-		const id = "r" + Date.now();
-		const next: TimetableRow[] = [
-			...rows,
-			{
-				id,
-				stationName: "",
-				arrive: "",
-				departure: "",
-				trackName: "1",
-				isPass: false,
-				isOperationOnlyStop: false,
-				hasBracket: false,
-				recordType: "station",
-				driveTime_MM: 0,
-				driveTime_SS: 0,
-				runInLimit: "",
-				runOutLimit: "",
-				remarks: "",
-				workType: "",
-				showHH: undefined,
-			},
-		];
-		setRows(next);
-		onUpdateTrain({ ...train, timetableRows: next });
-	};
-
 	const deleteRow = (idx: number) => {
-		const next = rows.filter((_, i) => i !== idx);
-		setRows(next);
-		onUpdateTrain({ ...train, timetableRows: next });
+		const row = rows[idx];
+		if (!row) return;
+		onDeleteRow(row.id);
 	};
 
 	const saveDetail = (updated: TimetableRow) => {
-		const next = rows.map((r) => (r.id === updated.id ? updated : r));
-		setRows(next);
-		onUpdateTrain({ ...train, timetableRows: next });
-	};
-
-	const addInfoRow = () => {
-		const id = "r" + Date.now();
-		const next: TimetableRow[] = [
-			...rows,
-			{
-				id,
-				stationName: "",
-				arrive: "",
-				departure: "",
-				trackName: "",
-				isPass: false,
-				isOperationOnlyStop: false,
-				hasBracket: false,
-				recordType: 2,
-				driveTime_MM: 0,
-				driveTime_SS: 0,
-				runInLimit: "",
-				runOutLimit: "",
-				remarks: "",
-				workType: "",
-			},
-		];
-		setRows(next);
-		onUpdateTrain({ ...train, timetableRows: next });
-	};
-
-	// (The prototype referenced an undefined `onDragStart`; defined here.)
-	const onDragStart = (i: number) => setDragIdx(i);
-
-	const onDrop = (i: number) => {
-		if (dragIdx === null || dragIdx === i) return;
-		const next = [...rows];
-		const [item] = next.splice(dragIdx, 1);
-		if (!item) return;
-		next.splice(i, 0, item);
-		setRows(next);
-		onUpdateTrain({ ...train, timetableRows: next });
-		setDragIdx(null);
-		setDragOver(null);
-	};
-
-	const rowStyle = (r: TimetableRow, isLast: boolean): CSSProperties => {
-		if (r.isPass) return { background: "var(--color-pass-bg)" };
-		if (r.isOperationOnlyStop)
-			return { background: "var(--color-oponly-bg)" };
-		if (isLast) return { background: "var(--color-laststop-bg)" };
-		return {};
+		onUpdateRow(updated.id, updated);
 	};
 
 	return (
@@ -1092,24 +1156,20 @@ export function TimetableGrid({ train, onUpdateTrain, t }: TimetableGridProps) {
 			<div className="tgrid-scroll">
 				<table className="tgrid">
 					<colgroup>
-						<col style={{ width: 24 }} />
 						<col style={{ width: 28 }} />
 						<col style={{ width: 128 }} />
 						<col style={{ width: 80 }} />
 						<col style={{ width: 80 }} />
-						<col style={{ width: 50 }} />
 						<col style={{ width: 42 }} />
 						<col style={{ width: "auto" }} />
 						<col style={{ width: 64 }} />
 					</colgroup>
 					<thead>
 						<tr>
-							<th></th>
 							<th>#</th>
 							<th className="lh">{t.stationName}</th>
 							<th>{t.arrive}</th>
 							<th>{t.depart}</th>
-							<th>{t.track}</th>
 							<th title={t.pass}>通</th>
 							<th className="lh">{t.remarks}</th>
 							<th></th>
@@ -1118,301 +1178,20 @@ export function TimetableGrid({ train, onUpdateTrain, t }: TimetableGridProps) {
 					<tbody>
 						{rows.map((row, idx) => {
 							const isLast = effectiveLastStop(row, idx);
-							const isInfoRow =
-								row.recordType === 2 || row.recordType === "2";
 							const fmt: Partial<RowFormat> = rowFormats[idx] ?? {};
 
-							if (isInfoRow) {
-								return (
-									<tr
-										key={row.id}
-										className={dragOver === idx ? "drag-over" : ""}
-										draggable
-										onDragStart={() => onDragStart(idx)}
-										onDragOver={(e) => {
-											e.preventDefault();
-											setDragOver(idx);
-										}}
-										onDragLeave={() => setDragOver(null)}
-										onDrop={() => onDrop(idx)}
-										onDragEnd={() => {
-											setDragIdx(null);
-											setDragOver(null);
-										}}
-										style={{
-											background:
-												"var(--color-info-bg, color-mix(in srgb, var(--color-accent) 8%, transparent))",
-										}}>
-										<td
-											style={{
-												cursor: "grab",
-												padding: 0,
-												textAlign: "center",
-											}}>
-											<div
-												className="drag-handle"
-												title="ドラッグして並べ替え">
-												⠿
-											</div>
-										</td>
-										<td
-											className="row-num"
-											style={{
-												fontSize: 9,
-												color: "var(--color-accent)",
-												fontWeight: 600,
-												textAlign: "center",
-											}}>
-											情報
-										</td>
-										<td colSpan={6} style={{ padding: "4px 10px" }}>
-											<div
-												style={{
-													display: "flex",
-													alignItems: "center",
-													gap: 6,
-												}}>
-												<input
-													value={row.stationName || ""}
-													onChange={(e) =>
-														updateRow(
-															idx,
-															"stationName",
-															e.target.value
-														)
-													}
-													placeholder="情報テキストを入力…"
-													style={{
-														flex: 1,
-														border: "none",
-														outline: "none",
-														background: "transparent",
-														fontSize: 13,
-														fontWeight: 500,
-														color: "var(--color-text)",
-														fontFamily: "inherit",
-													}}
-												/>
-												<BBCodeEditButton
-													title="InfoRow テキスト"
-													value={row.stationName || ""}
-													onChange={(v) =>
-														updateRow(idx, "stationName", v)
-													}
-													multiline={false}
-												/>
-											</div>
-										</td>
-										<td>
-											<div className="actions-cell">
-												<button
-													className="row-action-btn"
-													onClick={() => setDetailRow(row)}
-													title="詳細設定">
-													⚙
-												</button>
-												<button
-													className="row-action-btn del"
-													onClick={() => deleteRow(idx)}
-													title="削除">
-													✕
-												</button>
-											</div>
-										</td>
-									</tr>
-								);
-							}
 							return (
-								<tr
+								<StationRow
 									key={row.id}
-									style={rowStyle(row, isLast)}
-									className={dragOver === idx ? "drag-over" : ""}
-									draggable
-									onDragStart={() => onDragStart(idx)}
-									onDragOver={(e) => {
-										e.preventDefault();
-										setDragOver(idx);
-									}}
-									onDragLeave={() => setDragOver(null)}
-									onDrop={() => onDrop(idx)}
-									onDragEnd={() => {
-										setDragIdx(null);
-										setDragOver(null);
-									}}>
-									<td
-										style={{
-											cursor: "grab",
-											padding: 0,
-											textAlign: "center",
-										}}>
-										<div
-											className="drag-handle"
-											title="ドラッグして並べ替え">
-											⠿
-										</div>
-									</td>
-									<td className="row-num">
-										{idx + 1}
-										{isLast && (
-											<div
-												style={{
-													fontSize: 9,
-													color: "var(--color-success)",
-													fontWeight: 600,
-													marginTop: -2,
-												}}>
-												終
-											</div>
-										)}
-									</td>
-									<td>
-										<div
-											className="station-cell"
-											onDoubleClick={() => setDetailRow(row)}
-											title="ダブルクリックで詳細編集">
-											<span
-												className={`station-name ${!row.stationName ? "empty" : ""}`}>
-												<BBCodeInlineLabel
-													value={row.stationName}
-													emptyPlaceholder="(駅名未設定)"
-												/>
-											</span>
-											<BBCodeEditButton
-												title="駅名"
-												value={row.stationName || ""}
-												onChange={(v) =>
-													updateRow(idx, "stationName", v)
-												}
-												multiline={false}
-											/>
-										</div>
-									</td>
-									<td
-										style={
-											row.isPass
-												? { color: "oklch(0.55 0.12 15)" }
-												: {}
-										}>
-										<TimeCell
-											value={row.arrive}
-											displayText={row.arriveDisplayText || undefined}
-											formattedValue={
-												row.arriveDisplayText
-													? undefined
-													: fmt.arriveFormatted
-											}
-											onChange={(v) => updateRow(idx, "arrive", v)}
-											onChangeText={(v) =>
-												updateRow(idx, "arriveDisplayText", v)
-											}
-											muted={!!row.arriveHidden}
-										/>
-									</td>
-									<td
-										style={
-											row.isPass
-												? { color: "oklch(0.55 0.12 15)" }
-												: {}
-										}>
-										{isLast &&
-										!row.departure &&
-										!row.departureDisplayText ? (
-											<span
-												className="time-display"
-												style={{
-													textAlign: "center",
-													justifyContent: "center",
-													opacity: 0.35,
-													fontFamily: "var(--font-mono)",
-													fontSize: 12,
-													cursor: "default",
-												}}>
-												{"=="}
-											</span>
-										) : (
-											<TimeCell
-												value={row.departure}
-												displayText={
-													row.departureDisplayText || undefined
-												}
-												formattedValue={
-													row.departureDisplayText
-														? undefined
-														: fmt.departureFormatted
-												}
-												onChange={(v) =>
-													updateRow(idx, "departure", v)
-												}
-												onChangeText={(v) =>
-													updateRow(idx, "departureDisplayText", v)
-												}
-												muted={!!row.departureHidden}
-											/>
-										)}
-									</td>
-									<td style={{ color: "oklch(0.55 0.12 15)" }}>
-										<input
-											className="track-input"
-											value={row.trackName || ""}
-											onChange={(e) =>
-												updateRow(idx, "trackName", e.target.value)
-											}
-											placeholder="—"
-											style={row.trackHidden ? { opacity: 0.18 } : {}}
-										/>
-									</td>
-									<td className="toggle-cell">
-										<input
-											type="checkbox"
-											className="toggle-check"
-											checked={!!row.isPass}
-											onChange={(e) =>
-												updateRow(idx, "isPass", e.target.checked)
-											}
-										/>
-									</td>
-									<td>
-										<div
-											style={{
-												display: "flex",
-												alignItems: "center",
-												gap: 3,
-											}}>
-											<input
-												className="remarks-input"
-												value={row.remarks || ""}
-												onChange={(e) =>
-													updateRow(idx, "remarks", e.target.value)
-												}
-												placeholder="—"
-											/>
-											<BBCodeEditButton
-												title="記事"
-												value={row.remarks || ""}
-												onChange={(v) =>
-													updateRow(idx, "remarks", v)
-												}
-												multiline={false}
-											/>
-										</div>
-									</td>
-									<td>
-										<div className="actions-cell">
-											<button
-												className="row-action-btn"
-												onClick={() => setDetailRow(row)}
-												title={t.detail}>
-												⚙
-											</button>
-											<button
-												className="row-action-btn del"
-												onClick={() => deleteRow(idx)}
-												title={t.delete}>
-												✕
-											</button>
-										</div>
-									</td>
-								</tr>
+									row={row}
+									idx={idx}
+									isLast={isLast}
+									fmt={fmt}
+									onUpdateRow={updateRow}
+									onDeleteRow={deleteRow}
+									onOpenDetail={() => setDetailRow(row)}
+									t={t}
+								/>
 							);
 						})}
 					</tbody>
@@ -1420,14 +1199,10 @@ export function TimetableGrid({ train, onUpdateTrain, t }: TimetableGridProps) {
 			</div>
 
 			<div className="add-row-bar">
-				<button className="btn btn-secondary btn-sm" onClick={addRow}>
-					＋ {t.addRow}
-				</button>
 				<button
-					className="btn btn-ghost btn-sm"
-					onClick={addInfoRow}
-					title="横幅全体を使った情報行を追加">
-					＋ 情報行
+					className="btn btn-secondary btn-sm"
+					onClick={() => setShowPicker(true)}>
+					＋ {t.addRow}
 				</button>
 				{rows.length > 0 && (
 					<span
@@ -1447,14 +1222,43 @@ export function TimetableGrid({ train, onUpdateTrain, t }: TimetableGridProps) {
 				<RowDetailModal
 					row={detailRow}
 					isFirstRow={rows[0]?.id === detailRow.id}
-					isLastIdx={
-						lastStationIdx >= 0 &&
-						rows[lastStationIdx]?.id === detailRow.id
-					}
+					isLastIdx={rows[lastStationIdx]?.id === detailRow.id}
 					allRows={rows}
 					t={t}
 					onSave={saveDetail}
 					onClose={() => setDetailRow(null)}
+				/>
+			)}
+
+			{showPicker && (
+				<StationPickerModal
+					stations={stations}
+					usedStationIds={new Set(rows.map((r) => r.stationId ?? "").filter(Boolean))}
+					onPick={(picked) => {
+						const newRow: TimetableRow = {
+							id: "",
+							stationId: picked.id,
+							stationName: picked.stationName,
+							fullName: picked.fullName,
+							arrive: "",
+							departure: "",
+							trackName: "",
+							isPass: false,
+							isOperationOnlyStop: false,
+							hasBracket: false,
+							isLastStop: undefined,
+							recordType: "station",
+							driveTime_MM: 0,
+							driveTime_SS: 0,
+							runInLimit: "",
+							runOutLimit: "",
+							remarks: "",
+							workType: "",
+						};
+						onCreateRow(newRow);
+						setShowPicker(false);
+					}}
+					onClose={() => setShowPicker(false)}
 				/>
 			)}
 		</div>
