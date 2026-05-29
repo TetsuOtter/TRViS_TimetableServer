@@ -3,8 +3,9 @@
 [TRViS](https://github.com/TetsuOtter/TRViS) 用の時刻表データを編集する Web フロントエンドです。
 React 18 + TypeScript + [Vite](https://vitejs.dev/) で実装し、パッケージ管理は Yarn 4（Berry）です。
 
-バックエンド API は [`../backend/`](../backend/README.md)、API 仕様は
-[`../api_defs/`](../api_defs/README.md) を参照してください。
+バックエンド API は [`../backend/`](../backend/README.md) を参照してください。
+API 仕様は `../backend/openapi.json`（swagger-php によるコードファースト生成）が source-of-truth です。
+フロントエンドの型は `bash ../backend/gen_ts.sh` で `backend/openapi.json` から再生成します。
 
 ## 技術スタック
 
@@ -13,7 +14,7 @@ React 18 + TypeScript + [Vite](https://vitejs.dev/) で実装し、パッケー�
 | UI             | React 18 + TypeScript（独自デザインバンドル）                              |
 | ビルド         | Vite 5（`@vitejs/plugin-react-swc`、`vite-plugin-svgr`）                   |
 | データ取得     | [TanStack Query](https://tanstack.com/query)（正規化エンティティ）         |
-| API クライアント | `trvis-api`（OpenAPI から生成。`packages/trvis-api` をローカル参照）      |
+| API クライアント | [openapi-fetch](https://openapi-ts.dev/openapi-fetch/) + openapi-typescript 生成の `src/api/schema.ts` |
 | 認証           | Firebase Authentication（開発時は Auth Emulator）                          |
 | 国際化         | i18next / react-i18next                                                     |
 | パッケージ管理 | Yarn 4（`packageManager: yarn@4.13.0`、`nodeLinker: node-modules`）        |
@@ -27,7 +28,7 @@ React 18 + TypeScript + [Vite](https://vitejs.dev/) で実装し、パッケー�
 ```text
 main.tsx       … エントリ。AppProviders → App をマウント
 app/           … App / AppProviders / AuthContext / AuthGate / SettingsContext
-api/           … client・adapters・instances・queryClient・queryKeys と hooks/
+api/           … client.ts（openapi-fetch ラッパー）・adapters.ts・schema.ts（生成型）・queryClient・queryKeys・hooks/
 components/    … 画面コンポーネント（ProjectList, TimetableGrid 等）
 data/          … サンプルデータ
 firebase/      … Firebase 初期化
@@ -35,9 +36,7 @@ i18n/          … 翻訳リソース
 lib/ utils/ types/ styles/ assets/
 ```
 
-`packages/trvis-api/` は OpenAPI Generator（`typescript-fetch`）の出力です。
-`package.json` で `trvis-api: link:./packages/trvis-api` として参照しているため、
-**フロントをビルドする前に必ずこのパッケージをビルド**しておく必要があります（後述）。
+API 型は `bash ../backend/gen_ts.sh` で `backend/openapi.json` から再生成します（生成物ですがコミット対象）。
 
 ## 環境変数
 
@@ -63,9 +62,6 @@ cp .env.sample .env
 corepack enable                         # Yarn 4 を有効化
 yarn install --immutable                # 依存をインストール
 
-# trvis-api（生成クライアント）を先にビルド
-( cd packages/trvis-api && npm install && npm run build )
-
 yarn dev        # 開発サーバ（Vite）
 yarn build      # tsc && vite build（本番ビルド → dist/）
 yarn lint       # ESLint（--max-warnings 0）
@@ -73,9 +69,7 @@ yarn i18n       # i18next-parser で翻訳キー抽出
 yarn preview    # ビルド成果物のプレビュー
 ```
 
-`vite.config.ts` は `build.commonjsOptions.include` に `packages/trvis-api` を含めて
-リンクされた生成パッケージを取り込みます。また本番ビルドでは `console` / `debugger` を除去します。
-この設定は意図的なので変更しないでください。
+本番ビルドでは `console` / `debugger` を除去します。
 
 ## Docker
 
@@ -90,5 +84,5 @@ Docker Compose で起動すると、proxy（nginx）経由で `http://localhost/
 ## CI
 
 `.github/workflows/frontend-tests.yml` がマージゲートです。
-`trvis-api` の生成クライアントをビルド → `tsc`（型検査）→ `vite build` を実行します。
+`yarn install --immutable` → `tsc`（型検査）→ `vite build` を実行します。
 テストランナーは無く、**型検査が正しさの基準**です。型エラーはマージをブロックします。

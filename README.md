@@ -30,8 +30,7 @@ Docker Compose で一括起動できる形にまとめています。
 
 | パス          | 内容                                                                 |
 | ------------- | -------------------------------------------------------------------- |
-| `api_defs/`   | OpenAPI 仕様（API 契約の source-of-truth）。ここからコードを生成する  |
-| `backend/`    | PHP / Slim 4 製の REST API。`api_defs` から雛形を生成し実装を肉付け   |
+| `backend/`    | PHP / Slim 4 製の REST API。swagger-php が OpenAPI の source-of-truth (`backend/openapi.json` を生成) |
 | `frontend/`   | React + Vite + TypeScript の時刻表エディタ                           |
 | `mysql/`      | MySQL の初期スキーマ・設定・ログ                                      |
 | `firebase/`   | Firebase Auth Emulator のイメージと設定                              |
@@ -89,14 +88,37 @@ Docker Compose で一括起動できる形にまとめています。
   未認証でも参照系は通り、その利用者が見える範囲（=匿名なら空）だけが返ります。
   作成・更新・削除はトークン必須です。詳細は [`backend/README.md`](backend/README.md)。
 
-API 仕様は [`api_defs/`](api_defs/README.md) の OpenAPI 定義が正です。
+API 仕様は **コードファースト**です。`backend/src/` の PHP `#[OA\*]` 属性から swagger-php が `backend/openapi.json` を生成します。フロントエンドの型は `backend/gen_ts.sh` を実行すると `backend/openapi.json` から `frontend/src/api/schema.ts` が再生成されます（生成物ですがコミット対象）。
+
+## テスト
+
+バックエンドの PHPUnit には実 DB に接続する統合テストが含まれます（`tests/Api/` は実際の MySQL に対して SQL を実行します）。本番/開発スタックの `webmon-db` には一切触れない、使い捨ての専用 compose を用意しています。
+
+```sh
+# 全テストを実行（test-runner の終了コードがそのまま伝播するのでゲートに使える）
+docker compose -f docker-compose.test.yaml up --build \
+  --abort-on-container-exit --exit-code-from test-runner
+
+# 後始末（使い捨て DB と dev 依存ボリュームを破棄）
+docker compose -f docker-compose.test.yaml down -v
+
+# 一部のテストだけ実行（引数はそのまま phpunit に渡る）
+docker compose -f docker-compose.test.yaml run --rm test-runner \
+  vendor/bin/phpunit --filter testTombstone
+```
+
+- CI（`backend-tests.yml`）と同じ手順で動きます: MySQL 8.0 を `mysql/init_sql` で seed → スキーマ投入のスモークチェック → `composer test`（**PHP 8.2** = 正準ランタイム）。
+- 専用のプロジェクト名・ネットワーク・コンテナ名を使い、`test-db` のデータは tmpfs（永続ボリュームなし）なので本番の `webmon-db` と混ざりません。dev 依存もランナー専用ボリュームに入り、ホストの `vendor/` を上書きしません。
+- スモークチェックがスキーマ未投入を検出して必ず落とすため、「DB 未到達で全テストが静かにスキップ → 嘘の緑」を防ぎます。
+
+> Docker を使わずローカルの PHP で回す場合は、別途 MySQL を用意して `mysql/init_sql/0_create_db.sql` を `test` データベースへ投入し、`TEST_DB_DSN` / `TEST_DB_USER` / `TEST_DB_PASS` を設定したうえで `backend/` で `composer test` を実行します（DB 未接続時は統合テストがスキップされます）。具体的な接続値は `.github/workflows/backend-tests.yml` を参照してください。
 
 ## CI
 
 GitHub Actions でマージゲートを構成しています。
 
 - `.github/workflows/backend-tests.yml` — PHP 8.2 + MySQL 8.0 で PHPUnit（実 DB 統合テスト含む）
-- `.github/workflows/frontend-tests.yml` — `trvis-api` 生成クライアントのビルド → `tsc` → `vite build`
+- `.github/workflows/frontend-tests.yml` — `yarn install --immutable` → `tsc` → `vite build`
 
 ## ライセンス
 

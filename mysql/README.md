@@ -9,6 +9,7 @@ Docker Compose では `mysql`（コンテナ名 `webmon-db`）として起動し
 | パス             | 内容                                                                       |
 | ---------------- | -------------------------------------------------------------------------- |
 | `init_sql/`      | 初回起動時に実行される初期化 SQL                                           |
+| `migrations/`    | 既存DBへ手動適用するスキーマ差分（マイグレーションツール無し）             |
 | `conf.d/my.cnf`  | MySQL 設定（`utf8mb4`、スロークエリログ等）                                |
 | `logs/`          | エラーログ・スロークエリログのバインド先（ログ本体は Git 管理外）          |
 | `.env.sample`    | 認証情報のテンプレート                                                      |
@@ -17,23 +18,25 @@ Docker Compose では `mysql`（コンテナ名 `webmon-db`）として起動し
 ## スキーマ（正は SQL ファイル）
 
 **スキーマの source-of-truth は [`init_sql/0_create_db.sql`](init_sql/0_create_db.sql)** です。
-このファイルに定義された 17 テーブルが初回起動時に作成されます:
+このファイルに定義された 16 テーブルが初回起動時に作成されます:
 
 ```text
 projects                  … 権限の最上位単位（旧 WorkGroup 権限を置き換える privilege root）
 work_groups               … projects 配下（projects_id は NOT NULL）
 project_lines             … 路線（後述の予約語回避）
-project_stations          … Project 共通の駅
+stations                  … Project 共通の駅（旧 work-group 配下 stations を廃止し project_stations を統合・リネーム）
 stations_on_line          … 路線上の駅
 stop_patterns             … 停車パターン
 stop_pattern_rows         … 停車パターンの行
-works / trains / timetable_rows / stations / station_tracks / colors
+works / trains / timetable_rows / station_tracks / colors
 api_keys / invite_keys
 work_groups_privileges / projects_privileges
 ```
 
 FK のルート連鎖は `projects` を起点に
-`work_groups` / `project_lines` / `project_stations` / `stop_patterns` へ伸びます。
+`work_groups` / `project_lines` / `stations` / `stop_patterns` へ伸びます。
+`colors` と `station_tracks` も Project-rooted です（`colors.projects_id`、`station_tracks` は親 `stations` 経由）。
+`timetable_rows` は work-group 配下ですが、参照する `stations` / `station_tracks` / `colors` は Project-rooted です。
 
 ### 設計上の注意
 
@@ -45,7 +48,7 @@ FK のルート連鎖は `projects` を起点に
 
 旧版で手書きしていたデータモデル仕様（旧 `work_groups` 権限ベース）は廃止しました。
 現行スキーマは必ず SQL ファイルを参照してください。
-API としての見え方は [`../api_defs/README.md`](../api_defs/README.md) を参照。
+API としての見え方は [`../README.md`](../README.md) の「API」セクションおよび `../backend/openapi.json`（swagger-php 生成）を参照。
 
 ## 認証情報
 
