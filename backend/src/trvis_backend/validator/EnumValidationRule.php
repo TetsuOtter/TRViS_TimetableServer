@@ -3,7 +3,6 @@
 namespace dev_t0r\trvis_backend\validator;
 
 use dev_t0r\trvis_backend\RetValueOrError;
-use Enum;
 
 final class EnumValidationRule extends ValidationRuleBase
 {
@@ -32,8 +31,7 @@ final class EnumValidationRule extends ValidationRuleBase
 		int|string $index,
 		bool $isKvpArray,
 		bool $checkRequired = true,
-	): RetValueOrError
-	{
+	): RetValueOrError {
 		RetValueOrError::class;
 		if (!self::isPropExists($d, $isKvpArray, $this->key)) {
 			if ($checkRequired && $this->isRequired) {
@@ -59,8 +57,7 @@ final class EnumValidationRule extends ValidationRuleBase
 			);
 		}
 
-		try
-		{
+		try {
 			if (is_string($value) && $this->isFromStringExists) {
 				$value = $this->className::fromString($value);
 			} else {
@@ -69,9 +66,7 @@ final class EnumValidationRule extends ValidationRuleBase
 
 			self::setValue($d, $isKvpArray, $this->key, $value);
 			return RetValueOrError::withValue(null);
-		}
-		catch (\Throwable $e)
-		{
+		} catch (\Throwable $e) {
 			return RetValueOrError::withBadReq(
 				"Invalid value for property: '{$this->key}' @[$index] (expected: int/string, actual: string) - {$e->getMessage()}",
 			);

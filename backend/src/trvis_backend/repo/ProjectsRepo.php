@@ -21,7 +21,7 @@ final class ProjectsRepo
 	) {
 	}
 
-	private static function _fetchResultToProject(
+	private static function fetchResultToProject(
 		mixed $data
 	): Project {
 		$project = new Project();
@@ -110,7 +110,7 @@ final class ProjectsRepo
 			return Utils::errProjectNotFound();
 		}
 
-		$project = $this->_fetchResultToProject($data);
+		$project = $this->fetchResultToProject($data);
 		$this->logger->debug("select result - project: {project}", ['project' => $project]);
 		return RetValueOrError::withValue($project);
 	}
@@ -212,7 +212,7 @@ final class ProjectsRepo
 		$this->logger->debug("select success - rowCount: {rowCount}", ['rowCount' => $query->rowCount()]);
 
 		$projects = array_map(
-			fn ($data) => $this->_fetchResultToProject($data),
+			fn ($data) => $this->fetchResultToProject($data),
 			$query->fetchAll(PDO::FETCH_ASSOC),
 		);
 
@@ -252,7 +252,8 @@ final class ProjectsRepo
 		}
 
 		$this->logger->debug("select success - rowCount: {rowCount}", ['rowCount' => $query->rowCount()]);
-		$totalCount = $query->fetch(PDO::FETCH_ASSOC)['count'];
+		$row = $query->fetch(PDO::FETCH_ASSOC);
+		$totalCount = $row ? (int)$row['count'] : 0;
 
 		$this->logger->debug("select result - totalCount: {totalCount}", ['totalCount' => $totalCount]);
 		return RetValueOrError::withValue($totalCount);
@@ -294,9 +295,12 @@ final class ProjectsRepo
 			}
 
 			$errCode = $query->errorCode();
-			$errorInfo = implode('\n\t', $query->errorInfo());
+			$errorInfoArr = $query->errorInfo();
+			$driverCode = isset($errorInfoArr[1]) ? (int)$errorInfoArr[1] : null;
+			$errorInfo = implode('\n\t', $errorInfoArr);
 		} catch (\PDOException $ex) {
 			$errCode = strval($ex->getCode());
+			$driverCode = isset($ex->errorInfo[1]) ? (int)$ex->errorInfo[1] : null;
 			$errorInfo = $ex->getMessage();
 		}
 
@@ -307,11 +311,7 @@ final class ProjectsRepo
 				"errorInfo" => $errorInfo,
 			],
 		);
-		if ($errCode === '23000') {
-			return RetValueOrError::withError(Constants::HTTP_CONFLICT, "Project already exists");
-		}
-
-		return RetValueOrError::withError(Constants::HTTP_INTERNAL_SERVER_ERROR, "Failed to execute SQL - " . $errCode);
+		return Utils::mapPdoIntegrityError($errCode, $driverCode, "Project");
 	}
 
 	/**
@@ -381,9 +381,12 @@ final class ProjectsRepo
 			}
 
 			$errCode = $query->errorCode();
-			$errorInfo = implode('\n\t', $query->errorInfo());
+			$errorInfoArr = $query->errorInfo();
+			$driverCode = isset($errorInfoArr[1]) ? (int)$errorInfoArr[1] : null;
+			$errorInfo = implode('\n\t', $errorInfoArr);
 		} catch (\PDOException $ex) {
 			$errCode = strval($ex->getCode());
+			$driverCode = isset($ex->errorInfo[1]) ? (int)$ex->errorInfo[1] : null;
 			$errorInfo = $ex->getMessage();
 		}
 
@@ -394,11 +397,7 @@ final class ProjectsRepo
 				"errorInfo" => $errorInfo,
 			],
 		);
-		if ($errCode === '23000') {
-			return RetValueOrError::withError(Constants::HTTP_CONFLICT, "Project already exists");
-		}
-
-		return RetValueOrError::withError(Constants::HTTP_INTERNAL_SERVER_ERROR, "Failed to execute SQL - " . $errCode);
+		return Utils::mapPdoIntegrityError($errCode, $driverCode, "Project");
 	}
 
 	/**
@@ -448,7 +447,6 @@ final class ProjectsRepo
 			} else {
 				return RetValueOrError::withValue(null);
 			}
-
 		} catch (\PDOException $ex) {
 			$errCode = $ex->getCode();
 			$this->logger->error(

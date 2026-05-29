@@ -56,6 +56,7 @@ final class ProjectsService
 			],
 		);
 
+		// M10: two independent SELECTs — accepted (count, page) eventual-consistency; see RetValueOrError::withTotalCount().
 		$totalCountResult = $this->projectsRepo->selectProjectPageTotalCount(
 			userId: $userId,
 			topId: $topId,
@@ -112,16 +113,17 @@ final class ProjectsService
 				return $insertPrivilegeResult;
 			}
 
-			$this->db->commit();
 			$selectProjectOneResult = $this->projectsRepo->selectProjectOne($userId, $projectsId);
 			if ($selectProjectOneResult->isError) {
+				$this->db->rollBack();
 				return $selectProjectOneResult;
-			} else {
-				return RetValueOrError::withValue(
-					$selectProjectOneResult->value,
-					Constants::HTTP_CREATED,
-				);
 			}
+
+			$this->db->commit();
+			return RetValueOrError::withValue(
+				$selectProjectOneResult->value,
+				Constants::HTTP_CREATED,
+			);
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				"Failed to create project: {exception}",
@@ -134,7 +136,7 @@ final class ProjectsService
 			}
 			return RetValueOrError::withError(
 				Constants::HTTP_INTERNAL_SERVER_ERROR,
-				'unknown error - ',
+				'unknown error',
 				$e->getCode(),
 			);
 		}
@@ -277,7 +279,7 @@ final class ProjectsService
 			}
 			return RetValueOrError::withError(
 				Constants::HTTP_INTERNAL_SERVER_ERROR,
-				'unknown error - ',
+				'unknown error',
 				$e->getCode(),
 			);
 		}
@@ -333,11 +335,9 @@ final class ProjectsService
 		}
 
 		if (!$senderPrivilegeType->hasPrivilege(InviteKeyPrivilegeType::admin)) {
-			// adminでない場合、他のユーザーの権限を取得することはできない
-			return RetValueOrError::withError(
-				Constants::HTTP_FORBIDDEN,
-				'You don\'t have permission to get privileges of other users'
-			);
+			// adminでない場合、他のユーザーの権限を取得することはできない。
+			// GET の権限不足は存在を秘匿するため 404 に統一（非memberと同じ応答）。
+			return Utils::errProjectNotFound();
 		}
 
 		$targetPrivilegeTypeResult = $this->projectsPrivilegesRepo->selectPrivilegeTypeObject(
@@ -401,13 +401,34 @@ final class ProjectsService
 		}
 
 		if ($senderUserId === $targetUserId) {
-			if ($senderPrivilegeType->value < $newPrivilegeType->value) {
+			// H2: the self-update ceiling MUST be the caller's PERSONAL
+			// privilege only. $senderPrivilegeType above is the MAX of the
+			// personal row and the public (uid='') row; using it lets a user
+			// with no personal row but a public read/write row pass this guard,
+			// fall through changeType -> 404 -> insert(), and mint a PERMANENT
+			// personal projects_privileges row at the public level (identity
+			// laundering: it survives later revocation/downgrade of the public
+			// row). Recompute personal-only: no personal row => forbid (no
+			// minting from anonymous capability); otherwise only allow
+			// same-or-lower than the existing personal privilege.
+			$personalPrivilegeResult = $this->projectsPrivilegesRepo->selectPrivilegeType(
+				id: $projectsId,
+				userId: $senderUserId,
+				includeAnonymous: false,
+			);
+			if ($personalPrivilegeResult->isError) {
+				return RetValueOrError::withError(
+					Constants::HTTP_FORBIDDEN,
+					'You don\'t have permission to update your privilege',
+				);
+			}
+			if ($personalPrivilegeResult->value->value < $newPrivilegeType->value) {
 				return RetValueOrError::withError(
 					Constants::HTTP_FORBIDDEN,
 					'You don\'t have permission to update your privilege to higher than your current privilege',
 				);
 			}
-		} else if (!$senderPrivilegeType->hasPrivilege(InviteKeyPrivilegeType::admin)) {
+		} elseif (!$senderPrivilegeType->hasPrivilege(InviteKeyPrivilegeType::admin)) {
 			// adminでない場合、他のユーザーの権限を編集することはできない
 			return RetValueOrError::withError(
 				Constants::HTTP_FORBIDDEN,

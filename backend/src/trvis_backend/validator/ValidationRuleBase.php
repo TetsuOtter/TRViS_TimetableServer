@@ -6,7 +6,7 @@ use dev_t0r\trvis_backend\RetValueOrError;
 
 abstract class ValidationRuleBase
 {
-	public abstract function validate(
+	abstract public function validate(
 		array|object &$d,
 		int|string $index,
 		bool $isKvpArray,
