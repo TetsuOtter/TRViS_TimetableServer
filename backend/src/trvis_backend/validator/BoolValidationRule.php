@@ -10,15 +10,15 @@ final class BoolValidationRule extends ValidationRuleBase
 		private readonly string $key,
 		private readonly bool $isRequired = false,
 		private readonly bool $isNullable = false,
-	) {}
+	) {
+	}
 
 	public function validate(
 		array|object &$d,
 		int|string $index,
 		bool $isKvpArray,
 		bool $checkRequired = true,
-	): RetValueOrError
-	{
+	): RetValueOrError {
 		if (!self::isPropExists($d, $isKvpArray, $this->key)) {
 			if ($checkRequired && $this->isRequired) {
 				return RetValueOrError::withBadReq(
