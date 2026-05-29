@@ -1,0 +1,82 @@
+# DB 結合テストを docker compose で回すための独立 compose。
+#
+# 本番/開発の docker-compose.yaml とは完全に分離: 専用コンテナ名・専用ネットワーク
+# を使い、本番データの webmon-db / webmon-db ボリュームには一切触れない。test-db は
+# tmpfs 上の使い捨て (毎回まっさら、後始末不要)。
+#
+# 実行:
+#   docker compose -f docker-compose.test.yaml up --build \
+#     --abort-on-container-exit --exit-code-from test-runner
+#   (test-runner の終了コードがそのまま伝播するので CI/ローカルゲートに使える)
+#
+# 後始末:
+#   docker compose -f docker-compose.test.yaml down -v
+#
+# 一部テストだけ回す (引数はエントリポイントが exec する):
+#   docker compose -f docker-compose.test.yaml run --rm test-runner \
+#     vendor/bin/phpunit --filter testTombstone
+name: trvis-backend-test
+
+services:
+  test-db:
+    # 本番 (docker-compose.yaml) と同じ 8.0-oracle でパリティを取る。
+    image: mysql:8.0-oracle
+    platform: linux/amd64
+    container_name: trvis-test-db
+    networks:
+      - test-net
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: test
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test
+    volumes:
+      # MYSQL_DATABASE=test 設定下では entrypoint が init_sql を test に対して流す。
+      - type: bind
+        read_only: true
+        source: ./mysql/init_sql
+        target: /docker-entrypoint-initdb.d
+      # character-set-server=utf8mb4 を効かせ、開発/CI と同じ文字コードで test DB を作る。
+      - type: bind
+        read_only: true
+        source: ./mysql/conf.d
+        target: /etc/mysql/conf.d
+    tmpfs:
+      # 使い捨て。永続ボリュームを作らないので webmon-db と混ざらず後始末も不要。
+      - /var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  test-runner:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.test
+    container_name: trvis-test-runner
+    networks:
+      - test-net
+    environment:
+      # IntegrationTestCase / smoke check が読む接続情報。CI と同じダミー (test/test)。
+      TEST_DB_DSN: "mysql:host=test-db;port=3306;dbname=test;charset=utf8mb4"
+      TEST_DB_USER: test
+      TEST_DB_PASS: test
+    volumes:
+      - type: bind
+        source: ./backend
+        target: /app
+      # dev 依存はランナー専用ボリュームへ。ホスト (ローカル PHP 8.5) の vendor を
+      # PHP 8.2 で上書きしないための隔離。再作成は down -v で。
+      - type: volume
+        source: test-vendor
+        target: /app/vendor
+    depends_on:
+      test-db:
+        condition: service_healthy
+
+volumes:
+  test-vendor:
+
+networks:
+  test-net:
