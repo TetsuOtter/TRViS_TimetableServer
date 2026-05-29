@@ -1,6 +1,7 @@
 <?php
 
 namespace dev_t0r\trvis_backend;
+
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -51,6 +52,28 @@ final class RetValueOrError
 	 * @template T
 	 * @param RetValueOrError<T> $value
 	 * @param RetValueOrError<number> $totalCount
+	 *
+	 * M10 — accepted (count, page) consistency tradeoff
+	 * -------------------------------------------------------
+	 * Every paged-list service calls two independent SELECTs:
+	 *   1. COUNT(*) → becomes the X-Total-Count response header ($totalCount)
+	 *   2. Keyset/offset page → becomes the response body ($value)
+	 *
+	 * Under MySQL InnoDB's default READ COMMITTED isolation, each statement sees
+	 * its own fresh MVCC snapshot.  A concurrent INSERT or DELETE that arrives
+	 * between the two statements can therefore produce a tuple where the page and
+	 * the total disagree (e.g. total=11 but the page still shows the just-deleted
+	 * row, or total=12 but the new row is missing from the page).
+	 *
+	 * This is intentionally accepted (CODE_REVIEW.md M10 — 許容) because:
+	 *   - The artefact is cosmetic: clients should treat (X-Total-Count, page) as
+	 *     eventually consistent and never rely on them being jointly exact.
+	 *   - Wrapping every paged read in a REPEATABLE READ transaction would add
+	 *     lock/snapshot overhead to all read paths for negligible user-visible gain.
+	 *
+	 * If a future caller needs strict consistency (count == len(page) guaranteed),
+	 * the fix is to wrap both repo calls in a single REPEATABLE READ transaction
+	 * before invoking withTotalCount().
 	 */
 	public static function withTotalCount(
 		RetValueOrError $value,
@@ -98,7 +121,7 @@ final class RetValueOrError
 	{
 		if ($this->isError) {
 			return Utils::withError($response, $this->statusCode, $this->errorMsg, $this->errorCode);
-		} else if (!is_null($this->value)) {
+		} elseif (!is_null($this->value)) {
 			if (!is_null($this->totalCount)) {
 				// PSR-7 ResponseInterface::withHeader() は string|string[] を要求するため明示的に文字列化
 				$response = $response->withHeader(Constants::HEADER_TOTAL_COUNT, (string)$this->totalCount);
