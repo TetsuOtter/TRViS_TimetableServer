@@ -12,15 +12,16 @@ final class LonLatValidationRule extends ValidationRuleBase
 		private readonly string $key,
 		private readonly bool $isRequired = false,
 		private readonly bool $isNullable = false,
-	) {}
+		private readonly string $modelClass = StationLocationLonlat::class,
+	) {
+	}
 
 	public function validate(
 		array|object &$d,
 		int|string $index,
 		bool $isKvpArray,
 		bool $checkRequired = true,
-	): RetValueOrError
-	{
+	): RetValueOrError {
 		if (!self::isPropExists($d, $isKvpArray, $this->key)) {
 			if ($checkRequired && $this->isRequired) {
 				return RetValueOrError::withBadReq(
@@ -79,7 +80,7 @@ final class LonLatValidationRule extends ValidationRuleBase
 			);
 		}
 
-		$lonlatObj = new StationLocationLonlat;
+		$lonlatObj = new $this->modelClass();
 		$lonlatObj->setData([
 			'longitude' => $lon,
 			'latitude' => $lat,

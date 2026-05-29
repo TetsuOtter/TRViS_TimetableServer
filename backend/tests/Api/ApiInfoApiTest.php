@@ -3,10 +3,9 @@
 /**
  * TRViS用 時刻表管理用API
  *
- * NOTE: OpenAPI-Generator stub filled with a real test. getApiInfo is
- * pure (no DB, no privilege): it reflects app.name / app.version from
- * the DI container into an ApiInfo JSON body. Driven directly through
- * the Slim handler with PSR-7 request/response.
+ * getApiInfo is pure (no DB, no privilege): it reflects app.name /
+ * app.version from the DI container into an ApiInfo JSON body. Driven
+ * directly through the Slim handler with PSR-7 request/response.
  */
 
 namespace dev_t0r\trvis_backend\api;

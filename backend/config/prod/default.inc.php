@@ -55,8 +55,39 @@ return [
 		true, // areAllHeadersAllowed
 		['content-type', 'authorization'], // allowedLcHeaders
 		'Content-Type,Authorization', // allowedHeadersList
-		'X-Total-Count', // exposedHeadersList
+		// H4: expose the rate-limit headers so the openapi-fetch frontend can
+		// read them (Retry-After + the X-RateLimit-* trio).
+		'X-Total-Count, Retry-After, X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Retry-After', // exposedHeadersList
 		true, // isCheckHost
+	],
+
+	// H4: rate limiting / throttling.
+	// Cache dir under sys_get_temp_dir() — always writable in the
+	// php:8.2-apache container; deliberately NOT under backend/cache because
+	// compose bind-mounts ./backend read-only.
+	'ratelimiter.cache_dir' => \sys_get_temp_dir() . '/trvis-ratelimiter',
+	// Default: 60 requests / 1 minute, sliding window, per client IP.
+	'ratelimiter.default' => [
+		'policy' => 'sliding_window',
+		'limit' => 60,
+		'interval' => '1 minute',
+	],
+	// Per-route overrides keyed by "<METHOD> <routeName>" or "<routeName>".
+	// useInviteKey is POST /api/v1/invite_keys/{inviteKeyId} (an invite-key
+	// capability redemption) — tighten it to blunt brute-force.
+	'ratelimiter.routes' => [
+		'POST useInviteKey' => [
+			'policy' => 'sliding_window',
+			'limit' => 10,
+			'interval' => '1 minute',
+		],
+		// dumpTimetable is GET /api/v1/dump/{workGroupId} (an expensive bulk
+		// export of an entire WorkGroup) — throttle it to 1 req / 5 s.
+		'GET dumpTimetable' => [
+			'policy' => 'sliding_window',
+			'limit' => 1,
+			'interval' => '5 seconds',
+		],
 	],
 
 	// PDO
@@ -67,6 +98,13 @@ return [
 		\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
 		\PDO::ATTR_AUTOCOMMIT => false,
 		\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET time_zone = \'+00:00\';',
+		// H7: rowCount() after UPDATE must report matched rows, not changed
+		// rows, so a no-op PATCH on an existing row is not a false 404.
+		\PDO::MYSQL_ATTR_FOUND_ROWS => true,
+		// L5: disable emulated prepares so the driver sends real prepared
+		// statements to MySQL, preventing silent type coercions and ensuring
+		// accurate error information on constraint violations.
+		\PDO::ATTR_EMULATE_PREPARES => false,
 	],
 
 	// logger

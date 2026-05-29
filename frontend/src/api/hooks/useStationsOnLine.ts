@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { fromApiStationOnLine, toApiStationOnLine } from "../adapters";
-import { stationOnLineApi } from "../instances";
+import { client, fetchAllPages, unwrap, unwrapCreated } from "../client";
 import { queryKeys } from "../queryKeys";
 
 import type { StationOnLine } from "../../types/entities";
@@ -9,10 +9,16 @@ import type { StationOnLine } from "../../types/entities";
 export const useStationsOnLine = (lineId: string) =>
 	useQuery({
 		queryKey: queryKeys.stationsOnLine(lineId),
-		queryFn: () =>
-			stationOnLineApi
-				.getStationOnLineList({ lineId })
-				.then((list) => list.map(fromApiStationOnLine)),
+		queryFn: async () => {
+			const data = await fetchAllPages((p, limit) =>
+				unwrap(
+					client.GET("/lines/{lineId}/stations_on_line", {
+						params: { path: { lineId }, query: { p, limit } },
+					})
+				)
+			);
+			return data.map(fromApiStationOnLine);
+		},
 		enabled: lineId !== "",
 	});
 
@@ -22,10 +28,12 @@ export const useCreateStationOnLine = (lineId: string) => {
 		mutationFn: (
 			draft: Omit<StationOnLine, "id" | "projectId" | "createdAt">
 		) =>
-			stationOnLineApi.createStationOnLine({
-				lineId,
-				stationOnLine: toApiStationOnLine(draft),
-			}),
+			unwrapCreated(
+				client.POST("/lines/{lineId}/stations_on_line", {
+					params: { path: { lineId } },
+					body: toApiStationOnLine(draft),
+				})
+			),
 		onSuccess: () => {
 			void queryClient.invalidateQueries({
 				queryKey: queryKeys.stationsOnLine(lineId),
@@ -41,17 +49,19 @@ export const useUpdateStationOnLine = (lineId: string) => {
 			vars: Pick<StationOnLine, "id"> &
 				Omit<StationOnLine, "id" | "projectId" | "createdAt">
 		) =>
-			stationOnLineApi.updateStationOnLine({
-				stationOnLineId: vars.id,
-				stationOnLine: toApiStationOnLine({
-					lineId: vars.lineId,
-					projectStationId: vars.projectStationId,
-					locationM: vars.locationM,
-					longitude: vars.longitude,
-					latitude: vars.latitude,
-					trackHiddenByDefault: vars.trackHiddenByDefault,
-				}),
-			}),
+			unwrap(
+				client.PUT("/stations_on_line/{stationOnLineId}", {
+					params: { path: { stationOnLineId: vars.id } },
+					body: toApiStationOnLine({
+						lineId: vars.lineId,
+						projectStationId: vars.projectStationId,
+						locationM: vars.locationM,
+						longitude: vars.longitude,
+						latitude: vars.latitude,
+						trackHiddenByDefault: vars.trackHiddenByDefault,
+					}),
+				})
+			),
 		onSuccess: () => {
 			void queryClient.invalidateQueries({
 				queryKey: queryKeys.stationsOnLine(lineId),
@@ -64,7 +74,11 @@ export const useDeleteStationOnLine = (lineId: string) => {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: (stationOnLineId: string) =>
-			stationOnLineApi.deleteStationOnLine({ stationOnLineId }),
+			unwrap(
+				client.DELETE("/stations_on_line/{stationOnLineId}", {
+					params: { path: { stationOnLineId } },
+				})
+			),
 		onSuccess: () => {
 			void queryClient.invalidateQueries({
 				queryKey: queryKeys.stationsOnLine(lineId),

@@ -3,14 +3,19 @@
 /**
  * TRViS用 時刻表管理用API
  *
- * NOTE: OpenAPI-Generator stub filled with DB integration tests for
- * Work (WorkApi -> WorksService). Work is keyed to a WorkGroup;
- * privilege resolves through the parent project's projects_privileges.
- * WorksService extends MyServiceBase, so getOne/update/delete go
- * through WorksRepo (MyRepoBase) selectPrivilegeType -> this regresses
- * the project-root privilege-resolution fix (admin -> 200, not 404).
- * Mirrors tests/Api/StationApiTest.php (single hop under WG).
+ * NOTE: DB integration tests for Work (WorkApi -> WorksService). Work is
+ * keyed to a WorkGroup; privilege resolves through the parent project's
+ * projects_privileges. WorksService is standalone (no MyServiceBase),
+ * so getOne/update/delete go through WorksRepo::selectPrivilegeType ->
+ * WorkGroupsPrivilegesRepo -> ProjectsPrivilegesRepo. This regresses the
+ * project-root privilege-resolution fix (admin -> 200, not 404).
+ * Mirrors tests/Api/WorkGroupApiTest.php (WG under Project).
  * @see tests/Integration/IntegrationTestCase.php
+ *
+ * GUARDRAIL-5: The legacy RED (WorkApiTest.php) exercises only `name` and
+ * `description`. The validator-wired fields affect_date, affix_content_type,
+ * affix_content, remarks, has_e_train_timetable, e_train_timetable_content_type,
+ * and e_train_timetable_content are NOT exercised by that test.
  */
 
 namespace dev_t0r\trvis_backend\api;
@@ -24,7 +29,8 @@ use dev_t0r\trvis_backend\tests\integration\IntegrationTestCase;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
-require_once __DIR__ . '/../Integration/IntegrationTestCase.php';
+// IntegrationTestCase is composer classmap-autoloaded
+// (autoload-dev.classmap: ["tests/Integration/"]); no require_once needed.
 
 #[CoversClass(\dev_t0r\trvis_backend\api\WorkApi::class)]
 #[CoversMethod(\dev_t0r\trvis_backend\api\WorkApi::class, 'createWork')]
@@ -66,7 +72,7 @@ class WorkApiTest extends IntegrationTestCase
 		return $o;
 	}
 
-	public function testCreateWork()
+	public function testCreateWork(): void
 	{
 		$wg = $this->newWorkGroup();
 		$o = $this->createOne($wg);
@@ -75,7 +81,7 @@ class WorkApiTest extends IntegrationTestCase
 		$this->assertSame('W', $o->name);
 	}
 
-	public function testGetWork()
+	public function testGetWork(): void
 	{
 		$o = $this->createOne($this->newWorkGroup());
 		// admin -> 200 (regresses the project-root privilege fix)
@@ -88,7 +94,7 @@ class WorkApiTest extends IntegrationTestCase
 		$this->assertSame(404, $nm->statusCode);
 	}
 
-	public function testGetWorkList()
+	public function testGetWorkList(): void
 	{
 		$wg = $this->newWorkGroup();
 		$a = $this->createOne($wg, ['name' => 'A']);
@@ -100,7 +106,7 @@ class WorkApiTest extends IntegrationTestCase
 		$this->assertContains((string)$b->works_id, $ids);
 	}
 
-	public function testUpdateWork()
+	public function testUpdateWork(): void
 	{
 		$o = $this->createOne($this->newWorkGroup(), ['name' => 'before']);
 		$before = $this->fetchUpdatedAt((string)$o->works_id);
@@ -121,7 +127,7 @@ class WorkApiTest extends IntegrationTestCase
 		);
 	}
 
-	public function testDeleteWork()
+	public function testDeleteWork(): void
 	{
 		$o = $this->createOne($this->newWorkGroup());
 		$d = $this->svc()->delete($this->userId, $o->works_id);

@@ -3,10 +3,9 @@
 /**
  * TRViS用 時刻表管理用API
  *
- * NOTE: OpenAPI-Generator stub filled with DB integration tests for
- * DumpApi -> DumpService::dump. dump() is read-gated via
- * checkPrivilegeToRead (WorkGroupsPrivilegesRepo -> project ->
- * projects_privileges). The populated WG (Work -> Train +
+ * DB integration tests for DumpApi -> DumpService::dump. dump() is
+ * read-gated via checkPrivilegeToRead (WorkGroupsPrivilegesRepo ->
+ * project -> projects_privileges). The populated WG (Work -> Train +
  * Station -> TimetableRow) exercises the full works/trains/
  * timetable_rows dump chain; testDumpEmptyWorkGroup covers the
  * empty-WG path (previously 500 / SQLSTATE 42000 from
@@ -34,12 +33,15 @@ use dev_t0r\trvis_backend\tests\integration\IntegrationTestCase;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
-require_once __DIR__ . '/../Integration/IntegrationTestCase.php';
+// IntegrationTestCase is composer classmap-autoloaded
+// (autoload-dev.classmap: ["tests/Integration/"]); no require_once needed.
 
 #[CoversClass(\dev_t0r\trvis_backend\api\DumpApi::class)]
 #[CoversMethod(\dev_t0r\trvis_backend\api\DumpApi::class, 'dumpTimetable')]
 class DumpApiTest extends IntegrationTestCase
 {
+	private ?UuidInterface $seededStationsId = null;
+
 	private function svc(): DumpService
 	{
 		return new DumpService($this->db, $this->logger);
@@ -82,20 +84,21 @@ class DumpApiTest extends IntegrationTestCase
 		$trainsId = $t->value[0]->trains_id;
 		$this->register('trains', 'trains_id', (string)$trainsId);
 
-		$s = (new StationsService($this->db, $this->logger))->create(
-			$wgId,
-			$this->userId,
-			[$this->makeModel(Station::class, [
-				'name' => 'S',
-				'description' => 'd',
-				'location_km' => 12.3,
-				'on_station_detect_radius_m' => 100.0,
-				'record_type' => StationRecordType::normal,
-			])],
+		$s = (new StationsService($this->db, $this->logger))->createStation(
+			projectsId: $this->projectId,
+			userId: $this->userId,
+			name: 'S',
+			fullName: null,
+			locationKm: 12.3,
+			locationLonlat: null,
+			onStationDetectRadiusM: 100.0,
+			recordType: StationRecordType::normal,
+			alwaysShowHh: false,
 		);
 		$this->assertOk($s, 'createStation');
-		$stationsId = $s->value[0]->stations_id;
+		$stationsId = $s->value->stations_id;
 		$this->register('stations', 'stations_id', (string)$stationsId);
+		$this->seededStationsId = $stationsId;
 
 		$tr = (new TimetableRowsService($this->db, $this->logger))->create(
 			$trainsId,
@@ -135,11 +138,11 @@ class DumpApiTest extends IntegrationTestCase
 	}
 
 	/**
-     * Regression: an empty WorkGroup (no Work) must dump cleanly.
-     * Previously worksIdList=[] made trainsRepo->dump() emit
-     * `WHERE works_id IN ()` -> SQLSTATE 42000 / HTTP 500.
-     */
-    public function testDumpEmptyWorkGroup()
+	 * Regression: an empty WorkGroup (no Work) must dump cleanly.
+	 * Previously worksIdList=[] made trainsRepo->dump() emit
+	 * `WHERE works_id IN ()` -> SQLSTATE 42000 / HTTP 500.
+	 */
+	public function testDumpEmptyWorkGroup()
 	{
 		$wg = (new WorkGroupsService($this->db, $this->logger))->createWorkGroupInProject(
 			$this->projectId,
@@ -155,5 +158,42 @@ class DumpApiTest extends IntegrationTestCase
 		$this->assertOk($d, 'dump (empty WG)');
 		$this->assertSame('Empty WG', $d->value->Name);
 		$this->assertSame([], $d->value->Works, 'empty WG must dump zero Works');
+	}
+
+	/**
+	 * A dumped TimetableRow whose Station was soft-deleted must vanish from the
+	 * dump: the dump is the published timetable consumed by the TRViS app, and
+	 * a stop at a no-longer-existing station is meaningless there. Stations is
+	 * INNER-joined, so the `stations.deleted_at IS NULL` filter drops the whole
+	 * row (the editor, by contrast, will keep showing it as a tombstone).
+	 */
+	public function testDumpHidesRowWhoseStationIsSoftDeleted()
+	{
+		$wgId = $this->newPopulatedWorkGroup();
+		$stationsId = $this->seededStationsId;
+		$this->assertNotNull($stationsId);
+
+		// Assert on the serialized TRViS-JSON contract (what the client receives)
+		// rather than the internal wrapper objects.
+		$dumpRows = function (UuidInterface $wg): array {
+			$d = $this->svc()->dump($wg, $this->userId);
+			$this->assertOk($d, 'dump');
+			$json = json_decode((string)json_encode($d->value), true);
+			return $json['Works'][0]['Trains'][0]['TimetableRows'];
+		};
+
+		// before: the train carries its one timetable row
+		$this->assertCount(1, $dumpRows($wgId), 'row present before station soft-delete');
+
+		// soft-delete the station the row points at
+		$del = (new StationsService($this->db, $this->logger))->deleteStation($stationsId, $this->userId);
+		$this->assertOk($del, 'soft-delete station');
+
+		// after: the row is gone (Train still dumps, just with zero rows)
+		$this->assertCount(
+			0,
+			$dumpRows($wgId),
+			'row referencing a soft-deleted station must be hidden from the dump',
+		);
 	}
 }

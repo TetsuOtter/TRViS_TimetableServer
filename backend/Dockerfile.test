@@ -1,0 +1,21 @@
+# テストランナー専用イメージ。本番の Dockerfile (php:8.2-apache, --no-dev) は
+# PHPUnit を含まないため、結合テストを docker compose で回すための別イメージ。
+# 正準ランタイム/CI と同じ PHP 8.2 + 同じ拡張 (pdo_mysql, intl, bcmath, mbstring)
+# を載せ、dev 依存はランタイムに composer install する。本番には一切使わない。
+FROM php:8.2-cli
+
+RUN apt-get update \
+	&& apt-get install -y --no-install-recommends \
+		libicu-dev libonig-dev git unzip default-mysql-client \
+	&& docker-php-ext-install pdo_mysql intl bcmath mbstring \
+	&& rm -rf /var/lib/apt/lists/*
+
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# エントリポイントは /usr/local/bin に置く。コード (/app) は compose の bind mount
+# で供給されるため、ここに置かないとマウントでシャドウされて消える。
+COPY docker-test-entrypoint.sh /usr/local/bin/docker-test-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-test-entrypoint.sh
+
+WORKDIR /app
+ENTRYPOINT ["/usr/local/bin/docker-test-entrypoint.sh"]

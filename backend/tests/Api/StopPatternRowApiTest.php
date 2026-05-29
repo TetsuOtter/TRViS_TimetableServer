@@ -3,30 +3,39 @@
 /**
  * TRViS用 時刻表管理用API
  *
- * NOTE: OpenAPI-Generator stub filled with DB integration tests for
- * StopPatternRow (StopPatternRowApi -> StopPatternRowsService).
+ * DB integration tests for the StopPatternRow entity
+ * (StopPatternRowApi -> StopPatternRowsService). Drives the service directly;
+ * route registration / OA parsing / container glue are covered separately
+ * (drift tests + byte-stable openapi.json regen + route-wiring smoke).
+ *
  * Covers projects_id derived via subquery from stop_patterns, and
- * parentRepo=StopPatternsRepo privilege resolution (parentId = stopPatternId).
+ * privilege resolution via stop_pattern_rows.projects_id ->
+ * ProjectsPrivilegesRepo (parentId = stopPatternId, project-rooted).
+ *
+ * Line rows are inserted directly via PDO (LineService::create has a
+ * different signature from the legacy model-list form used in the legacy RED;
+ * direct PDO insert is the established pattern for this — see StopPatternApiTest).
+ *
  * @see tests/Integration/IntegrationTestCase.php
+ * @see tests/Unit/RouteSmokeTest.php
  */
 
 namespace dev_t0r\trvis_backend\api;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversMethod;
-use dev_t0r\trvis_backend\model\Line;
-use dev_t0r\trvis_backend\model\ProjectStation;
+use dev_t0r\trvis_backend\model\StationRecordType;
 use dev_t0r\trvis_backend\model\StopPattern;
 use dev_t0r\trvis_backend\model\StopPatternRow;
-use dev_t0r\trvis_backend\service\LineService;
-use dev_t0r\trvis_backend\service\ProjectStationsService;
 use dev_t0r\trvis_backend\service\StopPatternsService;
+use dev_t0r\trvis_backend\service\StationsService;
 use dev_t0r\trvis_backend\service\StopPatternRowsService;
 use dev_t0r\trvis_backend\tests\integration\IntegrationTestCase;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
-require_once __DIR__ . '/../Integration/IntegrationTestCase.php';
+// IntegrationTestCase is composer classmap-autoloaded
+// (autoload-dev.classmap: ["tests/Integration/"]); no require_once needed.
 
 #[CoversClass(\dev_t0r\trvis_backend\api\StopPatternRowApi::class)]
 #[CoversMethod(\dev_t0r\trvis_backend\api\StopPatternRowApi::class, 'createStopPatternRow')]
@@ -41,17 +50,30 @@ class StopPatternRowApiTest extends IntegrationTestCase
 		return new StopPatternRowsService($this->db, $this->logger);
 	}
 
+	/**
+	 * Insert a project_lines row directly via PDO (LineService::create signature
+	 * changed from the legacy model-list form; direct PDO insert is the
+	 * established pattern — see StopPatternApiTest). Register for FK-safe teardown.
+	 */
+	private function newLine(string $name = 'L'): UuidInterface
+	{
+		$id = Uuid::uuid7();
+		$this->db->prepare(
+			"INSERT INTO project_lines (project_lines_id, projects_id, description, owner, name)"
+			. " VALUES (:id, :pid, '', :owner, :name)"
+		)->execute([
+			':id' => $id->getBytes(),
+			':pid' => $this->projectId->getBytes(),
+			':owner' => $this->userId,
+			':name' => $name,
+		]);
+		$this->register('project_lines', 'project_lines_id', (string)$id);
+		return $id;
+	}
+
 	private function newStopPattern(): UuidInterface
 	{
-		$lr = (new LineService($this->db, $this->logger))->create(
-			$this->projectId,
-			$this->userId,
-			[$this->makeModel(Line::class, ['name' => 'L', 'description' => 'd'])],
-		);
-		$this->assertOk($lr, 'newLine');
-		$lineId = $lr->value[0]->lines_id;
-		$this->register('project_lines', 'project_lines_id', (string)$lineId);
-
+		$lineId = $this->newLine();
 		$sr = (new StopPatternsService($this->db, $this->logger))->create(
 			$this->projectId,
 			$this->userId,
@@ -65,14 +87,20 @@ class StopPatternRowApiTest extends IntegrationTestCase
 
 	private function newProjectStation(): UuidInterface
 	{
-		$r = (new ProjectStationsService($this->db, $this->logger))->create(
-			$this->projectId,
-			$this->userId,
-			[$this->makeModel(ProjectStation::class, ['name' => 'PS'])],
+		$r = (new StationsService($this->db, $this->logger))->createStation(
+			projectsId: $this->projectId,
+			userId: $this->userId,
+			name: 'PS',
+			fullName: null,
+			locationKm: 0.0,
+			locationLonlat: null,
+			onStationDetectRadiusM: null,
+			recordType: StationRecordType::normal,
+			alwaysShowHh: false,
 		);
 		$this->assertOk($r, 'newProjectStation');
-		$id = $r->value[0]->project_stations_id;
-		$this->register('project_stations', 'project_stations_id', (string)$id);
+		$id = $r->value->stations_id;
+		$this->register('stations', 'stations_id', (string)$id);
 		return $id;
 	}
 
@@ -92,7 +120,7 @@ class StopPatternRowApiTest extends IntegrationTestCase
 		return $o;
 	}
 
-	public function testCreateStopPatternRow()
+	public function testCreateStopPatternRow(): void
 	{
 		$sp = $this->newStopPattern();
 		$ps = $this->newProjectStation();
@@ -107,7 +135,7 @@ class StopPatternRowApiTest extends IntegrationTestCase
 		$this->assertSame('1', $o->track_name);
 	}
 
-	public function testGetStopPatternRow()
+	public function testGetStopPatternRow(): void
 	{
 		$o = $this->createOne($this->newStopPattern(), $this->newProjectStation());
 		$g = $this->svc()->getOne($this->userId, $o->stop_pattern_rows_id);
@@ -118,7 +146,7 @@ class StopPatternRowApiTest extends IntegrationTestCase
 		$this->assertSame(404, $nm->statusCode);
 	}
 
-	public function testGetStopPatternRowList()
+	public function testGetStopPatternRowList(): void
 	{
 		$sp = $this->newStopPattern();
 		$ps = $this->newProjectStation();
@@ -126,12 +154,12 @@ class StopPatternRowApiTest extends IntegrationTestCase
 		$b = $this->createOne($sp, $ps, ['sort_key' => 1]);
 		$list = $this->svc()->getPage($this->userId, $sp, 1, 50, null);
 		$this->assertOk($list, 'getPage');
-		$ids = array_map(fn($x) => (string)$x->stop_pattern_rows_id, $list->value);
+		$ids = array_map(fn ($x) => (string)$x->stop_pattern_rows_id, $list->value);
 		$this->assertContains((string)$a->stop_pattern_rows_id, $ids);
 		$this->assertContains((string)$b->stop_pattern_rows_id, $ids);
 	}
 
-	public function testUpdateStopPatternRow()
+	public function testUpdateStopPatternRow(): void
 	{
 		$o = $this->createOne($this->newStopPattern(), $this->newProjectStation());
 		$before = $this->fetchUpdatedAt((string)$o->stop_pattern_rows_id);
@@ -153,7 +181,7 @@ class StopPatternRowApiTest extends IntegrationTestCase
 		);
 	}
 
-	public function testDeleteStopPatternRow()
+	public function testDeleteStopPatternRow(): void
 	{
 		$o = $this->createOne($this->newStopPattern(), $this->newProjectStation());
 		$d = $this->svc()->delete($this->userId, $o->stop_pattern_rows_id);

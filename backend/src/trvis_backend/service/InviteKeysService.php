@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace dev_t0r\trvis_backend\service;
 
 use dev_t0r\trvis_backend\Constants;
@@ -7,8 +9,8 @@ use dev_t0r\trvis_backend\model\InviteKey;
 use dev_t0r\trvis_backend\model\InviteKeyPrivilegeType;
 use dev_t0r\trvis_backend\repo\InviteKeysRepo;
 use dev_t0r\trvis_backend\repo\ProjectsPrivilegesRepo;
-use dev_t0r\trvis_backend\repo\WorkGroupsRepo;
 use dev_t0r\trvis_backend\repo\WorkGroupsPrivilegesRepo;
+use dev_t0r\trvis_backend\repo\WorkGroupsRepo;
 use dev_t0r\trvis_backend\RetValueOrError;
 use dev_t0r\trvis_backend\Utils;
 use PDO;
@@ -16,6 +18,18 @@ use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
+/**
+ * Service for InviteKey CRUD + use. Faithful port of legacy InviteKeysService.
+ *
+ * Privilege model: InviteKey is a bearer-capability (UUID = capability token).
+ * - createInviteKey, selectInviteKey, selectInviteKeyListWithWorkGroupsId,
+ *   disableInviteKey all require WorkGroup `admin`.
+ * - selectInviteKeyListWithOwnerUid is owner-only (no privilege gate).
+ * - useInviteKey requires a signed-in user; writes to projects_privileges.
+ *
+ * §7: getUserIdOrAnonymous returns a non-null string in the new backend, so
+ * the dead `?? Constants::UID_ANONYMOUS` null-coalesce is NOT carried forward.
+ */
 final class InviteKeysService
 {
 	private readonly InviteKeysRepo $inviteKeysRepo;
@@ -39,11 +53,10 @@ final class InviteKeysService
 		InviteKey $inviteKey,
 	): RetValueOrError {
 		$this->logger->debug(
-			"createInviteKey workGroupId: {workGroupId}, owner: {owner}, request: {request}",
+			"createInviteKey workGroupId: {workGroupId}, owner: {owner}",
 			[
 				'workGroupId' => $workGroupId,
 				'owner' => $owner,
-				'request' => $inviteKey,
 			]
 		);
 
@@ -51,8 +64,6 @@ final class InviteKeysService
 			id: $workGroupId,
 			userId: $owner,
 			includeAnonymous: true,
-			// ここでチェックした直後に権限が変更されても、その変更は無視する
-			// ロックして権限の変更を遅らせても、結局はInviteKeyの作成後に権限が変更されることになるため
 			selectForUpdate: false,
 		);
 		if ($ownerPrivilegeType->isError) {
@@ -68,14 +79,11 @@ final class InviteKeysService
 
 		$this->db->beginTransaction();
 
-		try
-		{
+		try {
 			$inviteKeyId = Uuid::uuid7();
 			$this->logger->debug(
 				"createInviteKey inviteKeyId: {inviteKeyId}",
-				[
-					'inviteKeyId' => $inviteKeyId,
-				]
+				['inviteKeyId' => $inviteKeyId]
 			);
 			$insertInviteKeyResult = $this->inviteKeysRepo->insertInviteKey(
 				inviteKeyId: $inviteKeyId,
@@ -92,18 +100,13 @@ final class InviteKeysService
 			return $this->inviteKeysRepo->selectInviteKey(
 				inviteKeyId: $inviteKeyId,
 			);
-		}
-		catch (\Throwable $th)
-		{
+		} catch (\Throwable $th) {
 			if ($this->db->inTransaction()) {
 				$this->db->rollBack();
 			}
-
 			$this->logger->error(
 				"Unknown error: {exception}",
-				[
-					"exception" => $th,
-				]
+				["exception" => $th]
 			);
 			return RetValueOrError::withError(
 				Constants::HTTP_INTERNAL_SERVER_ERROR,
@@ -139,10 +142,8 @@ final class InviteKeysService
 			return Utils::errWorkGroupNotFound();
 		}
 		if (!$privilegeType->value->hasPrivilege(InviteKeyPrivilegeType::admin)) {
-			return RetValueOrError::withError(
-				Constants::HTTP_FORBIDDEN,
-				"You don't have enough privilege to get InviteKey",
-			);
+			// GET の権限不足は存在を秘匿するため 404 に統一（非memberと同じ応答）。
+			return Utils::errWorkGroupNotFound();
 		}
 
 		return $inviteKeyData;
@@ -186,10 +187,8 @@ final class InviteKeysService
 			return $privilegeType;
 		}
 		if (!$privilegeType->value->hasPrivilege(InviteKeyPrivilegeType::admin)) {
-			return RetValueOrError::withError(
-				Constants::HTTP_FORBIDDEN,
-				"You don't have enough privilege to get InviteKey list",
-			);
+			// GET の権限不足は存在を秘匿するため 404 に統一（非memberと同じ応答）。
+			return Utils::errWorkGroupNotFound();
 		}
 
 		return $this->inviteKeysRepo->selectInviteKeyList(
@@ -216,8 +215,7 @@ final class InviteKeysService
 
 		$this->db->beginTransaction();
 
-		try
-		{
+		try {
 			// 将来的にuse_limitを適用したいため、transaction内でselectしておく
 			$inviteKeyData = $this->inviteKeysRepo->selectInviteKey(
 				inviteKeyId: $inviteKeyId,
@@ -226,6 +224,33 @@ final class InviteKeysService
 			if ($inviteKeyData->isError) {
 				$this->db->rollBack();
 				return $inviteKeyData;
+			}
+
+			// H1: enforce the invite-key lifecycle at the redemption path.
+			// selectInviteKey only filters `deleted_at IS NULL` (it is shared
+			// with owner/admin view paths that must still see disabled/expired
+			// keys), so without this gate an explicitly disabled, not-yet-valid
+			// or expired key stays redeemable and the granted
+			// projects_privileges row is permanent — the creator's revocation
+			// is ignored at the one place it is security-relevant. Mirrors the
+			// selectInviteKeyList window predicate; 404 so key state is not
+			// leaked.
+			$inviteKey = $inviteKeyData->value;
+			$now = Utils::getUtcNow();
+			if (
+				$inviteKey->disabled_at !== null
+				|| ($inviteKey->valid_from !== null && $now < $inviteKey->valid_from)
+				|| ($inviteKey->expires_at !== null && $inviteKey->expires_at < $now)
+			) {
+				$this->logger->warning(
+					"useInviteKey: rejected non-redeemable key (disabled/not-yet-valid/expired) inviteKeyId: {inviteKeyId}",
+					['inviteKeyId' => $inviteKeyId],
+				);
+				$this->db->rollBack();
+				return RetValueOrError::withError(
+					Constants::HTTP_NOT_FOUND,
+					"InviteKey not found",
+				);
 			}
 
 			$workGroupId = $inviteKeyData->value->work_groups_id;
@@ -251,9 +276,12 @@ final class InviteKeysService
 					]
 				);
 				$this->db->rollBack();
-				return RetValueOrError::withError(
-					Constants::HTTP_OK,
-					"You already have the same or higher privilege - " . $currentPrivilegeType->value->name,
+				// H8(b): redeeming a key you already match is an idempotent
+				// success, not an error. Return the target WorkGroup as a 200
+				// body so the contract (200 -> WorkGroup) holds on this exit.
+				return $this->workGroupsRepo->selectWorkGroupOne(
+					userId: $userId,
+					workGroupId: $workGroupId,
 				);
 			}
 
@@ -265,7 +293,7 @@ final class InviteKeysService
 				]
 			);
 			// Project = 権限ルート: 招待キーで付与する権限は所属Projectの
-			// projects_privileges に書き込む (Decision 2)
+			// projects_privileges に書き込む
 			$projectsIdResult = $this->workGroupsRepo->selectProjectsIdByWorkGroupsId($workGroupId);
 			if ($projectsIdResult->isError) {
 				$this->db->rollBack();
@@ -292,16 +320,20 @@ final class InviteKeysService
 			if ($execResult->isError) {
 				$this->logger->warning('apply invite key failed');
 				$this->db->rollBack();
-			} else {
-				$this->logger->warning('apply invite key success');
-				$this->db->commit();
+				return $execResult;
 			}
-			return $execResult;
-		}
-		catch (\Throwable $th)
-		{
+			$this->logger->warning('apply invite key success');
+			$this->db->commit();
+			// H8(b): the contract is 200 -> WorkGroup. The privileges repo
+			// returns RetValueOrError<null> on success, so re-read the joined
+			// WorkGroup (now visible via the just-committed privilege) and
+			// return it as the response body.
+			return $this->workGroupsRepo->selectWorkGroupOne(
+				userId: $userId,
+				workGroupId: $workGroupId,
+			);
+		} catch (\Throwable $th) {
 			$this->db->rollBack();
-
 			$errCode = $th->getCode();
 			$errInfo = $th->getMessage();
 			$this->logger->error(
@@ -333,8 +365,7 @@ final class InviteKeysService
 
 		$this->db->beginTransaction();
 
-		try
-		{
+		try {
 			$inviteKeyData = $this->inviteKeysRepo->selectInviteKey(
 				inviteKeyId: $inviteKeyId,
 				selectForUpdate: true,
@@ -344,10 +375,10 @@ final class InviteKeysService
 				return $inviteKeyData;
 			}
 
-			$inviteKeyData = $inviteKeyData->value;
+			$inviteKeyValue = $inviteKeyData->value;
 			$currentUserPrivilegeType = $this->workGroupsPrivilegesRepo->selectPrivilegeType(
 				userId: $userId,
-				id: $inviteKeyData->work_groups_id,
+				id: $inviteKeyValue->work_groups_id,
 				includeAnonymous: true,
 				selectForUpdate: true,
 			);
@@ -358,9 +389,7 @@ final class InviteKeysService
 			if (!$currentUserPrivilegeType->value->hasPrivilege(InviteKeyPrivilegeType::read)) {
 				$this->logger->warning(
 					"disableInviteKey: not enough privilege (currentUserPrivilegeType: {currentUserPrivilegeType})",
-					[
-						'currentUserPrivilegeType' => $currentUserPrivilegeType->value,
-					]
+					['currentUserPrivilegeType' => $currentUserPrivilegeType->value]
 				);
 				$this->db->rollBack();
 				return Utils::errWorkGroupNotFound();
@@ -368,9 +397,7 @@ final class InviteKeysService
 			if (!$currentUserPrivilegeType->value->hasPrivilege(InviteKeyPrivilegeType::admin)) {
 				$this->logger->warning(
 					"disableInviteKey: not enough privilege (currentUserPrivilegeType: {currentUserPrivilegeType})",
-					[
-						'currentUserPrivilegeType' => $currentUserPrivilegeType->value,
-					]
+					['currentUserPrivilegeType' => $currentUserPrivilegeType->value]
 				);
 				$this->db->rollBack();
 				return RetValueOrError::withError(
@@ -379,12 +406,10 @@ final class InviteKeysService
 				);
 			}
 
-			if ($inviteKeyData->disabled_at !== null) {
+			if ($inviteKeyValue->disabled_at !== null) {
 				$this->logger->info(
 					"disableInviteKey: already disabled (inviteKeyId: {inviteKeyId})",
-					[
-						'inviteKeyId' => $inviteKeyId,
-					]
+					['inviteKeyId' => $inviteKeyId]
 				);
 				$this->db->rollBack();
 				return RetValueOrError::withError(
@@ -393,12 +418,12 @@ final class InviteKeysService
 				);
 			}
 			$now = Utils::getUtcNow();
-			if ($inviteKeyData->valid_from != null && $now < $inviteKeyData->valid_from) {
+			if ($inviteKeyValue->valid_from != null && $now < $inviteKeyValue->valid_from) {
 				$this->logger->info(
 					"disableInviteKey: not valid yet (inviteKeyId: {inviteKeyId}, validFrom: {validFrom}, now: {now})",
 					[
 						'inviteKeyId' => $inviteKeyId,
-						'validFrom' => $inviteKeyData->valid_from,
+						'validFrom' => $inviteKeyValue->valid_from,
 						'now' => $now,
 					]
 				);
@@ -408,12 +433,12 @@ final class InviteKeysService
 					"InviteKey is not valid yet",
 				);
 			}
-			if ($inviteKeyData->expires_at != null && $inviteKeyData->expires_at < $now) {
+			if ($inviteKeyValue->expires_at != null && $inviteKeyValue->expires_at < $now) {
 				$this->logger->info(
 					"disableInviteKey: already expired (inviteKeyId: {inviteKeyId}, expiresAt: {expiresAt}, now: {now})",
 					[
 						'inviteKeyId' => $inviteKeyId,
-						'expiresAt' => $inviteKeyData->expires_at,
+						'expiresAt' => $inviteKeyValue->expires_at,
 						'now' => $now,
 					]
 				);
@@ -438,7 +463,6 @@ final class InviteKeysService
 			$this->db->rollBack();
 			$errCode = $th->getCode();
 			$errInfo = $th->getMessage();
-
 			$this->logger->error(
 				"Failed to execute SQL ({errorCode} -> {errorInfo})",
 				[

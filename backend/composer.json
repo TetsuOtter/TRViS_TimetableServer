@@ -1,7 +1,7 @@
 {
   "minimum-stability": "RC",
   "repositories": [],
-  "description": "",
+  "description": "TRViS Timetable Server backend (code-first: PHP implementation is the API source of truth)",
   "keywords": [
     "trvis"
   ],
@@ -24,33 +24,34 @@
     "slim/psr7": "^1.8",
     "symfony/cache": "^7.4",
     "symfony/console": "7.4.9",
+    "symfony/lock": "^7.4",
+    "symfony/rate-limiter": "^7.4",
     "symfony/string": "7.4.8",
-    "symfony/yaml": "7.4.10",
-    "ybelenko/openapi-data-mocker": "^1.1",
-    "ybelenko/openapi-data-mocker-server-middleware": "^1.2"
+    "symfony/yaml": "7.4.10"
   },
   "require-dev": {
     "overtrue/phplint": "^9.7",
     "phpunit/phpunit": "^11.5",
-    "squizlabs/php_codesniffer": "^4.0"
+    "squizlabs/php_codesniffer": "^4.0",
+    "zircote/swagger-php": "^4.10"
   },
   "autoload": {
-    "psr-4": { "dev_t0r\\": [
-      "lib/",
-      "src/"
-    ]}
+    "psr-4": { "dev_t0r\\": "src/" }
   },
   "autoload-dev": {
-    "psr-4": { "dev_t0r\\": "tests/" }
+    "psr-4": { "dev_t0r\\trvis_backend\\tests\\": "tests/" },
+    "classmap": [ "tests/Integration/" ]
   },
   "scripts": {
     "test": [
       "phpunit"
     ],
     "test-apis": "phpunit --testsuite Apis",
-    "test-models": "phpunit --testsuite Models",
+    "test-unit": "phpunit --testsuite Unit",
     "phpcs": "phpcs",
-    "phplint": "phplint ./ --exclude=vendor"
+    "phplint": "phplint ./ --exclude=vendor",
+    "openapi": "openapi src/ --bootstrap vendor/autoload.php -o openapi.json --format json",
+    "cleanup-orphans": "php bin/cleanup-orphans.php"
   },
   "config": {
     "sort-packages": true,

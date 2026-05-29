@@ -3,11 +3,13 @@
 /**
  * TRViS用 時刻表管理用API
  *
- * NOTE: The OpenAPI-Generator stub for this file has been filled with
- * DB integration tests for the Line entity (Phase 7/8). The Line endpoint
- * is a thin delegate (LineApi -> MyApiHandler -> LineService -> LineRepo);
- * these tests drive the Service/Repo layer against the real test MySQL.
+ * DB integration tests for the Line entity (Phase 3.4 port). Drives the
+ * Service/Repo layer against the real test MySQL; same behavioural contract
+ * as backend_legacy/tests/Api/LineApiTest.php (the RED contract), rewritten
+ * against the new bespoke LineService signatures.
  * @see tests/Integration/IntegrationTestCase.php
+ * @see tests/Unit/RouteSmokeTest.php — proves every LineApi routes() entry
+ *      is actually mounted (name/pattern/methods, no collision).
  */
 
 namespace dev_t0r\trvis_backend\api;
@@ -21,8 +23,10 @@ use dev_t0r\trvis_backend\service\LineService;
 use dev_t0r\trvis_backend\service\ProjectsService;
 use dev_t0r\trvis_backend\tests\integration\IntegrationTestCase;
 use Ramsey\Uuid\Uuid;
+use Ramsey\Uuid\UuidInterface;
 
-require_once __DIR__ . '/../Integration/IntegrationTestCase.php';
+// IntegrationTestCase is composer classmap-autoloaded
+// (autoload-dev.classmap: ["tests/Integration/"]); no require_once needed.
 
 #[CoversClass(\dev_t0r\trvis_backend\api\LineApi::class)]
 #[CoversMethod(\dev_t0r\trvis_backend\api\LineApi::class, 'createLine')]
@@ -40,41 +44,41 @@ class LineApiTest extends IntegrationTestCase
 	private function createOne(string $name = 'L', string $desc = 'd'): Line
 	{
 		$r = $this->svc()->create(
-			$this->projectId,
-			$this->userId,
-			[$this->makeModel(Line::class, ['name' => $name, 'description' => $desc])],
+			projectsId: $this->projectId,
+			userId: $this->userId,
+			name: $name,
+			description: $desc,
 		);
 		$this->assertOk($r, 'createLine');
-		$line = $r->value[0];
+		$line = $r->value;
 		$this->register('project_lines', 'project_lines_id', (string)$line->lines_id);
 		return $line;
 	}
 
 	/**
 	 * Grant a brand-new user exactly `read` privilege on the fixture project
-	 * and return its uid. The projects_privileges row is keyed by projects_id,
-	 * which IntegrationTestCase::setUp already registered for teardown.
+	 * and return its uid.
 	 */
 	private function grantReadOnlyUser(): string
 	{
 		$uid = 'it-R-' . bin2hex(random_bytes(4));
 		$r = (new ProjectsService($this->db, $this->logger))->updatePrivilege(
-			$this->projectId,
-			$this->userId,
-			$uid,
-			InviteKeyPrivilegeType::read,
+			projectsId: $this->projectId,
+			senderUserId: $this->userId,
+			targetUserId: $uid,
+			newPrivilegeType: InviteKeyPrivilegeType::read,
 		);
 		$this->assertOk($r, 'grant read privilege');
 		return $uid;
 	}
 
-	public function testCreateLine()
+	public function testCreateLine(): void
 	{
 		$line = $this->createOne('東海道本線', 'desc');
 		$this->assertTrue(Uuid::isValid((string)$line->lines_id));
 		$this->assertSame((string)$this->projectId, (string)$line->projects_id);
 		$this->assertSame('東海道本線', $line->name);
-		// row really lives in project_lines (reserved-word table), not "lines"
+		// row lives in project_lines (reserved-word table)
 		$st = $this->db->prepare(
 			"SELECT COUNT(*) FROM project_lines WHERE project_lines_id = :id AND deleted_at IS NULL"
 		);
@@ -82,14 +86,14 @@ class LineApiTest extends IntegrationTestCase
 		$this->assertSame(1, (int)$st->fetchColumn());
 	}
 
-	public function testGetLine()
+	public function testGetLine(): void
 	{
 		$line = $this->createOne();
 		$g = $this->svc()->getOne($this->userId, $line->lines_id);
 		$this->assertOk($g, 'getLine');
 		$this->assertSame((string)$line->lines_id, (string)$g->value->lines_id);
 
-		// project-rooted privilege override: non-member -> 404 (not `none`)
+		// project-rooted privilege: non-member -> 404
 		$nm = $this->svc()->getOne($this->nonMemberId, $line->lines_id);
 		$this->assertTrue($nm->isError);
 		$this->assertSame(404, $nm->statusCode);
@@ -104,13 +108,13 @@ class LineApiTest extends IntegrationTestCase
 		$this->assertSame(InviteKeyPrivilegeType::admin, $priv->value);
 	}
 
-	public function testGetLineList()
+	public function testGetLineList(): void
 	{
 		$a = $this->createOne('A');
 		$b = $this->createOne('B');
 		$list = $this->svc()->getPage($this->userId, $this->projectId, 1, 50, null);
 		$this->assertOk($list, 'getLineList');
-		$ids = array_map(fn($x) => (string)$x->lines_id, $list->value);
+		$ids = array_map(fn ($x) => (string)$x->lines_id, $list->value);
 		$this->assertContains((string)$a->lines_id, $ids);
 		$this->assertContains((string)$b->lines_id, $ids);
 		foreach ($list->value as $l) {
@@ -118,21 +122,22 @@ class LineApiTest extends IntegrationTestCase
 		}
 	}
 
-	public function testUpdateLine()
+	public function testUpdateLine(): void
 	{
 		$line = $this->createOne('before');
-		$before = $this->fetchUpdatedAt((string)$line->lines_id);
+		$before = $this->fetchUpdatedAt($line->lines_id);
 		sleep(1); // datetime column has 1s resolution; ensure a tick passes
+		$patch = (object)['name' => 'after'];
 		$u = $this->svc()->update(
-			$this->userId,
-			$line->lines_id,
-			$this->makeModel(Line::class, ['name' => 'after']),
-			['name' => 'after'],
+			userId: $this->userId,
+			lineId: $line->lines_id,
+			patch: $patch,
+			keys: ['name'],
 		);
 		$this->assertOk($u, 'updateLine');
 		$g = $this->svc()->getOne($this->userId, $line->lines_id);
 		$this->assertSame('after', $g->value->name);
-		$after = $this->fetchUpdatedAt((string)$line->lines_id);
+		$after = $this->fetchUpdatedAt($line->lines_id);
 		$this->assertGreaterThan(
 			$before,
 			$after,
@@ -140,7 +145,7 @@ class LineApiTest extends IntegrationTestCase
 		);
 	}
 
-	public function testDeleteLine()
+	public function testDeleteLine(): void
 	{
 		$line = $this->createOne();
 		$d = $this->svc()->delete($this->userId, $line->lines_id);
@@ -151,40 +156,41 @@ class LineApiTest extends IntegrationTestCase
 	}
 
 	/**
-     * Security regression: a principal holding only `read` privilege must NOT
-     * be able to create / update / delete. Before the fix,
-     * MyServiceBase::checkPrivilegeToWrite only logged a warning for the
-     * read-but-not-write case and fell through to success (write bypass).
-     * Driven via LineService, this covers every MyServiceBase subclass.
-     */
-    public function testReadOnlyUserCannotWrite()
+	 * Security regression: a principal holding only `read` privilege must NOT
+	 * be able to create / update / delete. Per the unified privilege-error rule
+	 * a read-capable member who lacks the write tier gets 403 on mutations (the
+	 * member CAN see the resource, so 404 would be a lie); non-members and GETs
+	 * stay 404 to hide existence.
+	 */
+	public function testReadOnlyUserCannotWrite(): void
 	{
 		$readUser = $this->grantReadOnlyUser();
 
-		// create as read-only user -> 404 errContentNotFound (not success)
+		// create as read-only user -> 403 (read-capable member, lacks write)
 		$c = $this->svc()->create(
-			$this->projectId,
-			$readUser,
-			[$this->makeModel(Line::class, ['name' => 'X', 'description' => 'd'])],
+			projectsId: $this->projectId,
+			userId: $readUser,
+			name: 'X',
+			description: 'd',
 		);
 		$this->assertTrue($c->isError, 'read-only create must be rejected');
-		$this->assertSame(404, $c->statusCode);
+		$this->assertSame(403, $c->statusCode);
 
 		// admin-owned row that the read-only user will try to tamper with
 		$line = $this->createOne('owned');
 
 		$u = $this->svc()->update(
-			$readUser,
-			$line->lines_id,
-			$this->makeModel(Line::class, ['name' => 'hacked']),
-			['name' => 'hacked'],
+			userId: $readUser,
+			lineId: $line->lines_id,
+			patch: (object)['name' => 'hacked'],
+			keys: ['name'],
 		);
 		$this->assertTrue($u->isError, 'read-only update must be rejected');
-		$this->assertSame(404, $u->statusCode);
+		$this->assertSame(403, $u->statusCode);
 
 		$d = $this->svc()->delete($readUser, $line->lines_id);
 		$this->assertTrue($d->isError, 'read-only delete must be rejected');
-		$this->assertSame(404, $d->statusCode);
+		$this->assertSame(403, $d->statusCode);
 
 		// the row must remain intact and unmodified
 		$g = $this->svc()->getOne($this->userId, $line->lines_id);
@@ -193,11 +199,47 @@ class LineApiTest extends IntegrationTestCase
 	}
 
 	/**
-     * Security regression: getOne / getPage now use checkPrivilegeToRead, so a
-     * read-only user (who must be denied writes) can still read. Guards against
-     * the getOne write->read change accidentally over-restricting reads.
-     */
-    public function testReadOnlyUserCanRead()
+	 * Existence-disclosure regression: a NON-member (no privilege row at all)
+	 * must get 404 on every mutation, never 403. The unified rule reserves 403
+	 * for read-capable members; a non-member must not be able to tell an
+	 * existing resource apart from a missing one. LineService relies solely on
+	 * selectPrivilegeType()'s isError(404) for this (it has no explicit read
+	 * gate), so this guards that the no-row path really returns 404 and never
+	 * falls through to the now-403 write gate.
+	 */
+	public function testNonMemberCannotWriteAndGets404(): void
+	{
+		// create under a project the non-member has no privilege on
+		$c = $this->svc()->create(
+			projectsId: $this->projectId,
+			userId: $this->nonMemberId,
+			name: 'X',
+			description: 'd',
+		);
+		$this->assertTrue($c->isError, 'non-member create must be rejected');
+		$this->assertSame(404, $c->statusCode);
+
+		$line = $this->createOne('owned');
+
+		$u = $this->svc()->update(
+			userId: $this->nonMemberId,
+			lineId: $line->lines_id,
+			patch: (object)['name' => 'hacked'],
+			keys: ['name'],
+		);
+		$this->assertTrue($u->isError, 'non-member update must be rejected');
+		$this->assertSame(404, $u->statusCode);
+
+		$d = $this->svc()->delete($this->nonMemberId, $line->lines_id);
+		$this->assertTrue($d->isError, 'non-member delete must be rejected');
+		$this->assertSame(404, $d->statusCode);
+	}
+
+	/**
+	 * Security regression: getOne / getPage use privilege checks, so a
+	 * read-only user (denied writes) can still read.
+	 */
+	public function testReadOnlyUserCanRead(): void
 	{
 		$readUser = $this->grantReadOnlyUser();
 		$line = $this->createOne('readable');
@@ -208,16 +250,16 @@ class LineApiTest extends IntegrationTestCase
 
 		$p = $this->svc()->getPage($readUser, $this->projectId, 1, 50, null);
 		$this->assertOk($p, 'read-only user getPage must succeed');
-		$ids = array_map(fn($x) => (string)$x->lines_id, $p->value);
+		$ids = array_map(fn ($x) => (string)$x->lines_id, $p->value);
 		$this->assertContains((string)$line->lines_id, $ids);
 	}
 
-	private function fetchUpdatedAt(string $lineId): string
+	private function fetchUpdatedAt(UuidInterface $lineId): string
 	{
 		$st = $this->db->prepare(
 			"SELECT updated_at FROM project_lines WHERE project_lines_id = :id"
 		);
-		$st->execute([':id' => Uuid::fromString($lineId)->getBytes()]);
+		$st->execute([':id' => $lineId->getBytes()]);
 		return (string)$st->fetchColumn();
 	}
 }

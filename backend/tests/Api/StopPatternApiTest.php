@@ -3,35 +3,39 @@
 /**
  * TRViS用 時刻表管理用API
  *
- * NOTE: OpenAPI-Generator stub filled with DB integration tests for
- * StopPattern (StopPatternApi -> StopPatternsService).
- * Covers the lines_id UPDATE path (DB alias project_lines_id = :lines_id).
+ * DB integration tests for StopPattern (StopPatternApi -> StopPatternsService).
+ * Drives the service directly; route registration / OA parsing / container
+ * glue are covered separately (drift tests + byte-stable openapi.json regen
+ * + route-wiring smoke).
+ *
+ * Covers the lines_id UPDATE path: StopPatternsRepo::updateStopPattern maps
+ * 'lines_id' -> "project_lines_id = :lines_id" in the SET clause.
+ *
+ * Line rows are inserted directly via PDO (LineService is not yet ported to
+ * the new backend — scope rule §0), registered for FK-safe teardown.
+ *
  * @see tests/Integration/IntegrationTestCase.php
+ * @see tests/Unit/RouteSmokeTest.php
  */
 
 namespace dev_t0r\trvis_backend\api;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversMethod;
-use dev_t0r\trvis_backend\model\Line;
 use dev_t0r\trvis_backend\model\StopPattern;
-use dev_t0r\trvis_backend\service\LineService;
 use dev_t0r\trvis_backend\service\StopPatternsService;
 use dev_t0r\trvis_backend\tests\integration\IntegrationTestCase;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
-require_once __DIR__ . '/../Integration/IntegrationTestCase.php';
+// IntegrationTestCase is composer classmap-autoloaded
+// (autoload-dev.classmap: ["tests/Integration/"]); no require_once needed.
 
 #[CoversClass(\dev_t0r\trvis_backend\api\StopPatternApi::class)]
 #[CoversMethod(\dev_t0r\trvis_backend\api\StopPatternApi::class, 'createStopPattern')]
 #[CoversMethod(\dev_t0r\trvis_backend\api\StopPatternApi::class, 'getStopPattern')]
 #[CoversMethod(\dev_t0r\trvis_backend\api\StopPatternApi::class, 'getStopPatternList')]
-#[CoversMethod('\dev_t0r\trvis_backend\api\StopPatternApi::class::updateStopPattern
-Covers the lines_id UPDATE alias (harness gap): _keyToUpdateQuerySetLine
-maps \'lines_id\' -> "project_lines_id = :lines_id".::class', 'updateStopPattern
-Covers the lines_id UPDATE alias (harness gap): _keyToUpdateQuerySetLine
-maps \'lines_id\' -> "project_lines_id = :lines_id".')]
+#[CoversMethod(\dev_t0r\trvis_backend\api\StopPatternApi::class, 'updateStopPattern')]
 #[CoversMethod(\dev_t0r\trvis_backend\api\StopPatternApi::class, 'deleteStopPattern')]
 class StopPatternApiTest extends IntegrationTestCase
 {
@@ -40,15 +44,23 @@ class StopPatternApiTest extends IntegrationTestCase
 		return new StopPatternsService($this->db, $this->logger);
 	}
 
+	/**
+	 * Insert a project_lines row directly via PDO (LineService is not yet
+	 * ported to the new backend — §0 scope rule). Register for FK-safe
+	 * teardown via register().
+	 */
 	private function newLine(string $name = 'L'): UuidInterface
 	{
-		$r = (new LineService($this->db, $this->logger))->create(
-			$this->projectId,
-			$this->userId,
-			[$this->makeModel(Line::class, ['name' => $name, 'description' => 'd'])],
-		);
-		$this->assertOk($r, 'newLine');
-		$id = $r->value[0]->lines_id;
+		$id = Uuid::uuid7();
+		$this->db->prepare(
+			"INSERT INTO project_lines (project_lines_id, projects_id, description, owner, name)"
+			. " VALUES (:id, :pid, '', :owner, :name)"
+		)->execute([
+			':id' => $id->getBytes(),
+			':pid' => $this->projectId->getBytes(),
+			':owner' => $this->userId,
+			':name' => $name,
+		]);
 		$this->register('project_lines', 'project_lines_id', (string)$id);
 		return $id;
 	}
@@ -71,7 +83,7 @@ class StopPatternApiTest extends IntegrationTestCase
 		return $o;
 	}
 
-	public function testCreateStopPattern()
+	public function testCreateStopPattern(): void
 	{
 		$line = $this->newLine();
 		$o = $this->createOne($line);
@@ -80,18 +92,20 @@ class StopPatternApiTest extends IntegrationTestCase
 		$this->assertSame(1, $o->direction);
 	}
 
-	public function testGetStopPattern()
+	public function testGetStopPattern(): void
 	{
 		$o = $this->createOne($this->newLine());
 		$g = $this->svc()->getOne($this->userId, $o->stop_patterns_id);
 		$this->assertOk($g, 'getOne');
 		$this->assertSame((string)$o->stop_patterns_id, (string)$g->value->stop_patterns_id);
+
+		// non-member -> 404
 		$nm = $this->svc()->getOne($this->nonMemberId, $o->stop_patterns_id);
 		$this->assertTrue($nm->isError);
 		$this->assertSame(404, $nm->statusCode);
 	}
 
-	public function testGetStopPatternList()
+	public function testGetStopPatternList(): void
 	{
 		$line = $this->newLine();
 		$a = $this->createOne($line, ['name' => 'A']);
@@ -103,7 +117,7 @@ class StopPatternApiTest extends IntegrationTestCase
 		$this->assertContains((string)$b->stop_patterns_id, $ids);
 	}
 
-	public function testUpdateStopPattern()
+	public function testUpdateStopPattern(): void
 	{
 		$lineA = $this->newLine('A');
 		$lineB = $this->newLine('B');
@@ -111,16 +125,24 @@ class StopPatternApiTest extends IntegrationTestCase
 		$this->assertSame((string)$lineA, (string)$o->lines_id);
 		$before = $this->fetchUpdatedAt((string)$o->stop_patterns_id);
 		sleep(1);
+		$bodyModel = $this->makeModel(
+			StopPattern::class,
+			['name' => 'after', 'lines_id' => $lineB, 'direction' => -1],
+		);
 		$u = $this->svc()->update(
 			$this->userId,
 			$o->stop_patterns_id,
-			$this->makeModel(StopPattern::class, ['name' => 'after', 'lines_id' => $lineB, 'direction' => -1]),
-			['name' => 'after', 'lines_id' => $lineB, 'direction' => -1],
+			$bodyModel,
+			['name', 'lines_id', 'direction'],
 		);
 		$this->assertOk($u, 'updateStopPattern');
 		$g = $this->svc()->getOne($this->userId, $o->stop_patterns_id);
 		$this->assertSame('after', $g->value->name);
-		$this->assertSame((string)$lineB, (string)$g->value->lines_id, 'lines_id update via project_lines_id alias');
+		$this->assertSame(
+			(string)$lineB,
+			(string)$g->value->lines_id,
+			'lines_id update via project_lines_id alias',
+		);
 		$this->assertSame(-1, $g->value->direction);
 		$this->assertGreaterThan(
 			$before,
@@ -129,7 +151,7 @@ class StopPatternApiTest extends IntegrationTestCase
 		);
 	}
 
-	public function testDeleteStopPattern()
+	public function testDeleteStopPattern(): void
 	{
 		$o = $this->createOne($this->newLine());
 		$d = $this->svc()->delete($this->userId, $o->stop_patterns_id);

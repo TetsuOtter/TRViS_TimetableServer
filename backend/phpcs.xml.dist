@@ -24,11 +24,16 @@
     <!-- -s    Show sniff codes in all reports -->
     <arg value="ps"/>
 
-    <!-- Include the whole PSR12 standard -->
+    <!-- PSR12 with project carve-outs. The whole codebase is tab-indented
+         by convention (every backend_legacy file too); PSR12's space-indent
+         sniffs are excluded so `composer phpcs` is a real, green gate. -->
     <rule ref="PSR12">
-        <!-- There is no way to wrap generated comments, just disable that rule for now -->
+        <!-- Long #[OA\*] attribute / schema lines can't always be wrapped cleanly -->
         <exclude name="Generic.Files.LineLength.TooLong" />
-        <!-- Codegen generates variables with underscore on purpose -->
+        <!-- OAS models declare snake_case (underscore) properties on purpose -->
         <exclude name="PSR2.Classes.PropertyDeclaration.Underscore" />
+        <!-- Codebase convention is tab indentation -->
+        <exclude name="Generic.WhiteSpace.DisallowTabIndent" />
+        <exclude name="Generic.WhiteSpace.ScopeIndent" />
     </rule>
 </ruleset>

@@ -67,23 +67,6 @@ jobs:
         # (typecheck/build 用。本物の資格情報は使わない)。
         run: cp .env.sample .env
 
-      - name: "Build OpenAPI client (trvis-api workspace)"
-        # trvis-api は workspace (trvis-api: workspace:^)。dist は未コミットで、
-        # Yarn Berry は workspace の prepare を自動実行しないため、
-        # TS Project References のサイドカー設定 (tsconfig.build.json /
-        # composite) を frontend ピン留めの tsc で明示ビルドする。
-        # Dockerfile の `yarn build` 先頭と同一コマンド = 同経路。
-        run: ./node_modules/.bin/tsc -b packages/trvis-api/tsconfig.build.json
-
-      - name: Smoke check - OpenAPI client really built
-        # 後続の tsc / vite build は trvis-api の dist (main: ./dist/index.js) を
-        # 解決する。生成物が無いと別エラーに化けて切り分けが付かなくなるため、
-        # ここで生成済みを検証し、無ければ必ずジョブを落とす。
-        run: |
-          test -f packages/trvis-api/dist/index.js
-          test -f packages/trvis-api/dist/index.d.ts
-          echo "trvis-api dist/index.{js,d.ts}: OK"
-
       - name: Typecheck (tsc — correctness bar)
         # このプロジェクトにはテストランナーが無い。デザインバンドルの
         # 逐語移植のため eslint は意図的に noisy で、正しさのバーは tsc。

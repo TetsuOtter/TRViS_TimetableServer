@@ -14,6 +14,9 @@ export interface TimetableRow {
 	id: string;
 	stationId?: string;
 	stationName: string;
+	/** true when stationId points at a soft-deleted station — the editor shows
+	 * the resolved name with a "(削除済み)" tombstone instead of a live link. */
+	stationDeleted?: boolean;
 	fullName?: string;
 	/** internal "HH:MM:SS" (or "" / free text) */
 	arrive: string;
@@ -27,6 +30,16 @@ export interface TimetableRow {
 	departureHidden?: boolean;
 	trackName: string;
 	trackHidden?: boolean;
+	/** FK to a station_tracks entity (the row's track). */
+	stationTrackId?: string;
+	/** true when stationTrackId points at a soft-deleted track (tombstone). */
+	trackDeleted?: boolean;
+	/** FK to a colors entity (the row's marker color). */
+	colorIdMarker?: string;
+	/** backend-resolved name of colorIdMarker (present even when deleted). */
+	colorName?: string;
+	/** true when colorIdMarker points at a soft-deleted color (tombstone). */
+	colorDeleted?: boolean;
 	isPass: boolean;
 	isOperationOnlyStop: boolean;
 	isLastStop?: boolean;
@@ -111,6 +124,11 @@ export interface StationOnLine {
 	id: string;
 	lineId: string;
 	stationId: string;
+	/** backend-resolved name of the referenced station (present even when the
+	 * station is soft-deleted; the line editor shows it as a tombstone). */
+	stationName?: string;
+	/** true when stationId points at a soft-deleted station. */
+	stationDeleted?: boolean;
 	location_m: number;
 	longitude_deg?: number;
 	latitude_deg?: number;

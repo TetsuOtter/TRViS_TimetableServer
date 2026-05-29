@@ -40,8 +40,7 @@ final class ProjectsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 			]
 		);
 
-		try
-		{
+		try {
 			$query = $this->db->prepare(<<<SQL
 				INSERT INTO
 					projects_privileges
@@ -63,11 +62,31 @@ final class ProjectsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 			$query->bindValue(':projectsId', $projectsId->getBytes(), PDO::PARAM_STR);
 			$query->bindValue(':inviteKeysId', $inviteKeysId?->getBytes(), PDO::PARAM_STR);
 			$query->bindValue(':privilegeType', $privilegeType->value, PDO::PARAM_INT);
-			$query->execute();
-			return RetValueOrError::withValue(null);
-		}
-		catch (\PDOException $e)
-		{
+			$isSuccess = $query->execute();
+			if ($isSuccess) {
+				return RetValueOrError::withValue(null);
+			}
+
+			$errCode = $query->errorCode();
+			$errInfo = $query->errorInfo();
+			$this->logger->error(
+				'failed to insert project  ({errorCode} -> {errorInfo})',
+				[
+					"errorCode" => $errCode,
+					"errorInfo" => $errInfo,
+				]
+			);
+			if ((int)($errInfo[1] ?? 0) === 1062) {
+				return RetValueOrError::withError(
+					Constants::HTTP_CONFLICT,
+					'project privilege already exists',
+				);
+			}
+			return RetValueOrError::withError(
+				Constants::HTTP_INTERNAL_SERVER_ERROR,
+				"Failed to execute SQL - " . $errCode,
+			);
+		} catch (\PDOException $e) {
 			$errCode = $e->getCode();
 			$errInfo = $e->errorInfo;
 			$this->logger->error(
@@ -75,8 +94,14 @@ final class ProjectsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 				[
 					"errorCode" => $errCode,
 					"errorInfo" => $errInfo,
-					]
+				]
 			);
+			if ((int)($errInfo[1] ?? 0) === 1062) {
+				return RetValueOrError::withError(
+					Constants::HTTP_CONFLICT,
+					'project privilege already exists',
+				);
+			}
 			return RetValueOrError::withError(
 				Constants::HTTP_INTERNAL_SERVER_ERROR,
 				"Failed to execute SQL - " . $errCode,
@@ -104,8 +129,7 @@ final class ProjectsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 			]
 		);
 
-		try
-		{
+		try {
 			$query = $this->db->prepare(<<<SQL
 				UPDATE
 					projects_privileges
@@ -140,9 +164,7 @@ final class ProjectsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 				);
 			}
 			return RetValueOrError::withValue(null);
-		}
-		catch (\PDOException $e)
-		{
+		} catch (\PDOException $e) {
 			$errCode = $e->getCode();
 			$errInfo = $e->errorInfo;
 			$this->logger->error(
@@ -177,13 +199,11 @@ final class ProjectsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 			]
 		);
 
-		if ($userId === Constants::UID_ANONYMOUS)
-		{
+		if ($userId === Constants::UID_ANONYMOUS) {
 			// リクエスト対象自体がAnonymousの場合は、わざわざOR条件にする必要はない
 			$includeAnonymous = false;
 		}
-		try
-		{
+		try {
 			$query = $this->db->prepare(
 				'SELECT'
 				.
@@ -209,15 +229,13 @@ final class ProjectsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 			$query->bindValue(':userId', $userId, PDO::PARAM_STR);
 			$query->bindValue(':projectsId', $id->getBytes(), PDO::PARAM_STR);
 			$query->execute();
-			if ($query->rowCount() === 0)
-			{
+			if ($query->rowCount() === 0) {
 				return Utils::errProjectNotFound();
 			}
 
 			$privilegeTypeList = $query->fetchAll(PDO::FETCH_ASSOC);
 			$maximumPrivilegeTypeValue = InviteKeyPrivilegeType::none->value;
-			foreach ($privilegeTypeList as $row)
-			{
+			foreach ($privilegeTypeList as $row) {
 				$privilegeTypeValue = intval($row['privilege_type']);
 				$inviteKeysId = $row['invite_keys_id'];
 				$this->logger->debug(
@@ -228,8 +246,7 @@ final class ProjectsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 						'inviteKeysId' => is_null($inviteKeysId) ? null : Uuid::fromBytes($inviteKeysId),
 					]
 				);
-				if ($maximumPrivilegeTypeValue < $privilegeTypeValue)
-				{
+				if ($maximumPrivilegeTypeValue < $privilegeTypeValue) {
 					$maximumPrivilegeTypeValue = $privilegeTypeValue;
 				}
 			}
@@ -242,9 +259,7 @@ final class ProjectsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 			return RetValueOrError::withValue(
 				InviteKeyPrivilegeType::fromInt($maximumPrivilegeTypeValue)
 			);
-		}
-		catch (\PDOException $e)
-		{
+		} catch (\PDOException $e) {
 			$errCode = $e->getCode();
 			$errInfo = $e->errorInfo;
 			$this->logger->error(
@@ -281,13 +296,11 @@ final class ProjectsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 			]
 		);
 
-		if ($userId === Constants::UID_ANONYMOUS)
-		{
+		if ($userId === Constants::UID_ANONYMOUS) {
 			$this->logger->debug('userId is anonymous, so includeAnonymous is set to false');
 			$includeAnonymous = false;
 		}
-		try
-		{
+		try {
 			$query = $this->db->prepare(
 				'SELECT'
 				.
@@ -322,16 +335,14 @@ final class ProjectsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 					'rowCount' => $query->rowCount(),
 				],
 			);
-			if ($query->rowCount() === 0)
-			{
+			if ($query->rowCount() === 0) {
 				return Utils::errProjectNotFound();
 			}
 
 			$privilegeTypeList = $query->fetchAll(PDO::FETCH_ASSOC);
 			$maximumPrivilegeTypeValue = InviteKeyPrivilegeType::none->value;
 			$privilegeTypeObject = null;
-			foreach ($privilegeTypeList as $row)
-			{
+			foreach ($privilegeTypeList as $row) {
 				$privilegeTypeValue = intval($row['privilege_type']);
 				$inviteKeysId = $row['invite_keys_id'];
 				$obj = [
@@ -339,15 +350,14 @@ final class ProjectsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 					'projects_id' => Uuid::fromBytes($row['projects_id']),
 					'invite_keys_id' => is_null($inviteKeysId) ? null : Uuid::fromBytes($inviteKeysId),
 					'created_at' => Utils::dbDateStrToDateTime($row['created_at']),
-					'updated_at'=> Utils::dbDateStrToDateTime($row['updated_at']),
+					'updated_at' => Utils::dbDateStrToDateTime($row['updated_at']),
 					'privilege_type' => InviteKeyPrivilegeType::fromInt($privilegeTypeValue),
 				];
 				$this->logger->debug(
 					'privilege type: {privilege_type} (UID:{uid}, InviteKey:{invite_keys_id})',
 					$obj
 				);
-				if ($maximumPrivilegeTypeValue < $privilegeTypeValue || is_null($privilegeTypeObject))
-				{
+				if ($maximumPrivilegeTypeValue < $privilegeTypeValue || is_null($privilegeTypeObject)) {
 					$maximumPrivilegeTypeValue = $privilegeTypeValue;
 
 					$privilegeTypeObject ??= new ProjectsPrivilege();
@@ -361,9 +371,7 @@ final class ProjectsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 				]
 			);
 			return RetValueOrError::withValue($privilegeTypeObject);
-		}
-		catch (\PDOException $e)
-		{
+		} catch (\PDOException $e) {
 			$errCode = $e->getCode();
 			$errInfo = $e->errorInfo;
 			$this->logger->error(
@@ -398,8 +406,7 @@ final class ProjectsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 
 		$hasDeletedAt = !is_null($deletedAt);
 		$deletedAtPlaceholder = $hasDeletedAt ? ':deleted_at' : 'CURRENT_TIMESTAMP()';
-		try
-		{
+		try {
 			$query = $this->db->prepare(<<<SQL
 				UPDATE
 					projects_privileges
@@ -413,8 +420,7 @@ final class ProjectsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 				SQL
 			);
 			$query->bindValue(':projectsId', $projectsId->getBytes(), PDO::PARAM_STR);
-			if ($hasDeletedAt)
-			{
+			if ($hasDeletedAt) {
 				$query->bindValue($deletedAtPlaceholder, Utils::utcDateStrOrNull($deletedAt), PDO::PARAM_STR);
 			}
 
@@ -436,9 +442,7 @@ final class ProjectsPrivilegesRepo implements IMyRepoSelectPrivilegeType
 			} else {
 				return RetValueOrError::withValue(null);
 			}
-		}
-		catch (\PDOException $e)
-		{
+		} catch (\PDOException $e) {
 			$errCode = $e->getCode();
 			$errInfo = $e->errorInfo;
 			$this->logger->error(

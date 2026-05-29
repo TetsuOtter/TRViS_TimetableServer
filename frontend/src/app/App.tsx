@@ -5,11 +5,13 @@ import { useEffect, useMemo, useState } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
 
+import { fromApiStopPattern, fromApiTrain } from "../api/adapters";
 import {
-	fromApiStopPattern,
-	fromApiStopPatternRow,
-	fromApiTrain,
-} from "../api/adapters";
+	useColors,
+	useCreateColor,
+	useDeleteColor,
+	useUpdateColor,
+} from "../api/hooks/useColors";
 import {
 	useCreateLine,
 	useDeleteLine,
@@ -35,6 +37,7 @@ import {
 	useUpdateStationOnLine,
 } from "../api/hooks/useStationsOnLine";
 import {
+	fetchStopPatternRows,
 	useCreateStopPatternRows,
 	useDeleteStopPatternRow,
 	useStopPatternRows,
@@ -70,7 +73,6 @@ import {
 	useUpdateWork,
 	useWorks,
 } from "../api/hooks/useWorks";
-import { stopPatternRowApi } from "../api/instances";
 import { queryKeys } from "../api/queryKeys";
 import { AppShell } from "../components/AppShell";
 import AuthControls from "../components/auth/AuthControls";
@@ -81,6 +83,7 @@ import {
 	WorkDialog,
 	WorkGroupDialog,
 } from "../components/EntityDialogs";
+import { ColorManager } from "../components/ColorManager";
 import { LineManager } from "../components/LineManager";
 import { ProjectListScreen } from "../components/ProjectList";
 import { StopPatternWizard } from "../components/StopPatternWizard";
@@ -92,6 +95,7 @@ import { useSettings } from "./SettingsContext";
 import type { AppliedRow } from "../components/ApplyPatternDialog";
 import type { ContextMenuItem } from "../components/EntityDialogs";
 import type {
+	Color as EntityColor,
 	Line as EntityLine,
 	Project as EntityProject,
 	ProjectStation as EntityProjectStation,
@@ -131,11 +135,19 @@ function entityTimetableRowToModel(
 	};
 	const station =
 		row.stationId !== undefined ? stationsById.get(row.stationId) : undefined;
+	// Prefer the backend-resolved name (authoritative, and present even when the
+	// station is soft-deleted) over the client-side live-list lookup.
 	return {
 		id: row.id,
 		stationId: row.stationId,
-		stationName: station?.stationName ?? "",
+		stationName: row.stationName ?? station?.stationName ?? "",
+		stationDeleted: row.stationIsDeleted ?? false,
 		fullName: station?.fullName ?? "",
+		colorIdMarker: row.colorIdMarker,
+		colorName: row.colorName ?? undefined,
+		colorDeleted: row.colorIsDeleted ?? false,
+		stationTrackId: row.stationTrackId,
+		trackDeleted: row.stationTrackIsDeleted ?? false,
 		arrive: toTimeStr(row.arriveTimeHh, row.arriveTimeMm, row.arriveTimeSs),
 		departure: toTimeStr(
 			row.departureTimeHh,
@@ -144,7 +156,7 @@ function entityTimetableRowToModel(
 		),
 		arriveDisplayText: row.arriveStr,
 		departureDisplayText: row.departureStr,
-		trackName: "",
+		trackName: row.stationTrackName ?? "",
 		isPass: row.isPass ?? false,
 		isOperationOnlyStop: row.isOperationOnlyStop ?? false,
 		isLastStop: row.isLastStop,
@@ -224,6 +236,8 @@ function entityStationOnLineToModel(sol: EntityStationOnLine): StationOnLine {
 		id: sol.id,
 		lineId: sol.lineId,
 		stationId: sol.projectStationId,
+		stationName: sol.projectStationName ?? undefined,
+		stationDeleted: sol.projectStationIsDeleted ?? false,
 		location_m: sol.locationM,
 		longitude_deg: sol.longitude,
 		latitude_deg: sol.latitude,
@@ -326,7 +340,7 @@ function downloadJson(filename: string, obj: unknown) {
 	}, 0);
 }
 
-type Screen = "projects" | "work" | "lines";
+type Screen = "projects" | "work" | "lines" | "colors";
 
 interface ContextMenuState {
 	x: number;
@@ -346,6 +360,7 @@ interface SidebarTreeProps {
 	currentWork: string | null;
 	onSelect: (wgId: string, wId: string) => void;
 	onSelectLines: () => void;
+	onSelectColors: () => void;
 	onAddWG: () => void;
 	onWGContext: (x: number, y: number, wg: WorkGroup) => void;
 	onWorkContext: (
@@ -366,6 +381,7 @@ function SidebarTree({
 	currentWork,
 	onSelect,
 	onSelectLines,
+	onSelectColors,
 	onAddWG,
 	onWGContext,
 	onWorkContext,
@@ -495,6 +511,11 @@ function SidebarTree({
 					<span style={{ fontSize: 11 }}>🛤</span> {t.lineManager}
 				</button>
 				<button
+					className={`sidebar-item ${currentScreen === "colors" ? "active" : ""}`}
+					onClick={onSelectColors}>
+					<span style={{ fontSize: 11 }}>🎨</span> {t.colorManager}
+				</button>
+				<button
 					className="sidebar-item"
 					style={{ fontSize: 12 }}
 					onClick={onExport}>
@@ -566,6 +587,11 @@ export function App() {
 	const createProjectStationMutation = useCreateProjectStation(projectId ?? "");
 	const updateProjectStationMutation = useUpdateProjectStation(projectId ?? "");
 	const deleteProjectStationMutation = useDeleteProjectStation(projectId ?? "");
+
+	const { data: apiColors } = useColors(projectId ?? "");
+	const createColorMutation = useCreateColor(projectId ?? "");
+	const updateColorMutation = useUpdateColor(projectId ?? "");
+	const deleteColorMutation = useDeleteColor(projectId ?? "");
 
 	const { data: apiStationsOnLine } = useStationsOnLine(currentLine ?? "");
 	const createStationOnLineMutation = useCreateStationOnLine(currentLine ?? "");
@@ -719,6 +745,8 @@ export function App() {
 			bc.push({ label: work.name, onClick: () => {} });
 		if (screen === "lines")
 			bc.push({ label: t.lineManager, onClick: () => {} });
+		if (screen === "colors")
+			bc.push({ label: t.colorManager, onClick: () => {} });
 		return bc;
 	}, [project, wg, work, screen, t]);
 
@@ -902,6 +930,8 @@ export function App() {
 
 	const modelRowToEntityDraft = (r: ModelTimetableRow): Omit<EntityTimetableRow, "id" | "trainId" | "createdAt" | "updatedAt"> => ({
 		stationId: r.stationId,
+		stationTrackId: r.stationTrackId,
+		colorIdMarker: r.colorIdMarker,
 		driveTimeMm: r.driveTime_MM,
 		driveTimeSs: r.driveTime_SS,
 		isPass: r.isPass,
@@ -1028,6 +1058,28 @@ export function App() {
 		}
 	};
 
+	/* ─── Color CRUD (wired from ColorManager) ─── */
+	const handleCreateColor = (
+		draft: Omit<EntityColor, "id" | "projectId" | "createdAt">
+	) => {
+		createColorMutation.mutate(draft, {
+			onError: (e: Error) => alert(e.message),
+		});
+	};
+	const handleUpdateColor = (
+		vars: Pick<EntityColor, "id"> &
+			Omit<EntityColor, "id" | "projectId" | "createdAt">
+	) => {
+		updateColorMutation.mutate(vars, {
+			onError: (e: Error) => alert(e.message),
+		});
+	};
+	const handleDeleteColor = (colorId: string) => {
+		deleteColorMutation.mutate(colorId, {
+			onError: (e: Error) => alert(e.message),
+		});
+	};
+
 	/* ─── ProjectStation CRUD (wired from LineManager) ─── */
 	const handleCreateStation = (
 		draft: Omit<EntityProjectStation, "id" | "projectId" | "createdAt">
@@ -1145,13 +1197,7 @@ export function App() {
 
 	const handleDuplicateStopPattern = async (p: StopPattern) => {
 		try {
-			const rows = await queryClient.fetchQuery({
-				queryKey: queryKeys.stopPatternRows(p.id),
-				queryFn: () =>
-					stopPatternRowApi
-						.getStopPatternRowList({ stopPatternId: p.id })
-						.then((l) => l.map(fromApiStopPatternRow)),
-			});
+			const rows = await fetchStopPatternRows(queryClient, p.id);
 			const created = await createStopPatternMutation.mutateAsync({
 				lineId: p.lineId,
 				name: p.name + " (コピー)",
@@ -1305,6 +1351,7 @@ export function App() {
 				setCurrentWork(wId);
 			}}
 			onSelectLines={() => setScreen("lines")}
+			onSelectColors={() => setScreen("colors")}
 			onAddWG={() => setEditingWG({ new: true })}
 			onAddWork={(w) => {
 					setCurrentWG(w.id);
@@ -1439,6 +1486,7 @@ export function App() {
 						}}
 						stopPatterns={modelStopPatterns}
 						stations={modelProjectStations}
+						colors={apiColors ?? []}
 						stationsOnLine={data.stationsOnLine}
 						lines={data.lines}
 						onCreateRow={handleCreateRow}
@@ -1501,6 +1549,15 @@ export function App() {
 						onDuplicateStopPattern={(p) => {
 							void handleDuplicateStopPattern(p);
 						}}
+						t={t}
+					/>
+				)}
+				{projectId && screen === "colors" && (
+					<ColorManager
+						colors={apiColors ?? []}
+						onCreate={handleCreateColor}
+						onUpdate={handleUpdateColor}
+						onDelete={handleDeleteColor}
 						t={t}
 					/>
 				)}

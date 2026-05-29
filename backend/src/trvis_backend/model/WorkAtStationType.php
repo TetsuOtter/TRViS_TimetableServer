@@ -2,10 +2,20 @@
 
 namespace dev_t0r\trvis_backend\model;
 
-enum WorkAtStationType: int implements \JsonSerializable {
+/**
+ * Faithful 1:1 port of the legacy int-backed work-at-station-type enum.
+ *
+ * Behaviour preserved exactly (fromString/fromOrNull/jsonSerialize). Same
+ * code-first style as InviteKeyPrivilegeType: no `declare(strict_types=1)`
+ * on purpose (ported repos/service rely on legacy coercion semantics);
+ * explicit `public` on the static factories (PSR1 method-visibility).
+ */
+enum WorkAtStationType: int implements \JsonSerializable
+{
 	case none = 0;
 
-	public static function fromString(string $string): self {
+	public static function fromString(string $string): self
+	{
 		switch (strtolower($string)) {
 			case 'none':
 				return self::none;
@@ -15,7 +25,8 @@ enum WorkAtStationType: int implements \JsonSerializable {
 		}
 	}
 
-	public static function fromOrNull(int|string|null $value): ?self {
+	public static function fromOrNull(int|string|null $value): ?self
+	{
 		if (is_null($value)) {
 			return null;
 		}
@@ -27,7 +38,8 @@ enum WorkAtStationType: int implements \JsonSerializable {
 		}
 	}
 
-	public function jsonSerialize(): string {
+	public function jsonSerialize(): string
+	{
 		return $this->name;
 	}
 }

@@ -17,9 +17,10 @@ use Ramsey\Uuid\UuidInterface;
  *   登録された行をFK安全順に明示削除 (サービスが自前でtxを張るので外側tx
  *   ラップはしない)。
  * - makeModel(): OASスキーマの全プロパティを埋めてから setData する。
- *   phpunit.xml.dist の convertWarningsToExceptions=true 下で、Repoが
- *   未設定の任意プロパティを参照した際の "Undefined array key" 警告が
- *   例外化してテストが落ちるのを防ぐ。
+ *   phpunit.xml.dist の failOnWarning="true" 下で、Repoが未設定の任意
+ *   プロパティを参照した際の "Undefined array key" 警告がテストを落とす
+ *   のを防ぐ (モデル読み取り側の防御)。なお Repo の SELECT が列を出し
+ *   忘れた場合の同警告は makeModel では防げず、failOnWarning が検出する。
  */
 abstract class IntegrationTestCase extends TestCase
 {
@@ -43,6 +44,12 @@ abstract class IntegrationTestCase extends TestCase
 		try {
 			self::$pdo = new PDO($dsn, $user, $pass, [
 				PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+				// H7: mirror the dev/prod connection so update* rowCount()
+				// reports matched (not changed) rows — a no-op PATCH on a
+				// live row must not be a false 404. (dev config = ERRMODE +
+				// FOUND_ROWS; AUTOCOMMIT=false is prod-only and orthogonal to
+				// H7, so it is intentionally not set here.)
+				PDO::MYSQL_ATTR_FOUND_ROWS => true,
 			]);
 		} catch (\PDOException $e) {
 			self::$skipReason = 'Test DB unavailable (' . $e->getMessage() . ')';

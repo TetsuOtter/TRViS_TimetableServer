@@ -3,20 +3,25 @@
 /**
  * TRViS用 時刻表管理用API
  *
- * NOTE: OpenAPI-Generator stub filled with DB integration tests for
- * Train (TrainApi -> TrainsService). Train is keyed to a Work (-> WG);
- * privilege resolves through the project's projects_privileges via the
- * Work parent chain. TrainsService extends MyServiceBase, so
- * getOne/update/delete go through TrainsRepo (MyRepoBase)
- * selectPrivilegeType -> this regresses the project-root
- * privilege-resolution fix (admin -> 200, not 404).
+ * NOTE: DB integration tests for Train (TrainApi -> TrainsService). Train is
+ * keyed to a Work (-> WG); privilege resolves through the project's
+ * projects_privileges via the Work parent chain. TrainsService is standalone
+ * (no MyServiceBase), so getOne/update/delete go through
+ * TrainsRepo::selectPrivilegeType -> WorkGroupsPrivilegesRepo ->
+ * ProjectsPrivilegesRepo. This regresses the project-root privilege-resolution
+ * fix (admin -> 200, not 404).
  * @see tests/Integration/IntegrationTestCase.php
  */
 
 namespace dev_t0r\trvis_backend\api;
 
+use Lcobucci\JWT\Token\DataSet;
+use Lcobucci\JWT\UnencryptedToken;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversMethod;
+use Slim\Psr7\Factory\ResponseFactory;
+use Slim\Psr7\Factory\ServerRequestFactory;
+use dev_t0r\trvis_backend\auth\MyAuthMiddleware;
 use dev_t0r\trvis_backend\model\Train;
 use dev_t0r\trvis_backend\model\Work;
 use dev_t0r\trvis_backend\service\TrainsService;
@@ -26,7 +31,8 @@ use dev_t0r\trvis_backend\tests\integration\IntegrationTestCase;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
-require_once __DIR__ . '/../Integration/IntegrationTestCase.php';
+// IntegrationTestCase is composer classmap-autoloaded
+// (autoload-dev.classmap: ["tests/Integration/"]); no require_once needed.
 
 #[CoversClass(\dev_t0r\trvis_backend\api\TrainApi::class)]
 #[CoversMethod(\dev_t0r\trvis_backend\api\TrainApi::class, 'createTrain')]
@@ -84,7 +90,7 @@ class TrainApiTest extends IntegrationTestCase
 		return $o;
 	}
 
-	public function testCreateTrain()
+	public function testCreateTrain(): void
 	{
 		$work = $this->newWork();
 		$o = $this->createOne($work);
@@ -94,10 +100,10 @@ class TrainApiTest extends IntegrationTestCase
 	}
 
 	/**
-     * Recommended-spec regression: is_ride_on_moving may be omitted by the
-     * client; the repo must coalesce null -> DB DEFAULT (false), not 500.
-     */
-    public function testCreateTrainDefaults()
+	 * Recommended-spec regression: is_ride_on_moving may be omitted by the
+	 * client; the repo must coalesce null -> DB DEFAULT (false), not 500.
+	 */
+	public function testCreateTrainDefaults(): void
 	{
 		$work = $this->newWork();
 		$data = [
@@ -120,7 +126,7 @@ class TrainApiTest extends IntegrationTestCase
 		$this->assertSame(0, (int)$g->value->is_ride_on_moving, 'omitted is_ride_on_moving must persist as DB DEFAULT false');
 	}
 
-	public function testGetTrain()
+	public function testGetTrain(): void
 	{
 		$o = $this->createOne($this->newWork());
 		// admin -> 200 (regresses the project-root privilege fix)
@@ -133,7 +139,7 @@ class TrainApiTest extends IntegrationTestCase
 		$this->assertSame(404, $nm->statusCode);
 	}
 
-	public function testGetTrainList()
+	public function testGetTrainList(): void
 	{
 		$work = $this->newWork();
 		$a = $this->createOne($work, ['train_number' => 'A']);
@@ -145,7 +151,7 @@ class TrainApiTest extends IntegrationTestCase
 		$this->assertContains((string)$b->trains_id, $ids);
 	}
 
-	public function testUpdateTrain()
+	public function testUpdateTrain(): void
 	{
 		$o = $this->createOne($this->newWork(), ['train_number' => 'before']);
 		$before = $this->fetchUpdatedAt((string)$o->trains_id);
@@ -166,7 +172,7 @@ class TrainApiTest extends IntegrationTestCase
 		);
 	}
 
-	public function testDeleteTrain()
+	public function testDeleteTrain(): void
 	{
 		$o = $this->createOne($this->newWork());
 		$d = $this->svc()->delete($this->userId, $o->trains_id);
@@ -174,6 +180,113 @@ class TrainApiTest extends IntegrationTestCase
 		$g = $this->svc()->getOne($this->userId, $o->trains_id);
 		$this->assertTrue($g->isError);
 		$this->assertSame(404, $g->statusCode);
+	}
+
+	/**
+	 * Build a ServerRequest with a JSON-decoded parsed body and a fake auth
+	 * token attribute set so getUserIdOrNull() returns the given userId.
+	 *
+	 * @param array<string,mixed>|list<array<string,mixed>> $parsedBody
+	 */
+	private function buildRequest(mixed $parsedBody, string $userId): \Psr\Http\Message\ServerRequestInterface
+	{
+		$tokenMock = $this->createMock(UnencryptedToken::class);
+		$claims = new DataSet(['sub' => $userId], '');
+		$tokenMock->method('claims')->willReturn($claims);
+
+		$req = (new ServerRequestFactory())->createServerRequest('POST', '/');
+		return $req
+			->withParsedBody($parsedBody)
+			->withAttribute(MyAuthMiddleware::ATTR_NAME_TOKEN_OBJ, $tokenMock);
+	}
+
+	/**
+	 * Build a fully-populated Train body (all optional properties set to null)
+	 * to prevent BaseModel::__get "Undefined array key" warnings when the
+	 * service/repo reads optional fields from the model.
+	 *
+	 * @param array<string,mixed> $over
+	 * @return array<string,mixed>
+	 */
+	private function trainBody(array $over = []): array
+	{
+		return array_merge([
+			'train_number' => 'API-T1',
+			'description' => 'd',
+			'direction' => 1,
+			'day_count' => 0,
+			'is_ride_on_moving' => false,
+			'max_speed' => null,
+			'speed_type' => null,
+			'nominal_tractive_capacity' => null,
+			'car_count' => null,
+			'destination' => null,
+			'begin_remarks' => null,
+			'after_remarks' => null,
+			'remarks' => null,
+			'before_departure' => null,
+			'after_arrive' => null,
+			'train_info' => null,
+		], $over);
+	}
+
+	/**
+	 * Api-level single-item create test: POST a single JSON object to
+	 * /works/{workId}/trains — assert HTTP 200 and body is a single object
+	 * (not a list). This is the faithful-port contract from KNOWLEDGE.md §1.
+	 */
+	public function testCreateTrainApiSingleItemReturns200(): void
+	{
+		$worksId = $this->newWork();
+		$api = new TrainApi($this->db, $this->logger);
+
+		$req = $this->buildRequest($this->trainBody(['train_number' => 'API-1']), $this->userId);
+		$resp = $api->createTrain($req, (new ResponseFactory())->createResponse(), (string)$worksId);
+
+		$this->assertSame(200, $resp->getStatusCode(), 'single-item create must return HTTP 200');
+
+		$decoded = json_decode((string)$resp->getBody(), true);
+		$this->assertIsArray($decoded, 'body must be JSON-decoded to an array/object');
+		$this->assertFalse(
+			array_is_list($decoded),
+			'single-item create body must be an associative object, not a list',
+		);
+		$this->assertArrayHasKey('train_number', $decoded);
+		$this->assertSame('API-1', $decoded['train_number']);
+
+		// Cleanup: register the created train for teardown
+		if (isset($decoded['trains_id'])) {
+			$this->register('trains', 'trains_id', $decoded['trains_id']);
+		}
+	}
+
+	/**
+	 * Bonus: POST array body to /works/{workId}/trains — assert HTTP 201 + list.
+	 */
+	public function testCreateTrainApiArrayBodyReturns201(): void
+	{
+		$worksId = $this->newWork();
+		$api = new TrainApi($this->db, $this->logger);
+
+		$body = [
+			$this->trainBody(['train_number' => 'ARR-1', 'direction' => 1]),
+			$this->trainBody(['train_number' => 'ARR-2', 'direction' => -1]),
+		];
+		$req = $this->buildRequest($body, $this->userId);
+		$resp = $api->createTrain($req, (new ResponseFactory())->createResponse(), (string)$worksId);
+
+		$this->assertSame(201, $resp->getStatusCode(), 'array create must return HTTP 201');
+
+		$decoded = json_decode((string)$resp->getBody(), true);
+		$this->assertIsArray($decoded, 'body must be JSON array');
+		$this->assertTrue(array_is_list($decoded), 'array create body must be a list');
+		$this->assertCount(2, $decoded);
+
+		foreach ($decoded as $item) {
+			if (isset($item['trains_id'])) {
+				$this->register('trains', 'trains_id', $item['trains_id']);
+			}
+		}
 	}
 
 	private function fetchUpdatedAt(string $id): string

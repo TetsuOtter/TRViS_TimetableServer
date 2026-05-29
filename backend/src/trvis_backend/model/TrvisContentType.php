@@ -2,14 +2,24 @@
 
 namespace dev_t0r\trvis_backend\model;
 
-enum TrvisContentType: int implements \JsonSerializable {
+/**
+ * Faithful 1:1 port of the legacy int-backed content-type enum.
+ *
+ * Behaviour preserved exactly (fromString/fromOrNull/jsonSerialize). Same
+ * code-first style as InviteKeyPrivilegeType: no `declare(strict_types=1)`
+ * on purpose (ported repos/service rely on legacy coercion semantics);
+ * explicit `public` on the static factories (PSR1 method-visibility).
+ */
+enum TrvisContentType: int implements \JsonSerializable
+{
 	case text = 0;
 	case URI = 1;
 	case PNG = 2;
 	case PDF = 3;
 	case JPG = 4;
 
-	public static function fromString(string $string): self {
+	public static function fromString(string $string): self
+	{
 		switch (strtolower($string)) {
 			case 'text':
 				return TrvisContentType::text;
@@ -31,7 +41,8 @@ enum TrvisContentType: int implements \JsonSerializable {
 		}
 	}
 
-	public static function fromOrNull(int|string|null $value): ?self {
+	public static function fromOrNull(int|string|null $value): ?self
+	{
 		if (is_null($value)) {
 			return null;
 		}
@@ -43,7 +54,8 @@ enum TrvisContentType: int implements \JsonSerializable {
 		}
 	}
 
-	public function jsonSerialize(): string {
+	public function jsonSerialize(): string
+	{
 		return $this->name;
 	}
 }

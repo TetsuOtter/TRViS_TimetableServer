@@ -3,13 +3,12 @@
 /**
  * TRViS用 時刻表管理用API
  *
- * NOTE: OpenAPI-Generator stub filled with DB integration tests for the
- * InviteKey entity. InviteKey is keyed to a WorkGroup (under a Project);
- * privilege resolves through the project's projects_privileges.
- * These tests also regress the L-2 fix: selectInviteKey must gate
- * disclosure behind WorkGroup `admin` (read-not-admin -> 403, non-member
- * -> 404). Driven at the InviteKeysService layer against the real test
- * MySQL, mirroring tests/Api/LineApiTest.php.
+ * DB integration tests for the InviteKey entity. InviteKey is keyed to a
+ * WorkGroup (under a Project); privilege resolves through the project's
+ * projects_privileges. These tests also regress the L-2 fix: selectInviteKey
+ * must gate disclosure behind WorkGroup `admin` (read-not-admin -> 403,
+ * non-member -> 404). Driven at the InviteKeysService layer against the real
+ * test MySQL, mirroring tests/Api/WorkGroupApiTest.php.
  * @see tests/Integration/IntegrationTestCase.php
  */
 
@@ -25,8 +24,6 @@ use dev_t0r\trvis_backend\service\WorkGroupsService;
 use dev_t0r\trvis_backend\tests\integration\IntegrationTestCase;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
-
-require_once __DIR__ . '/../Integration/IntegrationTestCase.php';
 
 #[CoversClass(\dev_t0r\trvis_backend\api\InviteKeyApi::class)]
 #[CoversMethod(\dev_t0r\trvis_backend\api\InviteKeyApi::class, 'createInviteKey')]
@@ -109,7 +106,7 @@ class InviteKeyApiTest extends IntegrationTestCase
 		return $uid;
 	}
 
-	public function testCreateInviteKey()
+	public function testCreateInviteKey(): void
 	{
 		$wgId = $this->newWorkGroup();
 		$key = $this->newInviteKey($wgId, InviteKeyPrivilegeType::write);
@@ -133,11 +130,11 @@ class InviteKeyApiTest extends IntegrationTestCase
 	}
 
 	/**
-     * Recommended-spec regression: valid_from may be omitted by the client;
-     * the repo must coalesce null -> "now" (DB DEFAULT CURRENT_TIMESTAMP),
-     * not bind explicit NULL into the NOT NULL column (23000 / 500).
-     */
-    public function testCreateInviteKeyDefaults()
+	 * Recommended-spec regression: valid_from may be omitted by the client;
+	 * the repo must coalesce null -> "now" (DB DEFAULT CURRENT_TIMESTAMP),
+	 * not bind explicit NULL into the NOT NULL column (23000 / 500).
+	 */
+	public function testCreateInviteKeyDefaults(): void
 	{
 		$wgId = $this->newWorkGroup();
 
@@ -171,10 +168,10 @@ class InviteKeyApiTest extends IntegrationTestCase
 	}
 
 	/**
-     * Security regression (L-2): selectInviteKey discloses privilege_type /
-     * work_groups_id and must therefore be gated behind WorkGroup `admin`.
-     */
-    public function testGetInviteKey()
+	 * Security regression (L-2): selectInviteKey discloses privilege_type /
+	 * work_groups_id and must therefore be gated behind WorkGroup `admin`.
+	 */
+	public function testGetInviteKey(): void
 	{
 		$wgId = $this->newWorkGroup();
 		$key = $this->newInviteKey($wgId);
@@ -184,11 +181,13 @@ class InviteKeyApiTest extends IntegrationTestCase
 		$this->assertOk($g, 'admin selectInviteKey');
 		$this->assertSame((string)$key->invite_keys_id, (string)$g->value->invite_keys_id);
 
-		// has `read` but not `admin` -> 403 (must not leak the key)
+		// has `read` but not `admin` -> 404. selectInviteKey is a GET; per the
+		// unified rule GET privilege errors hide existence (404), so a
+		// read-only member is answered exactly like a non-member.
 		$readUser = $this->grantReadOnlyUser();
 		$r = $this->ikSvc()->selectInviteKey($key->invite_keys_id, $readUser);
 		$this->assertTrue($r->isError, 'read-not-admin must be rejected');
-		$this->assertSame(403, $r->statusCode);
+		$this->assertSame(404, $r->statusCode);
 
 		// no privilege at all -> 404 (do not even reveal existence)
 		$nm = $this->ikSvc()->selectInviteKey($key->invite_keys_id, $this->nonMemberId);
@@ -201,7 +200,7 @@ class InviteKeyApiTest extends IntegrationTestCase
 		$this->assertSame(404, $unknown->statusCode);
 	}
 
-	public function testDeleteInviteKey()
+	public function testDeleteInviteKey(): void
 	{
 		$wgId = $this->newWorkGroup();
 		$key = $this->newInviteKey($wgId);
@@ -232,7 +231,7 @@ class InviteKeyApiTest extends IntegrationTestCase
 		$this->assertSame(404, $unknown->statusCode);
 	}
 
-	public function testGetInviteKeyList()
+	public function testGetInviteKeyList(): void
 	{
 		$wgId = $this->newWorkGroup();
 		$key = $this->newInviteKey($wgId);
@@ -246,10 +245,11 @@ class InviteKeyApiTest extends IntegrationTestCase
 			null,
 		);
 		$this->assertOk($list, 'admin selectInviteKeyListWithWorkGroupsId');
-		$ids = array_map(fn($x) => (string)$x->invite_keys_id, $list->value);
+		$ids = array_map(fn ($x) => (string)$x->invite_keys_id, $list->value);
 		$this->assertContains((string)$key->invite_keys_id, $ids);
 
-		// read-not-admin -> 403
+		// read-not-admin -> 404 (GET privilege errors hide existence, same as a
+		// non-member; see the unified GET=404 / mutation-tier=403 rule).
 		$readUser = $this->grantReadOnlyUser();
 		$ro = $this->ikSvc()->selectInviteKeyListWithWorkGroupsId(
 			$wgId,
@@ -259,10 +259,10 @@ class InviteKeyApiTest extends IntegrationTestCase
 			null,
 		);
 		$this->assertTrue($ro->isError, 'read-not-admin list must be rejected');
-		$this->assertSame(403, $ro->statusCode);
+		$this->assertSame(404, $ro->statusCode);
 	}
 
-	public function testGetMyInviteKeyList()
+	public function testGetMyInviteKeyList(): void
 	{
 		$wgId = $this->newWorkGroup();
 		$key = $this->newInviteKey($wgId);
@@ -275,7 +275,7 @@ class InviteKeyApiTest extends IntegrationTestCase
 			null,
 		);
 		$this->assertOk($mine, 'selectInviteKeyListWithOwnerUid (owner)');
-		$ids = array_map(fn($x) => (string)$x->invite_keys_id, $mine->value);
+		$ids = array_map(fn ($x) => (string)$x->invite_keys_id, $mine->value);
 		$this->assertContains((string)$key->invite_keys_id, $ids);
 
 		// a different user's "my list" must not include this key
@@ -286,16 +286,16 @@ class InviteKeyApiTest extends IntegrationTestCase
 			null,
 		);
 		$this->assertOk($other, 'selectInviteKeyListWithOwnerUid (other)');
-		$otherIds = array_map(fn($x) => (string)$x->invite_keys_id, $other->value);
+		$otherIds = array_map(fn ($x) => (string)$x->invite_keys_id, $other->value);
 		$this->assertNotContains((string)$key->invite_keys_id, $otherIds);
 	}
 
 	/**
-     * updateInviteKey is intentionally not implemented: InviteKeyApi
-     * returns 501 Not Implemented and InviteKeysService has no
-     * corresponding method. Documented as a deliberate contract.
-     */
-    public function testUpdateInviteKey()
+	 * updateInviteKey is intentionally not implemented: InviteKeyApi
+	 * returns 501 Not Implemented and InviteKeysService has no
+	 * corresponding method. Documented as a deliberate contract.
+	 */
+	public function testUpdateInviteKey(): void
 	{
 		$this->assertFalse(
 			method_exists(InviteKeysService::class, 'updateInviteKey'),
@@ -303,7 +303,7 @@ class InviteKeyApiTest extends IntegrationTestCase
 		);
 	}
 
-	public function testUseInviteKey()
+	public function testUseInviteKey(): void
 	{
 		$wgId = $this->newWorkGroup();
 		$key = $this->newInviteKey($wgId, InviteKeyPrivilegeType::write);
@@ -327,9 +327,16 @@ class InviteKeyApiTest extends IntegrationTestCase
 			'useInviteKey must write projects_privileges',
 		);
 
-		// using again with same/higher privilege -> rejected (status 200 body)
+		// H8(b) (a96e610): redeeming a key whose privilege you already hold is
+		// an idempotent success, not an error. The contract is 200 -> WorkGroup;
+		// useInviteKey rolls back and re-reads the target WorkGroup as the body.
 		$again = $this->ikSvc()->useInviteKey($key->invite_keys_id, $newUser);
-		$this->assertTrue($again->isError, 'redundant use must be rejected');
+		$this->assertOk($again, 'redundant useInviteKey is idempotent success');
 		$this->assertSame(200, $again->statusCode);
+		$this->assertSame(
+			(string)$wgId,
+			(string)$again->value->work_groups_id,
+			'redundant use must return the target WorkGroup',
+		);
 	}
 }

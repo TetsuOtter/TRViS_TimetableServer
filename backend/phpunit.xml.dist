@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.5/phpunit.xsd" bootstrap="./vendor/autoload.php" colors="true" beStrictAboutTestsThatDoNotTestAnything="false" stopOnFailure="false" cacheDirectory=".phpunit.cache">
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/11.5/phpunit.xsd" bootstrap="./vendor/autoload.php" colors="true" beStrictAboutTestsThatDoNotTestAnything="false" stopOnFailure="false" failOnWarning="true" cacheDirectory=".phpunit.cache">
   <testsuites>
+    <testsuite name="Unit">
+      <directory>./tests/Unit</directory>
+    </testsuite>
     <testsuite name="Apis">
       <directory>./tests/Api</directory>
-    </testsuite>
-    <testsuite name="Models">
-      <file>./tests/BaseModelTest.php</file>
-      <directory>./tests/Model</directory>
     </testsuite>
   </testsuites>
   <php>
@@ -14,9 +13,7 @@
   </php>
   <source>
     <include>
-      <directory suffix=".php">./lib/trvis_backend/api</directory>
-      <file>./lib/BaseModel.php</file>
-      <directory suffix=".php">./lib/trvis_backend/model</directory>
+      <directory suffix=".php">./src</directory>
     </include>
   </source>
 </phpunit>

@@ -21,7 +21,7 @@ final class WorkGroupsRepo
 	) {
 	}
 
-	private static function _fetchResultToWorkGroup(
+	private static function fetchResultToWorkGroup(
 		mixed $data
 	): WorkGroup {
 		$workGroup = new WorkGroup();
@@ -113,7 +113,7 @@ final class WorkGroupsRepo
 			return Utils::errWorkGroupNotFound();
 		}
 
-		$workGroup = $this->_fetchResultToWorkGroup($data);
+		$workGroup = $this->fetchResultToWorkGroup($data);
 		$this->logger->debug("select result - workGroup: {workGroup}", ['workGroup' => $workGroup]);
 		return RetValueOrError::withValue($workGroup);
 	}
@@ -218,7 +218,7 @@ final class WorkGroupsRepo
 		}
 
 		$workGroups = array_map(
-			fn ($data) => $this->_fetchResultToWorkGroup($data),
+			fn ($data) => $this->fetchResultToWorkGroup($data),
 			$query->fetchAll(PDO::FETCH_ASSOC),
 		);
 		return RetValueOrError::withValue($workGroups);
@@ -252,7 +252,8 @@ final class WorkGroupsRepo
 			);
 			return RetValueOrError::withError(500, "Failed to execute SQL - " . $errCode);
 		}
-		$totalCount = $query->fetch(PDO::FETCH_ASSOC)['count'];
+		$row = $query->fetch(PDO::FETCH_ASSOC);
+		$totalCount = $row ? (int)$row['count'] : 0;
 		return RetValueOrError::withValue($totalCount);
 	}
 
@@ -296,7 +297,7 @@ final class WorkGroupsRepo
 		$this->logger->debug("select success - rowCount: {rowCount}", ['rowCount' => $query->rowCount()]);
 
 		$workGroups = array_map(
-			fn ($data) => $this->_fetchResultToWorkGroup($data),
+			fn ($data) => $this->fetchResultToWorkGroup($data),
 			$query->fetchAll(PDO::FETCH_ASSOC),
 		);
 
@@ -336,15 +337,13 @@ final class WorkGroupsRepo
 		}
 
 		$this->logger->debug("select success - rowCount: {rowCount}", ['rowCount' => $query->rowCount()]);
-		$totalCount = $query->fetch(PDO::FETCH_ASSOC)['count'];
+		$row = $query->fetch(PDO::FETCH_ASSOC);
+		$totalCount = $row ? (int)$row['count'] : 0;
 
 		$this->logger->debug("select result - totalCount: {totalCount}", ['totalCount' => $totalCount]);
 		return RetValueOrError::withValue($totalCount);
 	}
 
-	/**
-	 * @return RetValueOrError<null>
-	 */
 	/**
 	 * 指定WorkGroupが属するProjectのIDを取得する。
 	 * @return RetValueOrError<UuidInterface>
@@ -416,9 +415,12 @@ final class WorkGroupsRepo
 			}
 
 			$errCode = $query->errorCode();
-			$errorInfo = implode('\n\t', $query->errorInfo());
+			$errorInfoArr = $query->errorInfo();
+			$driverCode = isset($errorInfoArr[1]) ? (int)$errorInfoArr[1] : null;
+			$errorInfo = implode('\n\t', $errorInfoArr);
 		} catch (\PDOException $ex) {
 			$errCode = strval($ex->getCode());
+			$driverCode = isset($ex->errorInfo[1]) ? (int)$ex->errorInfo[1] : null;
 			$errorInfo = $ex->getMessage();
 		}
 
@@ -429,11 +431,7 @@ final class WorkGroupsRepo
 				"errorInfo" => $errorInfo,
 			],
 		);
-		if ($errCode === '23000') {
-			return RetValueOrError::withError(Constants::HTTP_CONFLICT, "WorkGroup already exists");
-		}
-
-		return RetValueOrError::withError(Constants::HTTP_INTERNAL_SERVER_ERROR, "Failed to execute SQL - " . $errCode);
+		return Utils::mapPdoIntegrityError($errCode, $driverCode, "WorkGroup");
 	}
 
 	/**
@@ -503,9 +501,12 @@ final class WorkGroupsRepo
 			}
 
 			$errCode = $query->errorCode();
-			$errorInfo = implode('\n\t', $query->errorInfo());
+			$errorInfoArr = $query->errorInfo();
+			$driverCode = isset($errorInfoArr[1]) ? (int)$errorInfoArr[1] : null;
+			$errorInfo = implode('\n\t', $errorInfoArr);
 		} catch (\PDOException $ex) {
 			$errCode = strval($ex->getCode());
+			$driverCode = isset($ex->errorInfo[1]) ? (int)$ex->errorInfo[1] : null;
 			$errorInfo = $ex->getMessage();
 		}
 
@@ -516,11 +517,7 @@ final class WorkGroupsRepo
 				"errorInfo" => $errorInfo,
 			],
 		);
-		if ($errCode === '23000') {
-			return RetValueOrError::withError(Constants::HTTP_CONFLICT, "WorkGroup already exists");
-		}
-
-		return RetValueOrError::withError(Constants::HTTP_INTERNAL_SERVER_ERROR, "Failed to execute SQL - " . $errCode);
+		return Utils::mapPdoIntegrityError($errCode, $driverCode, "WorkGroup");
 	}
 
 	/**
@@ -570,7 +567,6 @@ final class WorkGroupsRepo
 			} else {
 				return RetValueOrError::withValue(null);
 			}
-
 		} catch (\PDOException $ex) {
 			$errCode = $ex->getCode();
 			$this->logger->error(

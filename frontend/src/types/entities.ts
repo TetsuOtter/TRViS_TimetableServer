@@ -58,6 +58,18 @@ export type TimetableRow = {
 	stationId?: string;
 	stationTrackId?: string;
 	colorIdMarker?: string;
+	/** Resolved display name of stationId (read-only; present even when the
+	 * station is soft-deleted — see stationIsDeleted for the tombstone). */
+	stationName?: string | null;
+	stationIsDeleted?: boolean;
+	/** Resolved display name of stationTrackId (read-only; tombstone via
+	 * stationTrackIsDeleted). */
+	stationTrackName?: string | null;
+	stationTrackIsDeleted?: boolean;
+	/** Resolved display name of colorIdMarker (read-only; tombstone via
+	 * colorIsDeleted). */
+	colorName?: string | null;
+	colorIsDeleted?: boolean;
 	description?: string;
 	driveTimeMm?: number;
 	driveTimeSs?: number;
@@ -87,6 +99,28 @@ export type Line = {
 	projectId: string;
 	name: string;
 	description: string;
+	createdAt?: Date;
+};
+
+export type Color = {
+	id: string;
+	projectId: string;
+	name: string;
+	description: string;
+	/** 8-bit marker color components (0-255). */
+	red: number;
+	green: number;
+	blue: number;
+	createdAt?: Date;
+};
+
+export type StationTrack = {
+	id: string;
+	stationId: string;
+	name: string;
+	description: string;
+	runInLimit?: number;
+	runOutLimit?: number;
 	createdAt?: Date;
 };
 
@@ -120,6 +154,10 @@ export type StationOnLine = {
 	projectId: string;
 	lineId: string;
 	projectStationId: string;
+	/** Resolved display name of projectStationId (read-only; present even when
+	 * the station is soft-deleted — tombstone via projectStationIsDeleted). */
+	projectStationName?: string | null;
+	projectStationIsDeleted?: boolean;
 	locationM: number;
 	longitude?: number;
 	latitude?: number;

@@ -12,18 +12,18 @@ final class ColorRealValidationRule extends ValidationRuleBase
 		private readonly string $key,
 		private readonly bool $isRequired = false,
 		private readonly bool $isNullable = false,
-	) {}
+	) {
+	}
 
-	const COLOR_MIN = 0.0;
-	const COLOR_MAX = 1.0;
+	private const COLOR_MIN = 0.0;
+	private const COLOR_MAX = 1.0;
 
 	public function validate(
 		array|object &$d,
 		int|string $index,
 		bool $isKvpArray,
 		bool $checkRequired = true,
-	): RetValueOrError
-	{
+	): RetValueOrError {
 		if (!self::isPropExists($d, $isKvpArray, $this->key)) {
 			if ($checkRequired && $this->isRequired) {
 				return RetValueOrError::withBadReq(
@@ -46,17 +46,21 @@ final class ColorRealValidationRule extends ValidationRuleBase
 		$red = Utils::getValue($value, 'red');
 		$green = Utils::getValue($value, 'green');
 		$blue = Utils::getValue($value, 'blue');
-		if (is_null($red) || is_null($green) || is_null($blue)
+		if (
+			is_null($red) || is_null($green) || is_null($blue)
 			|| !(is_float($red) || is_int($red))
 			|| !(is_float($green) || is_int($green))
-			|| !(is_float($blue) || is_int($blue))) {
+			|| !(is_float($blue) || is_int($blue))
+		) {
 			return RetValueOrError::withBadReq(
 				"Invalid type for property: '{$this->key}' @[$index] (each of 'red', 'green', 'blue' must be an integer/float)",
 			);
 		}
-		if ($red < self::COLOR_MIN || self::COLOR_MAX < $red
+		if (
+			$red < self::COLOR_MIN || self::COLOR_MAX < $red
 			|| $green < self::COLOR_MIN || self::COLOR_MAX < $green
-			|| $blue < self::COLOR_MIN || self::COLOR_MAX < $blue) {
+			|| $blue < self::COLOR_MIN || self::COLOR_MAX < $blue
+		) {
 			$min = self::COLOR_MIN;
 			$max = self::COLOR_MAX;
 			return RetValueOrError::withBadReq(

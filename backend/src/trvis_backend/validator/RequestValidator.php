@@ -1,6 +1,7 @@
 <?php
 
 namespace dev_t0r\trvis_backend\validator;
+
 use dev_t0r\trvis_backend\Constants;
 use dev_t0r\trvis_backend\RetValueOrError;
 
@@ -26,8 +27,25 @@ final class RequestValidator
 		}
 
 		if (is_array($d) && array_is_list($d)) {
+			// M5: an empty list passes the C1 max-count gate and the zero-iteration
+			// foreach, yielding a misleading 201 that created nothing. Reject it.
+			if (count($d) < 1) {
+				return RetValueOrError::withBadReq('Request must contain at least one item');
+			}
+
 			if (!$allowNestedArray) {
 				return RetValueOrError::withBadReq('Nested array is not allowed');
+			}
+
+			// C1: reject oversized bulk payloads BEFORE decoding/validating every
+			// element. The per-element foreach below (and downstream array_map model
+			// construction) is O(n); without this gate an attacker can force ~1e5
+			// validations within post_max_size and OOM the worker. The service-layer
+			// BULK_INSERT_MAX_COUNT check is kept as defence-in-depth.
+			if (count($d) > Constants::BULK_INSERT_MAX_COUNT) {
+				return RetValueOrError::withBadReq(
+					'Too many items in bulk request (max ' . Constants::BULK_INSERT_MAX_COUNT . ')',
+				);
 			}
 
 			foreach ($d as $i => $item) {
@@ -63,7 +81,8 @@ final class RequestValidator
 		return RetValueOrError::withValue(null);
 	}
 
-	public static function getNameValidationRule(): StringValidationRule {
+	public static function getNameValidationRule(): StringValidationRule
+	{
 		return new StringValidationRule(
 			key: 'name',
 			minLength: Constants::NAME_MIN_LENGTH,
@@ -72,7 +91,8 @@ final class RequestValidator
 			isNullable: false,
 		);
 	}
-	public static function getDescriptionValidationRule(): StringValidationRule {
+	public static function getDescriptionValidationRule(): StringValidationRule
+	{
 		return new StringValidationRule(
 			key: 'description',
 			minLength: Constants::DESCRIPTION_MIN_LENGTH,

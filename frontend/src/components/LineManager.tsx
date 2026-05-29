@@ -7,6 +7,8 @@ import {
 	useEffect,
 	useCallback,
 } from "react";
+import { StationTrackManager } from "./StationTrackManager";
+
 import type { CSSProperties, KeyboardEvent, RefObject } from "react";
 
 import type { Strings } from "../i18n/strings";
@@ -162,6 +164,7 @@ interface StationsTabProps {
 	onCreateStation: (draft: EntityStationDraft) => void;
 	onUpdateStation: (vars: EntityStationUpdate) => void;
 	onDeleteStation: (id: string) => void;
+	t: Strings;
 }
 
 function StationsTab({
@@ -171,8 +174,14 @@ function StationsTab({
 	onCreateStation,
 	onUpdateStation,
 	onDeleteStation,
+	t,
 }: StationsTabProps) {
 	const [editingId, setEditingId] = useState<string | null>(null); // station id or 'new'
+	// The station whose tracks are being managed in the modal (null = closed).
+	const [tracksStation, setTracksStation] = useState<{
+		id: string;
+		name: string;
+	} | null>(null);
 	const [draft, setDraft] = useState<StationDraft>({
 		stationName: "",
 		fullName: "",
@@ -683,6 +692,19 @@ function StationsTab({
 											>
 												<button
 													className="btn btn-ghost btn-xs"
+													title={t.trackManager}
+													onClick={e => {
+														e.stopPropagation();
+														setTracksStation({
+															id: s.id,
+															name: s.stationName,
+														});
+													}}
+												>
+													🛤
+												</button>
+												<button
+													className="btn btn-ghost btn-xs"
 													style={{
 														color: "var(--color-danger)",
 														opacity: 0.7,
@@ -866,6 +888,14 @@ function StationsTab({
 					</tbody>
 				</table>
 			</div>
+			{tracksStation !== null && (
+				<StationTrackManager
+					stationId={tracksStation.id}
+					stationName={tracksStation.name}
+					onClose={() => setTracksStation(null)}
+					t={t}
+				/>
+			)}
 		</div>
 	);
 }
@@ -1283,7 +1313,30 @@ function LineStationsTab({
 													fontWeight: 500,
 												}}
 											>
-												{sol.station.stationName}
+												<span
+													style={
+														sol.stationDeleted
+															? {
+																color: "var(--color-danger)",
+																textDecoration: "line-through",
+															}
+															: undefined
+													}
+												>
+													{sol.station.stationName}
+												</span>
+												{sol.stationDeleted && (
+													<span
+														style={{
+															marginLeft: 6,
+															fontSize: 10,
+															fontWeight: 600,
+															color: "var(--color-danger)",
+														}}
+													>
+														(削除済み)
+													</span>
+												)}
 											</td>
 											<td
 												style={{
@@ -1414,7 +1467,30 @@ function LineStationsTab({
 													fontWeight: 500,
 												}}
 											>
-												{sol.station.stationName}
+												<span
+													style={
+														sol.stationDeleted
+															? {
+																color: "var(--color-danger)",
+																textDecoration: "line-through",
+															}
+															: undefined
+													}
+												>
+													{sol.station.stationName}
+												</span>
+												{sol.stationDeleted && (
+													<span
+														style={{
+															marginLeft: 6,
+															fontSize: 10,
+															fontWeight: 600,
+															color: "var(--color-danger)",
+														}}
+													>
+														(削除済み)
+													</span>
+												)}
 											</td>
 											<td
 												style={{
@@ -1991,10 +2067,25 @@ export function LineManager({
 			activeLine
 				? stationsOnLine
 						.filter(sol => sol.lineId === activeLineId)
-						.map(sol => ({
-							...sol,
-							station: stations.find(s => s.id === sol.stationId),
-						}))
+						.map(sol => {
+							// A soft-deleted referenced station is absent from the
+							// live `stations` list; fall back to the backend-resolved
+							// name (sol.stationName) so the row tombstones instead of
+							// silently vanishing from the line editor.
+							const liveStation = stations.find(
+								s => s.id === sol.stationId
+							);
+							const station: Station | undefined =
+								liveStation ??
+								(sol.stationName !== undefined
+									? {
+											id: sol.stationId,
+											stationName: sol.stationName,
+											fullName: sol.stationName,
+										}
+									: undefined);
+							return { ...sol, station };
+						})
 						.filter(
 							(x): x is LineStationEntry => Boolean(x.station)
 						)
@@ -2366,6 +2457,7 @@ export function LineManager({
 					onCreateStation={onCreateStation}
 					onUpdateStation={onUpdateStation}
 					onDeleteStation={onDeleteStation}
+					t={t}
 				/>
 			)}
 

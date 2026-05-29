@@ -1,6 +1,7 @@
 // TimetableGrid — spreadsheet-style timetable row editor. Ported from TimetableGrid.jsx.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { useStationTracks } from "../api/hooks/useStationTracks";
 import { TRViSTime } from "../lib/timeUtils";
 
 import {
@@ -10,6 +11,7 @@ import {
 
 import type { RowFormat } from "../lib/timeUtils";
 import type { Strings } from "../i18n/strings";
+import type { Color as EntityColor } from "../types/entities";
 import type { ShowHH, Station, TimetableRow, Train } from "../types/model";
 import type { CSSProperties } from "react";
 
@@ -408,8 +410,22 @@ function RowDetailModal({
 						<div className="field-row" style={{ marginBottom: 12 }}>
 							<div className="field" style={{ flex: 2 }}>
 								<label>{t.stationName}</label>
-								<span style={{ padding: "6px 0", display: "block", fontWeight: 500 }}>
+								<span
+									style={{
+										padding: "6px 0",
+										display: "block",
+										fontWeight: 500,
+										...(data.stationDeleted
+											? { color: "var(--color-danger)", textDecoration: "line-through" }
+											: {}),
+									}}>
 									{data.stationName || "(未設定)"}
+									{data.stationDeleted && (
+										<span
+											style={{ marginLeft: 6, fontSize: 11, textDecoration: "none" }}>
+											(削除済み)
+										</span>
+									)}
 								</span>
 							</div>
 							<div className="field" style={{ flex: 3 }}>
@@ -826,18 +842,159 @@ function RowDetailModal({
 }
 
 // Per-row remarks input with local draft to avoid per-keystroke API writes.
+// Track picker for one row, scoped to the row's station (station_tracks belong
+// to a station). The available-track list is fetched ON DEMAND — only when the
+// picker is opened — so opening a timetable doesn't fan out a tracks query per
+// station. Display uses the backend-embedded row.trackName; a soft-deleted
+// track keeps its id selected and surfaces as a "(削除済み)" tombstone.
+function TrackCell({
+	row,
+	onChange,
+	t,
+}: {
+	row: TimetableRow;
+	onChange: (id: string | undefined) => void;
+	t: Strings;
+}) {
+	const [open, setOpen] = useState(false);
+	const stationId = row.stationId ?? "";
+	const { data: tracks } = useStationTracks(stationId, open && stationId !== "");
+	const deleted = !!row.trackDeleted;
+
+	if (!open) {
+		return (
+			<button
+				type="button"
+				className="track-pick"
+				disabled={stationId === ""}
+				onClick={() => setOpen(true)}
+				title={
+					deleted
+						? `${row.trackName}（${t.deleted}）`
+						: row.trackName || t.none
+				}
+				style={
+					deleted
+						? {
+								color: "var(--color-danger)",
+								textDecoration: "line-through",
+							}
+						: undefined
+				}>
+				{row.trackName ? (
+					row.trackName
+				) : (
+					<span style={{ opacity: 0.4 }}>—</span>
+				)}
+				{deleted && (
+					<span style={{ marginLeft: 3, textDecoration: "none" }}>⚠</span>
+				)}
+			</button>
+		);
+	}
+	return (
+		<select
+			className="color-select"
+			autoFocus
+			value={row.stationTrackId ?? ""}
+			style={deleted ? { color: "var(--color-danger)" } : undefined}
+			onChange={(e) => {
+				onChange(e.target.value === "" ? undefined : e.target.value);
+				setOpen(false);
+			}}
+			onBlur={() => setOpen(false)}>
+			<option value="">— {t.none} —</option>
+			{deleted && row.stationTrackId !== undefined && (
+				<option value={row.stationTrackId}>
+					⚠ {row.trackName}（{t.deleted}）
+				</option>
+			)}
+			{(tracks ?? []).map((tr) => (
+				<option key={tr.id} value={tr.id}>
+					{tr.name}
+				</option>
+			))}
+		</select>
+	);
+}
+
+// Marker-color picker + swatch for one row. Resolves the swatch from the
+// project color list; when the referenced color is soft-deleted it keeps the
+// id selected and surfaces it as a "(削除済み)" tombstone option (the name
+// comes from the backend-embedded row.colorName).
+function ColorCell({
+	row,
+	colors,
+	onChange,
+	t,
+}: {
+	row: TimetableRow;
+	colors: EntityColor[];
+	onChange: (id: string | undefined) => void;
+	t: Strings;
+}) {
+	const selected = row.colorIdMarker
+		? colors.find((c) => c.id === row.colorIdMarker)
+		: undefined;
+	const deleted = !!row.colorDeleted;
+	const swatch = selected
+		? `rgb(${selected.red}, ${selected.green}, ${selected.blue})`
+		: undefined;
+	return (
+		<div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+			<span
+				title={
+					deleted
+						? `${row.colorName ?? ""}（${t.deleted}）`
+						: (selected?.name ?? t.none)
+				}
+				style={{
+					width: 14,
+					height: 14,
+					borderRadius: 3,
+					flexShrink: 0,
+					background: swatch ?? "transparent",
+					border: deleted
+						? "1px solid var(--color-danger)"
+						: "1px solid var(--color-border)",
+				}}
+			/>
+			<select
+				className="color-select"
+				value={row.colorIdMarker ?? ""}
+				style={deleted ? { color: "var(--color-danger)" } : undefined}
+				onChange={(e) =>
+					onChange(e.target.value === "" ? undefined : e.target.value)
+				}>
+				<option value="">— {t.none} —</option>
+				{deleted && row.colorIdMarker !== undefined && (
+					<option value={row.colorIdMarker}>
+						⚠ {row.colorName ?? ""}（{t.deleted}）
+					</option>
+				)}
+				{colors.map((c) => (
+					<option key={c.id} value={c.id}>
+						{c.name}
+					</option>
+				))}
+			</select>
+		</div>
+	);
+}
+
 interface StationRowProps {
 	row: TimetableRow;
 	idx: number;
 	isLast: boolean;
 	fmt: Partial<RowFormat>;
+	colors: EntityColor[];
 	onUpdateRow: <K extends keyof TimetableRow>(idx: number, key: K, val: TimetableRow[K]) => void;
 	onDeleteRow: (idx: number) => void;
 	onOpenDetail: () => void;
 	t: Strings;
 }
 
-function StationRow({ row, idx, isLast, fmt, onUpdateRow, onDeleteRow, onOpenDetail, t }: StationRowProps) {
+function StationRow({ row, idx, isLast, fmt, colors, onUpdateRow, onDeleteRow, onOpenDetail, t }: StationRowProps) {
 	const [remarksDraft, setRemarksDraft] = useState(row.remarks);
 
 	// Reseed when the row data changes (e.g. after a mutation refetch).
@@ -875,10 +1032,20 @@ function StationRow({ row, idx, isLast, fmt, onUpdateRow, onDeleteRow, onOpenDet
 				<div
 					className="station-cell"
 					onDoubleClick={onOpenDetail}
-					title="ダブルクリックで詳細編集">
-					<span className={`station-name ${!row.stationName ? "empty" : ""}`}>
+					title={
+						row.stationDeleted
+							? "この駅は削除されています"
+							: "ダブルクリックで詳細編集"
+					}>
+					<span
+						className={`station-name ${!row.stationName ? "empty" : ""} ${row.stationDeleted ? "tombstone" : ""}`}>
 						{row.stationName || "(駅名未設定)"}
 					</span>
+					{row.stationDeleted && (
+						<span className="tombstone-tag" title="この駅は削除されています">
+							削除済み
+						</span>
+					)}
 				</div>
 			</td>
 			<td style={row.isPass ? { color: "oklch(0.55 0.12 15)" } : {}}>
@@ -922,6 +1089,21 @@ function StationRow({ row, idx, isLast, fmt, onUpdateRow, onDeleteRow, onOpenDet
 					className="toggle-check"
 					checked={!!row.isPass}
 					onChange={(e) => onUpdateRow(idx, "isPass", e.target.checked)}
+				/>
+			</td>
+			<td>
+				<TrackCell
+					row={row}
+					onChange={(id) => onUpdateRow(idx, "stationTrackId", id)}
+					t={t}
+				/>
+			</td>
+			<td>
+				<ColorCell
+					row={row}
+					colors={colors}
+					onChange={(id) => onUpdateRow(idx, "colorIdMarker", id)}
+					t={t}
 				/>
 			</td>
 			<td>
@@ -1057,13 +1239,14 @@ function StationPickerModal({ stations, usedStationIds, onPick, onClose }: Stati
 interface TimetableGridProps {
 	train: Train;
 	stations: Station[];
+	colors: EntityColor[];
 	onCreateRow: (row: TimetableRow) => void;
 	onUpdateRow: (rowId: string, row: TimetableRow) => void;
 	onDeleteRow: (rowId: string) => void;
 	t: Strings;
 }
 
-export function TimetableGrid({ train, stations, onCreateRow, onUpdateRow, onDeleteRow, t }: TimetableGridProps) {
+export function TimetableGrid({ train, stations, colors, onCreateRow, onUpdateRow, onDeleteRow, t }: TimetableGridProps) {
 	const rows = train.timetableRows ?? [];
 	const [detailRow, setDetailRow] = useState<TimetableRow | null>(null);
 	const [showPicker, setShowPicker] = useState(false);
@@ -1133,6 +1316,8 @@ export function TimetableGrid({ train, stations, onCreateRow, onUpdateRow, onDel
         .station-cell { display: flex; align-items: center; gap: 5px; padding-left: 2px; }
         .station-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500; }
         .station-name.empty { color: var(--color-text-muted); font-weight: 400; font-style: italic; }
+        .station-name.tombstone { color: var(--color-danger); text-decoration: line-through; text-decoration-color: color-mix(in srgb, var(--color-danger) 55%, transparent); }
+        .tombstone-tag { flex-shrink: 0; font-size: 9px; font-weight: 600; line-height: 1; padding: 2px 4px; border-radius: 3px; color: var(--color-danger); background: color-mix(in srgb, var(--color-danger) 14%, transparent); border: 1px solid color-mix(in srgb, var(--color-danger) 40%, transparent); white-space: nowrap; }
         .drag-handle { cursor: grab; opacity: 0.3; font-size: 13px; flex-shrink: 0; }
         .drag-handle:hover { opacity: 0.7; }
         .tgrid tr:active .drag-handle { cursor: grabbing; }
@@ -1148,6 +1333,11 @@ export function TimetableGrid({ train, stations, onCreateRow, onUpdateRow, onDel
         .row-action-btn.del:hover { background: #fee2e2; color: var(--color-danger); border-color: var(--color-danger); }
         .track-input { border: none; outline: none; background: transparent; text-align: center; width: 100%; font-size: 12px; font-family: var(--font-mono); color: inherit; }
         .track-input:focus { outline: 1px solid var(--color-accent); border-radius: 3px; }
+        .color-select { flex: 1; min-width: 0; border: none; outline: none; background: transparent; font-size: 12px; color: inherit; cursor: pointer; padding: 2px 0; }
+        .color-select:focus { outline: 1px solid var(--color-accent); border-radius: 3px; }
+        .track-pick { width: 100%; border: none; background: transparent; text-align: left; font-size: 12px; color: inherit; cursor: pointer; padding: 3px 4px; border-radius: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .track-pick:hover:not(:disabled) { background: var(--color-accent-bg); }
+        .track-pick:disabled { cursor: default; opacity: 0.5; }
         .tgrid-scroll { flex: 1; overflow: auto; }
         .add-row-bar { padding: 8px 12px; border-top: 1px solid var(--color-border); background: var(--color-content); display: flex; align-items: center; gap: 12px; }
         .actions-cell { display: flex; gap: 3px; justify-content: flex-end; }
@@ -1161,6 +1351,8 @@ export function TimetableGrid({ train, stations, onCreateRow, onUpdateRow, onDel
 						<col style={{ width: 80 }} />
 						<col style={{ width: 80 }} />
 						<col style={{ width: 42 }} />
+						<col style={{ width: 88 }} />
+						<col style={{ width: 104 }} />
 						<col style={{ width: "auto" }} />
 						<col style={{ width: 64 }} />
 					</colgroup>
@@ -1171,6 +1363,8 @@ export function TimetableGrid({ train, stations, onCreateRow, onUpdateRow, onDel
 							<th>{t.arrive}</th>
 							<th>{t.depart}</th>
 							<th title={t.pass}>通</th>
+							<th className="lh">{t.track}</th>
+							<th className="lh">{t.color}</th>
 							<th className="lh">{t.remarks}</th>
 							<th></th>
 						</tr>
@@ -1187,6 +1381,7 @@ export function TimetableGrid({ train, stations, onCreateRow, onUpdateRow, onDel
 									idx={idx}
 									isLast={isLast}
 									fmt={fmt}
+									colors={colors}
 									onUpdateRow={updateRow}
 									onDeleteRow={deleteRow}
 									onOpenDetail={() => setDetailRow(row)}

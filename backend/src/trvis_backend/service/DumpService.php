@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace dev_t0r\trvis_backend\service;
 
 use dev_t0r\trvis_backend\model\InviteKeyPrivilegeType;
@@ -15,6 +17,15 @@ use PDO;
 use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\UuidInterface;
 
+/**
+ * Dump aggregator — the terminal P3.5 epilogue. Walks the WorkGroup ->
+ * Work -> Train -> TimetableRow tree and returns a single TRViSJsonWorkGroup
+ * the TRViS client consumes. Faithful 1:1 port of the legacy DumpService
+ * (declare(strict_types=1) added; the by-reference re-keying and the
+ * strtoupper(getHex()) key normalization are preserved verbatim — ramsey's
+ * getHex() is lowercase, MySQL HEX() is uppercase, so strtoupper is required
+ * for the parent-id key match).
+ */
 final class DumpService
 {
 	private readonly WorkGroupsRepo $workGroupsRepo;
@@ -49,7 +60,7 @@ final class DumpService
 		);
 	}
 
-		/**
+	/**
 	 * @return RetValueOrError<null>
 	 */
 	protected function checkPrivilegeToRead(
@@ -88,8 +99,7 @@ final class DumpService
 	public function dump(
 		UuidInterface $workGroupsId,
 		string $senderUserId,
-	): RetValueOrError
-	{
+	): RetValueOrError {
 		$this->logger->debug(
 			'DumpService::dump() called - {workGroupsId} by {senderUserId}',
 			[
