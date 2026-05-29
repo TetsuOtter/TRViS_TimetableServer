@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace dev_t0r\trvis_backend\repo;
 
 use DateTimeInterface;
@@ -13,6 +15,11 @@ use Psr\Log\LoggerInterface;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
+/**
+ * Repo for the `invite_keys` table. Faithful port of the legacy
+ * InviteKeysRepo; method names stripped of `_` prefix per §9 code-style.
+ * `deleteByWorkGroupId` is required by the §8 cascade in WorkGroupsService.
+ */
 final class InviteKeysRepo
 {
 	public function __construct(
@@ -21,7 +28,7 @@ final class InviteKeysRepo
 	) {
 	}
 
-	const SQL_COLUMNS = <<<SQL
+	private const SQL_COLUMNS = <<<SQL
 		invite_keys_id,
 		work_groups_id,
 		created_at,
@@ -34,7 +41,7 @@ final class InviteKeysRepo
 
 	SQL;
 
-	static function _fetchResultToInviteKey(
+	private static function fetchResultToInviteKey(
 		mixed $data
 	): InviteKey {
 		$inviteKey = new InviteKey();
@@ -62,12 +69,11 @@ final class InviteKeysRepo
 		InviteKey $inviteKey,
 	): RetValueOrError {
 		$this->logger->debug(
-			"insertInviteKey inviteKeyId: {inviteKeyId}, workGroupId: {workGroupId}, owner: {owner}, inviteKey: '{inviteKey}'",
+			"insertInviteKey inviteKeyId: {inviteKeyId}, workGroupId: {workGroupId}, owner: {owner}",
 			[
 				'inviteKeyId' => $inviteKeyId,
 				'workGroupId' => $workGroupId,
 				'owner' => $owner,
-				'inviteKey'=> $inviteKey,
 			]
 		);
 
@@ -108,12 +114,7 @@ final class InviteKeysRepo
 
 		try {
 			$isSuccess = $query->execute();
-			$this->logger->debug(
-				"insertInviteKey isSuccess: {isSuccess}",
-				[
-					'isSuccess' => $isSuccess,
-				]
-			);
+			$this->logger->debug("insertInviteKey isSuccess: {isSuccess}", ['isSuccess' => $isSuccess]);
 			if ($isSuccess) {
 				return RetValueOrError::withValue(null);
 			} else {
@@ -143,9 +144,7 @@ final class InviteKeysRepo
 	): RetValueOrError {
 		$this->logger->debug(
 			"selectInviteKey inviteKeyId: {inviteKeyId}",
-			[
-				'inviteKeyId' => $inviteKeyId,
-			]
+			['inviteKeyId' => $inviteKeyId]
 		);
 
 		$query = $this->db->prepare(
@@ -171,12 +170,7 @@ final class InviteKeysRepo
 
 		try {
 			$isSuccess = $query->execute();
-			$this->logger->debug(
-				"selectInviteKey isSuccess: {isSuccess}",
-				[
-					'isSuccess' => $isSuccess,
-				]
-			);
+			$this->logger->debug("selectInviteKey isSuccess: {isSuccess}", ['isSuccess' => $isSuccess]);
 			if (!$isSuccess) {
 				$this->logger->error("Unknown error");
 				return RetValueOrError::withError(500, "Unknown error");
@@ -185,7 +179,7 @@ final class InviteKeysRepo
 			if ($inviteKey === false) {
 				return RetValueOrError::withError(404, "InviteKey not found");
 			}
-			return RetValueOrError::withValue($this::_fetchResultToInviteKey($inviteKey));
+			return RetValueOrError::withValue(self::fetchResultToInviteKey($inviteKey));
 		} catch (\PDOException $th) {
 			$errCode = $th->getCode();
 			$errInfo = $th->getMessage();
@@ -213,15 +207,11 @@ final class InviteKeysRepo
 	): RetValueOrError {
 		$isRequestWithOwnerUid = is_string($ownerOrWorkGroupsId);
 		$this->logger->debug(
-			"selectInviteKeyListWithOwnerUid isRequestWithOwnerUid: {isRequestWithOwnerUid}, ownerOrWorkGroupsId: {ownerOrWorkGroupsId}, page: {page}, perPage: {perPage}, topId: {topId}, includeExpired: {includeExpired}, currentDateTime: {currentDateTime}",
+			"selectInviteKeyList isRequestWithOwnerUid: {isRequestWithOwnerUid}, page: {page}, perPage: {perPage}",
 			[
 				'isRequestWithOwnerUid' => $isRequestWithOwnerUid,
-				'ownerOrWorkGroupsId' => $ownerOrWorkGroupsId,
 				'page' => $page,
 				'perPage' => $perPage,
-				'topId' => $topId,
-				'includeExpired' => $includeExpired,
-				'currentDateTime' => $currentDateTime,
 			]
 		);
 
@@ -284,26 +274,18 @@ final class InviteKeysRepo
 
 		try {
 			$isSuccess = $query->execute();
-			$this->logger->debug(
-				"selectInviteKeyListWithOwnerUid isSuccess: {isSuccess}",
-				[
-					'isSuccess' => $isSuccess,
-				]
-			);
+			$this->logger->debug("selectInviteKeyList isSuccess: {isSuccess}", ['isSuccess' => $isSuccess]);
 			if ($isSuccess) {
 				$inviteKeyList = $query->fetchAll(PDO::FETCH_ASSOC);
 				if ($inviteKeyList === false) {
 					return RetValueOrError::withError(404, "InviteKeys not found");
 				}
-
 				$this->logger->debug(
-					"selectInviteKeyListWithOwnerUid inviteKeyList->length: {inviteKeyList}",
-					[
-						'inviteKeyList' => count($inviteKeyList),
-					]
+					"selectInviteKeyList count: {count}",
+					['count' => count($inviteKeyList)]
 				);
 				return RetValueOrError::withValue(
-					array_map(fn($inviteKey) => $this::_fetchResultToInviteKey($inviteKey), $inviteKeyList)
+					array_map(fn ($row) => self::fetchResultToInviteKey($row), $inviteKeyList)
 				);
 			} else {
 				$this->logger->error("Unknown error");
@@ -338,8 +320,7 @@ final class InviteKeysRepo
 			]
 		);
 
-		try
-		{
+		try {
 			$query = $this->db->prepare(<<<SQL
 				UPDATE
 					invite_keys
@@ -362,7 +343,6 @@ final class InviteKeysRepo
 					$this->logger->error("disableInviteKey Not found");
 					return RetValueOrError::withError(404, "Invite key not found");
 				}
-
 				$this->logger->debug("disableInviteKey Success");
 				return RetValueOrError::withValue(null);
 			} else {
@@ -372,7 +352,6 @@ final class InviteKeysRepo
 		} catch (\PDOException $th) {
 			$errCode = $th->getCode();
 			$errInfo = $th->getMessage();
-
 			$this->logger->error(
 				"Failed to execute SQL ({errorCode} -> {errorInfo})",
 				[
@@ -389,6 +368,9 @@ final class InviteKeysRepo
 	}
 
 	/**
+	 * Cascade-delete all invite_keys for a work group. Called by
+	 * WorkGroupsService::deleteWorkGroup (§8 cascade re-added by InviteKey pass).
+	 *
 	 * @return RetValueOrError<null>
 	 */
 	public function deleteByWorkGroupId(
@@ -396,7 +378,7 @@ final class InviteKeysRepo
 		?DateTimeInterface $deletedAt = null,
 	): RetValueOrError {
 		$this->logger->debug(
-			"deleteLinkedInviteKeys workGroupsId: {workGroupsId}, deletedAt: {deletedAt}",
+			"deleteByWorkGroupId workGroupsId: {workGroupsId}, deletedAt: {deletedAt}",
 			[
 				'workGroupsId' => $workGroupsId,
 				'deletedAt' => $deletedAt,
@@ -426,10 +408,8 @@ final class InviteKeysRepo
 			$query->execute();
 			$rowCount = $query->rowCount();
 			$this->logger->debug(
-				"deleteLinkedInviteKeys deleted: {rows} rows",
-				[
-					'rows' => $rowCount,
-				]
+				"deleteByWorkGroupId deleted: {rows} rows",
+				['rows' => $rowCount]
 			);
 			if ($rowCount === 0) {
 				return RetValueOrError::withError(404, "InviteKeys not found");
