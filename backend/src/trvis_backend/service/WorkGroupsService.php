@@ -20,18 +20,18 @@ final class WorkGroupsService
 {
 	private readonly WorkGroupsRepo $workGroupsRepo;
 	private readonly WorkGroupsPrivilegesRepo $workGroupsPrivilegesRepo;
-	private readonly InviteKeysRepo $inviteKeysRepo;
 	private readonly ProjectsRepo $projectsRepo;
 	private readonly ProjectsPrivilegesRepo $projectsPrivilegesRepo;
+	private readonly InviteKeysRepo $inviteKeysRepo;
 	public function __construct(
 		private readonly PDO $db,
 		private readonly LoggerInterface $logger,
 	) {
 		$this->workGroupsRepo = new WorkGroupsRepo($db, $logger);
 		$this->workGroupsPrivilegesRepo = new WorkGroupsPrivilegesRepo($db, $logger);
-		$this->inviteKeysRepo = new InviteKeysRepo($db, $logger);
 		$this->projectsRepo = new ProjectsRepo($db, $logger);
 		$this->projectsPrivilegesRepo = new ProjectsPrivilegesRepo($db, $logger);
+		$this->inviteKeysRepo = new InviteKeysRepo($db, $logger);
 	}
 
 	public function selectWorkGroupOne(
@@ -65,6 +65,7 @@ final class WorkGroupsService
 			],
 		);
 
+		// M10: two independent SELECTs — accepted (count, page) eventual-consistency; see RetValueOrError::withTotalCount().
 		$totalCountResult = $this->workGroupsRepo->selectWorkGroupPageTotalCount(
 			userId: $userId,
 			topId: $topId,
@@ -136,16 +137,17 @@ final class WorkGroupsService
 				return $insertResult;
 			}
 
-			$this->db->commit();
 			$selectWorkGroupOneResult = $this->workGroupsRepo->selectWorkGroupOne($userId, $workGroupsId);
 			if ($selectWorkGroupOneResult->isError) {
+				$this->db->rollBack();
 				return $selectWorkGroupOneResult;
-			} else {
-				return RetValueOrError::withValue(
-					$selectWorkGroupOneResult->value,
-					Constants::HTTP_CREATED,
-				);
 			}
+
+			$this->db->commit();
+			return RetValueOrError::withValue(
+				$selectWorkGroupOneResult->value,
+				Constants::HTTP_CREATED,
+			);
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				"Failed to create work group: {exception}",
@@ -158,7 +160,7 @@ final class WorkGroupsService
 			}
 			return RetValueOrError::withError(
 				Constants::HTTP_INTERNAL_SERVER_ERROR,
-				'unknown error - ',
+				'unknown error',
 				$e->getCode(),
 			);
 		}
@@ -231,6 +233,7 @@ final class WorkGroupsService
 			[ 'projectsId' => $projectsId, 'userId' => $userId, 'page' => $pageFrom1 ],
 		);
 
+		// M10: two independent SELECTs — accepted (count, page) eventual-consistency; see RetValueOrError::withTotalCount().
 		$totalCountResult = $this->workGroupsRepo->selectWorkGroupPageByProjectIdTotalCount(
 			projectId: $projectsId,
 			userId: $userId,
@@ -396,7 +399,7 @@ final class WorkGroupsService
 			}
 			return RetValueOrError::withError(
 				Constants::HTTP_INTERNAL_SERVER_ERROR,
-				'unknown error - ',
+				'unknown error',
 				$e->getCode(),
 			);
 		}
@@ -452,11 +455,9 @@ final class WorkGroupsService
 		}
 
 		if (!$senderPrivilegeType->hasPrivilege(InviteKeyPrivilegeType::admin)) {
-			// adminでない場合、他のユーザーの権限を取得することはできない
-			return RetValueOrError::withError(
-				Constants::HTTP_FORBIDDEN,
-				'You don\'t have permission to get privileges of other users'
-			);
+			// adminでない場合、他のユーザーの権限を取得することはできない。
+			// GET の権限不足は存在を秘匿するため 404 に統一（非memberと同じ応答）。
+			return Utils::errWorkGroupNotFound();
 		}
 
 		$targetPrivilegeTypeResult = $this->workGroupsPrivilegesRepo->selectPrivilegeTypeObject(
@@ -526,7 +527,7 @@ final class WorkGroupsService
 					'You don\'t have permission to update your privilege to higher than your current privilege',
 				);
 			}
-		} else if (!$senderPrivilegeType->hasPrivilege(InviteKeyPrivilegeType::admin)) {
+		} elseif (!$senderPrivilegeType->hasPrivilege(InviteKeyPrivilegeType::admin)) {
 			// adminでない場合、他のユーザーの権限を編集することはできない
 			return RetValueOrError::withError(
 				Constants::HTTP_FORBIDDEN,
