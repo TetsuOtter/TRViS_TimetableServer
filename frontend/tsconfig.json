@@ -22,7 +22,6 @@
 	},
 	"include": ["src"],
 	"references": [
-		{ "path": "./tsconfig.node.json" },
-		{ "path": "./packages/trvis-api/tsconfig.build.json" }
+		{ "path": "./tsconfig.node.json" }
 	]
 }

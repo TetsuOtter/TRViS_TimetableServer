@@ -8,9 +8,4 @@ export default defineConfig({
 	esbuild: {
 		drop: ["console", "debugger"],
 	},
-	build: {
-		commonjsOptions: {
-			include: [/packages\/trvis-api/, /node_modules/],
-		},
-	},
 });

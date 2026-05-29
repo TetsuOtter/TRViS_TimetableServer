@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { fromApiStopPattern, toApiStopPattern } from "../adapters";
-import { stopPatternApi } from "../instances";
+import { client, fetchAllPages, unwrap, unwrapCreated } from "../client";
 import { queryKeys } from "../queryKeys";
 
 import type { StopPattern } from "../../types/entities";
@@ -9,10 +9,16 @@ import type { StopPattern } from "../../types/entities";
 export const useStopPatterns = (projectId: string) =>
 	useQuery({
 		queryKey: queryKeys.stopPatterns(projectId),
-		queryFn: () =>
-			stopPatternApi
-				.getStopPatternList({ projectId })
-				.then((list) => list.map(fromApiStopPattern)),
+		queryFn: async () => {
+			const data = await fetchAllPages((p, limit) =>
+				unwrap(
+					client.GET("/projects/{projectId}/stop_patterns", {
+						params: { path: { projectId }, query: { p, limit } },
+					})
+				)
+			);
+			return data.map(fromApiStopPattern);
+		},
 		enabled: projectId !== "",
 	});
 
@@ -20,10 +26,12 @@ export const useCreateStopPattern = (projectId: string) => {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: (draft: Omit<StopPattern, "id" | "projectId" | "createdAt">) =>
-			stopPatternApi.createStopPattern({
-				projectId,
-				stopPattern: toApiStopPattern(draft),
-			}),
+			unwrapCreated(
+				client.POST("/projects/{projectId}/stop_patterns", {
+					params: { path: { projectId } },
+					body: toApiStopPattern(draft),
+				})
+			),
 		onSuccess: () => {
 			void queryClient.invalidateQueries({
 				queryKey: queryKeys.stopPatterns(projectId),
@@ -39,16 +47,18 @@ export const useUpdateStopPattern = (projectId: string) => {
 			vars: Pick<StopPattern, "id"> &
 				Omit<StopPattern, "id" | "projectId" | "createdAt">
 		) =>
-			stopPatternApi.updateStopPattern({
-				stopPatternId: vars.id,
-				stopPattern: toApiStopPattern({
-					lineId: vars.lineId,
-					name: vars.name,
-					fromProjectStationId: vars.fromProjectStationId,
-					toProjectStationId: vars.toProjectStationId,
-					direction: vars.direction,
-				}),
-			}),
+			unwrap(
+				client.PUT("/stop_patterns/{stopPatternId}", {
+					params: { path: { stopPatternId: vars.id } },
+					body: toApiStopPattern({
+						lineId: vars.lineId,
+						name: vars.name,
+						fromProjectStationId: vars.fromProjectStationId,
+						toProjectStationId: vars.toProjectStationId,
+						direction: vars.direction,
+					}),
+				})
+			),
 		onSuccess: () => {
 			void queryClient.invalidateQueries({
 				queryKey: queryKeys.stopPatterns(projectId),
@@ -61,7 +71,11 @@ export const useDeleteStopPattern = (projectId: string) => {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: (id: string) =>
-			stopPatternApi.deleteStopPattern({ stopPatternId: id }),
+			unwrap(
+				client.DELETE("/stop_patterns/{stopPatternId}", {
+					params: { path: { stopPatternId: id } },
+				})
+			),
 		onSuccess: () => {
 			void queryClient.invalidateQueries({
 				queryKey: queryKeys.stopPatterns(projectId),

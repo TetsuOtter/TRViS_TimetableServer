@@ -4,12 +4,9 @@
 	"private": true,
 	"version": "0.0.0",
 	"type": "module",
-	"workspaces": [
-		"packages/*"
-	],
 	"scripts": {
 		"dev": "vite",
-		"build": "tsc -b packages/trvis-api/tsconfig.build.json && tsc && vite build",
+		"build": "tsc && vite build",
 		"lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
 		"i18n": "i18next --config ./i18next-parser.config.ts",
 		"preview": "vite preview"
@@ -29,14 +26,14 @@
 		"i18next": "^23.7.16",
 		"i18next-browser-languagedetector": "^7.2.0",
 		"i18next-http-backend": "^2.4.2",
+		"openapi-fetch": "0.17.0",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
 		"react-hook-form": "^7.49.3",
 		"react-i18next": "^14.0.0",
 		"react-redux": "^9.1.0",
 		"react-router-dom": "^6.21.2",
-		"redux-thunk": "^3.1.0",
-		"trvis-api": "workspace:^"
+		"redux-thunk": "^3.1.0"
 	},
 	"devDependencies": {
 		"@tsconfig/strictest": "^2.0.2",
@@ -52,6 +49,7 @@
 		"eslint-plugin-react": "^7.33.2",
 		"eslint-plugin-react-hooks": "^4.6.0",
 		"i18next-parser": "^8.12.0",
+		"openapi-typescript": "7.13.0",
 		"prettier": "^3.2.2",
 		"typescript": "^5.2.2",
 		"vite": "^5.0.8",
