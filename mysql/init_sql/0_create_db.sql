@@ -162,7 +162,7 @@ CREATE TABLE
     COMMENT 'UUID v4'
   ,
 
-  work_groups_id
+  projects_id
     BINARY(16)
     NOT NULL
     COMMENT 'UUID v4'
@@ -237,10 +237,10 @@ CREATE TABLE
   ),
 
   FOREIGN KEY (
-    work_groups_id
+    projects_id
   ) REFERENCES
-  work_groups (
-    work_groups_id
+  projects (
+    projects_id
   )
 );
 
@@ -456,6 +456,11 @@ CREATE TABLE
   )
 );
 
+-- `stations` は Project 直下の駅（旧 `project_stations` をリネーム・統合したもの）。
+-- 旧 work-group 配下 `stations` は廃止。`timetable_rows` / `station_tracks` は
+-- この Project-rooted `stations` を参照する。`location_km` / `record_type` は
+-- dump (TRViS-JSON) が要求するため保持（旧 WG モデル由来）。未設定時は
+-- DEFAULT 0 = location_km 0 / record_type normal で dump される（greenfield 既定）。
 CREATE TABLE
   stations
 (
@@ -465,7 +470,7 @@ CREATE TABLE
     COMMENT 'UUID v4'
   ,
 
-  work_groups_id
+  projects_id
     BINARY(16)
     NOT NULL
     COMMENT 'UUID v4'
@@ -474,6 +479,7 @@ CREATE TABLE
   description
     VARCHAR(255)
     NOT NULL
+    DEFAULT ''
   ,
 
   owner
@@ -505,9 +511,14 @@ CREATE TABLE
     NOT NULL
   ,
 
+  full_name
+    VARCHAR(255)
+  ,
+
   location_km
     DOUBLE PRECISION
     NOT NULL
+    DEFAULT 0
   ,
 
   location_lonlat
@@ -516,12 +527,18 @@ CREATE TABLE
 
   on_station_detect_radius_m
     DOUBLE PRECISION
-    NOT NULL
   ,
 
   record_type
     TINYINT
     NOT NULL
+    DEFAULT 0
+  ,
+
+  always_show_hh
+    BOOLEAN
+    NOT NULL
+    DEFAULT FALSE
   ,
 
   PRIMARY KEY (
@@ -529,10 +546,10 @@ CREATE TABLE
   ),
 
   FOREIGN KEY (
-    work_groups_id
+    projects_id
   ) REFERENCES
-  work_groups (
-    work_groups_id
+  projects (
+    projects_id
   )
 );
 
@@ -909,6 +926,18 @@ CREATE TABLE
     work_groups_id
   ),
 
+  -- M11: covering index for the GROUP BY MAX(privilege_type) derived table in
+  -- ProjectsRepo/WorkGroupsRepo list/one queries. uid+deleted_at prefix →
+  -- work_groups_id grouped filesort-free → privilege_type MAX loose scan; covering.
+  -- Also serves the legacy non-grouped WorkGroupsPrivilegesRepo::selectPrivilegeType
+  -- fallback path (WHERE work_groups_id=? AND uid=? AND deleted_at IS NULL).
+  KEY priv_lookup_covering_idx (
+    uid,
+    deleted_at,
+    work_groups_id,
+    privilege_type
+  ),
+
   FOREIGN KEY (
     work_groups_id
   ) REFERENCES
@@ -970,6 +999,16 @@ CREATE TABLE
   PRIMARY KEY (
     uid,
     projects_id
+  ),
+
+  -- M11: covering index for the GROUP BY MAX(privilege_type) derived table in
+  -- ProjectsRepo/WorkGroupsRepo list/one queries. uid+deleted_at prefix →
+  -- projects_id grouped filesort-free → privilege_type MAX loose scan; covering.
+  KEY priv_lookup_covering_idx (
+    uid,
+    deleted_at,
+    projects_id,
+    privilege_type
   ),
 
   FOREIGN KEY (
@@ -1042,86 +1081,6 @@ CREATE TABLE
 
   PRIMARY KEY (
     project_lines_id
-  ),
-
-  FOREIGN KEY (
-    projects_id
-  ) REFERENCES
-  projects (
-    projects_id
-  )
-);
-
-CREATE TABLE
-  project_stations
-(
-  project_stations_id
-    BINARY(16)
-    NOT NULL
-    COMMENT 'UUID v4'
-  ,
-
-  projects_id
-    BINARY(16)
-    NOT NULL
-    COMMENT 'UUID v4'
-  ,
-
-  description
-    VARCHAR(255)
-    NOT NULL
-    DEFAULT ''
-  ,
-
-  owner
-    VARCHAR(255)
-    CHARACTER SET ascii
-    COLLATE ascii_bin
-    NOT NULL
-  ,
-
-  created_at
-    DATETIME
-    NOT NULL
-    DEFAULT CURRENT_TIMESTAMP
-  ,
-
-  updated_at
-    DATETIME
-    NOT NULL
-    DEFAULT CURRENT_TIMESTAMP
-    ON UPDATE CURRENT_TIMESTAMP
-  ,
-
-  deleted_at
-    DATETIME
-  ,
-
-  name
-    VARCHAR(255)
-    NOT NULL
-  ,
-
-  full_name
-    VARCHAR(255)
-  ,
-
-  location_lonlat
-    POINT
-  ,
-
-  on_station_detect_radius_m
-    DOUBLE PRECISION
-  ,
-
-  always_show_hh
-    BOOLEAN
-    NOT NULL
-    DEFAULT FALSE
-  ,
-
-  PRIMARY KEY (
-    project_stations_id
   ),
 
   FOREIGN KEY (
@@ -1225,8 +1184,8 @@ CREATE TABLE
   FOREIGN KEY (
     project_stations_id
   ) REFERENCES
-  project_stations (
-    project_stations_id
+  stations (
+    stations_id
   )
 );
 
@@ -1323,15 +1282,15 @@ CREATE TABLE
   FOREIGN KEY (
     from_project_stations_id
   ) REFERENCES
-  project_stations (
-    project_stations_id
+  stations (
+    stations_id
   ),
 
   FOREIGN KEY (
     to_project_stations_id
   ) REFERENCES
-  project_stations (
-    project_stations_id
+  stations (
+    stations_id
   )
 );
 
@@ -1495,7 +1454,7 @@ CREATE TABLE
   FOREIGN KEY (
     project_stations_id
   ) REFERENCES
-  project_stations (
-    project_stations_id
+  stations (
+    stations_id
   )
 );
