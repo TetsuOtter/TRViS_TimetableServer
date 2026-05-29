@@ -3,15 +3,13 @@
 /**
  * TRViS用 時刻表管理用API
  *
- * NOTE: OpenAPI-Generator stub filled with DB integration tests for
- * TimetableRow (TimetableRowApi -> TimetableRowsService). TimetableRow
- * is keyed to a Train (-> Work -> WG) and additionally references a
- * Station (stations_id is NOT NULL in schema). Privilege resolves
- * through the project's projects_privileges via the Train parent chain.
- * TimetableRowsService extends MyServiceBase, so getOne/update/delete
- * go through TimetableRowsRepo (MyRepoBase) selectPrivilegeType ->
- * this regresses the project-root privilege-resolution fix
- * (admin -> 200, not 404).
+ * DB integration tests for TimetableRow (TimetableRowApi ->
+ * TimetableRowsService). TimetableRow is keyed to a Train (-> Work -> WG)
+ * and additionally references a Station (stations_id is NOT NULL in
+ * schema). Privilege resolves through the project's projects_privileges
+ * via the Train parent chain. getOne/update/delete resolve through
+ * TimetableRowsRepo::selectPrivilegeType (target); create/getPage through
+ * TrainsRepo (parent) — admin -> 200, not 404.
  * @see tests/Integration/IntegrationTestCase.php
  */
 
@@ -19,12 +17,18 @@ namespace dev_t0r\trvis_backend\api;
 
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\CoversMethod;
+use dev_t0r\trvis_backend\model\Color;
+use dev_t0r\trvis_backend\model\Color8bit;
+use dev_t0r\trvis_backend\model\ColorReal;
 use dev_t0r\trvis_backend\model\Station;
 use dev_t0r\trvis_backend\model\StationRecordType;
+use dev_t0r\trvis_backend\model\StationTrack;
 use dev_t0r\trvis_backend\model\TimetableRow;
 use dev_t0r\trvis_backend\model\Train;
 use dev_t0r\trvis_backend\model\Work;
+use dev_t0r\trvis_backend\service\ColorsService;
 use dev_t0r\trvis_backend\service\StationsService;
+use dev_t0r\trvis_backend\service\StationTracksService;
 use dev_t0r\trvis_backend\service\TimetableRowsService;
 use dev_t0r\trvis_backend\service\TrainsService;
 use dev_t0r\trvis_backend\service\WorksService;
@@ -33,7 +37,8 @@ use dev_t0r\trvis_backend\tests\integration\IntegrationTestCase;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
 
-require_once __DIR__ . '/../Integration/IntegrationTestCase.php';
+// IntegrationTestCase is composer classmap-autoloaded
+// (autoload-dev.classmap: ["tests/Integration/"]); no require_once needed.
 
 #[CoversClass(\dev_t0r\trvis_backend\api\TimetableRowApi::class)]
 #[CoversMethod(\dev_t0r\trvis_backend\api\TimetableRowApi::class, 'createTimetableRow')]
@@ -91,19 +96,19 @@ class TimetableRowApiTest extends IntegrationTestCase
 		$trainsId = $t->value[0]->trains_id;
 		$this->register('trains', 'trains_id', (string)$trainsId);
 
-		$s = (new StationsService($this->db, $this->logger))->create(
-			$wgId,
-			$this->userId,
-			[$this->makeModel(Station::class, [
-				'name' => 'S',
-				'description' => 'd',
-				'location_km' => 12.3,
-				'on_station_detect_radius_m' => 100.0,
-				'record_type' => StationRecordType::normal,
-			])],
+		$s = (new StationsService($this->db, $this->logger))->createStation(
+			projectsId: $this->projectId,
+			userId: $this->userId,
+			name: 'S',
+			fullName: null,
+			locationKm: 12.3,
+			locationLonlat: null,
+			onStationDetectRadiusM: 100.0,
+			recordType: StationRecordType::normal,
+			alwaysShowHh: false,
 		);
 		$this->assertOk($s, 'createStation');
-		$this->stationsId = $s->value[0]->stations_id;
+		$this->stationsId = $s->value->stations_id;
 		$this->register('stations', 'stations_id', (string)$this->stationsId);
 
 		return $trainsId;
@@ -141,10 +146,10 @@ class TimetableRowApiTest extends IntegrationTestCase
 	}
 
 	/**
-     * Recommended-spec regression: the 4 boolean flags may be omitted by
-     * the client; the repo must coalesce null -> DB DEFAULT (false), not 500.
-     */
-    public function testCreateTimetableRowDefaults()
+	 * Recommended-spec regression: the 4 boolean flags may be omitted by
+	 * the client; the repo must coalesce null -> DB DEFAULT (false), not 500.
+	 */
+	public function testCreateTimetableRowDefaults()
 	{
 		$train = $this->newTrain();
 		$data = [
@@ -188,7 +193,7 @@ class TimetableRowApiTest extends IntegrationTestCase
 		$b = $this->createOne($train, ['description' => 'B']);
 		$list = $this->svc()->getPage($this->userId, $train, 1, 50, null);
 		$this->assertOk($list, 'getPage');
-		$ids = array_map(fn($x) => (string)$x->timetable_rows_id, $list->value);
+		$ids = array_map(fn ($x) => (string)$x->timetable_rows_id, $list->value);
 		$this->assertContains((string)$a->timetable_rows_id, $ids);
 		$this->assertContains((string)$b->timetable_rows_id, $ids);
 	}
@@ -222,6 +227,108 @@ class TimetableRowApiTest extends IntegrationTestCase
 		$g = $this->svc()->getOne($this->userId, $o->timetable_rows_id);
 		$this->assertTrue($g->isError);
 		$this->assertSame(404, $g->statusCode);
+	}
+
+	/**
+	 * Tombstone read contract: a TimetableRow read embeds resolved display
+	 * names + is_deleted flags for its station / track / color FK targets, and
+	 * the resolving LEFT JOINs deliberately do NOT filter deleted_at — so when
+	 * a referenced station/track/color is soft-deleted, the row STILL surfaces
+	 * its name (with *_is_deleted = true) for the editor's "(削除済み)"
+	 * tombstone. (The dump, by contrast, hides such rows — see DumpApiTest.)
+	 */
+	public function testTombstoneFieldsSurfaceSoftDeletedRefs()
+	{
+		$train = $this->newTrain();
+
+		// a track under the row's station + a project color, both referenced.
+		$tr = (new StationTracksService($this->db, $this->logger))->create(
+			$this->stationsId,
+			$this->userId,
+			[$this->makeModel(StationTrack::class, ['name' => '1番線', 'description' => 'd'])],
+		);
+		$this->assertOk($tr, 'createStationTrack');
+		$trackId = $tr->value[0]->station_tracks_id;
+		$this->register('station_tracks', 'station_tracks_id', (string)$trackId);
+
+		$c = (new ColorsService($this->db, $this->logger))->create(
+			$this->projectId,
+			$this->userId,
+			[$this->makeModel(Color::class, [
+				'name' => '赤',
+				'description' => 'd',
+				'color_8bit' => $this->makeModel(Color8bit::class, ['red' => 255, 'green' => 0, 'blue' => 0]),
+				'color_real' => $this->makeModel(ColorReal::class, ['red' => 1.0, 'green' => 0.0, 'blue' => 0.0]),
+			])],
+		);
+		$this->assertOk($c, 'createColor');
+		$colorId = $c->value[0]->colors_id;
+		$this->register('colors', 'colors_id', (string)$colorId);
+
+		$row = $this->createOne($train, [
+			'station_tracks_id' => $trackId,
+			'colors_id_marker' => $colorId,
+		]);
+
+		// before any delete: names resolve, nothing flagged deleted.
+		$g = $this->svc()->getOne($this->userId, $row->timetable_rows_id);
+		$this->assertOk($g, 'getOne (live refs)');
+		$this->assertSame('S', $g->value->stations_name);
+		$this->assertFalse((bool)$g->value->stations_is_deleted);
+		$this->assertSame('1番線', $g->value->station_tracks_name);
+		$this->assertFalse((bool)$g->value->station_tracks_is_deleted);
+		$this->assertSame('赤', $g->value->colors_name);
+		$this->assertFalse((bool)$g->value->colors_is_deleted);
+
+		// soft-delete all three refs.
+		(new StationTracksService($this->db, $this->logger))->delete($this->userId, $trackId);
+		(new ColorsService($this->db, $this->logger))->delete($this->userId, $colorId);
+		(new StationsService($this->db, $this->logger))->deleteStation($this->stationsId, $this->userId);
+
+		// after: names STILL resolve (tombstone), is_deleted flips true.
+		$g2 = $this->svc()->getOne($this->userId, $row->timetable_rows_id);
+		$this->assertOk($g2, 'getOne (tombstoned refs)');
+		$this->assertSame('S', $g2->value->stations_name, 'deleted station name still surfaces');
+		$this->assertTrue((bool)$g2->value->stations_is_deleted);
+		$this->assertSame('1番線', $g2->value->station_tracks_name, 'deleted track name still surfaces');
+		$this->assertTrue((bool)$g2->value->station_tracks_is_deleted);
+		$this->assertSame('赤', $g2->value->colors_name, 'deleted color name still surfaces');
+		$this->assertTrue((bool)$g2->value->colors_is_deleted);
+
+		// The editor's grid loads rows via getPage (selectTimetableRowPage), a
+		// DIFFERENT read path than getOne — it must embed the tombstone too.
+		$page = $this->svc()->getPage($this->userId, $train, 1, 50, null);
+		$this->assertOk($page, 'getPage (tombstoned refs)');
+		$pageRow = null;
+		foreach ($page->value as $m) {
+			if ((string)$m->timetable_rows_id === (string)$row->timetable_rows_id) {
+				$pageRow = $m;
+				break;
+			}
+		}
+		$this->assertNotNull($pageRow, 'created row present in page');
+		$this->assertSame('S', $pageRow->stations_name, 'page: deleted station name still surfaces');
+		$this->assertTrue((bool)$pageRow->stations_is_deleted);
+		$this->assertSame('1番線', $pageRow->station_tracks_name, 'page: deleted track name still surfaces');
+		$this->assertTrue((bool)$pageRow->station_tracks_is_deleted);
+		$this->assertSame('赤', $pageRow->colors_name, 'page: deleted color name still surfaces');
+		$this->assertTrue((bool)$pageRow->colors_is_deleted);
+	}
+
+	/**
+	 * A row with no track / no color must report is_deleted = false (not true)
+	 * for the absent FK — the LEFT JOIN yields NULL deleted_at, and the mapper
+	 * coalesces a null FK id to "not deleted" rather than leaking 0/NULL noise.
+	 */
+	public function testTombstoneFlagsFalseWhenNoTrackOrColor()
+	{
+		$row = $this->createOne($this->newTrain());
+		$g = $this->svc()->getOne($this->userId, $row->timetable_rows_id);
+		$this->assertOk($g, 'getOne');
+		$this->assertNull($g->value->station_tracks_name);
+		$this->assertFalse((bool)$g->value->station_tracks_is_deleted);
+		$this->assertNull($g->value->colors_name);
+		$this->assertFalse((bool)$g->value->colors_is_deleted);
 	}
 
 	private function fetchUpdatedAt(string $id): string
