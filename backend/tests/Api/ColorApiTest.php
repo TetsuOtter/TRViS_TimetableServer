@@ -3,13 +3,10 @@
 /**
  * TRViS用 時刻表管理用API
  *
- * NOTE: OpenAPI-Generator stub filled with DB integration tests for
- * Color (ColorApi -> ColorsService). Color is keyed to a WorkGroup;
- * privilege resolves through the parent project's projects_privileges.
- * ColorsService extends MyServiceBase, so getOne/update/delete go
- * through ColorsRepo (MyRepoBase) selectPrivilegeType -> this regresses
- * the project-root privilege-resolution fix (admin -> 200, not 404).
- * Mirrors tests/Api/StationApiTest.php (single hop under WG).
+ * DB integration tests for Color (ColorApi -> ColorsService). Color is now
+ * Project-rooted (re-rooted from work-group; colors.projects_id), privilege
+ * resolves through ProjectsPrivilegesRepo. ColorsService is standalone (no
+ * MyServiceBase).
  * @see tests/Integration/IntegrationTestCase.php
  */
 
@@ -21,12 +18,11 @@ use dev_t0r\trvis_backend\model\Color;
 use dev_t0r\trvis_backend\model\Color8bit;
 use dev_t0r\trvis_backend\model\ColorReal;
 use dev_t0r\trvis_backend\service\ColorsService;
-use dev_t0r\trvis_backend\service\WorkGroupsService;
 use dev_t0r\trvis_backend\tests\integration\IntegrationTestCase;
 use Ramsey\Uuid\Uuid;
-use Ramsey\Uuid\UuidInterface;
 
-require_once __DIR__ . '/../Integration/IntegrationTestCase.php';
+// IntegrationTestCase is composer classmap-autoloaded
+// (autoload-dev.classmap: ["tests/Integration/"]); no require_once needed.
 
 #[CoversClass(\dev_t0r\trvis_backend\api\ColorApi::class)]
 #[CoversMethod(\dev_t0r\trvis_backend\api\ColorApi::class, 'createColor')]
@@ -41,21 +37,7 @@ class ColorApiTest extends IntegrationTestCase
 		return new ColorsService($this->db, $this->logger);
 	}
 
-	private function newWorkGroup(): UuidInterface
-	{
-		$r = (new WorkGroupsService($this->db, $this->logger))->createWorkGroupInProject(
-			$this->projectId,
-			$this->userId,
-			'IT WG',
-			'desc',
-		);
-		$this->assertOk($r, 'createWorkGroupInProject');
-		$wgId = $r->value->work_groups_id;
-		$this->register('work_groups', 'work_groups_id', (string)$wgId);
-		return $wgId;
-	}
-
-	private function createOne(UuidInterface $wgId, array $over = []): Color
+	private function createOne(array $over = []): Color
 	{
 		$data = array_merge([
 			'name' => 'C',
@@ -71,7 +53,7 @@ class ColorApiTest extends IntegrationTestCase
 				'blue' => 0.3,
 			]),
 		], $over);
-		$r = $this->svc()->create($wgId, $this->userId, [$this->makeModel(Color::class, $data)]);
+		$r = $this->svc()->create($this->projectId, $this->userId, [$this->makeModel(Color::class, $data)]);
 		$this->assertOk($r, 'createColor');
 		$o = $r->value[0];
 		$this->register('colors', 'colors_id', (string)$o->colors_id);
@@ -80,17 +62,16 @@ class ColorApiTest extends IntegrationTestCase
 
 	public function testCreateColor()
 	{
-		$wg = $this->newWorkGroup();
-		$o = $this->createOne($wg);
+		$o = $this->createOne();
 		$this->assertTrue(Uuid::isValid((string)$o->colors_id));
-		$this->assertSame((string)$wg, (string)$o->work_groups_id);
+		$this->assertSame((string)$this->projectId, (string)$o->projects_id);
 		$this->assertSame('C', $o->name);
 	}
 
 	public function testGetColor()
 	{
-		$o = $this->createOne($this->newWorkGroup());
-		// admin -> 200 (regresses the project-root privilege fix)
+		$o = $this->createOne();
+		// admin -> 200
 		$g = $this->svc()->getOne($this->userId, $o->colors_id);
 		$this->assertOk($g, 'getOne');
 		$this->assertSame((string)$o->colors_id, (string)$g->value->colors_id);
@@ -102,10 +83,9 @@ class ColorApiTest extends IntegrationTestCase
 
 	public function testGetColorList()
 	{
-		$wg = $this->newWorkGroup();
-		$a = $this->createOne($wg, ['name' => 'A']);
-		$b = $this->createOne($wg, ['name' => 'B']);
-		$list = $this->svc()->getPage($this->userId, $wg, 1, 50, null);
+		$a = $this->createOne(['name' => 'A']);
+		$b = $this->createOne(['name' => 'B']);
+		$list = $this->svc()->getPage($this->userId, $this->projectId, 1, 50, null);
 		$this->assertOk($list, 'getPage');
 		$ids = array_map(fn($x) => (string)$x->colors_id, $list->value);
 		$this->assertContains((string)$a->colors_id, $ids);
@@ -114,7 +94,7 @@ class ColorApiTest extends IntegrationTestCase
 
 	public function testUpdateColor()
 	{
-		$o = $this->createOne($this->newWorkGroup(), ['name' => 'before']);
+		$o = $this->createOne(['name' => 'before']);
 		$before = $this->fetchUpdatedAt((string)$o->colors_id);
 		sleep(1);
 		$u = $this->svc()->update(
@@ -135,7 +115,7 @@ class ColorApiTest extends IntegrationTestCase
 
 	public function testDeleteColor()
 	{
-		$o = $this->createOne($this->newWorkGroup());
+		$o = $this->createOne();
 		$d = $this->svc()->delete($this->userId, $o->colors_id);
 		$this->assertOk($d, 'delete');
 		$g = $this->svc()->getOne($this->userId, $o->colors_id);
