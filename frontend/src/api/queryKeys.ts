@@ -26,6 +26,13 @@ export const queryKeys = {
 		["workGroups", workGroupId, "stations"] as const,
 	station: (workGroupId: string, id: string) =>
 		["workGroups", workGroupId, "stations", id] as const,
+	colors: (projectId: string) => ["projects", projectId, "colors"] as const,
+	color: (projectId: string, id: string) =>
+		["projects", projectId, "colors", id] as const,
+	stationTracks: (stationId: string) =>
+		["stations", stationId, "stationTracks"] as const,
+	stationTrack: (stationId: string, id: string) =>
+		["stations", stationId, "stationTracks", id] as const,
 	stationsOnLine: (lineId: string) =>
 		["lines", lineId, "stationsOnLine"] as const,
 	stationOnLine: (lineId: string, id: string) =>

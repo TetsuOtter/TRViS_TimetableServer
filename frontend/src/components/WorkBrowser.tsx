@@ -8,7 +8,7 @@ import { TimetableGrid } from "./TimetableGrid";
 
 import type { AppliedRow } from "./ApplyPatternDialog";
 import type { Strings } from "../i18n/strings";
-import type { Train as EntityTrain } from "../types/entities";
+import type { Color as EntityColor, Train as EntityTrain } from "../types/entities";
 import type {
 	Direction,
 	Line,
@@ -622,6 +622,7 @@ interface WorkBrowserProps {
 	}) => void;
 	stopPatterns: StopPattern[];
 	stations: Station[];
+	colors: EntityColor[];
 	stationsOnLine: StationOnLine[];
 	lines: Line[];
 	onCreateRow: (trainId: string, row: TimetableRow) => void;
@@ -639,6 +640,7 @@ export function WorkBrowser({
 	onApplyPattern,
 	stopPatterns,
 	stations,
+	colors,
 	stationsOnLine,
 	lines,
 	onCreateRow,
@@ -724,6 +726,7 @@ export function WorkBrowser({
 							<TimetableGrid
 								train={selectedTrain}
 								stations={stations}
+								colors={colors}
 								onCreateRow={(r) => onCreateRow(selectedTrain.id, r)}
 								onUpdateRow={(rowId, r) => onUpdateRow(selectedTrain.id, rowId, r)}
 								onDeleteRow={(rowId) => onDeleteRow(selectedTrain.id, rowId)}
