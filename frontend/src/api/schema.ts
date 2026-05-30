@@ -309,6 +309,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/projects/{projectId}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * エクスポートする
+         * @description Project の全グラフ (子エンティティを含む) を1つの ProjectGraph として取得する。
+         *
+         *     このProjectへのREAD権限が必要です。
+         */
+        get: operations["exportProject"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/projects/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * インポートする
+         * @description ProjectGraph を読み込み、新しい Project として全グラフを複製する。すべての id はサーバ側で再採番される。
+         *
+         *     この操作にはサインインが必要です。
+         */
+        post: operations["importProject"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/projects/{projectId}/privileges": {
         parameters: {
             query?: never;
@@ -1125,6 +1169,21 @@ export interface components {
              * @enum {string}
              */
             readonly privilege_type?: "read" | "write" | "admin";
+        };
+        /** @description Project の全グラフ (エクスポート/インポート用バックアップ)。子エンティティは依存順の配列として平坦に保持され、インポート時に全 id はサーバ側で再採番される。 */
+        ProjectGraph: {
+            project: components["schemas"]["Project"];
+            colors?: components["schemas"]["Color"][];
+            stations?: components["schemas"]["Station"][];
+            station_tracks?: components["schemas"]["StationTrack"][];
+            lines?: components["schemas"]["Line"][];
+            stations_on_line?: components["schemas"]["StationOnLine"][];
+            stop_patterns?: components["schemas"]["StopPattern"][];
+            stop_pattern_rows?: components["schemas"]["StopPatternRow"][];
+            work_groups?: components["schemas"]["WorkGroup"][];
+            works?: components["schemas"]["Work"][];
+            trains?: components["schemas"]["Train"][];
+            timetable_rows?: components["schemas"]["TimetableRow"][];
         };
         ProjectsPrivilege: {
             /** @description UserID */
@@ -3303,6 +3362,99 @@ export interface operations {
             };
             /** @description コンテンツが存在しない */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorData"];
+                };
+            };
+        };
+    };
+    exportProject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description ProjectのID */
+                projectId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 取得成功 */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectGraph"];
+                };
+            };
+            /** @description リクエストが不正 (Projectが大きすぎる等) */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorData"];
+                };
+            };
+            /** @description 認証トークンのエラー */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorData"];
+                };
+            };
+            /** @description コンテンツが存在しない */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorData"];
+                };
+            };
+        };
+    };
+    importProject: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description インポートする ProjectGraph */
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProjectGraph"];
+            };
+        };
+        responses: {
+            /** @description 作成成功 (作成された Project を返す) */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Project"];
+                };
+            };
+            /** @description リクエストが不正 (payloadが大きすぎる等) */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApiErrorData"];
+                };
+            };
+            /** @description 認証トークンのエラー */
+            401: {
                 headers: {
                     [name: string]: unknown;
                 };

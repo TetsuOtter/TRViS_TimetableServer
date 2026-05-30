@@ -369,11 +369,20 @@ interface ContextMenuProps {
 
 export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
 	useEffect(() => {
+		// Attach the dismiss listeners on the NEXT tick. The right-click that
+		// opened this menu is a discrete event; React 18 flushes its state update
+		// (and this mount + effect) synchronously, while the same contextmenu
+		// event is still propagating to window — so attaching synchronously made
+		// the opening event immediately dismiss the menu. Deferring one tick lets
+		// that event finish first; subsequent clicks/right-clicks/keys still close.
 		const close = () => onClose();
-		window.addEventListener("click", close);
-		window.addEventListener("contextmenu", close);
-		window.addEventListener("keydown", close);
+		const id = setTimeout(() => {
+			window.addEventListener("click", close);
+			window.addEventListener("contextmenu", close);
+			window.addEventListener("keydown", close);
+		}, 0);
 		return () => {
+			clearTimeout(id);
 			window.removeEventListener("click", close);
 			window.removeEventListener("contextmenu", close);
 			window.removeEventListener("keydown", close);

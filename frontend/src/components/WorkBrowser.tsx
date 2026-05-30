@@ -1,6 +1,6 @@
 // WorkBrowser — train master/detail layout: train list + timetable grid.
 // Ported from WorkBrowser.jsx.
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { ApplyPatternDialog } from "./ApplyPatternDialog";
 import { BBCodeField } from "./BBCodeEditor";
@@ -662,6 +662,25 @@ export function WorkBrowser({
 		setSelectedTrainId(id);
 		onSelectTrain(id);
 	};
+
+	// Auto-select the first train so the timetable grid mounts. The useState
+	// initializer above only runs once at mount, when work.trains is usually
+	// still empty (trains load async via useTrains, and a freshly created train
+	// arrives after mount). Re-select whenever the current selection is missing
+	// (null, or no longer in the list) and trains are available. Mirrors the
+	// WG/work auto-select effect in App.tsx. Must call selectTrain (not just
+	// setSelectedTrainId) so App.tsx's currentTrain is set too, otherwise
+	// useTimetableRows(currentTrain) stays empty and rows never load.
+	const firstTrainId = work.trains[0]?.id ?? null;
+	const selectionValid =
+		selectedTrainId != null &&
+		work.trains.some((tr) => tr.id === selectedTrainId);
+	useEffect(() => {
+		if (!selectionValid && firstTrainId) {
+			selectTrain(firstTrainId);
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [selectionValid, firstTrainId]);
 
 	const updateTrain = (updated: Train) => {
 		onUpdateTrain({ id: updated.id, ...modelTrainToEntityDraft(updated) });

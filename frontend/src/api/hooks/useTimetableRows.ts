@@ -17,7 +17,16 @@ const timetableRowsQueryOptions = (trainId: string) => ({
 				})
 			)
 		);
-		return data.map(fromApiTimetableRow);
+		// The API returns rows ordered by id DESC (reverse insertion). Rows must
+		// render in route/insertion order: first/last-row detection and the
+		// drive-time cascade (computeRowFormats) both depend on it. IDs are
+		// UUID v7 (lexicographically chronological), so sort by id ascending.
+		return data
+			.slice()
+			.sort((a, b) =>
+				(a.timetable_rows_id ?? "").localeCompare(b.timetable_rows_id ?? "")
+			)
+			.map(fromApiTimetableRow);
 	},
 });
 
