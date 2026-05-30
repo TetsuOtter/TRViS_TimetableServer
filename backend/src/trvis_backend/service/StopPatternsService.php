@@ -32,6 +32,22 @@ final class StopPatternsService
 		$this->projectsPrivilegesRepo = new ProjectsPrivilegesRepo($db, $logger);
 	}
 
+	/** Coerce a request value (string UUID, or UuidInterface from a direct
+	 *  test caller) into a UuidInterface. */
+	private static function asUuid(mixed $v): UuidInterface
+	{
+		return $v instanceof UuidInterface ? $v : Uuid::fromString((string)$v);
+	}
+
+	/** Like asUuid() but passes null/empty through as null. */
+	private static function asUuidOrNull(mixed $v): ?UuidInterface
+	{
+		if ($v === null || $v === '') {
+			return null;
+		}
+		return self::asUuid($v);
+	}
+
 	/**
 	 * @return RetValueOrError<StopPattern>
 	 */
@@ -140,10 +156,14 @@ final class StopPatternsService
 					projectsId: $projectsId,
 					owner: $userId,
 					name: $d->name,
-					linesId: $d->lines_id,
+					// The HTTP path delivers these as strings (parsed JSON body);
+					// direct-service test callers pass UuidInterface already.
+					// The repo demands UuidInterface, so coerce strings here —
+					// without this, createStopPattern is a hard 500 (TypeError).
+					linesId: self::asUuid($d->lines_id),
 					direction: $d->direction ?? 1,
-					fromProjectStationsId: $d->from_project_stations_id,
-					toProjectStationsId: $d->to_project_stations_id,
+					fromProjectStationsId: self::asUuidOrNull($d->from_project_stations_id),
+					toProjectStationsId: self::asUuidOrNull($d->to_project_stations_id),
 				);
 				if ($insertResult->isError) {
 					$this->db->rollBack();

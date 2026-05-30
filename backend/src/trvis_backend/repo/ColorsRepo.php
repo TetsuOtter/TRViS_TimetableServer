@@ -411,9 +411,9 @@ final class ColorsRepo implements IMyRepoSelectPrivilegeType
 				fn ($i) => <<<SQL
 					(
 						:colors_id_{$i},
-						:projects_id,
+						:projects_id_{$i},
 						:description_{$i},
-						:owner,
+						:owner_{$i},
 						:name_{$i},
 						:red_8bit_{$i},
 						:green_8bit_{$i},
@@ -445,10 +445,13 @@ final class ColorsRepo implements IMyRepoSelectPrivilegeType
 				;
 				SQL
 			);
-			$query->bindValue(':projects_id', $projectsId->getBytes(), PDO::PARAM_STR);
-			$query->bindValue(':owner', $owner, PDO::PARAM_STR);
-
+			// Per-row placeholders for projects_id / owner: under native prepares
+			// (EMULATE_PREPARES=false) a named placeholder may appear only once
+			// in the statement, so the shared :projects_id / :owner reused across
+			// every VALUES tuple was an HY093 for any bulk (N>1) insert.
 			foreach ($dataList as $i => $d) {
+				$query->bindValue(":projects_id_$i", $projectsId->getBytes(), PDO::PARAM_STR);
+				$query->bindValue(":owner_$i", $owner, PDO::PARAM_STR);
 				$query->bindValue(":colors_id_$i", $insertIdList[$i]->getBytes(), PDO::PARAM_STR);
 				$query->bindValue(":description_$i", $d->description, PDO::PARAM_STR);
 				$query->bindValue(":name_$i", $d->name, PDO::PARAM_STR);

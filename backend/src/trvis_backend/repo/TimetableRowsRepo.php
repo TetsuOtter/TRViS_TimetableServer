@@ -36,11 +36,10 @@ use Ramsey\Uuid\UuidInterface;
  *   - update() has NO column allowlist and NO explicit updated_at set —
  *     it is a literal port of MyRepoBase::update. The kvpArray is already
  *     filtered to the 22 model keys by the service's getArrayForUpdateSource.
- *   - The `colors_id_marker` field maps to the DB column `colors_id` on
- *     INSERT (correct), but legacy update() emits the SET line
- *     `colors_id_marker = :colors_id_marker` for that key — MySQL rejects
- *     it ("Unknown column 'colors_id_marker'") → caught → HTTP 500. This
- *     is a legacy bug reproduced 1:1; a fix belongs in a post-migration PR.
+ *   - The `colors_id_marker` model/kvp key maps to the DB column `colors_id`
+ *     (as on INSERT). update() now remaps that one SET column name (see the
+ *     $keyToColumn map below) — previously it emitted `colors_id_marker = ...`
+ *     and MySQL rejected it ("Unknown column") → HTTP 500.
  *
  * Method names must NOT have a leading underscore (PSR2.Methods — not in
  * the 4-exclude carve-out). Canonical precedent: TrainsRepo / WorksRepo.
@@ -821,10 +820,14 @@ final class TimetableRowsRepo implements IMyRepoSelectPrivilegeType
 			['timetableRowsId' => $timetableRowsId],
 		);
 
+		// The model/kvp key `colors_id_marker` maps to the DB column `colors_id`
+		// (matching the INSERT path). Remap only the SET column name; the bound
+		// placeholder keeps the kvp key, so the bind loop below is unaffected.
+		$keyToColumn = ['colors_id_marker' => 'colors_id'];
 		$setClause = implode(
 			', ',
 			array_map(
-				fn ($key) => "{$key} = :{$key}",
+				fn ($key) => ($keyToColumn[$key] ?? $key) . " = :{$key}",
 				array_keys($kvpArray),
 			),
 		);
@@ -857,7 +860,12 @@ final class TimetableRowsRepo implements IMyRepoSelectPrivilegeType
 				} elseif (is_int($newValue)) {
 					$paramType = PDO::PARAM_INT;
 				} elseif (is_bool($newValue)) {
-					$paramType = PDO::PARAM_BOOL;
+					// The boolean columns are `tinyint(1) NOT NULL`. With native
+					// (non-emulated) prepares, PDO::PARAM_BOOL binds `false` as an
+					// empty string on this UPDATE path, violating NOT NULL (SQLSTATE
+					// 23000). Bind the explicit 0/1 int instead (matches tinyint).
+					$newValue = $newValue ? 1 : 0;
+					$paramType = PDO::PARAM_INT;
 				}
 
 				$query->bindValue(":{$key}", $newValue, $paramType);

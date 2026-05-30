@@ -142,7 +142,13 @@ final class WorksService
 					owner: $userId,
 					name: $d->name,
 					description: $d->description,
-					affectDate: $d->affect_date,
+					// HTTP path delivers affect_date as a string (parsed JSON);
+					// direct-service test callers pass a DateTimeInterface. The
+					// repo demands ?DateTimeInterface, so coerce strings here —
+					// without this, creating a Work with any date is a hard 500.
+					affectDate: $d->affect_date instanceof \DateTimeInterface
+						? $d->affect_date
+						: Utils::fromJsonDateOnlyStrToDateTime($d->affect_date),
 					affixContentType: $d->affix_content_type,
 					remarks: $d->remarks,
 					hasETrainTimetable: $d->has_e_train_timetable ?? false,
@@ -243,7 +249,11 @@ final class WorksService
 			hasName: $hasName,
 			description: $hasDescription ? $body->description : null,
 			hasDescription: $hasDescription,
-			affectDate: $hasAffectDate ? $body->affect_date : null,
+			affectDate: $hasAffectDate
+				? ($body->affect_date instanceof \DateTimeInterface
+					? $body->affect_date
+					: Utils::fromJsonDateOnlyStrToDateTime($body->affect_date))
+				: null,
 			hasAffectDate: $hasAffectDate,
 			affixContentType: $hasAffixContentType ? $body->affix_content_type : null,
 			hasAffixContentType: $hasAffixContentType,

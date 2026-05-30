@@ -512,7 +512,7 @@ final class StationsOnLineRepo implements IMyRepoSelectPrivilegeType
 				track_hidden_by_default
 			) VALUES (
 				:stations_on_line_id,
-				(SELECT pl.projects_id FROM project_lines pl WHERE pl.project_lines_id = :lines_id),
+				(SELECT pl.projects_id FROM project_lines pl WHERE pl.project_lines_id = :lines_id_for_projects),
 				:lines_id,
 				:project_stations_id,
 				:owner,
@@ -524,6 +524,9 @@ final class StationsOnLineRepo implements IMyRepoSelectPrivilegeType
 		);
 		$query->bindValue(':stations_on_line_id', $stationOnLineId->getBytes(), PDO::PARAM_STR);
 		$query->bindValue(':lines_id', $linesId->getBytes(), PDO::PARAM_STR);
+		// Native prepares (EMULATE_PREPARES=false) forbid reusing a named
+		// placeholder; the projects_id subquery binds the same value separately.
+		$query->bindValue(':lines_id_for_projects', $linesId->getBytes(), PDO::PARAM_STR);
 		$query->bindValue(':project_stations_id', $projectStationsId->getBytes(), PDO::PARAM_STR);
 		$query->bindValue(':owner', $owner, PDO::PARAM_STR);
 		$query->bindValue(':location_m', $locationM, PDO::PARAM_STR);

@@ -243,6 +243,33 @@ final class Utils
 	}
 
 	/**
+	 * Like getValueOrNull, but does NOT collapse a literal `false` to null.
+	 * getValue() returns the bool `false` both for an absent key AND for a
+	 * present `false` value, so getValueOrNull can't tell them apart — fine for
+	 * most fields, but it silently nulls a present `is_pass: false` etc., which
+	 * then violates the NOT NULL boolean columns on UPDATE. Use this for those
+	 * fields: it preserves `false` and only yields null when the key is truly
+	 * absent (or explicitly null).
+	 */
+	public static function getBoolValueOrNull(mixed $d, string $key): ?bool
+	{
+		if (is_object($d)) {
+			if (!property_exists($d, $key)) {
+				return null;
+			}
+			$v = $d->{$key};
+		} elseif (is_array($d)) {
+			if (!array_key_exists($key, $d)) {
+				return null;
+			}
+			$v = $d[$key];
+		} else {
+			return null;
+		}
+		return is_null($v) ? null : (bool)$v;
+	}
+
+	/**
 	 * @param array<string> $keys
 	 * @return array<string, string|int>
 	 */

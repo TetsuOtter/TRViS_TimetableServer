@@ -71,12 +71,12 @@ final class ProjectsRepo
 					$WHERE_USER_ID
 				AND
 					$WHERE_PRIVILEGE_TYPE
+				GROUP BY
+					projects_id
 				) AS projects_privileges
 			USING
 				(projects_id)
 			WHERE
-				projects.projects_id = :projects_id
-			AND
 				projects.deleted_at IS NULL
 			;
 			SQL

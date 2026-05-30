@@ -1957,6 +1957,133 @@
                 ]
             }
         },
+        "/projects/{projectId}/export": {
+            "get": {
+                "tags": [
+                    "project"
+                ],
+                "summary": "エクスポートする",
+                "description": "Project の全グラフ (子エンティティを含む) を1つの ProjectGraph として取得する。\n\nこのProjectへのREAD権限が必要です。",
+                "operationId": "exportProject",
+                "parameters": [
+                    {
+                        "name": "projectId",
+                        "in": "path",
+                        "description": "ProjectのID",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "取得成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProjectGraph"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "リクエストが不正 (Projectが大きすぎる等)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "認証トークンのエラー",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorData"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "コンテンツが存在しない",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorData"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/projects/import": {
+            "post": {
+                "tags": [
+                    "project"
+                ],
+                "summary": "インポートする",
+                "description": "ProjectGraph を読み込み、新しい Project として全グラフを複製する。すべての id はサーバ側で再採番される。\n\nこの操作にはサインインが必要です。",
+                "operationId": "importProject",
+                "requestBody": {
+                    "description": "インポートする ProjectGraph",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ProjectGraph"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "作成成功 (作成された Project を返す)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Project"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "リクエストが不正 (payloadが大きすぎる等)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "認証トークンのエラー",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorData"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/projects/{projectId}/privileges": {
             "get": {
                 "tags": [
@@ -6834,6 +6961,84 @@
                         ],
                         "readOnly": true,
                         "example": "admin"
+                    }
+                },
+                "type": "object"
+            },
+            "ProjectGraph": {
+                "description": "Project の全グラフ (エクスポート/インポート用バックアップ)。子エンティティは依存順の配列として平坦に保持され、インポート時に全 id はサーバ側で再採番される。",
+                "required": [
+                    "project"
+                ],
+                "properties": {
+                    "project": {
+                        "$ref": "#/components/schemas/Project"
+                    },
+                    "colors": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Color"
+                        }
+                    },
+                    "stations": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Station"
+                        }
+                    },
+                    "station_tracks": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/StationTrack"
+                        }
+                    },
+                    "lines": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Line"
+                        }
+                    },
+                    "stations_on_line": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/StationOnLine"
+                        }
+                    },
+                    "stop_patterns": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/StopPattern"
+                        }
+                    },
+                    "stop_pattern_rows": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/StopPatternRow"
+                        }
+                    },
+                    "work_groups": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/WorkGroup"
+                        }
+                    },
+                    "works": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Work"
+                        }
+                    },
+                    "trains": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Train"
+                        }
+                    },
+                    "timetable_rows": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/TimetableRow"
+                        }
                     }
                 },
                 "type": "object"
