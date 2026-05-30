@@ -9,29 +9,29 @@ import {
 	useMemo,
 	useState,
 } from "react";
+import type { ReactNode } from "react";
 
 import { TRVIS_I18N } from "../i18n/strings";
 
 import type { Lang, Strings } from "../i18n/strings";
-import type { ReactNode } from "react";
 
 export type Theme = "light" | "dark";
 export type Density = "comfortable" | "compact";
 
-interface Settings {
+type Settings = {
 	theme: Theme;
 	lang: Lang;
 	density: Density;
-}
+};
 
-interface SettingsContextValue extends Settings {
+type SettingsContextValue = {
 	t: Strings;
 	setTheme: (v: Theme) => void;
 	toggleTheme: () => void;
 	setLang: (v: Lang) => void;
 	toggleLang: () => void;
 	setDensity: (v: Density) => void;
-}
+} & Settings;
 
 const STORAGE_KEY = "trvis-editor-settings";
 
@@ -54,7 +54,11 @@ function loadSettings(): Settings {
 
 const SettingsContext = createContext<SettingsContextValue | null>(null);
 
-export function SettingsProvider({ children }: { children: ReactNode }) {
+export const SettingsProvider = ({
+	children,
+}: {
+	readonly children: ReactNode;
+}) => {
 	const [settings, setSettings] = useState<Settings>(loadSettings);
 
 	useEffect(() => {
@@ -65,31 +69,24 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 		}
 	}, [settings]);
 
-	const setTheme = useCallback(
-		(theme: Theme) => setSettings((s) => ({ ...s, theme })),
-		[]
-	);
-	const toggleTheme = useCallback(
-		() =>
-			setSettings((s) => ({
-				...s,
-				theme: s.theme === "light" ? "dark" : "light",
-			})),
-		[]
-	);
-	const setLang = useCallback(
-		(lang: Lang) => setSettings((s) => ({ ...s, lang })),
-		[]
-	);
-	const toggleLang = useCallback(
-		() =>
-			setSettings((s) => ({ ...s, lang: s.lang === "ja" ? "en" : "ja" })),
-		[]
-	);
-	const setDensity = useCallback(
-		(density: Density) => setSettings((s) => ({ ...s, density })),
-		[]
-	);
+	const setTheme = useCallback((theme: Theme) => {
+		setSettings((s) => ({ ...s, theme }));
+	}, []);
+	const toggleTheme = useCallback(() => {
+		setSettings((s) => ({
+			...s,
+			theme: s.theme === "light" ? "dark" : "light",
+		}));
+	}, []);
+	const setLang = useCallback((lang: Lang) => {
+		setSettings((s) => ({ ...s, lang }));
+	}, []);
+	const toggleLang = useCallback(() => {
+		setSettings((s) => ({ ...s, lang: s.lang === "ja" ? "en" : "ja" }));
+	}, []);
+	const setDensity = useCallback((density: Density) => {
+		setSettings((s) => ({ ...s, density }));
+	}, []);
 
 	const value = useMemo<SettingsContextValue>(
 		() => ({
@@ -109,7 +106,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 			{children}
 		</SettingsContext.Provider>
 	);
-}
+};
 
 export function useSettings(): SettingsContextValue {
 	const ctx = useContext(SettingsContext);

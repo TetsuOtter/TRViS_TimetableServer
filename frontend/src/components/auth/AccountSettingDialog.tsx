@@ -32,7 +32,9 @@ const AccountSettingDialog = () => {
 		} catch {
 			setCopyState("error");
 		}
-		copyTimer.current = setTimeout(() => setCopyState("idle"), 2000);
+		copyTimer.current = setTimeout(() => {
+			setCopyState("idle");
+		}, 2000);
 	}, [userId]);
 
 	const handleSignOut = useCallback(() => {
@@ -49,7 +51,9 @@ const AccountSettingDialog = () => {
 		<div
 			className="modal-backdrop"
 			onClick={(e) => e.target === e.currentTarget && closeAccount()}>
-			<div className="modal" style={{ maxWidth: 480 }}>
+			<div
+				className="modal"
+				style={{ maxWidth: 480 }}>
 				<div className="modal-header">
 					<span className="modal-title">👤 {t.account}</span>
 					<button
@@ -59,7 +63,9 @@ const AccountSettingDialog = () => {
 					</button>
 				</div>
 				<div className="modal-body">
-					<div className="field" style={{ marginBottom: 16 }}>
+					<div
+						className="field"
+						style={{ marginBottom: 16 }}>
 						<label>ユーザーID</label>
 						<div style={{ display: "flex", gap: 6 }}>
 							<input
@@ -84,7 +90,9 @@ const AccountSettingDialog = () => {
 						</div>
 					</div>
 
-					<div className="field" style={{ marginBottom: 16 }}>
+					<div
+						className="field"
+						style={{ marginBottom: 16 }}>
 						<label>{t.email}</label>
 						<div
 							style={{
@@ -92,9 +100,7 @@ const AccountSettingDialog = () => {
 								alignItems: "center",
 								gap: 8,
 							}}>
-							<span style={{ flex: 1, fontSize: 13 }}>
-								{email}
-							</span>
+							<span style={{ flex: 1, fontSize: 13 }}>{email}</span>
 							{isEmailVerified ? (
 								<span className="chip green">確認済み</span>
 							) : (

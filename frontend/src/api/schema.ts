@@ -3,6528 +3,5886 @@
  * Do not make direct changes to the file.
  */
 
-export interface paths {
-    "/": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** APIの情報を取得する */
-        get: operations["getApiInfo"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/projects/{projectId}/colors": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 複数件取得する
-         * @description 指定のProjectに属する Color (色) の情報を複数件取得する  このProjectへのREAD権限が必要です。
-         */
-        get: operations["getColorList"];
-        put?: never;
-        /**
-         * 作成する
-         * @description 指定のProjectに属する Color (色) を新しく作成する  指定のProjectへのWRITE権限が必要です。
-         */
-        post: operations["createColor"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/colors/{colorId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 1件取得する
-         * @description Color の情報を1件取得する  このデータが属するWorkGroupへのREAD権限が必要です。
-         */
-        get: operations["getColor"];
-        /**
-         * 更新する
-         * @description 既存の Color の情報を更新する  このデータが属するWorkGroupへのWRITE権限が必要です。
-         */
-        put: operations["updateColor"];
-        post?: never;
-        /**
-         * 削除する
-         * @description 既存の Color を削除する  このデータが属するWorkGroupへのWRITE権限が必要です。
-         */
-        delete: operations["deleteColor"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/dump/{workGroupId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * まとめて出力する
-         * @description WorkGroupに属するデータをまとめて出力する
-         *
-         *     指定のWorkGroupへのREAD権限、およびサインインが必要です。
-         */
-        get: operations["dumpTimetable"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/invite_keys": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 一覧を取得する
-         * @description 自身が作成した (オーナーな) 招待キーの一覧を取得する
-         *
-         *     実行にはサインインが必要です。
-         */
-        get: operations["getMyInviteKeyList"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/invite_keys/{inviteKeyId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 1件取得する
-         * @description 招待キーの情報を1件取得する
-         *
-         *     削除された招待キーは取得できませんが、無効化された招待キーは取得できます。
-         */
-        get: operations["getInviteKey"];
-        /**
-         * (未実装) 更新する
-         * @description 既存の招待キーを更新する
-         *
-         *     指定のWorkGroupへのADMIN権限が必要です。
-         */
-        put: operations["updateInviteKey"];
-        /**
-         * 使用する
-         * @description 招待キーを使用する
-         *
-         *     サインインが必須です。サインインしたユーザに対して、この招待キーに割り当てられた権限が付与されます。
-         */
-        post: operations["useInviteKey"];
-        /**
-         * 無効化する
-         * @description 指定の招待キーを無効化する。
-         *
-         *     なお、この操作はキーが有効な間だけ行える。
-         *
-         *     指定のWorkGroupへのADMIN権限が必要です。
-         */
-        delete: operations["deleteInviteKey"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/work_groups/{workGroupId}/invite_keys": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 一覧を取得する
-         * @description 指定のWorkGroupに属する招待キーの一覧を取得する
-         *
-         *     指定のWorkGroupへのADMIN権限が必要です。
-         */
-        get: operations["getInviteKeyList"];
-        put?: never;
-        /**
-         * 作成する
-         * @description 指定のWorkGroupに属する招待キーを新規に作成する
-         *
-         *     指定のWorkGroupへのADMIN権限が必要です。
-         */
-        post: operations["createInviteKey"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/projects/{projectId}/lines": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 複数件取得する
-         * @description 指定のProjectに属する Line の情報を複数件取得する
-         *
-         *     このProjectへのREAD権限が必要です。
-         */
-        get: operations["getLineList"];
-        put?: never;
-        /**
-         * 作成する
-         * @description 指定のProjectに属する Line を新しく作成する
-         *
-         *     このProjectへのWRITE権限が必要です。
-         */
-        post: operations["createLine"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/lines/{lineId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 1件取得する
-         * @description Line の情報を1件取得する
-         *
-         *     このLineが属するProjectへのREAD権限が必要です。
-         */
-        get: operations["getLine"];
-        /**
-         * 更新する
-         * @description 既存の Line を更新する
-         *
-         *     このLineが属するProjectへのWRITE権限が必要です。
-         */
-        put: operations["updateLine"];
-        post?: never;
-        /**
-         * 削除する
-         * @description 既存の Line を削除する
-         *
-         *     このLineが属するProjectへのWRITE権限が必要です。
-         */
-        delete: operations["deleteLine"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/projects": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 複数件取得する
-         * @description 自身が取得できる Project の情報を複数件取得する
-         */
-        get: operations["getProjectList"];
-        put?: never;
-        /**
-         * 作成する
-         * @description Project を新しく作成する
-         *
-         *     この操作にはサインインが必要です。
-         */
-        post: operations["createProject"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/projects/{projectId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 1件取得する
-         * @description Project の情報を1件取得する
-         *
-         *     このProjectへのREAD権限が必要です。
-         */
-        get: operations["getProject"];
-        /**
-         * 更新する
-         * @description 既存の Project を更新する
-         *
-         *     このProjectへのWRITE権限が必要です。
-         */
-        put: operations["updateProject"];
-        post?: never;
-        /**
-         * 削除する
-         * @description 既存の Project を削除する
-         *
-         *     このProjectへのADMIN権限が必要です。
-         */
-        delete: operations["deleteProject"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/projects/{projectId}/export": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * エクスポートする
-         * @description Project の全グラフ (子エンティティを含む) を1つの ProjectGraph として取得する。
-         *
-         *     このProjectへのREAD権限が必要です。
-         */
-        get: operations["exportProject"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/projects/import": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * インポートする
-         * @description ProjectGraph を読み込み、新しい Project として全グラフを複製する。すべての id はサーバ側で再採番される。
-         *
-         *     この操作にはサインインが必要です。
-         */
-        post: operations["importProject"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/projects/{projectId}/privileges": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 権限情報を取得する
-         * @description このProjectに関する自身の権限を取得する。
-         *
-         *     管理者の場合は、指定のユーザの権限を取得することも可能。
-         */
-        get: operations["getProjectPrivilege"];
-        /**
-         * 権限を更新する
-         * @description このProjectに対する自身の権限を更新する。(現在の権限以下の権限のみ設定可能)
-         *
-         *     管理者の場合は、指定のユーザの権限を追加・更新することも可能。(invite_key_idはNULLになります)
-         */
-        put: operations["updateProjectPrivilege"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/projects/{projectId}/stations": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 複数件取得する
-         * @description 指定のProjectに属する Station (Project内共通の駅) の情報を複数件取得する  このProjectへのREAD権限が必要です。
-         */
-        get: operations["getStationList"];
-        put?: never;
-        /**
-         * 作成する
-         * @description 指定のProjectに属する Station を新しく作成する  このProjectへのWRITE権限が必要です。
-         */
-        post: operations["createStation"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/stations/{stationId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 1件取得する
-         * @description Station の情報を1件取得する  このデータが属するProjectへのREAD権限が必要です。
-         */
-        get: operations["getStation"];
-        /**
-         * 更新する
-         * @description 既存の Station の情報を更新する  このデータが属するProjectへのWRITE権限が必要です。
-         */
-        put: operations["updateStation"];
-        post?: never;
-        /**
-         * 削除する
-         * @description 既存の Station を削除する  このデータが属するProjectへのWRITE権限が必要です。
-         */
-        delete: operations["deleteStation"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/lines/{lineId}/stations_on_line": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 複数件取得する
-         * @description 指定のLineに属する StationOnLine (路線上の駅) の情報を複数件取得する
-         *
-         *     このデータが属するProjectへのREAD権限が必要です。
-         */
-        get: operations["getStationOnLineList"];
-        put?: never;
-        /**
-         * 作成する
-         * @description 指定のLineに属する StationOnLine を新しく作成する
-         *
-         *     このデータが属するProjectへのWRITE権限が必要です。
-         */
-        post: operations["createStationOnLine"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/stations_on_line/{stationOnLineId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 1件取得する
-         * @description StationOnLine (路線上の駅) の情報を1件取得する
-         *
-         *     このデータが属するProjectへのREAD権限が必要です。
-         */
-        get: operations["getStationOnLine"];
-        /**
-         * 更新する
-         * @description 既存の StationOnLine の情報を更新する
-         *
-         *     このデータが属するProjectへのWRITE権限が必要です。
-         */
-        put: operations["updateStationOnLine"];
-        post?: never;
-        /**
-         * 削除する
-         * @description 既存の StationOnLine を削除する
-         *
-         *     このデータが属するProjectへのWRITE権限が必要です。
-         */
-        delete: operations["deleteStationOnLine"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/stations/{stationId}/tracks": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 複数件取得する
-         * @description 指定のStationに属するStationTrackの情報を複数件取得する  属するWorkGroupへのREAD権限が必要です。
-         */
-        get: operations["getStationTrackList"];
-        put?: never;
-        /**
-         * 作成する
-         * @description 指定のStationに属する StationTrack を新しく作成する  属するWorkGroupへのWRITE権限が必要です。
-         */
-        post: operations["createStationTrack"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/tracks/{stationTrackId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 1件取得する
-         * @description StationTrack (駅の番線) の情報を1件取得する  このデータが属するWorkGroupへのREAD権限が必要です。
-         */
-        get: operations["getStationTrack"];
-        /**
-         * 更新する
-         * @description 既存のStationTrackの情報を更新する  このデータが属するWorkGroupへのWRITE権限が必要です。
-         */
-        put: operations["updateStationTrack"];
-        post?: never;
-        /**
-         * 削除する
-         * @description 既存のStationTrackを削除する  このデータが属するWorkGroupへのWRITE権限が必要です。
-         */
-        delete: operations["deleteStationTrack"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/projects/{projectId}/stop_patterns": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 複数件取得する
-         * @description 指定のProjectに属する StopPattern の情報を複数件取得する
-         *
-         *     このProjectへのREAD権限が必要です。
-         */
-        get: operations["getStopPatternList"];
-        put?: never;
-        /**
-         * 作成する
-         * @description 指定のProjectに属する StopPattern を新しく作成する
-         *
-         *     このProjectへのWRITE権限が必要です。
-         */
-        post: operations["createStopPattern"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/stop_patterns/{stopPatternId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 1件取得する
-         * @description StopPattern の情報を1件取得する
-         *
-         *     このデータが属するProjectへのREAD権限が必要です。
-         */
-        get: operations["getStopPattern"];
-        /**
-         * 更新する
-         * @description 既存の StopPattern を更新する
-         *
-         *     このデータが属するProjectへのWRITE権限が必要です。
-         */
-        put: operations["updateStopPattern"];
-        post?: never;
-        /**
-         * 削除する
-         * @description 既存の StopPattern を削除する
-         *
-         *     このデータが属するProjectへのWRITE権限が必要です。
-         */
-        delete: operations["deleteStopPattern"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/stop_patterns/{stopPatternId}/rows": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 複数件取得する
-         * @description 指定のStopPatternに属する StopPatternRow (停車パターンの1行) の情報を複数件取得する
-         *
-         *     このデータが属するProjectへのREAD権限が必要です。
-         */
-        get: operations["getStopPatternRowList"];
-        put?: never;
-        /**
-         * 作成する
-         * @description 指定のStopPatternに属する StopPatternRow を新しく作成する
-         *
-         *     このデータが属するProjectへのWRITE権限が必要です。
-         */
-        post: operations["createStopPatternRow"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/stop_pattern_rows/{stopPatternRowId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 1件取得する
-         * @description StopPatternRow (停車パターンの1行) の情報を1件取得する
-         *
-         *     このデータが属するProjectへのREAD権限が必要です。
-         */
-        get: operations["getStopPatternRow"];
-        /**
-         * 更新する
-         * @description 既存の StopPatternRow の情報を更新する
-         *
-         *     このデータが属するProjectへのWRITE権限が必要です。
-         */
-        put: operations["updateStopPatternRow"];
-        post?: never;
-        /**
-         * 削除する
-         * @description 既存の StopPatternRow を削除する
-         *
-         *     このデータが属するProjectへのWRITE権限が必要です。
-         */
-        delete: operations["deleteStopPatternRow"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/trains/{trainId}/timetable_rows": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 複数件取得する
-         * @description 指定のTrainに属する TimetableRow (時刻表の行) の情報を複数件取得する
-         *
-         *     属するWorkGroupへのREAD権限が必要です。
-         */
-        get: operations["getTimetableRowList"];
-        put?: never;
-        /**
-         * 作成する
-         * @description 指定のTrainに属する TimetableRow (時刻表の行) を新しく作成する
-         *
-         *     属するWorkGroupへのWRITE権限が必要です。
-         */
-        post: operations["createTimetableRow"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/timetable_rows/{timetableRowId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 1件取得する
-         * @description TimetableRow (時刻表の行) の情報を1件取得する
-         *
-         *     このデータが属するWorkGroupへのREAD権限が必要です。
-         */
-        get: operations["getTimetableRow"];
-        /**
-         * 更新する
-         * @description 既存のTimetableRowの情報を更新する
-         *
-         *     このデータが属するWorkGroupへのWRITE権限が必要です。
-         */
-        put: operations["updateTimetableRow"];
-        post?: never;
-        /**
-         * 削除する
-         * @description 既存のTimetableRowを削除する
-         *
-         *     このデータが属するWorkGroupへのWRITE権限が必要です。
-         */
-        delete: operations["deleteTimetableRow"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/works/{workId}/trains": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 複数件取得する
-         * @description 指定のWorkに属する Train (列車) の情報を複数件取得する
-         *
-         *     属するWorkGroupへのREAD権限が必要です。
-         */
-        get: operations["getTrainList"];
-        put?: never;
-        /**
-         * 作成する
-         * @description 指定のWorkに属する Train (列車) を新しく作成する
-         *
-         *     属するWorkGroupへのWRITE権限が必要です。
-         */
-        post: operations["createTrain"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/trains/{trainId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 1件取得する
-         * @description Train (列車) の情報を1件取得する
-         *
-         *     このデータが属するWorkGroupへのREAD権限が必要です。
-         */
-        get: operations["getTrain"];
-        /**
-         * 更新する
-         * @description 既存のTrainの情報を更新する
-         *
-         *     このデータが属するWorkGroupへのWRITE権限が必要です。
-         */
-        put: operations["updateTrain"];
-        post?: never;
-        /**
-         * 削除する
-         * @description 既存のTrainを削除する
-         *
-         *     このデータが属するWorkGroupへのWRITE権限が必要です。
-         */
-        delete: operations["deleteTrain"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/work_groups/{workGroupId}/works": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 複数件取得する
-         * @description 指定のWorkGroupに属する Work の情報を複数件取得する
-         *
-         *     このWorkGroupへのREAD権限が必要です。
-         */
-        get: operations["getWorkList"];
-        put?: never;
-        /**
-         * 作成する
-         * @description 指定のWorkGroupに属する Work を新しく作成する
-         *
-         *     このWorkGroupへのWRITE権限が必要です。
-         */
-        post: operations["createWork"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/works/{workId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 1件取得する
-         * @description Work の情報を1件取得する
-         *
-         *     このデータが属するWorkGroupへのREAD権限が必要です。
-         */
-        get: operations["getWork"];
-        /**
-         * 更新する
-         * @description 既存の Work を更新する
-         *
-         *     このデータが属するWorkGroupへのWRITE権限が必要です。
-         */
-        put: operations["updateWork"];
-        post?: never;
-        /**
-         * 削除する
-         * @description 既存の Work を削除する
-         *
-         *     このデータが属するWorkGroupへのWRITE権限が必要です。
-         */
-        delete: operations["deleteWork"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/work_groups": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 複数件取得する
-         * @description 自身が取得できるWorkのまとまり (WorkGroup) の情報を複数件取得する
-         */
-        get: operations["getWorkGroupList"];
-        put?: never;
-        /**
-         * 作成する
-         * @description Workのまとまり (WorkGroup) を新しく作成する
-         *
-         *     この操作にはサインインが必要です。
-         */
-        post: operations["createWorkGroup"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/work_groups/{workGroupId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 1件取得する
-         * @description Workのまとまり (WorkGroup) の情報を1件取得する
-         *
-         *     このデータが属するWorkGroupへのREAD権限が必要です。
-         */
-        get: operations["getWorkGroup"];
-        /**
-         * 更新する
-         * @description 既存の「Workのまとまり (WorkGroup)」を更新する
-         *
-         *     このデータが属するWorkGroupへのWRITE権限が必要です。
-         */
-        put: operations["updateWorkGroup"];
-        post?: never;
-        /**
-         * 削除する
-         * @description 既存の「Workのまとまり (WorkGroup)」を削除する
-         *
-         *     このデータが属するWorkGroupへのADMIN権限が必要です。
-         */
-        delete: operations["deleteWorkGroup"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/work_groups/{workGroupId}/privileges": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 権限情報を取得する
-         * @description このWorkGroupに関する自身の権限を取得する。
-         *
-         *     管理者の場合は、指定のユーザの権限を取得することも可能。
-         */
-        get: operations["getWorkGroupPrivilege"];
-        /**
-         * 権限を更新する
-         * @description このWorkGroupに対する自身の権限を更新する。(現在の権限以下の権限のみ設定可能)
-         *
-         *     管理者の場合は、指定のユーザの権限を追加・更新することも可能。(invite_key_idはNULLになります)
-         */
-        put: operations["updateWorkGroupPrivilege"];
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/projects/{projectId}/work_groups": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * 複数件取得する
-         * @description 指定のProjectに属する WorkGroup の情報を複数件取得する
-         *
-         *     このProjectへのREAD権限が必要です。
-         */
-        get: operations["getWorkGroupListByProject"];
-        put?: never;
-        /**
-         * 作成する
-         * @description 指定のProjectに属する WorkGroup を新しく作成する
-         *
-         *     このProjectへのWRITE権限が必要です。
-         */
-        post: operations["createWorkGroupInProject"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-}
+export type paths = {
+	"/": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** APIの情報を取得する */
+		get: operations["getApiInfo"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/projects/{projectId}/colors": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * 複数件取得する
+		 * @description 指定のProjectに属する Color (色) の情報を複数件取得する  このProjectへのREAD権限が必要です。
+		 */
+		get: operations["getColorList"];
+		put?: never;
+		/**
+		 * 作成する
+		 * @description 指定のProjectに属する Color (色) を新しく作成する  指定のProjectへのWRITE権限が必要です。
+		 */
+		post: operations["createColor"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/colors/{colorId}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * 1件取得する
+		 * @description Color の情報を1件取得する  このデータが属するWorkGroupへのREAD権限が必要です。
+		 */
+		get: operations["getColor"];
+		/**
+		 * 更新する
+		 * @description 既存の Color の情報を更新する  このデータが属するWorkGroupへのWRITE権限が必要です。
+		 */
+		put: operations["updateColor"];
+		post?: never;
+		/**
+		 * 削除する
+		 * @description 既存の Color を削除する  このデータが属するWorkGroupへのWRITE権限が必要です。
+		 */
+		delete: operations["deleteColor"];
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/dump/{workGroupId}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * まとめて出力する
+		 * @description WorkGroupに属するデータをまとめて出力する
+		 *
+		 *     指定のWorkGroupへのREAD権限、およびサインインが必要です。
+		 */
+		get: operations["dumpTimetable"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/invite_keys": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * 一覧を取得する
+		 * @description 自身が作成した (オーナーな) 招待キーの一覧を取得する
+		 *
+		 *     実行にはサインインが必要です。
+		 */
+		get: operations["getMyInviteKeyList"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/invite_keys/{inviteKeyId}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * 1件取得する
+		 * @description 招待キーの情報を1件取得する
+		 *
+		 *     削除された招待キーは取得できませんが、無効化された招待キーは取得できます。
+		 */
+		get: operations["getInviteKey"];
+		/**
+		 * (未実装) 更新する
+		 * @description 既存の招待キーを更新する
+		 *
+		 *     指定のWorkGroupへのADMIN権限が必要です。
+		 */
+		put: operations["updateInviteKey"];
+		/**
+		 * 使用する
+		 * @description 招待キーを使用する
+		 *
+		 *     サインインが必須です。サインインしたユーザに対して、この招待キーに割り当てられた権限が付与されます。
+		 */
+		post: operations["useInviteKey"];
+		/**
+		 * 無効化する
+		 * @description 指定の招待キーを無効化する。
+		 *
+		 *     なお、この操作はキーが有効な間だけ行える。
+		 *
+		 *     指定のWorkGroupへのADMIN権限が必要です。
+		 */
+		delete: operations["deleteInviteKey"];
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/work_groups/{workGroupId}/invite_keys": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * 一覧を取得する
+		 * @description 指定のWorkGroupに属する招待キーの一覧を取得する
+		 *
+		 *     指定のWorkGroupへのADMIN権限が必要です。
+		 */
+		get: operations["getInviteKeyList"];
+		put?: never;
+		/**
+		 * 作成する
+		 * @description 指定のWorkGroupに属する招待キーを新規に作成する
+		 *
+		 *     指定のWorkGroupへのADMIN権限が必要です。
+		 */
+		post: operations["createInviteKey"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/projects/{projectId}/lines": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * 複数件取得する
+		 * @description 指定のProjectに属する Line の情報を複数件取得する
+		 *
+		 *     このProjectへのREAD権限が必要です。
+		 */
+		get: operations["getLineList"];
+		put?: never;
+		/**
+		 * 作成する
+		 * @description 指定のProjectに属する Line を新しく作成する
+		 *
+		 *     このProjectへのWRITE権限が必要です。
+		 */
+		post: operations["createLine"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/lines/{lineId}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * 1件取得する
+		 * @description Line の情報を1件取得する
+		 *
+		 *     このLineが属するProjectへのREAD権限が必要です。
+		 */
+		get: operations["getLine"];
+		/**
+		 * 更新する
+		 * @description 既存の Line を更新する
+		 *
+		 *     このLineが属するProjectへのWRITE権限が必要です。
+		 */
+		put: operations["updateLine"];
+		post?: never;
+		/**
+		 * 削除する
+		 * @description 既存の Line を削除する
+		 *
+		 *     このLineが属するProjectへのWRITE権限が必要です。
+		 */
+		delete: operations["deleteLine"];
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/projects": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * 複数件取得する
+		 * @description 自身が取得できる Project の情報を複数件取得する
+		 */
+		get: operations["getProjectList"];
+		put?: never;
+		/**
+		 * 作成する
+		 * @description Project を新しく作成する
+		 *
+		 *     この操作にはサインインが必要です。
+		 */
+		post: operations["createProject"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/projects/{projectId}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * 1件取得する
+		 * @description Project の情報を1件取得する
+		 *
+		 *     このProjectへのREAD権限が必要です。
+		 */
+		get: operations["getProject"];
+		/**
+		 * 更新する
+		 * @description 既存の Project を更新する
+		 *
+		 *     このProjectへのWRITE権限が必要です。
+		 */
+		put: operations["updateProject"];
+		post?: never;
+		/**
+		 * 削除する
+		 * @description 既存の Project を削除する
+		 *
+		 *     このProjectへのADMIN権限が必要です。
+		 */
+		delete: operations["deleteProject"];
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/projects/{projectId}/export": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * エクスポートする
+		 * @description Project の全グラフ (子エンティティを含む) を1つの ProjectGraph として取得する。
+		 *
+		 *     このProjectへのREAD権限が必要です。
+		 */
+		get: operations["exportProject"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/projects/import": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		get?: never;
+		put?: never;
+		/**
+		 * インポートする
+		 * @description ProjectGraph を読み込み、新しい Project として全グラフを複製する。すべての id はサーバ側で再採番される。
+		 *
+		 *     この操作にはサインインが必要です。
+		 */
+		post: operations["importProject"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/projects/{projectId}/privileges": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * 権限情報を取得する
+		 * @description このProjectに関する自身の権限を取得する。
+		 *
+		 *     管理者の場合は、指定のユーザの権限を取得することも可能。
+		 */
+		get: operations["getProjectPrivilege"];
+		/**
+		 * 権限を更新する
+		 * @description このProjectに対する自身の権限を更新する。(現在の権限以下の権限のみ設定可能)
+		 *
+		 *     管理者の場合は、指定のユーザの権限を追加・更新することも可能。(invite_key_idはNULLになります)
+		 */
+		put: operations["updateProjectPrivilege"];
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/projects/{projectId}/stations": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * 複数件取得する
+		 * @description 指定のProjectに属する Station (Project内共通の駅) の情報を複数件取得する  このProjectへのREAD権限が必要です。
+		 */
+		get: operations["getStationList"];
+		put?: never;
+		/**
+		 * 作成する
+		 * @description 指定のProjectに属する Station を新しく作成する  このProjectへのWRITE権限が必要です。
+		 */
+		post: operations["createStation"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/stations/{stationId}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * 1件取得する
+		 * @description Station の情報を1件取得する  このデータが属するProjectへのREAD権限が必要です。
+		 */
+		get: operations["getStation"];
+		/**
+		 * 更新する
+		 * @description 既存の Station の情報を更新する  このデータが属するProjectへのWRITE権限が必要です。
+		 */
+		put: operations["updateStation"];
+		post?: never;
+		/**
+		 * 削除する
+		 * @description 既存の Station を削除する  このデータが属するProjectへのWRITE権限が必要です。
+		 */
+		delete: operations["deleteStation"];
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/lines/{lineId}/stations_on_line": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * 複数件取得する
+		 * @description 指定のLineに属する StationOnLine (路線上の駅) の情報を複数件取得する
+		 *
+		 *     このデータが属するProjectへのREAD権限が必要です。
+		 */
+		get: operations["getStationOnLineList"];
+		put?: never;
+		/**
+		 * 作成する
+		 * @description 指定のLineに属する StationOnLine を新しく作成する
+		 *
+		 *     このデータが属するProjectへのWRITE権限が必要です。
+		 */
+		post: operations["createStationOnLine"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/stations_on_line/{stationOnLineId}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * 1件取得する
+		 * @description StationOnLine (路線上の駅) の情報を1件取得する
+		 *
+		 *     このデータが属するProjectへのREAD権限が必要です。
+		 */
+		get: operations["getStationOnLine"];
+		/**
+		 * 更新する
+		 * @description 既存の StationOnLine の情報を更新する
+		 *
+		 *     このデータが属するProjectへのWRITE権限が必要です。
+		 */
+		put: operations["updateStationOnLine"];
+		post?: never;
+		/**
+		 * 削除する
+		 * @description 既存の StationOnLine を削除する
+		 *
+		 *     このデータが属するProjectへのWRITE権限が必要です。
+		 */
+		delete: operations["deleteStationOnLine"];
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/stations/{stationId}/tracks": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * 複数件取得する
+		 * @description 指定のStationに属するStationTrackの情報を複数件取得する  属するWorkGroupへのREAD権限が必要です。
+		 */
+		get: operations["getStationTrackList"];
+		put?: never;
+		/**
+		 * 作成する
+		 * @description 指定のStationに属する StationTrack を新しく作成する  属するWorkGroupへのWRITE権限が必要です。
+		 */
+		post: operations["createStationTrack"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/tracks/{stationTrackId}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * 1件取得する
+		 * @description StationTrack (駅の番線) の情報を1件取得する  このデータが属するWorkGroupへのREAD権限が必要です。
+		 */
+		get: operations["getStationTrack"];
+		/**
+		 * 更新する
+		 * @description 既存のStationTrackの情報を更新する  このデータが属するWorkGroupへのWRITE権限が必要です。
+		 */
+		put: operations["updateStationTrack"];
+		post?: never;
+		/**
+		 * 削除する
+		 * @description 既存のStationTrackを削除する  このデータが属するWorkGroupへのWRITE権限が必要です。
+		 */
+		delete: operations["deleteStationTrack"];
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/projects/{projectId}/stop_patterns": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * 複数件取得する
+		 * @description 指定のProjectに属する StopPattern の情報を複数件取得する
+		 *
+		 *     このProjectへのREAD権限が必要です。
+		 */
+		get: operations["getStopPatternList"];
+		put?: never;
+		/**
+		 * 作成する
+		 * @description 指定のProjectに属する StopPattern を新しく作成する
+		 *
+		 *     このProjectへのWRITE権限が必要です。
+		 */
+		post: operations["createStopPattern"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/stop_patterns/{stopPatternId}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * 1件取得する
+		 * @description StopPattern の情報を1件取得する
+		 *
+		 *     このデータが属するProjectへのREAD権限が必要です。
+		 */
+		get: operations["getStopPattern"];
+		/**
+		 * 更新する
+		 * @description 既存の StopPattern を更新する
+		 *
+		 *     このデータが属するProjectへのWRITE権限が必要です。
+		 */
+		put: operations["updateStopPattern"];
+		post?: never;
+		/**
+		 * 削除する
+		 * @description 既存の StopPattern を削除する
+		 *
+		 *     このデータが属するProjectへのWRITE権限が必要です。
+		 */
+		delete: operations["deleteStopPattern"];
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/stop_patterns/{stopPatternId}/rows": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * 複数件取得する
+		 * @description 指定のStopPatternに属する StopPatternRow (停車パターンの1行) の情報を複数件取得する
+		 *
+		 *     このデータが属するProjectへのREAD権限が必要です。
+		 */
+		get: operations["getStopPatternRowList"];
+		put?: never;
+		/**
+		 * 作成する
+		 * @description 指定のStopPatternに属する StopPatternRow を新しく作成する
+		 *
+		 *     このデータが属するProjectへのWRITE権限が必要です。
+		 */
+		post: operations["createStopPatternRow"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/stop_pattern_rows/{stopPatternRowId}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * 1件取得する
+		 * @description StopPatternRow (停車パターンの1行) の情報を1件取得する
+		 *
+		 *     このデータが属するProjectへのREAD権限が必要です。
+		 */
+		get: operations["getStopPatternRow"];
+		/**
+		 * 更新する
+		 * @description 既存の StopPatternRow の情報を更新する
+		 *
+		 *     このデータが属するProjectへのWRITE権限が必要です。
+		 */
+		put: operations["updateStopPatternRow"];
+		post?: never;
+		/**
+		 * 削除する
+		 * @description 既存の StopPatternRow を削除する
+		 *
+		 *     このデータが属するProjectへのWRITE権限が必要です。
+		 */
+		delete: operations["deleteStopPatternRow"];
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/trains/{trainId}/timetable_rows": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * 複数件取得する
+		 * @description 指定のTrainに属する TimetableRow (時刻表の行) の情報を複数件取得する
+		 *
+		 *     属するWorkGroupへのREAD権限が必要です。
+		 */
+		get: operations["getTimetableRowList"];
+		put?: never;
+		/**
+		 * 作成する
+		 * @description 指定のTrainに属する TimetableRow (時刻表の行) を新しく作成する
+		 *
+		 *     属するWorkGroupへのWRITE権限が必要です。
+		 */
+		post: operations["createTimetableRow"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/timetable_rows/{timetableRowId}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * 1件取得する
+		 * @description TimetableRow (時刻表の行) の情報を1件取得する
+		 *
+		 *     このデータが属するWorkGroupへのREAD権限が必要です。
+		 */
+		get: operations["getTimetableRow"];
+		/**
+		 * 更新する
+		 * @description 既存のTimetableRowの情報を更新する
+		 *
+		 *     このデータが属するWorkGroupへのWRITE権限が必要です。
+		 */
+		put: operations["updateTimetableRow"];
+		post?: never;
+		/**
+		 * 削除する
+		 * @description 既存のTimetableRowを削除する
+		 *
+		 *     このデータが属するWorkGroupへのWRITE権限が必要です。
+		 */
+		delete: operations["deleteTimetableRow"];
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/works/{workId}/trains": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * 複数件取得する
+		 * @description 指定のWorkに属する Train (列車) の情報を複数件取得する
+		 *
+		 *     属するWorkGroupへのREAD権限が必要です。
+		 */
+		get: operations["getTrainList"];
+		put?: never;
+		/**
+		 * 作成する
+		 * @description 指定のWorkに属する Train (列車) を新しく作成する
+		 *
+		 *     属するWorkGroupへのWRITE権限が必要です。
+		 */
+		post: operations["createTrain"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/trains/{trainId}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * 1件取得する
+		 * @description Train (列車) の情報を1件取得する
+		 *
+		 *     このデータが属するWorkGroupへのREAD権限が必要です。
+		 */
+		get: operations["getTrain"];
+		/**
+		 * 更新する
+		 * @description 既存のTrainの情報を更新する
+		 *
+		 *     このデータが属するWorkGroupへのWRITE権限が必要です。
+		 */
+		put: operations["updateTrain"];
+		post?: never;
+		/**
+		 * 削除する
+		 * @description 既存のTrainを削除する
+		 *
+		 *     このデータが属するWorkGroupへのWRITE権限が必要です。
+		 */
+		delete: operations["deleteTrain"];
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/work_groups/{workGroupId}/works": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * 複数件取得する
+		 * @description 指定のWorkGroupに属する Work の情報を複数件取得する
+		 *
+		 *     このWorkGroupへのREAD権限が必要です。
+		 */
+		get: operations["getWorkList"];
+		put?: never;
+		/**
+		 * 作成する
+		 * @description 指定のWorkGroupに属する Work を新しく作成する
+		 *
+		 *     このWorkGroupへのWRITE権限が必要です。
+		 */
+		post: operations["createWork"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/works/{workId}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * 1件取得する
+		 * @description Work の情報を1件取得する
+		 *
+		 *     このデータが属するWorkGroupへのREAD権限が必要です。
+		 */
+		get: operations["getWork"];
+		/**
+		 * 更新する
+		 * @description 既存の Work を更新する
+		 *
+		 *     このデータが属するWorkGroupへのWRITE権限が必要です。
+		 */
+		put: operations["updateWork"];
+		post?: never;
+		/**
+		 * 削除する
+		 * @description 既存の Work を削除する
+		 *
+		 *     このデータが属するWorkGroupへのWRITE権限が必要です。
+		 */
+		delete: operations["deleteWork"];
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/work_groups": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * 複数件取得する
+		 * @description 自身が取得できるWorkのまとまり (WorkGroup) の情報を複数件取得する
+		 */
+		get: operations["getWorkGroupList"];
+		put?: never;
+		/**
+		 * 作成する
+		 * @description Workのまとまり (WorkGroup) を新しく作成する
+		 *
+		 *     この操作にはサインインが必要です。
+		 */
+		post: operations["createWorkGroup"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/work_groups/{workGroupId}": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * 1件取得する
+		 * @description Workのまとまり (WorkGroup) の情報を1件取得する
+		 *
+		 *     このデータが属するWorkGroupへのREAD権限が必要です。
+		 */
+		get: operations["getWorkGroup"];
+		/**
+		 * 更新する
+		 * @description 既存の「Workのまとまり (WorkGroup)」を更新する
+		 *
+		 *     このデータが属するWorkGroupへのWRITE権限が必要です。
+		 */
+		put: operations["updateWorkGroup"];
+		post?: never;
+		/**
+		 * 削除する
+		 * @description 既存の「Workのまとまり (WorkGroup)」を削除する
+		 *
+		 *     このデータが属するWorkGroupへのADMIN権限が必要です。
+		 */
+		delete: operations["deleteWorkGroup"];
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/work_groups/{workGroupId}/privileges": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * 権限情報を取得する
+		 * @description このWorkGroupに関する自身の権限を取得する。
+		 *
+		 *     管理者の場合は、指定のユーザの権限を取得することも可能。
+		 */
+		get: operations["getWorkGroupPrivilege"];
+		/**
+		 * 権限を更新する
+		 * @description このWorkGroupに対する自身の権限を更新する。(現在の権限以下の権限のみ設定可能)
+		 *
+		 *     管理者の場合は、指定のユーザの権限を追加・更新することも可能。(invite_key_idはNULLになります)
+		 */
+		put: operations["updateWorkGroupPrivilege"];
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	"/projects/{projectId}/work_groups": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * 複数件取得する
+		 * @description 指定のProjectに属する WorkGroup の情報を複数件取得する
+		 *
+		 *     このProjectへのREAD権限が必要です。
+		 */
+		get: operations["getWorkGroupListByProject"];
+		put?: never;
+		/**
+		 * 作成する
+		 * @description 指定のProjectに属する WorkGroup を新しく作成する
+		 *
+		 *     このProjectへのWRITE権限が必要です。
+		 */
+		post: operations["createWorkGroupInProject"];
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+};
 export type webhooks = Record<string, never>;
-export interface components {
-    schemas: {
-        /**
-         * error_code_message
-         * @description エラーコードとエラーメッセージ
-         */
-        ApiErrorData: {
-            /** @description エラーコード */
-            code?: number;
-            /** @description エラーメッセージ */
-            message?: string;
-        };
-        ApiInfo: {
-            /** @description サーバの名前 */
-            readonly server_name?: string;
-            /** @description APIのバージョン */
-            readonly version?: string;
-        };
-        /** Color */
-        Color: {
-            /**
-             * Format: uuid
-             * @description ColorのID (UUID)
-             */
-            readonly colors_id?: string;
-            /**
-             * Format: uuid
-             * @description この色が属するProjectのID (UUID)
-             */
-            readonly projects_id?: string;
-            /**
-             * Format: date-time
-             * @description 作成日時
-             */
-            readonly created_at?: string;
-            /**
-             * @description WorkGroupの説明
-             * @example WorkGroupの説明が入ります
-             */
-            description: string;
-            /**
-             * Format: date-time
-             * @description 更新日時
-             */
-            readonly updated_at?: string;
-            /**
-             * @description Colorの名前 (詳細な説明はdescriptionに書く)
-             * @example 赤
-             */
-            name: string;
-            color_8bit: components["schemas"]["Color8bit"];
-            color_real?: components["schemas"]["ColorReal"];
-        };
-        /** Color8bit */
-        Color8bit: {
-            /**
-             * @description 色の赤色成分 (8bit)
-             * @example 127
-             */
-            red?: number;
-            /**
-             * @description 色の緑色成分 (8bit)
-             * @example 127
-             */
-            green?: number;
-            /**
-             * @description 色の青色成分 (8bit)
-             * @example 127
-             */
-            blue?: number;
-        };
-        /** ColorReal */
-        ColorReal: {
-            /**
-             * Format: double
-             * @description 色の赤色成分 (小数)
-             * @example 0.5
-             */
-            red?: number;
-            /**
-             * Format: double
-             * @description 色の緑色成分 (小数)
-             * @example 0.5
-             */
-            green?: number;
-            /**
-             * Format: double
-             * @description 色の青色成分 (小数)
-             * @example 0.5
-             */
-            blue?: number;
-        };
-        InviteKey: {
-            /**
-             * Format: uuid
-             * @description Invite Key (UUID)
-             */
-            readonly invite_keys_id?: string;
-            /**
-             * Format: uuid
-             * @description 対応するWorkGroupのID (UUID)
-             */
-            readonly work_groups_id?: string;
-            /**
-             * Format: date-time
-             * @description 作成日時
-             */
-            readonly created_at?: string;
-            /**
-             * @description 招待キーの説明
-             * @example グループAの招待キー
-             */
-            description: string;
-            /**
-             * Format: date-time
-             * @description キーの有効期限 (開始)
-             */
-            valid_from?: string;
-            /**
-             * Format: date-time
-             * @description キーの有効期限 (終了)
-             */
-            expires_at?: string;
-            /**
-             * @description キーの使用回数の上限
-             * @example 15
-             */
-            use_limit?: number;
-            /**
-             * Format: date-time
-             * @description キーが無効になった日時 (Expireした場合はexpires_atと同じ値)
-             */
-            readonly disabled_at?: string;
-            /**
-             * @description 招待キーで付与される権限
-             * @example read
-             * @enum {string}
-             */
-            privilege_type?: "read" | "write" | "admin";
-        };
-        Line: {
-            /**
-             * Format: uuid
-             * @description LineのID (UUID)
-             */
-            readonly lines_id?: string;
-            /**
-             * Format: uuid
-             * @description ProjectのID (UUID)
-             */
-            readonly projects_id?: string;
-            /**
-             * Format: date-time
-             * @description 作成日時
-             */
-            readonly created_at?: string;
-            /**
-             * @description Lineの説明
-             * @example Lineの説明が入ります
-             */
-            description: string;
-            /**
-             * @description 路線名
-             * @example 東海道本線
-             */
-            name: string;
-        };
-        Project: {
-            /**
-             * Format: uuid
-             * @description ProjectのID (UUID)
-             */
-            readonly projects_id?: string;
-            /**
-             * Format: date-time
-             * @description 作成日時
-             */
-            readonly created_at?: string;
-            /**
-             * @description Projectの説明
-             * @example Projectの説明が入ります
-             */
-            description: string;
-            /**
-             * @description Projectの名前
-             * @example AAA鉄道
-             */
-            name: string;
-            /**
-             * @description 権限の種類
-             * @example admin
-             * @enum {string}
-             */
-            readonly privilege_type?: "read" | "write" | "admin";
-        };
-        /** @description Project の全グラフ (エクスポート/インポート用バックアップ)。子エンティティは依存順の配列として平坦に保持され、インポート時に全 id はサーバ側で再採番される。 */
-        ProjectGraph: {
-            project: components["schemas"]["Project"];
-            colors?: components["schemas"]["Color"][];
-            stations?: components["schemas"]["Station"][];
-            station_tracks?: components["schemas"]["StationTrack"][];
-            lines?: components["schemas"]["Line"][];
-            stations_on_line?: components["schemas"]["StationOnLine"][];
-            stop_patterns?: components["schemas"]["StopPattern"][];
-            stop_pattern_rows?: components["schemas"]["StopPatternRow"][];
-            work_groups?: components["schemas"]["WorkGroup"][];
-            works?: components["schemas"]["Work"][];
-            trains?: components["schemas"]["Train"][];
-            timetable_rows?: components["schemas"]["TimetableRow"][];
-        };
-        ProjectsPrivilege: {
-            /** @description UserID */
-            readonly uid?: string;
-            /**
-             * Format: uuid
-             * @description ProjectのID (UUID)
-             */
-            readonly projects_id?: string;
-            /**
-             * Format: uuid
-             * @description InviteKeyのID (UUID)
-             */
-            readonly invite_keys_id?: string;
-            /**
-             * Format: date-time
-             * @description 作成日時
-             */
-            readonly created_at?: string;
-            /**
-             * Format: date-time
-             * @description 更新日時
-             */
-            readonly updated_at?: string;
-            /**
-             * @description 権限の種類
-             * @example admin
-             * @enum {string}
-             */
-            privilege_type: "read" | "write" | "admin";
-        };
-        Station: {
-            /**
-             * Format: uuid
-             * @description Station (Project内共通の駅) のID (UUID)
-             */
-            readonly stations_id?: string;
-            /**
-             * Format: uuid
-             * @description ProjectのID (UUID)
-             */
-            readonly projects_id?: string;
-            /**
-             * Format: date-time
-             * @description 作成日時
-             */
-            readonly created_at?: string;
-            /**
-             * @description 駅名
-             * @example 東京
-             */
-            name: string;
-            /**
-             * @description 駅のフルネーム
-             * @example 東京駅
-             */
-            full_name?: string;
-            /**
-             * Format: double
-             * @description 駅の位置 (起点からのキロ程, km)。dump の Location_m に使用される。
-             * @example 12.3
-             */
-            location_km?: number;
-            location_lonlat?: components["schemas"]["Station_location_lonlat"];
-            /**
-             * Format: double
-             * @description その駅にいるかどうかを判定する円の半径 (m)
-             * @example 123.45
-             */
-            on_station_detect_radius_m?: number;
-            /**
-             * @description レコード種別 (TRViS-JSON dump の RecordType)
-             * @example normal
-             * @enum {string}
-             */
-            record_type?: "normal" | "normal_no_ett" | "info" | "info_ex";
-            /**
-             * @description 時刻表示で常に「時」を表示するかどうか
-             * @example false
-             */
-            always_show_hh?: boolean;
-        };
-        /** @description 駅の位置 (緯度経度) */
-        Station_location_lonlat: {
-            /**
-             * Format: double
-             * @description 経度
-             * @example 139.766944
-             */
-            longitude: number;
-            /**
-             * Format: double
-             * @description 緯度
-             * @example 35.681111
-             */
-            latitude: number;
-        };
-        /** StationOnLine */
-        StationOnLine: {
-            /**
-             * Format: uuid
-             * @description StationOnLineのID (UUID)
-             */
-            readonly stations_on_line_id?: string;
-            /**
-             * Format: uuid
-             * @description ProjectのID (UUID)
-             */
-            readonly projects_id?: string;
-            /**
-             * Format: uuid
-             * @description 紐づくLineのID (UUID)
-             */
-            lines_id: string;
-            /**
-             * Format: uuid
-             * @description 紐づくProject StationのID (UUID)
-             */
-            project_stations_id: string;
-            /** @description project_stations_id が指す駅の名前 (読み取り専用・表示用)。駅が論理削除済みの場合も名前を返す (project_stations_is_deleted で判別)。 */
-            readonly project_stations_name?: string | null;
-            /** @description project_stations_id が指す駅が論理削除済みかどうか (tombstone表示用) */
-            readonly project_stations_is_deleted?: boolean;
-            /**
-             * Format: date-time
-             * @description 作成日時
-             */
-            readonly created_at?: string;
-            /**
-             * Format: double
-             * @description その路線上での駅の位置 (m)
-             * @example 12345.6
-             */
-            location_m: number;
-            location_lonlat?: components["schemas"]["StationOnLine_location_lonlat"];
-            /**
-             * @description デフォルトで番線を非表示にするかどうか
-             * @example false
-             */
-            track_hidden_by_default?: boolean;
-        };
-        /** @description その路線上での駅の位置 (緯度経度) ※未指定時はProject Stationの値を使用 */
-        StationOnLine_location_lonlat: {
-            /**
-             * Format: double
-             * @description 経度
-             * @example 139.766944
-             */
-            longitude: number;
-            /**
-             * Format: double
-             * @description 緯度
-             * @example 35.681111
-             */
-            latitude: number;
-        };
-        StationTrack: {
-            /**
-             * Format: uuid
-             * @description Station TrackのID (UUID)
-             */
-            readonly station_tracks_id?: string;
-            /**
-             * Format: uuid
-             * @description StationのID (UUID)
-             */
-            readonly stations_id?: string;
-            /**
-             * Format: date-time
-             * @description 作成日時
-             */
-            readonly created_at?: string;
-            /**
-             * @description Station Trackの説明
-             * @example Station Trackの説明が入ります
-             */
-            description: string;
-            /**
-             * @description その番線の名前
-             * @example 上2
-             */
-            name: string;
-            /**
-             * @description 進入制限のデフォルト値 (km/h)
-             * @example 15
-             */
-            run_in_limit?: number;
-            /**
-             * @description 進出制限のデフォルト値 (km/h)
-             * @example 15
-             */
-            run_out_limit?: number;
-        };
-        StopPattern: {
-            /**
-             * Format: uuid
-             * @description StopPatternのID (UUID)
-             */
-            readonly stop_patterns_id?: string;
-            /**
-             * Format: uuid
-             * @description ProjectのID (UUID)
-             */
-            readonly projects_id?: string;
-            /**
-             * Format: uuid
-             * @description 紐づくLineのID (UUID)
-             */
-            lines_id: string;
-            /**
-             * Format: date-time
-             * @description 作成日時
-             */
-            readonly created_at?: string;
-            /**
-             * @description 停車パターンの名前
-             * @example 各駅停車
-             */
-            name: string;
-            /**
-             * Format: uuid
-             * @description 始点のProject StationのID (UUID)
-             */
-            from_project_stations_id?: string;
-            /**
-             * Format: uuid
-             * @description 終点のProject StationのID (UUID)
-             */
-            to_project_stations_id?: string;
-            /**
-             * @description 進行方向 (1=下り, -1=上り)
-             * @example 1
-             * @enum {integer}
-             */
-            direction?: 1 | -1;
-        };
-        StopPatternRow: {
-            /**
-             * Format: uuid
-             * @description StopPatternRowのID (UUID)
-             */
-            readonly stop_pattern_rows_id?: string;
-            /**
-             * Format: uuid
-             * @description 紐づくStopPatternのID (UUID)
-             */
-            readonly stop_patterns_id?: string;
-            /**
-             * Format: uuid
-             * @description ProjectのID (UUID)
-             */
-            readonly projects_id?: string;
-            /**
-             * Format: uuid
-             * @description この行の駅 (Project Station) のID (UUID)
-             */
-            project_stations_id: string;
-            /**
-             * Format: date-time
-             * @description 作成日時
-             */
-            readonly created_at?: string;
-            /**
-             * @description 並び順 (昇順)
-             * @example 0
-             */
-            sort_key?: number;
-            /**
-             * @description 番線名
-             * @example 上2
-             */
-            track_name?: string;
-            /**
-             * @description 番線を非表示にするかどうか
-             * @example false
-             */
-            track_hidden?: boolean;
-            /**
-             * @description 運転停車かどうか
-             * @example false
-             */
-            is_operation_only_stop?: boolean;
-            /**
-             * @description 通過駅かどうか
-             * @example false
-             */
-            is_pass?: boolean;
-            /**
-             * @description 駅間運転時間 (分)
-             * @example 3
-             */
-            drive_time_mm?: number;
-            /**
-             * @description 駅間運転時間 (秒)
-             * @example 15
-             */
-            drive_time_ss?: number;
-            /**
-             * @description 停車時間 (分)
-             * @example 1
-             */
-            dwell_time_mm?: number;
-            /**
-             * @description 停車時間 (秒)
-             * @example 0
-             */
-            dwell_time_ss?: number;
-            /**
-             * @description 到着時刻を表示するかどうか
-             * @example true
-             */
-            show_arrive?: boolean;
-            /**
-             * @description 出発時刻を表示するかどうか
-             * @example true
-             */
-            show_departure?: boolean;
-            /**
-             * @description 到着時刻欄に表示する文字列
-             * @example 停車
-             */
-            arrive_str?: string;
-            /**
-             * @description 出発時刻欄に表示する文字列
-             * @example ↓
-             */
-            departure_str?: string;
-            /**
-             * @description 進入制限 (km/h)
-             * @example 15
-             */
-            run_in_limit?: number;
-            /**
-             * @description 進出制限 (km/h)
-             * @example 15
-             */
-            run_out_limit?: number;
-            /**
-             * @description 注意事項
-             * @example 通過設定
-             */
-            remarks?: string;
-            /**
-             * @description 時刻表示で常に「時」を表示するかどうか
-             * @example false
-             */
-            always_show_hh?: boolean;
-        };
-        TRViS_json_TimetableRow: {
-            /**
-             * @description TRViS_json_TimetableRow — a TimetableRow as emitted by the Dump aggregator
-             *     (TimetableRowsRepo::dump sets these keys via setData). Faithful port of the
-             *     legacy OpenAPI-Generator MODEL_SCHEMA (required/properties/order/format/
-             *     nullable/min/max/pattern/exclusiveMaximum/example preserved 1:1).
-             *
-             *     Properties live on the #[OA\Schema] attribute; OAS_PROPERTIES /
-             *     OAS_REQUIRED drive the runtime model. TRViSJsonTimetableRowDriftTest
-             *     asserts the two stay in sync. Schema name MUST be `TRViS_json_TimetableRow`
-             *     (the Train $ref depends on it). Legacy `title:`/`description:` dropped per
-             *     Work.php. `WorkType` deliberately carries no example (legacy MODEL_SCHEMA
-             *     had none — 作業種別 実装準備中).
-             * @example 東京
-             */
-            StationName: string;
-            /**
-             * Format: double
-             * @example 0
-             */
-            Location_m: number;
-            /**
-             * Format: double
-             * @example 139.766944
-             */
-            Longitude_deg?: number | null;
-            /**
-             * Format: double
-             * @example 35.680833
-             */
-            Latitude_deg?: number | null;
-            /**
-             * Format: double
-             * @example 123.45
-             */
-            OnStationDetectRadius_m?: number | null;
-            /** @example 東京駅 */
-            FullName?: string | null;
-            /** @example 0 */
-            RecordType?: number;
-            /** @example 上1 */
-            TrackName?: string | null;
-            /** @example 3 */
-            DriveTime_MM?: number;
-            /** @example 15 */
-            DriveTime_SS?: number;
-            /** @example false */
-            IsOperationOnlyStop?: boolean;
-            /** @example false */
-            IsPass?: boolean;
-            /** @example false */
-            HasBracket?: boolean;
-            /** @example false */
-            IsLastStop?: boolean;
-            /** @example 12:34:56 */
-            Arrive?: string;
-            /** @example ::56 */
-            Departure?: string;
-            /** @example 15 */
-            RunInLimit?: number;
-            /** @example 15 */
-            RunOutLimit?: number;
-            /** @example 通過設定 */
-            Remarks?: string;
-            /** @example ff0000 */
-            MarkerColor?: string;
-            /** @example 合図 */
-            MarkerText?: string;
-            WorkType?: number;
-        };
-        TRViS_json_Train: {
-            /**
-             * @description TRViS_json_Train — a Train as emitted by the Dump aggregator
-             *     (TrainsRepo::dump sets these keys via setData). Faithful port of the legacy
-             *     OpenAPI-Generator MODEL_SCHEMA (required/properties/order/nullable/minimum/
-             *     example preserved 1:1).
-             *
-             *     Properties live on the #[OA\Schema] attribute; OAS_PROPERTIES /
-             *     OAS_REQUIRED drive the runtime model. TRViSJsonTrainDriftTest asserts the
-             *     two stay in sync. Schema name MUST be `TRViS_json_Train` (the Work $ref
-             *     depends on it). Legacy `title:`/`description:` dropped per Work.php.
-             * @example 試1234M
-             */
-            TrainNumber: string;
-            /** @example 110 */
-            MaxSpeed?: string | null;
-            /** @example 通電A20 */
-            SpeedType?: string | null;
-            /** @example XXX系 1M9T */
-            NominalTractiveCapacity?: string | null;
-            /** @example 10 */
-            CarCount?: number | null;
-            /** @example 東  京 */
-            Destination?: string | null;
-            /** @example (乗継) */
-            BeginRemarks?: string | null;
-            /** @example (乗継) */
-            AfterRemarks?: string | null;
-            /**
-             * @example XXXX ~ YYYY 徐行 30km/h
-             *     AAAA ~ BBBB 車掌省略
-             */
-            Remarks?: string | null;
-            /** @example 転線 5分          転線 */
-            BeforeDeparture?: string | null;
-            /** @example <div style="color: red">車掌省略</div> */
-            TrainInfo?: string | null;
-            /** @example 1 */
-            Direction: number;
-            /** @example 転線 5分          転線 */
-            AfterArrive?: string | null;
-            /** @example 1 */
-            DayCount?: number;
-            /** @example false */
-            IsRideOnMoving?: boolean;
-            TimetableRows: components["schemas"]["TRViS_json_TimetableRow"][];
-        };
-        TRViS_json_Work: {
-            /**
-             * @description TRViS_json_Work — a Work as emitted by the Dump aggregator (WorksRepo::dump
-             *     sets these keys via setData). Faithful port of the legacy
-             *     OpenAPI-Generator MODEL_SCHEMA (required/properties/order/format/nullable/
-             *     example preserved 1:1).
-             *
-             *     Properties live on the #[OA\Schema] attribute; OAS_PROPERTIES /
-             *     OAS_REQUIRED drive the runtime model. TRViSJsonWorkDriftTest asserts the
-             *     two stay in sync. Schema name MUST be `TRViS_json_Work` (the WorkGroup
-             *     $ref depends on it). Legacy `title:`/`description:` dropped per Work.php.
-             * @example 123行路
-             */
-            Name: string;
-            /**
-             * Format: date
-             * @example 2020-01-01
-             */
-            AffectDate?: string | null;
-            /** @example 0 */
-            AffixContentType?: number | null;
-            /** @example  */
-            AffixContent?: string | null;
-            /** @example 2023年1月1日 12時34分56秒作成 */
-            Remarks?: string | null;
-            /** @example true */
-            HasETrainTimetable?: boolean;
-            /** @example 0 */
-            ETrainTimetableContentType?: number | null;
-            /** @example  */
-            ETrainTimetableContent?: string | null;
-            Trains: components["schemas"]["TRViS_json_Train"][];
-        };
-        TRViS_json_WorkGroup: {
-            /**
-             * @description TRViS_json_WorkGroup — the root object the Dump aggregator emits
-             *     (DumpService returns a single TRViSJsonWorkGroup). Faithful port of the
-             *     legacy OpenAPI-Generator MODEL_SCHEMA (required/properties/order/example
-             *     preserved 1:1).
-             *
-             *     Properties live on the #[OA\Schema] attribute (not as PHP properties) so
-             *     they don't collide with BaseModel's __get/__set magic. OAS_PROPERTIES /
-             *     OAS_REQUIRED drive the runtime model; the attribute drives swagger-php.
-             *     TRViSJsonWorkGroupDriftTest asserts the two stay in sync.
-             *
-             *     The schema name MUST be `TRViS_json_WorkGroup` — DumpApi's 200 response and
-             *     the nested $ref chain (Work -> Train -> TimetableRow) depend on the exact
-             *     `TRViS_json_*` names. (Legacy `title:` is intentionally dropped, matching
-             *     the Work.php sibling precedent.)
-             * @example AAA運輸区
-             */
-            Name: string;
-            /** @example 1 */
-            DBVersion?: number;
-            Works: components["schemas"]["TRViS_json_Work"][];
-        };
-        TimetableRow: {
-            /**
-             * Format: uuid
-             * @description TimetableRowのID (UUID)
-             */
-            readonly timetable_rows_id?: string;
-            /**
-             * Format: uuid
-             * @description このデータが紐づいているTrainのID (UUID)
-             */
-            readonly trains_id?: string;
-            /**
-             * Format: uuid
-             * @description この行の駅のID (UUID)
-             */
-            stations_id?: string;
-            /**
-             * Format: uuid
-             * @description 駅の番線情報のID (UUID)
-             */
-            station_tracks_id?: string;
-            /**
-             * Format: uuid
-             * @description マーカーの色情報のID (UUID)
-             */
-            colors_id_marker?: string;
-            /** @description stations_id が指す駅の名前 (読み取り専用・表示用)。駅が論理削除済みの場合も名前を返す (stations_is_deleted で判別)。 */
-            readonly stations_name?: string | null;
-            /** @description stations_id が指す駅が論理削除済みかどうか (tombstone表示用) */
-            readonly stations_is_deleted?: boolean;
-            /** @description station_tracks_id が指す番線の名前 (読み取り専用・表示用)。番線が論理削除済みの場合も名前を返す (station_tracks_is_deleted で判別)。 */
-            readonly station_tracks_name?: string | null;
-            /** @description station_tracks_id が指す番線が論理削除済みかどうか (tombstone表示用) */
-            readonly station_tracks_is_deleted?: boolean;
-            /** @description colors_id_marker が指す色の名前 (読み取り専用・表示用)。色が論理削除済みの場合も名前を返す (colors_is_deleted で判別)。 */
-            readonly colors_name?: string | null;
-            /** @description colors_id_marker が指す色が論理削除済みかどうか (tombstone表示用) */
-            readonly colors_is_deleted?: boolean;
-            /**
-             * @description このTimetableRowの説明
-             * @example このTimetableRowの説明が入ります
-             */
-            description?: string;
-            /**
-             * Format: date-time
-             * @description 作成日時
-             */
-            readonly created_at?: string;
-            /**
-             * Format: date-time
-             * @description 更新日時
-             */
-            readonly updated_at?: string;
-            /**
-             * @description 駅間運転時間 (分)
-             * @example 3
-             */
-            drive_time_mm?: number;
-            /**
-             * @description 駅間運転時間 (秒)
-             * @example 15
-             */
-            drive_time_ss?: number;
-            /**
-             * @description 運転停車かどうか
-             * @example false
-             */
-            is_operation_only_stop?: boolean;
-            /**
-             * @description 通過駅かどうか
-             * @example false
-             */
-            is_pass?: boolean;
-            /**
-             * @description 到着時刻に括弧を付けるかどうか
-             * @example false
-             */
-            has_bracket?: boolean;
-            /**
-             * @description 終着駅かどうか
-             * @example false
-             */
-            is_last_stop?: boolean;
-            /**
-             * @description 到着時刻 (時)
-             * @example 15
-             */
-            arrive_time_hh?: number;
-            /**
-             * @description 到着時刻 (分)
-             * @example 20
-             */
-            arrive_time_mm?: number;
-            /**
-             * @description 到着時刻 (秒)
-             * @example 25
-             */
-            arrive_time_ss?: number;
-            /**
-             * @description 出発時刻 (時)
-             * @example 15
-             */
-            departure_time_hh?: number;
-            /**
-             * @description 出発時刻 (分)
-             * @example 20
-             */
-            departure_time_mm?: number;
-            /**
-             * @description 出発時刻 (秒)
-             * @example 25
-             */
-            departure_time_ss?: number;
-            /**
-             * @description 進入制限 (km/h)
-             * @example 15
-             */
-            run_in_limit?: number;
-            /**
-             * @description 進出制限 (km/h)
-             * @example 15
-             */
-            run_out_limit?: number;
-            /**
-             * @description 注意事項
-             * @example 通過設定
-             */
-            remarks?: string;
-            /**
-             * @description 到着時刻欄に表示する文字列
-             * @example 停車
-             */
-            arrive_str?: string;
-            /**
-             * @description 出発時刻欄に表示する文字列
-             * @example ???
-             */
-            departure_str?: string;
-            /**
-             * @description マーカー部分に表示する文字列
-             * @example 合図
-             */
-            marker_text?: string;
-            /** @description 作業種別 (実装準備中) */
-            work_type?: string;
-        };
-        Train: {
-            /**
-             * Format: uuid
-             * @description TrainのID (UUID)
-             */
-            readonly trains_id?: string;
-            /**
-             * Format: uuid
-             * @description WorkのID (UUID)
-             */
-            readonly works_id?: string;
-            /**
-             * Format: date-time
-             * @description 作成日時
-             */
-            readonly created_at?: string;
-            /**
-             * @description Train (列車) の説明
-             * @example Train (列車) の説明が入ります
-             */
-            description: string;
-            /**
-             * @description 列車番号
-             * @example 試9999M
-             */
-            train_number: string;
-            /**
-             * @description 最高速度 (km/h)
-             * @example 130
-             *     シク〜 60
-             */
-            max_speed?: string;
-            /**
-             * @description 速度種別
-             * @example 停電A9
-             *     シク〜 特定
-             */
-            speed_type?: string;
-            /**
-             * @description けん引定数
-             * @example 999系
-             *     9M1T
-             */
-            nominal_tractive_capacity?: string;
-            /**
-             * @description 編成両数 (0以下で非表示)
-             * @example 10
-             */
-            car_count?: number;
-            /**
-             * @description 行先
-             * @example 東  京
-             */
-            destination?: string;
-            /**
-             * @description 乗車前の注意事項 (「乗継」など)
-             * @example (乗継)
-             */
-            begin_remarks?: string;
-            /**
-             * @description 降車後の注意事項 (「乗継」など)
-             * @example (乗継)
-             */
-            after_remarks?: string;
-            /**
-             * @description 注意事項
-             * @example XXXX ~ YYYY 徐行 30km/h
-             *     AAAA ~ BBBB 車掌省略
-             */
-            remarks?: string;
-            /**
-             * @description 発前
-             * @example 転線 5分          転線
-             */
-            before_departure?: string;
-            /**
-             * @description 着後
-             * @example 転線 5分          転線
-             */
-            after_arrive?: string;
-            /**
-             * @description 列車に関する情報
-             * @example <div style="color: red">車掌省略</div>
-             */
-            train_info?: string;
-            /**
-             * @description 進行方向 (0~1: 下り, -1: 上り)
-             * @example 1
-             */
-            direction: number;
-            /**
-             * @description 仕業の初日からの経過日数 (0で初日/日勤、1で明け)
-             * @example 1
-             */
-            day_count: number;
-            /**
-             * @description 添乗での移動かどうか
-             * @example false
-             */
-            is_ride_on_moving?: boolean;
-        };
-        Work: {
-            /**
-             * Format: uuid
-             * @description Work — a 仕業 belonging to a WorkGroup. Faithful port of the legacy
-             *     OpenAPI-Generator MODEL_SCHEMA (title/required/properties/order/format/
-             *     example all preserved 1:1).
-             *
-             *     Properties live on the #[OA\Schema] attribute (not as PHP properties) so
-             *     they don't collide with BaseModel's __get/__set magic. OAS_PROPERTIES /
-             *     OAS_REQUIRED drive the runtime model; the attribute drives swagger-php.
-             *     WorkDriftTest asserts the two stay in sync.
-             *
-             *     affix_content and e_train_timetable_content are schema-present but never
-             *     persisted — the DB stores _file_name variants instead. They always read as
-             *     null. See WorksRepo::selectWorkOne for TODO comments.
-             *
-             *     affix_content_type / e_train_timetable_content_type use a hardcoded
-             *     string enum ['text','URI','PNG','PDF','JPG'] — copied 1:1 from the legacy
-             *     MODEL_SCHEMA. (Using ::cases() would cause a PHP fatal at attribute parse
-             *     time; see CONTRIBUTING-P3.md §3.)
-             */
-            readonly works_id?: string;
-            /** Format: uuid */
-            readonly work_groups_id?: string;
-            /** Format: date-time */
-            readonly created_at?: string;
-            /** @example Workの説明が入ります */
-            description: string;
-            /** @example 第NNN仕業 */
-            name: string;
-            /** Format: date */
-            affect_date?: string;
-            /**
-             * @example text
-             * @enum {string}
-             */
-            affix_content_type?: "text" | "URI" | "PNG" | "PDF" | "JPG";
-            /** @example 行路添付の内容が入ります */
-            affix_content?: string;
-            /** @example 注意事項が入ります */
-            remarks?: string;
-            /** @example true */
-            has_e_train_timetable?: boolean;
-            /**
-             * @example text
-             * @enum {string}
-             */
-            e_train_timetable_content_type?: "text" | "URI" | "PNG" | "PDF" | "JPG";
-            /** @example E電時刻表の内容が入ります */
-            e_train_timetable_content?: string;
-        };
-        WorkGroup: {
-            /**
-             * Format: uuid
-             * @description WorkGroupのID (UUID)
-             */
-            readonly work_groups_id?: string;
-            /**
-             * Format: uuid
-             * @description 所属するProjectのID (UUID)
-             */
-            readonly projects_id?: string;
-            /**
-             * Format: date-time
-             * @description 作成日時
-             */
-            readonly created_at?: string;
-            /**
-             * @description WorkGroupの説明
-             * @example WorkGroupの説明が入ります
-             */
-            description: string;
-            /**
-             * @description WorkGroupの名前
-             * @example AAA乗務員区
-             */
-            name: string;
-            /**
-             * @description 権限の種類
-             * @example admin
-             * @enum {string}
-             */
-            readonly privilege_type?: "read" | "write" | "admin";
-        };
-        WorkGroupsPrivilege: {
-            /** @description UserID */
-            readonly uid?: string;
-            /**
-             * Format: uuid
-             * @description WorkGroupのID (UUID)
-             */
-            readonly work_groups_id?: string;
-            /**
-             * Format: uuid
-             * @description InviteKeyのID (UUID)
-             */
-            readonly invite_keys_id?: string;
-            /**
-             * Format: date-time
-             * @description 作成日時
-             */
-            readonly created_at?: string;
-            /**
-             * Format: date-time
-             * @description 更新日時
-             */
-            readonly updated_at?: string;
-            /**
-             * @description 権限の種類
-             * @example admin
-             * @enum {string}
-             */
-            privilege_type: "read" | "write" | "admin";
-        };
-    };
-    responses: never;
-    parameters: never;
-    requestBodies: never;
-    headers: never;
-    pathItems: never;
-}
+export type components = {
+	schemas: {
+		/**
+		 * error_code_message
+		 * @description エラーコードとエラーメッセージ
+		 */
+		ApiErrorData: {
+			/** @description エラーコード */
+			code?: number;
+			/** @description エラーメッセージ */
+			message?: string;
+		};
+		ApiInfo: {
+			/** @description サーバの名前 */
+			readonly server_name?: string;
+			/** @description APIのバージョン */
+			readonly version?: string;
+		};
+		/** Color */
+		Color: {
+			/**
+			 * Format: uuid
+			 * @description ColorのID (UUID)
+			 */
+			readonly colors_id?: string;
+			/**
+			 * Format: uuid
+			 * @description この色が属するProjectのID (UUID)
+			 */
+			readonly projects_id?: string;
+			/**
+			 * Format: date-time
+			 * @description 作成日時
+			 */
+			readonly created_at?: string;
+			/**
+			 * @description WorkGroupの説明
+			 * @example WorkGroupの説明が入ります
+			 */
+			description: string;
+			/**
+			 * Format: date-time
+			 * @description 更新日時
+			 */
+			readonly updated_at?: string;
+			/**
+			 * @description Colorの名前 (詳細な説明はdescriptionに書く)
+			 * @example 赤
+			 */
+			name: string;
+			color_8bit: components["schemas"]["Color8bit"];
+			color_real?: components["schemas"]["ColorReal"];
+		};
+		/** Color8bit */
+		Color8bit: {
+			/**
+			 * @description 色の赤色成分 (8bit)
+			 * @example 127
+			 */
+			red?: number;
+			/**
+			 * @description 色の緑色成分 (8bit)
+			 * @example 127
+			 */
+			green?: number;
+			/**
+			 * @description 色の青色成分 (8bit)
+			 * @example 127
+			 */
+			blue?: number;
+		};
+		/** ColorReal */
+		ColorReal: {
+			/**
+			 * Format: double
+			 * @description 色の赤色成分 (小数)
+			 * @example 0.5
+			 */
+			red?: number;
+			/**
+			 * Format: double
+			 * @description 色の緑色成分 (小数)
+			 * @example 0.5
+			 */
+			green?: number;
+			/**
+			 * Format: double
+			 * @description 色の青色成分 (小数)
+			 * @example 0.5
+			 */
+			blue?: number;
+		};
+		InviteKey: {
+			/**
+			 * Format: uuid
+			 * @description Invite Key (UUID)
+			 */
+			readonly invite_keys_id?: string;
+			/**
+			 * Format: uuid
+			 * @description 対応するWorkGroupのID (UUID)
+			 */
+			readonly work_groups_id?: string;
+			/**
+			 * Format: date-time
+			 * @description 作成日時
+			 */
+			readonly created_at?: string;
+			/**
+			 * @description 招待キーの説明
+			 * @example グループAの招待キー
+			 */
+			description: string;
+			/**
+			 * Format: date-time
+			 * @description キーの有効期限 (開始)
+			 */
+			valid_from?: string;
+			/**
+			 * Format: date-time
+			 * @description キーの有効期限 (終了)
+			 */
+			expires_at?: string;
+			/**
+			 * @description キーの使用回数の上限
+			 * @example 15
+			 */
+			use_limit?: number;
+			/**
+			 * Format: date-time
+			 * @description キーが無効になった日時 (Expireした場合はexpires_atと同じ値)
+			 */
+			readonly disabled_at?: string;
+			/**
+			 * @description 招待キーで付与される権限
+			 * @example read
+			 * @enum {string}
+			 */
+			privilege_type?: "read" | "write" | "admin";
+		};
+		Line: {
+			/**
+			 * Format: uuid
+			 * @description LineのID (UUID)
+			 */
+			readonly lines_id?: string;
+			/**
+			 * Format: uuid
+			 * @description ProjectのID (UUID)
+			 */
+			readonly projects_id?: string;
+			/**
+			 * Format: date-time
+			 * @description 作成日時
+			 */
+			readonly created_at?: string;
+			/**
+			 * @description Lineの説明
+			 * @example Lineの説明が入ります
+			 */
+			description: string;
+			/**
+			 * @description 路線名
+			 * @example 東海道本線
+			 */
+			name: string;
+		};
+		Project: {
+			/**
+			 * Format: uuid
+			 * @description ProjectのID (UUID)
+			 */
+			readonly projects_id?: string;
+			/**
+			 * Format: date-time
+			 * @description 作成日時
+			 */
+			readonly created_at?: string;
+			/**
+			 * @description Projectの説明
+			 * @example Projectの説明が入ります
+			 */
+			description: string;
+			/**
+			 * @description Projectの名前
+			 * @example AAA鉄道
+			 */
+			name: string;
+			/**
+			 * @description 権限の種類
+			 * @example admin
+			 * @enum {string}
+			 */
+			readonly privilege_type?: "read" | "write" | "admin";
+		};
+		/** @description Project の全グラフ (エクスポート/インポート用バックアップ)。子エンティティは依存順の配列として平坦に保持され、インポート時に全 id はサーバ側で再採番される。 */
+		ProjectGraph: {
+			project: components["schemas"]["Project"];
+			colors?: components["schemas"]["Color"][];
+			stations?: components["schemas"]["Station"][];
+			station_tracks?: components["schemas"]["StationTrack"][];
+			lines?: components["schemas"]["Line"][];
+			stations_on_line?: components["schemas"]["StationOnLine"][];
+			stop_patterns?: components["schemas"]["StopPattern"][];
+			stop_pattern_rows?: components["schemas"]["StopPatternRow"][];
+			work_groups?: components["schemas"]["WorkGroup"][];
+			works?: components["schemas"]["Work"][];
+			trains?: components["schemas"]["Train"][];
+			timetable_rows?: components["schemas"]["TimetableRow"][];
+		};
+		ProjectsPrivilege: {
+			/** @description UserID */
+			readonly uid?: string;
+			/**
+			 * Format: uuid
+			 * @description ProjectのID (UUID)
+			 */
+			readonly projects_id?: string;
+			/**
+			 * Format: uuid
+			 * @description InviteKeyのID (UUID)
+			 */
+			readonly invite_keys_id?: string;
+			/**
+			 * Format: date-time
+			 * @description 作成日時
+			 */
+			readonly created_at?: string;
+			/**
+			 * Format: date-time
+			 * @description 更新日時
+			 */
+			readonly updated_at?: string;
+			/**
+			 * @description 権限の種類
+			 * @example admin
+			 * @enum {string}
+			 */
+			privilege_type: "read" | "write" | "admin";
+		};
+		Station: {
+			/**
+			 * Format: uuid
+			 * @description Station (Project内共通の駅) のID (UUID)
+			 */
+			readonly stations_id?: string;
+			/**
+			 * Format: uuid
+			 * @description ProjectのID (UUID)
+			 */
+			readonly projects_id?: string;
+			/**
+			 * Format: date-time
+			 * @description 作成日時
+			 */
+			readonly created_at?: string;
+			/**
+			 * @description 駅名
+			 * @example 東京
+			 */
+			name: string;
+			/**
+			 * @description 駅のフルネーム
+			 * @example 東京駅
+			 */
+			full_name?: string;
+			/**
+			 * Format: double
+			 * @description 駅の位置 (起点からのキロ程, km)。dump の Location_m に使用される。
+			 * @example 12.3
+			 */
+			location_km?: number;
+			location_lonlat?: components["schemas"]["Station_location_lonlat"];
+			/**
+			 * Format: double
+			 * @description その駅にいるかどうかを判定する円の半径 (m)
+			 * @example 123.45
+			 */
+			on_station_detect_radius_m?: number;
+			/**
+			 * @description レコード種別 (TRViS-JSON dump の RecordType)
+			 * @example normal
+			 * @enum {string}
+			 */
+			record_type?: "normal" | "normal_no_ett" | "info" | "info_ex";
+			/**
+			 * @description 時刻表示で常に「時」を表示するかどうか
+			 * @example false
+			 */
+			always_show_hh?: boolean;
+		};
+		/** @description 駅の位置 (緯度経度) */
+		Station_location_lonlat: {
+			/**
+			 * Format: double
+			 * @description 経度
+			 * @example 139.766944
+			 */
+			longitude: number;
+			/**
+			 * Format: double
+			 * @description 緯度
+			 * @example 35.681111
+			 */
+			latitude: number;
+		};
+		/** StationOnLine */
+		StationOnLine: {
+			/**
+			 * Format: uuid
+			 * @description StationOnLineのID (UUID)
+			 */
+			readonly stations_on_line_id?: string;
+			/**
+			 * Format: uuid
+			 * @description ProjectのID (UUID)
+			 */
+			readonly projects_id?: string;
+			/**
+			 * Format: uuid
+			 * @description 紐づくLineのID (UUID)
+			 */
+			lines_id: string;
+			/**
+			 * Format: uuid
+			 * @description 紐づくProject StationのID (UUID)
+			 */
+			project_stations_id: string;
+			/** @description project_stations_id が指す駅の名前 (読み取り専用・表示用)。駅が論理削除済みの場合も名前を返す (project_stations_is_deleted で判別)。 */
+			readonly project_stations_name?: string | null;
+			/** @description project_stations_id が指す駅が論理削除済みかどうか (tombstone表示用) */
+			readonly project_stations_is_deleted?: boolean;
+			/**
+			 * Format: date-time
+			 * @description 作成日時
+			 */
+			readonly created_at?: string;
+			/**
+			 * Format: double
+			 * @description その路線上での駅の位置 (m)
+			 * @example 12345.6
+			 */
+			location_m: number;
+			location_lonlat?: components["schemas"]["StationOnLine_location_lonlat"];
+			/**
+			 * @description デフォルトで番線を非表示にするかどうか
+			 * @example false
+			 */
+			track_hidden_by_default?: boolean;
+		};
+		/** @description その路線上での駅の位置 (緯度経度) ※未指定時はProject Stationの値を使用 */
+		StationOnLine_location_lonlat: {
+			/**
+			 * Format: double
+			 * @description 経度
+			 * @example 139.766944
+			 */
+			longitude: number;
+			/**
+			 * Format: double
+			 * @description 緯度
+			 * @example 35.681111
+			 */
+			latitude: number;
+		};
+		StationTrack: {
+			/**
+			 * Format: uuid
+			 * @description Station TrackのID (UUID)
+			 */
+			readonly station_tracks_id?: string;
+			/**
+			 * Format: uuid
+			 * @description StationのID (UUID)
+			 */
+			readonly stations_id?: string;
+			/**
+			 * Format: date-time
+			 * @description 作成日時
+			 */
+			readonly created_at?: string;
+			/**
+			 * @description Station Trackの説明
+			 * @example Station Trackの説明が入ります
+			 */
+			description: string;
+			/**
+			 * @description その番線の名前
+			 * @example 上2
+			 */
+			name: string;
+			/**
+			 * @description 進入制限のデフォルト値 (km/h)
+			 * @example 15
+			 */
+			run_in_limit?: number;
+			/**
+			 * @description 進出制限のデフォルト値 (km/h)
+			 * @example 15
+			 */
+			run_out_limit?: number;
+		};
+		StopPattern: {
+			/**
+			 * Format: uuid
+			 * @description StopPatternのID (UUID)
+			 */
+			readonly stop_patterns_id?: string;
+			/**
+			 * Format: uuid
+			 * @description ProjectのID (UUID)
+			 */
+			readonly projects_id?: string;
+			/**
+			 * Format: uuid
+			 * @description 紐づくLineのID (UUID)
+			 */
+			lines_id: string;
+			/**
+			 * Format: date-time
+			 * @description 作成日時
+			 */
+			readonly created_at?: string;
+			/**
+			 * @description 停車パターンの名前
+			 * @example 各駅停車
+			 */
+			name: string;
+			/**
+			 * Format: uuid
+			 * @description 始点のProject StationのID (UUID)
+			 */
+			from_project_stations_id?: string;
+			/**
+			 * Format: uuid
+			 * @description 終点のProject StationのID (UUID)
+			 */
+			to_project_stations_id?: string;
+			/**
+			 * @description 進行方向 (1=下り, -1=上り)
+			 * @example 1
+			 * @enum {integer}
+			 */
+			direction?: 1 | -1;
+		};
+		StopPatternRow: {
+			/**
+			 * Format: uuid
+			 * @description StopPatternRowのID (UUID)
+			 */
+			readonly stop_pattern_rows_id?: string;
+			/**
+			 * Format: uuid
+			 * @description 紐づくStopPatternのID (UUID)
+			 */
+			readonly stop_patterns_id?: string;
+			/**
+			 * Format: uuid
+			 * @description ProjectのID (UUID)
+			 */
+			readonly projects_id?: string;
+			/**
+			 * Format: uuid
+			 * @description この行の駅 (Project Station) のID (UUID)
+			 */
+			project_stations_id: string;
+			/**
+			 * Format: date-time
+			 * @description 作成日時
+			 */
+			readonly created_at?: string;
+			/**
+			 * @description 並び順 (昇順)
+			 * @example 0
+			 */
+			sort_key?: number;
+			/**
+			 * @description 番線名
+			 * @example 上2
+			 */
+			track_name?: string;
+			/**
+			 * @description 番線を非表示にするかどうか
+			 * @example false
+			 */
+			track_hidden?: boolean;
+			/**
+			 * @description 運転停車かどうか
+			 * @example false
+			 */
+			is_operation_only_stop?: boolean;
+			/**
+			 * @description 通過駅かどうか
+			 * @example false
+			 */
+			is_pass?: boolean;
+			/**
+			 * @description 駅間運転時間 (分)
+			 * @example 3
+			 */
+			drive_time_mm?: number;
+			/**
+			 * @description 駅間運転時間 (秒)
+			 * @example 15
+			 */
+			drive_time_ss?: number;
+			/**
+			 * @description 停車時間 (分)
+			 * @example 1
+			 */
+			dwell_time_mm?: number;
+			/**
+			 * @description 停車時間 (秒)
+			 * @example 0
+			 */
+			dwell_time_ss?: number;
+			/**
+			 * @description 到着時刻を表示するかどうか
+			 * @example true
+			 */
+			show_arrive?: boolean;
+			/**
+			 * @description 出発時刻を表示するかどうか
+			 * @example true
+			 */
+			show_departure?: boolean;
+			/**
+			 * @description 到着時刻欄に表示する文字列
+			 * @example 停車
+			 */
+			arrive_str?: string;
+			/**
+			 * @description 出発時刻欄に表示する文字列
+			 * @example ↓
+			 */
+			departure_str?: string;
+			/**
+			 * @description 進入制限 (km/h)
+			 * @example 15
+			 */
+			run_in_limit?: number;
+			/**
+			 * @description 進出制限 (km/h)
+			 * @example 15
+			 */
+			run_out_limit?: number;
+			/**
+			 * @description 注意事項
+			 * @example 通過設定
+			 */
+			remarks?: string;
+			/**
+			 * @description 時刻表示で常に「時」を表示するかどうか
+			 * @example false
+			 */
+			always_show_hh?: boolean;
+		};
+		TRViS_json_TimetableRow: {
+			/**
+			 * @description TRViS_json_TimetableRow — a TimetableRow as emitted by the Dump aggregator
+			 *     (TimetableRowsRepo::dump sets these keys via setData). Faithful port of the
+			 *     legacy OpenAPI-Generator MODEL_SCHEMA (required/properties/order/format/
+			 *     nullable/min/max/pattern/exclusiveMaximum/example preserved 1:1).
+			 *
+			 *     Properties live on the #[OA\Schema] attribute; OAS_PROPERTIES /
+			 *     OAS_REQUIRED drive the runtime model. TRViSJsonTimetableRowDriftTest
+			 *     asserts the two stay in sync. Schema name MUST be `TRViS_json_TimetableRow`
+			 *     (the Train $ref depends on it). Legacy `title:`/`description:` dropped per
+			 *     Work.php. `WorkType` deliberately carries no example (legacy MODEL_SCHEMA
+			 *     had none — 作業種別 実装準備中).
+			 * @example 東京
+			 */
+			StationName: string;
+			/**
+			 * Format: double
+			 * @example 0
+			 */
+			Location_m: number;
+			/**
+			 * Format: double
+			 * @example 139.766944
+			 */
+			Longitude_deg?: number | null;
+			/**
+			 * Format: double
+			 * @example 35.680833
+			 */
+			Latitude_deg?: number | null;
+			/**
+			 * Format: double
+			 * @example 123.45
+			 */
+			OnStationDetectRadius_m?: number | null;
+			/** @example 東京駅 */
+			FullName?: string | null;
+			/** @example 0 */
+			RecordType?: number;
+			/** @example 上1 */
+			TrackName?: string | null;
+			/** @example 3 */
+			DriveTime_MM?: number;
+			/** @example 15 */
+			DriveTime_SS?: number;
+			/** @example false */
+			IsOperationOnlyStop?: boolean;
+			/** @example false */
+			IsPass?: boolean;
+			/** @example false */
+			HasBracket?: boolean;
+			/** @example false */
+			IsLastStop?: boolean;
+			/** @example 12:34:56 */
+			Arrive?: string;
+			/** @example ::56 */
+			Departure?: string;
+			/** @example 15 */
+			RunInLimit?: number;
+			/** @example 15 */
+			RunOutLimit?: number;
+			/** @example 通過設定 */
+			Remarks?: string;
+			/** @example ff0000 */
+			MarkerColor?: string;
+			/** @example 合図 */
+			MarkerText?: string;
+			WorkType?: number;
+		};
+		TRViS_json_Train: {
+			/**
+			 * @description TRViS_json_Train — a Train as emitted by the Dump aggregator
+			 *     (TrainsRepo::dump sets these keys via setData). Faithful port of the legacy
+			 *     OpenAPI-Generator MODEL_SCHEMA (required/properties/order/nullable/minimum/
+			 *     example preserved 1:1).
+			 *
+			 *     Properties live on the #[OA\Schema] attribute; OAS_PROPERTIES /
+			 *     OAS_REQUIRED drive the runtime model. TRViSJsonTrainDriftTest asserts the
+			 *     two stay in sync. Schema name MUST be `TRViS_json_Train` (the Work $ref
+			 *     depends on it). Legacy `title:`/`description:` dropped per Work.php.
+			 * @example 試1234M
+			 */
+			TrainNumber: string;
+			/** @example 110 */
+			MaxSpeed?: string | null;
+			/** @example 通電A20 */
+			SpeedType?: string | null;
+			/** @example XXX系 1M9T */
+			NominalTractiveCapacity?: string | null;
+			/** @example 10 */
+			CarCount?: number | null;
+			/** @example 東  京 */
+			Destination?: string | null;
+			/** @example (乗継) */
+			BeginRemarks?: string | null;
+			/** @example (乗継) */
+			AfterRemarks?: string | null;
+			/**
+			 * @example XXXX ~ YYYY 徐行 30km/h
+			 *     AAAA ~ BBBB 車掌省略
+			 */
+			Remarks?: string | null;
+			/** @example 転線 5分          転線 */
+			BeforeDeparture?: string | null;
+			/** @example <div style="color: red">車掌省略</div> */
+			TrainInfo?: string | null;
+			/** @example 1 */
+			Direction: number;
+			/** @example 転線 5分          転線 */
+			AfterArrive?: string | null;
+			/** @example 1 */
+			DayCount?: number;
+			/** @example false */
+			IsRideOnMoving?: boolean;
+			TimetableRows: components["schemas"]["TRViS_json_TimetableRow"][];
+		};
+		TRViS_json_Work: {
+			/**
+			 * @description TRViS_json_Work — a Work as emitted by the Dump aggregator (WorksRepo::dump
+			 *     sets these keys via setData). Faithful port of the legacy
+			 *     OpenAPI-Generator MODEL_SCHEMA (required/properties/order/format/nullable/
+			 *     example preserved 1:1).
+			 *
+			 *     Properties live on the #[OA\Schema] attribute; OAS_PROPERTIES /
+			 *     OAS_REQUIRED drive the runtime model. TRViSJsonWorkDriftTest asserts the
+			 *     two stay in sync. Schema name MUST be `TRViS_json_Work` (the WorkGroup
+			 *     $ref depends on it). Legacy `title:`/`description:` dropped per Work.php.
+			 * @example 123行路
+			 */
+			Name: string;
+			/**
+			 * Format: date
+			 * @example 2020-01-01
+			 */
+			AffectDate?: string | null;
+			/** @example 0 */
+			AffixContentType?: number | null;
+			/** @example  */
+			AffixContent?: string | null;
+			/** @example 2023年1月1日 12時34分56秒作成 */
+			Remarks?: string | null;
+			/** @example true */
+			HasETrainTimetable?: boolean;
+			/** @example 0 */
+			ETrainTimetableContentType?: number | null;
+			/** @example  */
+			ETrainTimetableContent?: string | null;
+			Trains: components["schemas"]["TRViS_json_Train"][];
+		};
+		TRViS_json_WorkGroup: {
+			/**
+			 * @description TRViS_json_WorkGroup — the root object the Dump aggregator emits
+			 *     (DumpService returns a single TRViSJsonWorkGroup). Faithful port of the
+			 *     legacy OpenAPI-Generator MODEL_SCHEMA (required/properties/order/example
+			 *     preserved 1:1).
+			 *
+			 *     Properties live on the #[OA\Schema] attribute (not as PHP properties) so
+			 *     they don't collide with BaseModel's __get/__set magic. OAS_PROPERTIES /
+			 *     OAS_REQUIRED drive the runtime model; the attribute drives swagger-php.
+			 *     TRViSJsonWorkGroupDriftTest asserts the two stay in sync.
+			 *
+			 *     The schema name MUST be `TRViS_json_WorkGroup` — DumpApi's 200 response and
+			 *     the nested $ref chain (Work -> Train -> TimetableRow) depend on the exact
+			 *     `TRViS_json_*` names. (Legacy `title:` is intentionally dropped, matching
+			 *     the Work.php sibling precedent.)
+			 * @example AAA運輸区
+			 */
+			Name: string;
+			/** @example 1 */
+			DBVersion?: number;
+			Works: components["schemas"]["TRViS_json_Work"][];
+		};
+		TimetableRow: {
+			/**
+			 * Format: uuid
+			 * @description TimetableRowのID (UUID)
+			 */
+			readonly timetable_rows_id?: string;
+			/**
+			 * Format: uuid
+			 * @description このデータが紐づいているTrainのID (UUID)
+			 */
+			readonly trains_id?: string;
+			/**
+			 * Format: uuid
+			 * @description この行の駅のID (UUID)
+			 */
+			stations_id?: string;
+			/**
+			 * Format: uuid
+			 * @description 駅の番線情報のID (UUID)
+			 */
+			station_tracks_id?: string;
+			/**
+			 * Format: uuid
+			 * @description マーカーの色情報のID (UUID)
+			 */
+			colors_id_marker?: string;
+			/** @description stations_id が指す駅の名前 (読み取り専用・表示用)。駅が論理削除済みの場合も名前を返す (stations_is_deleted で判別)。 */
+			readonly stations_name?: string | null;
+			/** @description stations_id が指す駅が論理削除済みかどうか (tombstone表示用) */
+			readonly stations_is_deleted?: boolean;
+			/** @description station_tracks_id が指す番線の名前 (読み取り専用・表示用)。番線が論理削除済みの場合も名前を返す (station_tracks_is_deleted で判別)。 */
+			readonly station_tracks_name?: string | null;
+			/** @description station_tracks_id が指す番線が論理削除済みかどうか (tombstone表示用) */
+			readonly station_tracks_is_deleted?: boolean;
+			/** @description colors_id_marker が指す色の名前 (読み取り専用・表示用)。色が論理削除済みの場合も名前を返す (colors_is_deleted で判別)。 */
+			readonly colors_name?: string | null;
+			/** @description colors_id_marker が指す色が論理削除済みかどうか (tombstone表示用) */
+			readonly colors_is_deleted?: boolean;
+			/**
+			 * @description このTimetableRowの説明
+			 * @example このTimetableRowの説明が入ります
+			 */
+			description?: string;
+			/**
+			 * Format: date-time
+			 * @description 作成日時
+			 */
+			readonly created_at?: string;
+			/**
+			 * Format: date-time
+			 * @description 更新日時
+			 */
+			readonly updated_at?: string;
+			/**
+			 * @description 駅間運転時間 (分)
+			 * @example 3
+			 */
+			drive_time_mm?: number;
+			/**
+			 * @description 駅間運転時間 (秒)
+			 * @example 15
+			 */
+			drive_time_ss?: number;
+			/**
+			 * @description 運転停車かどうか
+			 * @example false
+			 */
+			is_operation_only_stop?: boolean;
+			/**
+			 * @description 通過駅かどうか
+			 * @example false
+			 */
+			is_pass?: boolean;
+			/**
+			 * @description 到着時刻に括弧を付けるかどうか
+			 * @example false
+			 */
+			has_bracket?: boolean;
+			/**
+			 * @description 終着駅かどうか
+			 * @example false
+			 */
+			is_last_stop?: boolean;
+			/**
+			 * @description 到着時刻 (時)
+			 * @example 15
+			 */
+			arrive_time_hh?: number;
+			/**
+			 * @description 到着時刻 (分)
+			 * @example 20
+			 */
+			arrive_time_mm?: number;
+			/**
+			 * @description 到着時刻 (秒)
+			 * @example 25
+			 */
+			arrive_time_ss?: number;
+			/**
+			 * @description 出発時刻 (時)
+			 * @example 15
+			 */
+			departure_time_hh?: number;
+			/**
+			 * @description 出発時刻 (分)
+			 * @example 20
+			 */
+			departure_time_mm?: number;
+			/**
+			 * @description 出発時刻 (秒)
+			 * @example 25
+			 */
+			departure_time_ss?: number;
+			/**
+			 * @description 進入制限 (km/h)
+			 * @example 15
+			 */
+			run_in_limit?: number;
+			/**
+			 * @description 進出制限 (km/h)
+			 * @example 15
+			 */
+			run_out_limit?: number;
+			/**
+			 * @description 注意事項
+			 * @example 通過設定
+			 */
+			remarks?: string;
+			/**
+			 * @description 到着時刻欄に表示する文字列
+			 * @example 停車
+			 */
+			arrive_str?: string;
+			/**
+			 * @description 出発時刻欄に表示する文字列
+			 * @example ???
+			 */
+			departure_str?: string;
+			/**
+			 * @description マーカー部分に表示する文字列
+			 * @example 合図
+			 */
+			marker_text?: string;
+			/** @description 作業種別 (実装準備中) */
+			work_type?: string;
+		};
+		Train: {
+			/**
+			 * Format: uuid
+			 * @description TrainのID (UUID)
+			 */
+			readonly trains_id?: string;
+			/**
+			 * Format: uuid
+			 * @description WorkのID (UUID)
+			 */
+			readonly works_id?: string;
+			/**
+			 * Format: date-time
+			 * @description 作成日時
+			 */
+			readonly created_at?: string;
+			/**
+			 * @description Train (列車) の説明
+			 * @example Train (列車) の説明が入ります
+			 */
+			description: string;
+			/**
+			 * @description 列車番号
+			 * @example 試9999M
+			 */
+			train_number: string;
+			/**
+			 * @description 最高速度 (km/h)
+			 * @example 130
+			 *     シク〜 60
+			 */
+			max_speed?: string;
+			/**
+			 * @description 速度種別
+			 * @example 停電A9
+			 *     シク〜 特定
+			 */
+			speed_type?: string;
+			/**
+			 * @description けん引定数
+			 * @example 999系
+			 *     9M1T
+			 */
+			nominal_tractive_capacity?: string;
+			/**
+			 * @description 編成両数 (0以下で非表示)
+			 * @example 10
+			 */
+			car_count?: number;
+			/**
+			 * @description 行先
+			 * @example 東  京
+			 */
+			destination?: string;
+			/**
+			 * @description 乗車前の注意事項 (「乗継」など)
+			 * @example (乗継)
+			 */
+			begin_remarks?: string;
+			/**
+			 * @description 降車後の注意事項 (「乗継」など)
+			 * @example (乗継)
+			 */
+			after_remarks?: string;
+			/**
+			 * @description 注意事項
+			 * @example XXXX ~ YYYY 徐行 30km/h
+			 *     AAAA ~ BBBB 車掌省略
+			 */
+			remarks?: string;
+			/**
+			 * @description 発前
+			 * @example 転線 5分          転線
+			 */
+			before_departure?: string;
+			/**
+			 * @description 着後
+			 * @example 転線 5分          転線
+			 */
+			after_arrive?: string;
+			/**
+			 * @description 列車に関する情報
+			 * @example <div style="color: red">車掌省略</div>
+			 */
+			train_info?: string;
+			/**
+			 * @description 進行方向 (0~1: 下り, -1: 上り)
+			 * @example 1
+			 */
+			direction: number;
+			/**
+			 * @description 仕業の初日からの経過日数 (0で初日/日勤、1で明け)
+			 * @example 1
+			 */
+			day_count: number;
+			/**
+			 * @description 添乗での移動かどうか
+			 * @example false
+			 */
+			is_ride_on_moving?: boolean;
+		};
+		Work: {
+			/**
+			 * Format: uuid
+			 * @description Work — a 仕業 belonging to a WorkGroup. Faithful port of the legacy
+			 *     OpenAPI-Generator MODEL_SCHEMA (title/required/properties/order/format/
+			 *     example all preserved 1:1).
+			 *
+			 *     Properties live on the #[OA\Schema] attribute (not as PHP properties) so
+			 *     they don't collide with BaseModel's __get/__set magic. OAS_PROPERTIES /
+			 *     OAS_REQUIRED drive the runtime model; the attribute drives swagger-php.
+			 *     WorkDriftTest asserts the two stay in sync.
+			 *
+			 *     affix_content and e_train_timetable_content are schema-present but never
+			 *     persisted — the DB stores _file_name variants instead. They always read as
+			 *     null. See WorksRepo::selectWorkOne for TODO comments.
+			 *
+			 *     affix_content_type / e_train_timetable_content_type use a hardcoded
+			 *     string enum ['text','URI','PNG','PDF','JPG'] — copied 1:1 from the legacy
+			 *     MODEL_SCHEMA. (Using ::cases() would cause a PHP fatal at attribute parse
+			 *     time; see CONTRIBUTING-P3.md §3.)
+			 */
+			readonly works_id?: string;
+			/** Format: uuid */
+			readonly work_groups_id?: string;
+			/** Format: date-time */
+			readonly created_at?: string;
+			/** @example Workの説明が入ります */
+			description: string;
+			/** @example 第NNN仕業 */
+			name: string;
+			/** Format: date */
+			affect_date?: string;
+			/**
+			 * @example text
+			 * @enum {string}
+			 */
+			affix_content_type?: "text" | "URI" | "PNG" | "PDF" | "JPG";
+			/** @example 行路添付の内容が入ります */
+			affix_content?: string;
+			/** @example 注意事項が入ります */
+			remarks?: string;
+			/** @example true */
+			has_e_train_timetable?: boolean;
+			/**
+			 * @example text
+			 * @enum {string}
+			 */
+			e_train_timetable_content_type?: "text" | "URI" | "PNG" | "PDF" | "JPG";
+			/** @example E電時刻表の内容が入ります */
+			e_train_timetable_content?: string;
+		};
+		WorkGroup: {
+			/**
+			 * Format: uuid
+			 * @description WorkGroupのID (UUID)
+			 */
+			readonly work_groups_id?: string;
+			/**
+			 * Format: uuid
+			 * @description 所属するProjectのID (UUID)
+			 */
+			readonly projects_id?: string;
+			/**
+			 * Format: date-time
+			 * @description 作成日時
+			 */
+			readonly created_at?: string;
+			/**
+			 * @description WorkGroupの説明
+			 * @example WorkGroupの説明が入ります
+			 */
+			description: string;
+			/**
+			 * @description WorkGroupの名前
+			 * @example AAA乗務員区
+			 */
+			name: string;
+			/**
+			 * @description 権限の種類
+			 * @example admin
+			 * @enum {string}
+			 */
+			readonly privilege_type?: "read" | "write" | "admin";
+		};
+		WorkGroupsPrivilege: {
+			/** @description UserID */
+			readonly uid?: string;
+			/**
+			 * Format: uuid
+			 * @description WorkGroupのID (UUID)
+			 */
+			readonly work_groups_id?: string;
+			/**
+			 * Format: uuid
+			 * @description InviteKeyのID (UUID)
+			 */
+			readonly invite_keys_id?: string;
+			/**
+			 * Format: date-time
+			 * @description 作成日時
+			 */
+			readonly created_at?: string;
+			/**
+			 * Format: date-time
+			 * @description 更新日時
+			 */
+			readonly updated_at?: string;
+			/**
+			 * @description 権限の種類
+			 * @example admin
+			 * @enum {string}
+			 */
+			privilege_type: "read" | "write" | "admin";
+		};
+	};
+	responses: never;
+	parameters: never;
+	requestBodies: never;
+	headers: never;
+	pathItems: never;
+};
 export type $defs = Record<string, never>;
-export interface operations {
-    getApiInfo: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description APIの情報 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiInfo"];
-                };
-            };
-        };
-    };
-    getColorList: {
-        parameters: {
-            query?: {
-                /** @description ページングを行う場合のページ番号 */
-                p?: number;
-                /** @description ページングを行う場合の1ページあたりの件数 */
-                limit?: number;
-                /** @description ページングを行う場合の一番上に表示するID */
-                top?: string;
-            };
-            header?: never;
-            path: {
-                /** @description ProjectのID */
-                projectId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 取得成功 */
-            200: {
-                headers: {
-                    /** @description 取得できるレコードの総件数 */
-                    "X-Total-Count"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Color"][];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    createColor: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description ProjectのID */
-                projectId: string;
-            };
-            cookie?: never;
-        };
-        /** @description 作成するColorの情報。単一オブジェクトを送ると単一作成（200・単一オブジェクト応答）、配列を送るとバルク作成（201・配列応答）になる。 */
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Color"] | components["schemas"]["Color"][];
-            };
-        };
-        responses: {
-            /** @description 単一作成成功（リクエストボディが単一オブジェクトのとき） */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Color"];
-                };
-            };
-            /** @description バルク作成成功（リクエストボディが配列のとき）。作成された全要素を配列で返す。 */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Color"][];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    getColor: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description ColorのID */
-                colorId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 取得成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Color"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    updateColor: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description ColorのID */
-                colorId: string;
-            };
-            cookie?: never;
-        };
-        /** @description 更新するColorの情報 */
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Color"];
-            };
-        };
-        responses: {
-            /** @description 更新成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Color"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    deleteColor: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description ColorのID */
-                colorId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 削除成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    dumpTimetable: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description WorkGroupのID */
-                workGroupId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 取得成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TRViS_json_WorkGroup"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    getMyInviteKeyList: {
-        parameters: {
-            query?: {
-                /** @description ページングを行う場合のページ番号 */
-                p?: number;
-                /** @description ページングを行う場合の1ページあたりの件数 */
-                limit?: number;
-                /** @description ページングを行う場合の一番上に表示するID */
-                top?: string;
-                /** @description 期限切れ・無効化済みのキーを含めるか */
-                expired?: boolean;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 取得成功 */
-            200: {
-                headers: {
-                    /** @description 取得できるレコードの総件数 */
-                    "X-Total-Count"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InviteKey"][];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    getInviteKey: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description InviteKeyのID */
-                inviteKeyId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 取得成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InviteKey"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    updateInviteKey: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description InviteKeyのID */
-                inviteKeyId: string;
-            };
-            cookie?: never;
-        };
-        /** @description 更新する招待キーの情報 */
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["InviteKey"];
-            };
-        };
-        responses: {
-            /** @description 更新成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InviteKey"];
-                };
-            };
-            /** @description 未実装 */
-            501: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    useInviteKey: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description InviteKeyのID */
-                inviteKeyId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WorkGroup"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    deleteInviteKey: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description InviteKeyのID */
-                inviteKeyId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 無効化成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    getInviteKeyList: {
-        parameters: {
-            query?: {
-                /** @description ページングを行う場合のページ番号 */
-                p?: number;
-                /** @description ページングを行う場合の1ページあたりの件数 */
-                limit?: number;
-                /** @description ページングを行う場合の一番上に表示するID */
-                top?: string;
-                /** @description 期限切れ・無効化済みのキーを含めるか */
-                expired?: boolean;
-            };
-            header?: never;
-            path: {
-                /** @description WorkGroupのID */
-                workGroupId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 取得成功 */
-            200: {
-                headers: {
-                    /** @description 取得できるレコードの総件数 */
-                    "X-Total-Count"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InviteKey"][];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    createInviteKey: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description WorkGroupのID */
-                workGroupId: string;
-            };
-            cookie?: never;
-        };
-        /** @description 作成する招待キーの情報 */
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["InviteKey"];
-            };
-        };
-        responses: {
-            /** @description 作成成功 */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["InviteKey"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    getLineList: {
-        parameters: {
-            query?: {
-                /** @description ページングを行う場合のページ番号 */
-                p?: number;
-                /** @description ページングを行う場合の1ページあたりの件数 */
-                limit?: number;
-                /** @description ページングを行う場合の一番上に表示するID */
-                top?: string;
-            };
-            header?: never;
-            path: {
-                /** @description ProjectのID */
-                projectId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 取得成功 */
-            200: {
-                headers: {
-                    /** @description 取得できるレコードの総件数 */
-                    "X-Total-Count"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Line"][];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    createLine: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description ProjectのID */
-                projectId: string;
-            };
-            cookie?: never;
-        };
-        /** @description 作成するLineの情報 */
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Line"];
-            };
-        };
-        responses: {
-            /** @description 作成成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Line"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    getLine: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description LineのID */
-                lineId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 取得成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Line"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    updateLine: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description LineのID */
-                lineId: string;
-            };
-            cookie?: never;
-        };
-        /** @description 更新後のLineの情報 */
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Line"];
-            };
-        };
-        responses: {
-            /** @description 更新成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Line"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    deleteLine: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description LineのID */
-                lineId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 削除成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    getProjectList: {
-        parameters: {
-            query?: {
-                /** @description ページングを行う場合のページ番号 */
-                p?: number;
-                /** @description ページングを行う場合の1ページあたりの件数 */
-                limit?: number;
-                /** @description ページングを行う場合の一番上に表示するID */
-                top?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 取得成功 */
-            200: {
-                headers: {
-                    /** @description 取得できるレコードの総件数 */
-                    "X-Total-Count"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Project"][];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    createProject: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description 作成するProjectの情報 */
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Project"];
-            };
-        };
-        responses: {
-            /** @description 作成成功 */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Project"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    getProject: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description ProjectのID */
-                projectId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 取得成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Project"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    updateProject: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description ProjectのID */
-                projectId: string;
-            };
-            cookie?: never;
-        };
-        /** @description 更新後のProjectの情報 */
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Project"];
-            };
-        };
-        responses: {
-            /** @description 更新成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Project"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    deleteProject: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description ProjectのID */
-                projectId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 削除成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    exportProject: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description ProjectのID */
-                projectId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 取得成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProjectGraph"];
-                };
-            };
-            /** @description リクエストが不正 (Projectが大きすぎる等) */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    importProject: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description インポートする ProjectGraph */
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProjectGraph"];
-            };
-        };
-        responses: {
-            /** @description 作成成功 (作成された Project を返す) */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Project"];
-                };
-            };
-            /** @description リクエストが不正 (payloadが大きすぎる等) */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    getProjectPrivilege: {
-        parameters: {
-            query?: {
-                /** @description ユーザのID */
-                uid?: string;
-                /**
-                 * @description 匿名ユーザ・すべてのユーザに対する操作か
-                 *
-                 *     `uid` が指定された場合、そちらが優先される
-                 */
-                "uid-anonymous"?: boolean;
-            };
-            header?: never;
-            path: {
-                /** @description ProjectのID */
-                projectId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 取得成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProjectsPrivilege"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    updateProjectPrivilege: {
-        parameters: {
-            query?: {
-                /** @description ユーザのID */
-                uid?: string;
-                /**
-                 * @description 匿名ユーザ・すべてのユーザに対する操作か
-                 *
-                 *     `uid` が指定された場合、そちらが優先される
-                 */
-                "uid-anonymous"?: boolean;
-            };
-            header?: never;
-            path: {
-                /** @description ProjectのID */
-                projectId: string;
-            };
-            cookie?: never;
-        };
-        /** @description 更新後の権限情報 */
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["ProjectsPrivilege"];
-            };
-        };
-        responses: {
-            /** @description 更新成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ProjectsPrivilege"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    getStationList: {
-        parameters: {
-            query?: {
-                /** @description ページングを行う場合のページ番号 */
-                p?: number;
-                /** @description ページングを行う場合の1ページあたりの件数 */
-                limit?: number;
-                /** @description ページングを行う場合の一番上に表示するID */
-                top?: string;
-            };
-            header?: never;
-            path: {
-                /** @description ProjectのID */
-                projectId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 取得成功 */
-            200: {
-                headers: {
-                    /** @description 取得できるレコードの総件数 */
-                    "X-Total-Count"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Station"][];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    createStation: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description ProjectのID */
-                projectId: string;
-            };
-            cookie?: never;
-        };
-        /** @description 作成するStationの情報 */
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Station"];
-            };
-        };
-        responses: {
-            /** @description 作成成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Station"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    getStation: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description StationのID */
-                stationId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 取得成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Station"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    updateStation: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description StationのID */
-                stationId: string;
-            };
-            cookie?: never;
-        };
-        /** @description 更新するStationの情報 */
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Station"];
-            };
-        };
-        responses: {
-            /** @description 更新成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Station"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    deleteStation: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description StationのID */
-                stationId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 削除成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    getStationOnLineList: {
-        parameters: {
-            query?: {
-                /** @description ページングを行う場合のページ番号 */
-                p?: number;
-                /** @description ページングを行う場合の1ページあたりの件数 */
-                limit?: number;
-                /** @description ページングを行う場合の一番上に表示するID */
-                top?: string;
-            };
-            header?: never;
-            path: {
-                /** @description LineのID */
-                lineId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 取得成功 */
-            200: {
-                headers: {
-                    /** @description 取得できるレコードの総件数 */
-                    "X-Total-Count"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StationOnLine"][];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    createStationOnLine: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description LineのID */
-                lineId: string;
-            };
-            cookie?: never;
-        };
-        /** @description 作成するStationOnLineの情報。単一オブジェクトを送ると単一作成（200・単一オブジェクト応答）、配列を送るとバルク作成（201・配列応答）になる。 */
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StationOnLine"] | components["schemas"]["StationOnLine"][];
-            };
-        };
-        responses: {
-            /** @description 単一作成成功（リクエストボディが単一オブジェクトのとき） */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StationOnLine"];
-                };
-            };
-            /** @description バルク作成成功（リクエストボディが配列のとき）。作成された全要素を配列で返す。 */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StationOnLine"][];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    getStationOnLine: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description StationOnLineのID */
-                stationOnLineId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 取得成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StationOnLine"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    updateStationOnLine: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description StationOnLineのID */
-                stationOnLineId: string;
-            };
-            cookie?: never;
-        };
-        /** @description 更新するStationOnLineの情報 */
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StationOnLine"];
-            };
-        };
-        responses: {
-            /** @description 更新成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StationOnLine"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    deleteStationOnLine: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description StationOnLineのID */
-                stationOnLineId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 削除成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    getStationTrackList: {
-        parameters: {
-            query?: {
-                /** @description ページングを行う場合のページ番号 */
-                p?: number;
-                /** @description ページングを行う場合の1ページあたりの件数 */
-                limit?: number;
-                /** @description ページングを行う場合の一番上に表示するID */
-                top?: string;
-            };
-            header?: never;
-            path: {
-                /** @description StationのID */
-                stationId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 取得成功 */
-            200: {
-                headers: {
-                    /** @description 取得できるレコードの総件数 */
-                    "X-Total-Count"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StationTrack"][];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    createStationTrack: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description StationのID */
-                stationId: string;
-            };
-            cookie?: never;
-        };
-        /** @description 作成するStationTrackの情報。単一オブジェクトを送ると単一作成（200・単一オブジェクト応答）、配列を送るとバルク作成（201・配列応答）になる。 */
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StationTrack"] | components["schemas"]["StationTrack"][];
-            };
-        };
-        responses: {
-            /** @description 単一作成成功（リクエストボディが単一オブジェクトのとき） */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StationTrack"];
-                };
-            };
-            /** @description バルク作成成功（リクエストボディが配列のとき）。作成された全要素を配列で返す。 */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StationTrack"][];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    getStationTrack: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Station TrackのID */
-                stationTrackId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 取得成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StationTrack"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    updateStationTrack: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Station TrackのID */
-                stationTrackId: string;
-            };
-            cookie?: never;
-        };
-        /** @description 更新後のStationTrackの情報 */
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StationTrack"];
-            };
-        };
-        responses: {
-            /** @description 更新成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StationTrack"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    deleteStationTrack: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Station TrackのID */
-                stationTrackId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 削除成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    getStopPatternList: {
-        parameters: {
-            query?: {
-                /** @description ページングを行う場合のページ番号 */
-                p?: number;
-                /** @description ページングを行う場合の1ページあたりの件数 */
-                limit?: number;
-                /** @description ページングを行う場合の一番上に表示するID */
-                top?: string;
-            };
-            header?: never;
-            path: {
-                /** @description ProjectのID */
-                projectId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 取得成功 */
-            200: {
-                headers: {
-                    /** @description 取得できるレコードの総件数 */
-                    "X-Total-Count"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StopPattern"][];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    createStopPattern: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description ProjectのID */
-                projectId: string;
-            };
-            cookie?: never;
-        };
-        /** @description 作成するStopPatternの情報。単一オブジェクトを送ると単一作成（200・単一オブジェクト応答）、配列を送るとバルク作成（201・配列応答）になる。 */
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StopPattern"] | components["schemas"]["StopPattern"][];
-            };
-        };
-        responses: {
-            /** @description 単一作成成功（リクエストボディが単一オブジェクトのとき） */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StopPattern"];
-                };
-            };
-            /** @description バルク作成成功（リクエストボディが配列のとき）。作成された全要素を配列で返す。 */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StopPattern"][];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    getStopPattern: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description StopPatternのID */
-                stopPatternId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 取得成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StopPattern"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    updateStopPattern: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description StopPatternのID */
-                stopPatternId: string;
-            };
-            cookie?: never;
-        };
-        /** @description 更新後のStopPatternの情報 */
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StopPattern"];
-            };
-        };
-        responses: {
-            /** @description 更新成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StopPattern"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    deleteStopPattern: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description StopPatternのID */
-                stopPatternId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 削除成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    getStopPatternRowList: {
-        parameters: {
-            query?: {
-                /** @description ページングを行う場合のページ番号 */
-                p?: number;
-                /** @description ページングを行う場合の1ページあたりの件数 */
-                limit?: number;
-                /** @description ページングを行う場合の一番上に表示するID */
-                top?: string;
-            };
-            header?: never;
-            path: {
-                /** @description StopPatternのID */
-                stopPatternId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 取得成功 */
-            200: {
-                headers: {
-                    /** @description 取得できるレコードの総件数 */
-                    "X-Total-Count"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StopPatternRow"][];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    createStopPatternRow: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description StopPatternのID */
-                stopPatternId: string;
-            };
-            cookie?: never;
-        };
-        /** @description 作成するStopPatternRowの情報。単一オブジェクトを送ると単一作成（200・単一オブジェクト応答）、配列を送るとバルク作成（201・配列応答）になる。 */
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StopPatternRow"] | components["schemas"]["StopPatternRow"][];
-            };
-        };
-        responses: {
-            /** @description 単一作成成功（リクエストボディが単一オブジェクトのとき） */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StopPatternRow"];
-                };
-            };
-            /** @description バルク作成成功（リクエストボディが配列のとき）。作成された全要素を配列で返す。 */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StopPatternRow"][];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    getStopPatternRow: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description StopPatternRowのID */
-                stopPatternRowId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 取得成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StopPatternRow"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    updateStopPatternRow: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description StopPatternRowのID */
-                stopPatternRowId: string;
-            };
-            cookie?: never;
-        };
-        /** @description 更新後のStopPatternRowの情報 */
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["StopPatternRow"];
-            };
-        };
-        responses: {
-            /** @description 更新成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["StopPatternRow"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    deleteStopPatternRow: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description StopPatternRowのID */
-                stopPatternRowId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 削除成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    getTimetableRowList: {
-        parameters: {
-            query?: {
-                /** @description ページングを行う場合のページ番号 */
-                p?: number;
-                /** @description ページングを行う場合の1ページあたりの件数 */
-                limit?: number;
-                /** @description ページングを行う場合の一番上に表示するID */
-                top?: string;
-            };
-            header?: never;
-            path: {
-                /** @description TrainのID */
-                trainId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 取得成功 */
-            200: {
-                headers: {
-                    /** @description 取得できるレコードの総件数 */
-                    "X-Total-Count"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TimetableRow"][];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    createTimetableRow: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description TrainのID */
-                trainId: string;
-            };
-            cookie?: never;
-        };
-        /** @description 作成するTimetableRowの情報。単一オブジェクトを送ると単一作成（200・単一オブジェクト応答）、配列を送るとバルク作成（201・配列応答）になる。 */
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TimetableRow"] | components["schemas"]["TimetableRow"][];
-            };
-        };
-        responses: {
-            /** @description 単一作成成功（リクエストボディが単一オブジェクトのとき） */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TimetableRow"];
-                };
-            };
-            /** @description バルク作成成功（リクエストボディが配列のとき）。作成された全要素を配列で返す。 */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TimetableRow"][];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    getTimetableRow: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description TimetableRowのID */
-                timetableRowId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 取得成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TimetableRow"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    updateTimetableRow: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description TimetableRowのID */
-                timetableRowId: string;
-            };
-            cookie?: never;
-        };
-        /** @description 更新後のTimetableRowの情報 */
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["TimetableRow"];
-            };
-        };
-        responses: {
-            /** @description 更新成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["TimetableRow"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    deleteTimetableRow: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description TimetableRowのID */
-                timetableRowId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 削除成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    getTrainList: {
-        parameters: {
-            query?: {
-                /** @description ページングを行う場合のページ番号 */
-                p?: number;
-                /** @description ページングを行う場合の1ページあたりの件数 */
-                limit?: number;
-                /** @description ページングを行う場合の一番上に表示するID */
-                top?: string;
-            };
-            header?: never;
-            path: {
-                /** @description WorkのID */
-                workId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 取得成功 */
-            200: {
-                headers: {
-                    /** @description 取得できるレコードの総件数 */
-                    "X-Total-Count"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Train"][];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    createTrain: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description WorkのID */
-                workId: string;
-            };
-            cookie?: never;
-        };
-        /** @description 作成するTrainの情報。単一オブジェクトを送ると単一作成（200・単一オブジェクト応答）、配列を送るとバルク作成（201・配列応答）になる。 */
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Train"] | components["schemas"]["Train"][];
-            };
-        };
-        responses: {
-            /** @description 単一作成成功（リクエストボディが単一オブジェクトのとき） */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Train"];
-                };
-            };
-            /** @description バルク作成成功（リクエストボディが配列のとき）。作成された全要素を配列で返す。 */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Train"][];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    getTrain: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description TrainのID */
-                trainId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 取得成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Train"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    updateTrain: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description TrainのID */
-                trainId: string;
-            };
-            cookie?: never;
-        };
-        /** @description 更新後のTrainの情報 */
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Train"];
-            };
-        };
-        responses: {
-            /** @description 更新成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Train"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    deleteTrain: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description TrainのID */
-                trainId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 削除成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    getWorkList: {
-        parameters: {
-            query?: {
-                /** @description ページングを行う場合のページ番号 */
-                p?: number;
-                /** @description ページングを行う場合の1ページあたりの件数 */
-                limit?: number;
-                /** @description ページングを行う場合の一番上に表示するID */
-                top?: string;
-            };
-            header?: never;
-            path: {
-                /** @description WorkGroupのID */
-                workGroupId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 取得成功 */
-            200: {
-                headers: {
-                    /** @description 取得できるレコードの総件数 */
-                    "X-Total-Count"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Work"][];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    createWork: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description WorkGroupのID */
-                workGroupId: string;
-            };
-            cookie?: never;
-        };
-        /** @description 作成するWorkの情報。単一オブジェクトを送ると単一作成（200・単一オブジェクト応答）、配列を送るとバルク作成（201・配列応答）になる。 */
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Work"] | components["schemas"]["Work"][];
-            };
-        };
-        responses: {
-            /** @description 単一作成成功（リクエストボディが単一オブジェクトのとき） */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Work"];
-                };
-            };
-            /** @description バルク作成成功（リクエストボディが配列のとき）。作成された全要素を配列で返す。 */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Work"][];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    getWork: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description WorkのID */
-                workId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 取得成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Work"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    updateWork: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description WorkのID */
-                workId: string;
-            };
-            cookie?: never;
-        };
-        /** @description 更新後のWorkの情報 */
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["Work"];
-            };
-        };
-        responses: {
-            /** @description 更新成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["Work"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    deleteWork: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description WorkのID */
-                workId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 削除成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    getWorkGroupList: {
-        parameters: {
-            query?: {
-                /** @description ページングを行う場合のページ番号 */
-                p?: number;
-                /** @description ページングを行う場合の1ページあたりの件数 */
-                limit?: number;
-                /** @description ページングを行う場合の一番上に表示するID */
-                top?: string;
-            };
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 取得成功 */
-            200: {
-                headers: {
-                    /** @description 取得できるレコードの総件数 */
-                    "X-Total-Count"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WorkGroup"][];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    createWorkGroup: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** @description 作成するWorkGroupの情報 */
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["WorkGroup"];
-            };
-        };
-        responses: {
-            /** @description 作成成功 */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WorkGroup"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    getWorkGroup: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description WorkGroupのID */
-                workGroupId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 取得成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WorkGroup"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    updateWorkGroup: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description WorkGroupのID */
-                workGroupId: string;
-            };
-            cookie?: never;
-        };
-        /** @description 作成するWorkGroupの情報 */
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["WorkGroup"];
-            };
-        };
-        responses: {
-            /** @description 更新成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WorkGroup"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    deleteWorkGroup: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description WorkGroupのID */
-                workGroupId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 削除成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    getWorkGroupPrivilege: {
-        parameters: {
-            query?: {
-                /** @description ユーザのID */
-                uid?: string;
-                /**
-                 * @description 匿名ユーザ・すべてのユーザに対する操作か
-                 *
-                 *     `uid` が指定された場合、そちらが優先される
-                 */
-                "uid-anonymous"?: boolean;
-            };
-            header?: never;
-            path: {
-                /** @description WorkGroupのID */
-                workGroupId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 取得成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WorkGroupsPrivilege"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    updateWorkGroupPrivilege: {
-        parameters: {
-            query?: {
-                /** @description ユーザのID */
-                uid?: string;
-                /**
-                 * @description 匿名ユーザ・すべてのユーザに対する操作か
-                 *
-                 *     `uid` が指定された場合、そちらが優先される
-                 */
-                "uid-anonymous"?: boolean;
-            };
-            header?: never;
-            path: {
-                /** @description WorkGroupのID */
-                workGroupId: string;
-            };
-            cookie?: never;
-        };
-        /** @description 更新後の権限情報 */
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["WorkGroupsPrivilege"];
-            };
-        };
-        responses: {
-            /** @description 更新成功 */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WorkGroupsPrivilege"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    getWorkGroupListByProject: {
-        parameters: {
-            query?: {
-                /** @description ページングを行う場合のページ番号 */
-                p?: number;
-                /** @description ページングを行う場合の1ページあたりの件数 */
-                limit?: number;
-                /** @description ページングを行う場合の一番上に表示するID */
-                top?: string;
-            };
-            header?: never;
-            path: {
-                /** @description ProjectのID */
-                projectId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description 取得成功 */
-            200: {
-                headers: {
-                    /** @description 取得できるレコードの総件数 */
-                    "X-Total-Count"?: number;
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WorkGroup"][];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-    createWorkGroupInProject: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description ProjectのID */
-                projectId: string;
-            };
-            cookie?: never;
-        };
-        /** @description 作成するWorkGroupの情報 */
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["WorkGroup"];
-            };
-        };
-        responses: {
-            /** @description 作成成功 */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["WorkGroup"];
-                };
-            };
-            /** @description リクエストが不正 */
-            400: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 認証トークンのエラー */
-            401: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description 許可されていない操作を行おうとした */
-            403: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-            /** @description コンテンツが存在しない */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ApiErrorData"];
-                };
-            };
-        };
-    };
-}
+export type operations = {
+	getApiInfo: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description APIの情報 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiInfo"];
+				};
+			};
+		};
+	};
+	getColorList: {
+		parameters: {
+			query?: {
+				/** @description ページングを行う場合のページ番号 */
+				p?: number;
+				/** @description ページングを行う場合の1ページあたりの件数 */
+				limit?: number;
+				/** @description ページングを行う場合の一番上に表示するID */
+				top?: string;
+			};
+			header?: never;
+			path: {
+				/** @description ProjectのID */
+				projectId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 取得成功 */
+			200: {
+				headers: {
+					/** @description 取得できるレコードの総件数 */
+					"X-Total-Count"?: number;
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Color"][];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	createColor: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description ProjectのID */
+				projectId: string;
+			};
+			cookie?: never;
+		};
+		/** @description 作成するColorの情報。単一オブジェクトを送ると単一作成（200・単一オブジェクト応答）、配列を送るとバルク作成（201・配列応答）になる。 */
+		requestBody: {
+			content: {
+				"application/json":
+					| components["schemas"]["Color"]
+					| components["schemas"]["Color"][];
+			};
+		};
+		responses: {
+			/** @description 単一作成成功（リクエストボディが単一オブジェクトのとき） */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["Color"];
+				};
+			};
+			/** @description バルク作成成功（リクエストボディが配列のとき）。作成された全要素を配列で返す。 */
+			201: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["Color"][];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	getColor: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description ColorのID */
+				colorId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 取得成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["Color"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	updateColor: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description ColorのID */
+				colorId: string;
+			};
+			cookie?: never;
+		};
+		/** @description 更新するColorの情報 */
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["Color"];
+			};
+		};
+		responses: {
+			/** @description 更新成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["Color"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	deleteColor: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description ColorのID */
+				colorId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 削除成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content?: never;
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	dumpTimetable: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description WorkGroupのID */
+				workGroupId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 取得成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["TRViS_json_WorkGroup"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	getMyInviteKeyList: {
+		parameters: {
+			query?: {
+				/** @description ページングを行う場合のページ番号 */
+				p?: number;
+				/** @description ページングを行う場合の1ページあたりの件数 */
+				limit?: number;
+				/** @description ページングを行う場合の一番上に表示するID */
+				top?: string;
+				/** @description 期限切れ・無効化済みのキーを含めるか */
+				expired?: boolean;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 取得成功 */
+			200: {
+				headers: {
+					/** @description 取得できるレコードの総件数 */
+					"X-Total-Count"?: number;
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["InviteKey"][];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	getInviteKey: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description InviteKeyのID */
+				inviteKeyId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 取得成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["InviteKey"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	updateInviteKey: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description InviteKeyのID */
+				inviteKeyId: string;
+			};
+			cookie?: never;
+		};
+		/** @description 更新する招待キーの情報 */
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["InviteKey"];
+			};
+		};
+		responses: {
+			/** @description 更新成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["InviteKey"];
+				};
+			};
+			/** @description 未実装 */
+			501: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	useInviteKey: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description InviteKeyのID */
+				inviteKeyId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["WorkGroup"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	deleteInviteKey: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description InviteKeyのID */
+				inviteKeyId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 無効化成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content?: never;
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	getInviteKeyList: {
+		parameters: {
+			query?: {
+				/** @description ページングを行う場合のページ番号 */
+				p?: number;
+				/** @description ページングを行う場合の1ページあたりの件数 */
+				limit?: number;
+				/** @description ページングを行う場合の一番上に表示するID */
+				top?: string;
+				/** @description 期限切れ・無効化済みのキーを含めるか */
+				expired?: boolean;
+			};
+			header?: never;
+			path: {
+				/** @description WorkGroupのID */
+				workGroupId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 取得成功 */
+			200: {
+				headers: {
+					/** @description 取得できるレコードの総件数 */
+					"X-Total-Count"?: number;
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["InviteKey"][];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	createInviteKey: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description WorkGroupのID */
+				workGroupId: string;
+			};
+			cookie?: never;
+		};
+		/** @description 作成する招待キーの情報 */
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["InviteKey"];
+			};
+		};
+		responses: {
+			/** @description 作成成功 */
+			201: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["InviteKey"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	getLineList: {
+		parameters: {
+			query?: {
+				/** @description ページングを行う場合のページ番号 */
+				p?: number;
+				/** @description ページングを行う場合の1ページあたりの件数 */
+				limit?: number;
+				/** @description ページングを行う場合の一番上に表示するID */
+				top?: string;
+			};
+			header?: never;
+			path: {
+				/** @description ProjectのID */
+				projectId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 取得成功 */
+			200: {
+				headers: {
+					/** @description 取得できるレコードの総件数 */
+					"X-Total-Count"?: number;
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Line"][];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	createLine: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description ProjectのID */
+				projectId: string;
+			};
+			cookie?: never;
+		};
+		/** @description 作成するLineの情報 */
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["Line"];
+			};
+		};
+		responses: {
+			/** @description 作成成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["Line"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	getLine: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description LineのID */
+				lineId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 取得成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["Line"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	updateLine: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description LineのID */
+				lineId: string;
+			};
+			cookie?: never;
+		};
+		/** @description 更新後のLineの情報 */
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["Line"];
+			};
+		};
+		responses: {
+			/** @description 更新成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["Line"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	deleteLine: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description LineのID */
+				lineId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 削除成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content?: never;
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	getProjectList: {
+		parameters: {
+			query?: {
+				/** @description ページングを行う場合のページ番号 */
+				p?: number;
+				/** @description ページングを行う場合の1ページあたりの件数 */
+				limit?: number;
+				/** @description ページングを行う場合の一番上に表示するID */
+				top?: string;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 取得成功 */
+			200: {
+				headers: {
+					/** @description 取得できるレコードの総件数 */
+					"X-Total-Count"?: number;
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Project"][];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	createProject: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** @description 作成するProjectの情報 */
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["Project"];
+			};
+		};
+		responses: {
+			/** @description 作成成功 */
+			201: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["Project"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	getProject: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description ProjectのID */
+				projectId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 取得成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["Project"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	updateProject: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description ProjectのID */
+				projectId: string;
+			};
+			cookie?: never;
+		};
+		/** @description 更新後のProjectの情報 */
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["Project"];
+			};
+		};
+		responses: {
+			/** @description 更新成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["Project"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	deleteProject: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description ProjectのID */
+				projectId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 削除成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content?: never;
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	exportProject: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description ProjectのID */
+				projectId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 取得成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ProjectGraph"];
+				};
+			};
+			/** @description リクエストが不正 (Projectが大きすぎる等) */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	importProject: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** @description インポートする ProjectGraph */
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["ProjectGraph"];
+			};
+		};
+		responses: {
+			/** @description 作成成功 (作成された Project を返す) */
+			201: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["Project"];
+				};
+			};
+			/** @description リクエストが不正 (payloadが大きすぎる等) */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	getProjectPrivilege: {
+		parameters: {
+			query?: {
+				/** @description ユーザのID */
+				uid?: string;
+				/**
+				 * @description 匿名ユーザ・すべてのユーザに対する操作か
+				 *
+				 *     `uid` が指定された場合、そちらが優先される
+				 */
+				"uid-anonymous"?: boolean;
+			};
+			header?: never;
+			path: {
+				/** @description ProjectのID */
+				projectId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 取得成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ProjectsPrivilege"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	updateProjectPrivilege: {
+		parameters: {
+			query?: {
+				/** @description ユーザのID */
+				uid?: string;
+				/**
+				 * @description 匿名ユーザ・すべてのユーザに対する操作か
+				 *
+				 *     `uid` が指定された場合、そちらが優先される
+				 */
+				"uid-anonymous"?: boolean;
+			};
+			header?: never;
+			path: {
+				/** @description ProjectのID */
+				projectId: string;
+			};
+			cookie?: never;
+		};
+		/** @description 更新後の権限情報 */
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["ProjectsPrivilege"];
+			};
+		};
+		responses: {
+			/** @description 更新成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ProjectsPrivilege"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	getStationList: {
+		parameters: {
+			query?: {
+				/** @description ページングを行う場合のページ番号 */
+				p?: number;
+				/** @description ページングを行う場合の1ページあたりの件数 */
+				limit?: number;
+				/** @description ページングを行う場合の一番上に表示するID */
+				top?: string;
+			};
+			header?: never;
+			path: {
+				/** @description ProjectのID */
+				projectId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 取得成功 */
+			200: {
+				headers: {
+					/** @description 取得できるレコードの総件数 */
+					"X-Total-Count"?: number;
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Station"][];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	createStation: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description ProjectのID */
+				projectId: string;
+			};
+			cookie?: never;
+		};
+		/** @description 作成するStationの情報 */
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["Station"];
+			};
+		};
+		responses: {
+			/** @description 作成成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["Station"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	getStation: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description StationのID */
+				stationId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 取得成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["Station"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	updateStation: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description StationのID */
+				stationId: string;
+			};
+			cookie?: never;
+		};
+		/** @description 更新するStationの情報 */
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["Station"];
+			};
+		};
+		responses: {
+			/** @description 更新成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["Station"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	deleteStation: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description StationのID */
+				stationId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 削除成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content?: never;
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	getStationOnLineList: {
+		parameters: {
+			query?: {
+				/** @description ページングを行う場合のページ番号 */
+				p?: number;
+				/** @description ページングを行う場合の1ページあたりの件数 */
+				limit?: number;
+				/** @description ページングを行う場合の一番上に表示するID */
+				top?: string;
+			};
+			header?: never;
+			path: {
+				/** @description LineのID */
+				lineId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 取得成功 */
+			200: {
+				headers: {
+					/** @description 取得できるレコードの総件数 */
+					"X-Total-Count"?: number;
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["StationOnLine"][];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	createStationOnLine: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description LineのID */
+				lineId: string;
+			};
+			cookie?: never;
+		};
+		/** @description 作成するStationOnLineの情報。単一オブジェクトを送ると単一作成（200・単一オブジェクト応答）、配列を送るとバルク作成（201・配列応答）になる。 */
+		requestBody: {
+			content: {
+				"application/json":
+					| components["schemas"]["StationOnLine"]
+					| components["schemas"]["StationOnLine"][];
+			};
+		};
+		responses: {
+			/** @description 単一作成成功（リクエストボディが単一オブジェクトのとき） */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["StationOnLine"];
+				};
+			};
+			/** @description バルク作成成功（リクエストボディが配列のとき）。作成された全要素を配列で返す。 */
+			201: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["StationOnLine"][];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	getStationOnLine: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description StationOnLineのID */
+				stationOnLineId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 取得成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["StationOnLine"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	updateStationOnLine: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description StationOnLineのID */
+				stationOnLineId: string;
+			};
+			cookie?: never;
+		};
+		/** @description 更新するStationOnLineの情報 */
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["StationOnLine"];
+			};
+		};
+		responses: {
+			/** @description 更新成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["StationOnLine"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	deleteStationOnLine: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description StationOnLineのID */
+				stationOnLineId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 削除成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content?: never;
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	getStationTrackList: {
+		parameters: {
+			query?: {
+				/** @description ページングを行う場合のページ番号 */
+				p?: number;
+				/** @description ページングを行う場合の1ページあたりの件数 */
+				limit?: number;
+				/** @description ページングを行う場合の一番上に表示するID */
+				top?: string;
+			};
+			header?: never;
+			path: {
+				/** @description StationのID */
+				stationId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 取得成功 */
+			200: {
+				headers: {
+					/** @description 取得できるレコードの総件数 */
+					"X-Total-Count"?: number;
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["StationTrack"][];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	createStationTrack: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description StationのID */
+				stationId: string;
+			};
+			cookie?: never;
+		};
+		/** @description 作成するStationTrackの情報。単一オブジェクトを送ると単一作成（200・単一オブジェクト応答）、配列を送るとバルク作成（201・配列応答）になる。 */
+		requestBody: {
+			content: {
+				"application/json":
+					| components["schemas"]["StationTrack"]
+					| components["schemas"]["StationTrack"][];
+			};
+		};
+		responses: {
+			/** @description 単一作成成功（リクエストボディが単一オブジェクトのとき） */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["StationTrack"];
+				};
+			};
+			/** @description バルク作成成功（リクエストボディが配列のとき）。作成された全要素を配列で返す。 */
+			201: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["StationTrack"][];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	getStationTrack: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description Station TrackのID */
+				stationTrackId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 取得成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["StationTrack"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	updateStationTrack: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description Station TrackのID */
+				stationTrackId: string;
+			};
+			cookie?: never;
+		};
+		/** @description 更新後のStationTrackの情報 */
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["StationTrack"];
+			};
+		};
+		responses: {
+			/** @description 更新成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["StationTrack"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	deleteStationTrack: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description Station TrackのID */
+				stationTrackId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 削除成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content?: never;
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	getStopPatternList: {
+		parameters: {
+			query?: {
+				/** @description ページングを行う場合のページ番号 */
+				p?: number;
+				/** @description ページングを行う場合の1ページあたりの件数 */
+				limit?: number;
+				/** @description ページングを行う場合の一番上に表示するID */
+				top?: string;
+			};
+			header?: never;
+			path: {
+				/** @description ProjectのID */
+				projectId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 取得成功 */
+			200: {
+				headers: {
+					/** @description 取得できるレコードの総件数 */
+					"X-Total-Count"?: number;
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["StopPattern"][];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	createStopPattern: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description ProjectのID */
+				projectId: string;
+			};
+			cookie?: never;
+		};
+		/** @description 作成するStopPatternの情報。単一オブジェクトを送ると単一作成（200・単一オブジェクト応答）、配列を送るとバルク作成（201・配列応答）になる。 */
+		requestBody: {
+			content: {
+				"application/json":
+					| components["schemas"]["StopPattern"]
+					| components["schemas"]["StopPattern"][];
+			};
+		};
+		responses: {
+			/** @description 単一作成成功（リクエストボディが単一オブジェクトのとき） */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["StopPattern"];
+				};
+			};
+			/** @description バルク作成成功（リクエストボディが配列のとき）。作成された全要素を配列で返す。 */
+			201: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["StopPattern"][];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	getStopPattern: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description StopPatternのID */
+				stopPatternId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 取得成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["StopPattern"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	updateStopPattern: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description StopPatternのID */
+				stopPatternId: string;
+			};
+			cookie?: never;
+		};
+		/** @description 更新後のStopPatternの情報 */
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["StopPattern"];
+			};
+		};
+		responses: {
+			/** @description 更新成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["StopPattern"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	deleteStopPattern: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description StopPatternのID */
+				stopPatternId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 削除成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content?: never;
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	getStopPatternRowList: {
+		parameters: {
+			query?: {
+				/** @description ページングを行う場合のページ番号 */
+				p?: number;
+				/** @description ページングを行う場合の1ページあたりの件数 */
+				limit?: number;
+				/** @description ページングを行う場合の一番上に表示するID */
+				top?: string;
+			};
+			header?: never;
+			path: {
+				/** @description StopPatternのID */
+				stopPatternId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 取得成功 */
+			200: {
+				headers: {
+					/** @description 取得できるレコードの総件数 */
+					"X-Total-Count"?: number;
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["StopPatternRow"][];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	createStopPatternRow: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description StopPatternのID */
+				stopPatternId: string;
+			};
+			cookie?: never;
+		};
+		/** @description 作成するStopPatternRowの情報。単一オブジェクトを送ると単一作成（200・単一オブジェクト応答）、配列を送るとバルク作成（201・配列応答）になる。 */
+		requestBody: {
+			content: {
+				"application/json":
+					| components["schemas"]["StopPatternRow"]
+					| components["schemas"]["StopPatternRow"][];
+			};
+		};
+		responses: {
+			/** @description 単一作成成功（リクエストボディが単一オブジェクトのとき） */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["StopPatternRow"];
+				};
+			};
+			/** @description バルク作成成功（リクエストボディが配列のとき）。作成された全要素を配列で返す。 */
+			201: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["StopPatternRow"][];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	getStopPatternRow: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description StopPatternRowのID */
+				stopPatternRowId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 取得成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["StopPatternRow"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	updateStopPatternRow: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description StopPatternRowのID */
+				stopPatternRowId: string;
+			};
+			cookie?: never;
+		};
+		/** @description 更新後のStopPatternRowの情報 */
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["StopPatternRow"];
+			};
+		};
+		responses: {
+			/** @description 更新成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["StopPatternRow"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	deleteStopPatternRow: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description StopPatternRowのID */
+				stopPatternRowId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 削除成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content?: never;
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	getTimetableRowList: {
+		parameters: {
+			query?: {
+				/** @description ページングを行う場合のページ番号 */
+				p?: number;
+				/** @description ページングを行う場合の1ページあたりの件数 */
+				limit?: number;
+				/** @description ページングを行う場合の一番上に表示するID */
+				top?: string;
+			};
+			header?: never;
+			path: {
+				/** @description TrainのID */
+				trainId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 取得成功 */
+			200: {
+				headers: {
+					/** @description 取得できるレコードの総件数 */
+					"X-Total-Count"?: number;
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["TimetableRow"][];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	createTimetableRow: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description TrainのID */
+				trainId: string;
+			};
+			cookie?: never;
+		};
+		/** @description 作成するTimetableRowの情報。単一オブジェクトを送ると単一作成（200・単一オブジェクト応答）、配列を送るとバルク作成（201・配列応答）になる。 */
+		requestBody: {
+			content: {
+				"application/json":
+					| components["schemas"]["TimetableRow"]
+					| components["schemas"]["TimetableRow"][];
+			};
+		};
+		responses: {
+			/** @description 単一作成成功（リクエストボディが単一オブジェクトのとき） */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["TimetableRow"];
+				};
+			};
+			/** @description バルク作成成功（リクエストボディが配列のとき）。作成された全要素を配列で返す。 */
+			201: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["TimetableRow"][];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	getTimetableRow: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description TimetableRowのID */
+				timetableRowId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 取得成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["TimetableRow"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	updateTimetableRow: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description TimetableRowのID */
+				timetableRowId: string;
+			};
+			cookie?: never;
+		};
+		/** @description 更新後のTimetableRowの情報 */
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["TimetableRow"];
+			};
+		};
+		responses: {
+			/** @description 更新成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["TimetableRow"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	deleteTimetableRow: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description TimetableRowのID */
+				timetableRowId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 削除成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content?: never;
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	getTrainList: {
+		parameters: {
+			query?: {
+				/** @description ページングを行う場合のページ番号 */
+				p?: number;
+				/** @description ページングを行う場合の1ページあたりの件数 */
+				limit?: number;
+				/** @description ページングを行う場合の一番上に表示するID */
+				top?: string;
+			};
+			header?: never;
+			path: {
+				/** @description WorkのID */
+				workId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 取得成功 */
+			200: {
+				headers: {
+					/** @description 取得できるレコードの総件数 */
+					"X-Total-Count"?: number;
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Train"][];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	createTrain: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description WorkのID */
+				workId: string;
+			};
+			cookie?: never;
+		};
+		/** @description 作成するTrainの情報。単一オブジェクトを送ると単一作成（200・単一オブジェクト応答）、配列を送るとバルク作成（201・配列応答）になる。 */
+		requestBody: {
+			content: {
+				"application/json":
+					| components["schemas"]["Train"]
+					| components["schemas"]["Train"][];
+			};
+		};
+		responses: {
+			/** @description 単一作成成功（リクエストボディが単一オブジェクトのとき） */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["Train"];
+				};
+			};
+			/** @description バルク作成成功（リクエストボディが配列のとき）。作成された全要素を配列で返す。 */
+			201: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["Train"][];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	getTrain: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description TrainのID */
+				trainId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 取得成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["Train"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	updateTrain: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description TrainのID */
+				trainId: string;
+			};
+			cookie?: never;
+		};
+		/** @description 更新後のTrainの情報 */
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["Train"];
+			};
+		};
+		responses: {
+			/** @description 更新成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["Train"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	deleteTrain: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description TrainのID */
+				trainId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 削除成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content?: never;
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	getWorkList: {
+		parameters: {
+			query?: {
+				/** @description ページングを行う場合のページ番号 */
+				p?: number;
+				/** @description ページングを行う場合の1ページあたりの件数 */
+				limit?: number;
+				/** @description ページングを行う場合の一番上に表示するID */
+				top?: string;
+			};
+			header?: never;
+			path: {
+				/** @description WorkGroupのID */
+				workGroupId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 取得成功 */
+			200: {
+				headers: {
+					/** @description 取得できるレコードの総件数 */
+					"X-Total-Count"?: number;
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["Work"][];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	createWork: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description WorkGroupのID */
+				workGroupId: string;
+			};
+			cookie?: never;
+		};
+		/** @description 作成するWorkの情報。単一オブジェクトを送ると単一作成（200・単一オブジェクト応答）、配列を送るとバルク作成（201・配列応答）になる。 */
+		requestBody: {
+			content: {
+				"application/json":
+					| components["schemas"]["Work"]
+					| components["schemas"]["Work"][];
+			};
+		};
+		responses: {
+			/** @description 単一作成成功（リクエストボディが単一オブジェクトのとき） */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["Work"];
+				};
+			};
+			/** @description バルク作成成功（リクエストボディが配列のとき）。作成された全要素を配列で返す。 */
+			201: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["Work"][];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	getWork: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description WorkのID */
+				workId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 取得成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["Work"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	updateWork: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description WorkのID */
+				workId: string;
+			};
+			cookie?: never;
+		};
+		/** @description 更新後のWorkの情報 */
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["Work"];
+			};
+		};
+		responses: {
+			/** @description 更新成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["Work"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	deleteWork: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description WorkのID */
+				workId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 削除成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content?: never;
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	getWorkGroupList: {
+		parameters: {
+			query?: {
+				/** @description ページングを行う場合のページ番号 */
+				p?: number;
+				/** @description ページングを行う場合の1ページあたりの件数 */
+				limit?: number;
+				/** @description ページングを行う場合の一番上に表示するID */
+				top?: string;
+			};
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 取得成功 */
+			200: {
+				headers: {
+					/** @description 取得できるレコードの総件数 */
+					"X-Total-Count"?: number;
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["WorkGroup"][];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	createWorkGroup: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** @description 作成するWorkGroupの情報 */
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["WorkGroup"];
+			};
+		};
+		responses: {
+			/** @description 作成成功 */
+			201: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["WorkGroup"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	getWorkGroup: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description WorkGroupのID */
+				workGroupId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 取得成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["WorkGroup"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	updateWorkGroup: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description WorkGroupのID */
+				workGroupId: string;
+			};
+			cookie?: never;
+		};
+		/** @description 作成するWorkGroupの情報 */
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["WorkGroup"];
+			};
+		};
+		responses: {
+			/** @description 更新成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["WorkGroup"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	deleteWorkGroup: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description WorkGroupのID */
+				workGroupId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 削除成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content?: never;
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	getWorkGroupPrivilege: {
+		parameters: {
+			query?: {
+				/** @description ユーザのID */
+				uid?: string;
+				/**
+				 * @description 匿名ユーザ・すべてのユーザに対する操作か
+				 *
+				 *     `uid` が指定された場合、そちらが優先される
+				 */
+				"uid-anonymous"?: boolean;
+			};
+			header?: never;
+			path: {
+				/** @description WorkGroupのID */
+				workGroupId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 取得成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["WorkGroupsPrivilege"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	updateWorkGroupPrivilege: {
+		parameters: {
+			query?: {
+				/** @description ユーザのID */
+				uid?: string;
+				/**
+				 * @description 匿名ユーザ・すべてのユーザに対する操作か
+				 *
+				 *     `uid` が指定された場合、そちらが優先される
+				 */
+				"uid-anonymous"?: boolean;
+			};
+			header?: never;
+			path: {
+				/** @description WorkGroupのID */
+				workGroupId: string;
+			};
+			cookie?: never;
+		};
+		/** @description 更新後の権限情報 */
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["WorkGroupsPrivilege"];
+			};
+		};
+		responses: {
+			/** @description 更新成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["WorkGroupsPrivilege"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	getWorkGroupListByProject: {
+		parameters: {
+			query?: {
+				/** @description ページングを行う場合のページ番号 */
+				p?: number;
+				/** @description ページングを行う場合の1ページあたりの件数 */
+				limit?: number;
+				/** @description ページングを行う場合の一番上に表示するID */
+				top?: string;
+			};
+			header?: never;
+			path: {
+				/** @description ProjectのID */
+				projectId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 取得成功 */
+			200: {
+				headers: {
+					/** @description 取得できるレコードの総件数 */
+					"X-Total-Count"?: number;
+					[name: string]: unknown;
+				};
+				content: {
+					"application/json": components["schemas"]["WorkGroup"][];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	createWorkGroupInProject: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description ProjectのID */
+				projectId: string;
+			};
+			cookie?: never;
+		};
+		/** @description 作成するWorkGroupの情報 */
+		requestBody: {
+			content: {
+				"application/json": components["schemas"]["WorkGroup"];
+			};
+		};
+		responses: {
+			/** @description 作成成功 */
+			201: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["WorkGroup"];
+				};
+			};
+			/** @description リクエストが不正 */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 許可されていない操作を行おうとした */
+			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+};

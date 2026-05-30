@@ -15,8 +15,20 @@
 // one and the imports collapse.
 
 import type { components } from "./schema";
-
-import type { Color, Line, Project, ProjectStation, StationOnLine, StationTrack, StopPattern, StopPatternRow, TimetableRow, Train, Work, WorkGroup } from "../types/entities";
+import type {
+	Color,
+	Line,
+	Project,
+	ProjectStation,
+	StationOnLine,
+	StationTrack,
+	StopPattern,
+	StopPatternRow,
+	TimetableRow,
+	Train,
+	Work,
+	WorkGroup,
+} from "../types/entities";
 
 // MySQL tinyint(1) booleans arrive as 0/1 (the schema types them boolean).
 // Coerce to a real boolean, preserving undefined for absent fields.
@@ -206,7 +218,8 @@ export const fromApiWork = (api: ApiWork): Work => ({
 	hasETrainTimetable: api.has_e_train_timetable,
 	eTrainTimetableContentType: api.e_train_timetable_content_type,
 	eTrainTimetableContent: api.e_train_timetable_content,
-	createdAt: api.created_at !== undefined ? new Date(api.created_at) : undefined,
+	createdAt:
+		api.created_at !== undefined ? new Date(api.created_at) : undefined,
 });
 
 export const toApiWork = (
@@ -219,7 +232,8 @@ export const toApiWork = (
 	affix_content: x.affixContent,
 	remarks: x.remarks,
 	has_e_train_timetable: x.hasETrainTimetable,
-	e_train_timetable_content_type: x.eTrainTimetableContentType as ApiWork["e_train_timetable_content_type"],
+	e_train_timetable_content_type:
+		x.eTrainTimetableContentType as ApiWork["e_train_timetable_content_type"],
 	e_train_timetable_content: x.eTrainTimetableContent,
 });
 
@@ -246,7 +260,8 @@ export const fromApiTrain = (api: ApiTrain): Train => ({
 	afterArrive: api.after_arrive,
 	trainInfo: api.train_info,
 	isRideOnMoving: toBool(api.is_ride_on_moving),
-	createdAt: api.created_at !== undefined ? new Date(api.created_at) : undefined,
+	createdAt:
+		api.created_at !== undefined ? new Date(api.created_at) : undefined,
 });
 
 export const toApiTrain = (
@@ -310,8 +325,10 @@ export const fromApiTimetableRow = (api: ApiTimetableRow): TimetableRow => ({
 	departureStr: api.departure_str,
 	markerText: api.marker_text,
 	workType: api.work_type,
-	createdAt: api.created_at !== undefined ? new Date(api.created_at) : undefined,
-	updatedAt: api.updated_at !== undefined ? new Date(api.updated_at) : undefined,
+	createdAt:
+		api.created_at !== undefined ? new Date(api.created_at) : undefined,
+	updatedAt:
+		api.updated_at !== undefined ? new Date(api.updated_at) : undefined,
 });
 
 export const toApiTimetableRow = (

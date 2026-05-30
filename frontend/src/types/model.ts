@@ -10,7 +10,7 @@ export type RecordType = "station" | "info" | 2 | "2";
 /** undefined = auto (omit HH when same as last shown), true = always, false = never */
 export type ShowHH = boolean | undefined;
 
-export interface TimetableRow {
+export type TimetableRow = {
 	id: string;
 	stationId?: string;
 	stationName: string;
@@ -56,9 +56,9 @@ export interface TimetableRow {
 	longitude_deg?: number;
 	latitude_deg?: number;
 	onStationDetectRadius_m?: number;
-}
+};
 
-export interface Train {
+export type Train = {
 	id: string;
 	trainNumber: string;
 	direction: Direction;
@@ -78,38 +78,38 @@ export interface Train {
 	trainInfo: string;
 	nextTrainId: string;
 	timetableRows: TimetableRow[];
-}
+};
 
-export interface Work {
+export type Work = {
 	id: string;
 	name: string;
 	affectDate: string;
 	remarks: string;
 	trains: Train[];
-}
+};
 
-export interface WorkGroup {
+export type WorkGroup = {
 	id: string;
 	name: string;
 	description: string;
 	works: Work[];
-}
+};
 
-export interface Project {
+export type Project = {
 	id: string;
 	name: string;
 	description: string;
 	workGroups: WorkGroup[];
-}
+};
 
-export interface Line {
+export type Line = {
 	id: string;
 	name: string;
 	description: string;
-}
+};
 
 /** Stations are project-global; lat/lon/detect-radius live here. */
-export interface Station {
+export type Station = {
 	id: string;
 	stationName: string;
 	fullName: string;
@@ -117,10 +117,10 @@ export interface Station {
 	latitude_deg?: number;
 	onStationDetectRadius_m?: number;
 	alwaysShowHH?: boolean;
-}
+};
 
 /** A station's membership on a particular line (km-post + optional overrides). */
-export interface StationOnLine {
+export type StationOnLine = {
 	id: string;
 	lineId: string;
 	stationId: string;
@@ -133,9 +133,9 @@ export interface StationOnLine {
 	longitude_deg?: number;
 	latitude_deg?: number;
 	trackHiddenByDefault?: boolean;
-}
+};
 
-export interface StopPatternRow {
+export type StopPatternRow = {
 	stationId: string;
 	trackName?: string;
 	trackHidden?: boolean;
@@ -163,9 +163,9 @@ export interface StopPatternRow {
 	runOutLimit?: number | "";
 	remarks?: string;
 	alwaysShowHH?: boolean;
-}
+};
 
-export interface StopPattern {
+export type StopPattern = {
 	id: string;
 	name: string;
 	lineId: string;
@@ -176,12 +176,12 @@ export interface StopPattern {
 	/** ADDED for prototype port: the wizard/apply-dialog read & write `stopRows`
 	 * (the `rows` field is kept untouched for other consumers). */
 	stopRows?: StopPatternRow[];
-}
+};
 
-export interface AppData {
+export type AppData = {
 	projects: Project[];
 	lines: Line[];
 	stations: Station[];
 	stationsOnLine: StationOnLine[];
 	stopPatterns: StopPattern[];
-}
+};

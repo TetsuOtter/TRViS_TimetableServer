@@ -194,10 +194,16 @@ export const AuthProvider = ({
 		setErrorMessage("");
 	}, []);
 
-	const openAccount = useCallback(() => setIsAccountOpen(true), []);
-	const closeAccount = useCallback(() => setIsAccountOpen(false), []);
+	const openAccount = useCallback(() => {
+		setIsAccountOpen(true);
+	}, []);
+	const closeAccount = useCallback(() => {
+		setIsAccountOpen(false);
+	}, []);
 
-	const closeVerify = useCallback(() => setIsVerifyOpen(false), []);
+	const closeVerify = useCallback(() => {
+		setIsVerifyOpen(false);
+	}, []);
 
 	const value = useMemo<AuthContextValue>(
 		() => ({

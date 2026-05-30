@@ -13,31 +13,35 @@ type WorkDraft = Partial<Pick<Work, "id">> &
 	Pick<Work, "name" | "affectDate" | "remarks">;
 
 /* ─── Generic confirmation ──────────────────────────────────────────────── */
-interface ConfirmDialogProps {
-	title: string;
-	message: string;
-	confirmLabel?: string;
-	danger?: boolean;
-	onConfirm: () => void;
-	onClose: () => void;
-}
+type ConfirmDialogProps = {
+	readonly title: string;
+	readonly message: string;
+	readonly confirmLabel?: string;
+	readonly danger?: boolean;
+	readonly onConfirm: () => void;
+	readonly onClose: () => void;
+};
 
-export function ConfirmDialog({
+export const ConfirmDialog = ({
 	title,
 	message,
 	confirmLabel = "削除",
 	danger = true,
 	onConfirm,
 	onClose,
-}: ConfirmDialogProps) {
+}: ConfirmDialogProps) => {
 	return (
 		<div
 			className="modal-backdrop"
 			onClick={(e) => e.target === e.currentTarget && onClose()}>
-			<div className="modal" style={{ maxWidth: 420 }}>
+			<div
+				className="modal"
+				style={{ maxWidth: 420 }}>
 				<div className="modal-header">
 					<span className="modal-title">{title}</span>
-					<button className="btn btn-ghost btn-sm" onClick={onClose}>
+					<button
+						className="btn btn-ghost btn-sm"
+						onClick={onClose}>
 						✕
 					</button>
 				</div>
@@ -47,7 +51,9 @@ export function ConfirmDialog({
 					{message}
 				</div>
 				<div className="modal-footer">
-					<button className="btn btn-secondary" onClick={onClose}>
+					<button
+						className="btn btn-secondary"
+						onClick={onClose}>
 						キャンセル
 					</button>
 					<button
@@ -62,49 +68,58 @@ export function ConfirmDialog({
 			</div>
 		</div>
 	);
-}
+};
 
 /* ─── Project create/edit ───────────────────────────────────────────────── */
-interface ProjectDialogProps {
-	project?: Project | null;
-	onSave: (d: ProjectDraft) => void;
-	onClose: () => void;
-	t: Strings;
-}
+type ProjectDialogProps = {
+	readonly project?: Project | null;
+	readonly onSave: (d: ProjectDraft) => void;
+	readonly onClose: () => void;
+	readonly t: Strings;
+};
 
-export function ProjectDialog({
+export const ProjectDialog = ({
 	project,
 	onSave,
 	onClose,
 	t,
-}: ProjectDialogProps) {
+}: ProjectDialogProps) => {
 	const isNew = !project;
 	const [d, setD] = useState<ProjectDraft>(
 		project || { name: "", description: "" }
 	);
-	const set = <K extends keyof ProjectDraft>(k: K, v: ProjectDraft[K]) =>
+	const set = <K extends keyof ProjectDraft>(k: K, v: ProjectDraft[K]) => {
 		setD((p) => ({ ...p, [k]: v }));
+	};
 	const valid = !!d.name?.trim();
 
 	return (
 		<div
 			className="modal-backdrop"
 			onClick={(e) => e.target === e.currentTarget && onClose()}>
-			<div className="modal" style={{ maxWidth: 520 }}>
+			<div
+				className="modal"
+				style={{ maxWidth: 520 }}>
 				<div className="modal-header">
 					<span className="modal-title">
 						📁 {isNew ? t.newProject : "プロジェクトを編集"}
 					</span>
-					<button className="btn btn-ghost btn-sm" onClick={onClose}>
+					<button
+						className="btn btn-ghost btn-sm"
+						onClick={onClose}>
 						✕
 					</button>
 				</div>
 				<div className="modal-body">
-					<div className="field" style={{ marginBottom: 14 }}>
+					<div
+						className="field"
+						style={{ marginBottom: 14 }}>
 						<label>プロジェクト名 *</label>
 						<input
 							value={d.name || ""}
-							onChange={(e) => set("name", e.target.value)}
+							onChange={(e) => {
+								set("name", e.target.value);
+							}}
 							placeholder="例: 東海道本線 ダイヤ2024"
 							autoFocus
 						/>
@@ -113,7 +128,9 @@ export function ProjectDialog({
 						<label>{t.description}</label>
 						<textarea
 							value={d.description || ""}
-							onChange={(e) => set("description", e.target.value)}
+							onChange={(e) => {
+								set("description", e.target.value);
+							}}
 							rows={3}
 							placeholder="例: 2024年3月改正ダイヤ"
 							style={{
@@ -133,7 +150,9 @@ export function ProjectDialog({
 					</div>
 				</div>
 				<div className="modal-footer">
-					<button className="btn btn-secondary" onClick={onClose}>
+					<button
+						className="btn btn-secondary"
+						onClick={onClose}>
 						{t.cancel}
 					</button>
 					<button
@@ -153,49 +172,58 @@ export function ProjectDialog({
 			</div>
 		</div>
 	);
-}
+};
 
 /* ─── WorkGroup create/edit ─────────────────────────────────────────────── */
-interface WorkGroupDialogProps {
-	workGroup?: WorkGroup | null;
-	onSave: (d: WorkGroupDraft) => void;
-	onClose: () => void;
-	t: Strings;
-}
+type WorkGroupDialogProps = {
+	readonly workGroup?: WorkGroup | null;
+	readonly onSave: (d: WorkGroupDraft) => void;
+	readonly onClose: () => void;
+	readonly t: Strings;
+};
 
-export function WorkGroupDialog({
+export const WorkGroupDialog = ({
 	workGroup,
 	onSave,
 	onClose,
 	t,
-}: WorkGroupDialogProps) {
+}: WorkGroupDialogProps) => {
 	const isNew = !workGroup;
 	const [d, setD] = useState<WorkGroupDraft>(
 		workGroup || { name: "", description: "" }
 	);
-	const set = <K extends keyof WorkGroupDraft>(k: K, v: WorkGroupDraft[K]) =>
+	const set = <K extends keyof WorkGroupDraft>(k: K, v: WorkGroupDraft[K]) => {
 		setD((p) => ({ ...p, [k]: v }));
+	};
 	const valid = !!d.name?.trim();
 
 	return (
 		<div
 			className="modal-backdrop"
 			onClick={(e) => e.target === e.currentTarget && onClose()}>
-			<div className="modal" style={{ maxWidth: 520 }}>
+			<div
+				className="modal"
+				style={{ maxWidth: 520 }}>
 				<div className="modal-header">
 					<span className="modal-title">
 						📂 {isNew ? "ワークグループを新規作成" : "ワークグループを編集"}
 					</span>
-					<button className="btn btn-ghost btn-sm" onClick={onClose}>
+					<button
+						className="btn btn-ghost btn-sm"
+						onClick={onClose}>
 						✕
 					</button>
 				</div>
 				<div className="modal-body">
-					<div className="field" style={{ marginBottom: 14 }}>
+					<div
+						className="field"
+						style={{ marginBottom: 14 }}>
 						<label>WG名 *</label>
 						<input
 							value={d.name || ""}
-							onChange={(e) => set("name", e.target.value)}
+							onChange={(e) => {
+								set("name", e.target.value);
+							}}
 							placeholder="例: 平日ダイヤ"
 							autoFocus
 						/>
@@ -204,7 +232,9 @@ export function WorkGroupDialog({
 						<label>{t.description}</label>
 						<textarea
 							value={d.description || ""}
-							onChange={(e) => set("description", e.target.value)}
+							onChange={(e) => {
+								set("description", e.target.value);
+							}}
 							rows={3}
 							placeholder="例: 月〜金 運転"
 							style={{
@@ -224,7 +254,9 @@ export function WorkGroupDialog({
 					</div>
 				</div>
 				<div className="modal-footer">
-					<button className="btn btn-secondary" onClick={onClose}>
+					<button
+						className="btn btn-secondary"
+						onClick={onClose}>
 						{t.cancel}
 					</button>
 					<button
@@ -244,17 +276,17 @@ export function WorkGroupDialog({
 			</div>
 		</div>
 	);
-}
+};
 
 /* ─── Work create/edit ──────────────────────────────────────────────────── */
-interface WorkDialogProps {
-	work?: Work | null;
-	onSave: (d: WorkDraft) => void;
-	onClose: () => void;
-	t: Strings;
-}
+type WorkDialogProps = {
+	readonly work?: Work | null;
+	readonly onSave: (d: WorkDraft) => void;
+	readonly onClose: () => void;
+	readonly t: Strings;
+};
 
-export function WorkDialog({ work, onSave, onClose, t }: WorkDialogProps) {
+export const WorkDialog = ({ work, onSave, onClose, t }: WorkDialogProps) => {
 	const isNew = !work;
 	const [d, setD] = useState<WorkDraft>(
 		work || {
@@ -263,20 +295,25 @@ export function WorkDialog({ work, onSave, onClose, t }: WorkDialogProps) {
 			remarks: "",
 		}
 	);
-	const set = <K extends keyof WorkDraft>(k: K, v: WorkDraft[K]) =>
+	const set = <K extends keyof WorkDraft>(k: K, v: WorkDraft[K]) => {
 		setD((p) => ({ ...p, [k]: v }));
+	};
 	const valid = !!d.name?.trim();
 
 	return (
 		<div
 			className="modal-backdrop"
 			onClick={(e) => e.target === e.currentTarget && onClose()}>
-			<div className="modal" style={{ maxWidth: 560 }}>
+			<div
+				className="modal"
+				style={{ maxWidth: 560 }}>
 				<div className="modal-header">
 					<span className="modal-title">
 						📋 {isNew ? `${t.newWork}を作成` : "ワークを編集"}
 					</span>
-					<button className="btn btn-ghost btn-sm" onClick={onClose}>
+					<button
+						className="btn btn-ghost btn-sm"
+						onClick={onClose}>
 						✕
 					</button>
 				</div>
@@ -292,7 +329,9 @@ export function WorkDialog({ work, onSave, onClose, t }: WorkDialogProps) {
 							<label>ワーク名 *</label>
 							<input
 								value={d.name || ""}
-								onChange={(e) => set("name", e.target.value)}
+								onChange={(e) => {
+									set("name", e.target.value);
+								}}
 								placeholder="例: 2024年3月改正"
 								autoFocus
 							/>
@@ -302,7 +341,9 @@ export function WorkDialog({ work, onSave, onClose, t }: WorkDialogProps) {
 							<input
 								type="date"
 								value={d.affectDate || ""}
-								onChange={(e) => set("affectDate", e.target.value)}
+								onChange={(e) => {
+									set("affectDate", e.target.value);
+								}}
 							/>
 						</div>
 					</div>
@@ -310,7 +351,9 @@ export function WorkDialog({ work, onSave, onClose, t }: WorkDialogProps) {
 						<label>{t.remarks}</label>
 						<textarea
 							value={d.remarks || ""}
-							onChange={(e) => set("remarks", e.target.value)}
+							onChange={(e) => {
+								set("remarks", e.target.value);
+							}}
 							rows={3}
 							placeholder="例: 春のダイヤ改正"
 							style={{
@@ -330,7 +373,9 @@ export function WorkDialog({ work, onSave, onClose, t }: WorkDialogProps) {
 					</div>
 				</div>
 				<div className="modal-footer">
-					<button className="btn btn-secondary" onClick={onClose}>
+					<button
+						className="btn btn-secondary"
+						onClick={onClose}>
 						{t.cancel}
 					</button>
 					<button
@@ -350,24 +395,24 @@ export function WorkDialog({ work, onSave, onClose, t }: WorkDialogProps) {
 			</div>
 		</div>
 	);
-}
+};
 
 /* ─── Tiny context menu (right-click / kebab) ───────────────────────────── */
-export interface ContextMenuItem {
+export type ContextMenuItem = {
 	icon: string;
 	label: string;
 	danger?: boolean;
 	onClick: () => void;
-}
+};
 
-interface ContextMenuProps {
-	x: number;
-	y: number;
-	items: ContextMenuItem[];
-	onClose: () => void;
-}
+type ContextMenuProps = {
+	readonly x: number;
+	readonly y: number;
+	readonly items: ContextMenuItem[];
+	readonly onClose: () => void;
+};
 
-export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
+export const ContextMenu = ({ x, y, items, onClose }: ContextMenuProps) => {
 	useEffect(() => {
 		// Attach the dismiss listeners on the NEXT tick. The right-click that
 		// opened this menu is a discrete event; React 18 flushes its state update
@@ -375,7 +420,9 @@ export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
 		// event is still propagating to window — so attaching synchronously made
 		// the opening event immediately dismiss the menu. Deferring one tick lets
 		// that event finish first; subsequent clicks/right-clicks/keys still close.
-		const close = () => onClose();
+		const close = () => {
+			onClose();
+		};
 		const id = setTimeout(() => {
 			window.addEventListener("click", close);
 			window.addEventListener("contextmenu", close);
@@ -397,7 +444,9 @@ export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
 
 	return (
 		<div
-			onClick={(e) => e.stopPropagation()}
+			onClick={(e) => {
+				e.stopPropagation();
+			}}
 			onContextMenu={(e) => {
 				e.preventDefault();
 				e.stopPropagation();
@@ -447,4 +496,4 @@ export function ContextMenu({ x, y, items, onClose }: ContextMenuProps) {
 			))}
 		</div>
 	);
-}
+};

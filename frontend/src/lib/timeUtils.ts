@@ -1,23 +1,23 @@
 // Shared HH:MM:SS time utilities. Ported from the design's timeUtils.jsx.
 import type { TimetableRow } from "../types/model";
 
-export interface FormatOneResult {
+export type FormatOneResult = {
 	formatted: string | null;
 	newHH: number | null;
-}
+};
 
-export interface RowFormat {
+export type RowFormat = {
 	arriveFormatted: string | null;
 	departureFormatted: string | null;
 	lastHH: number | null;
-}
+};
 
 // Parse "HH:MM", "HH:MM:SS" → total seconds. Returns null if invalid.
 function toSeconds(str: string | null | undefined): number | null {
 	if (str == null || str === "") return null;
-	const m2 = String(str).match(/^(\d{1,3}):(\d{2})$/);
+	const m2 = /^(\d{1,3}):(\d{2})$/.exec(String(str));
 	if (m2) return +m2[1]! * 3600 + +m2[2]! * 60;
-	const m3 = String(str).match(/^(\d{1,3}):(\d{2}):(\d{2})$/);
+	const m3 = /^(\d{1,3}):(\d{2}):(\d{2})$/.exec(String(str));
 	if (m3) return +m3[1]! * 3600 + +m3[2]! * 60 + +m3[3]!;
 	return null;
 }
@@ -37,13 +37,13 @@ function fromSeconds(secs: number | null | undefined): string {
 function normalize(str: string | null | undefined): string {
 	if (!str || !String(str).trim()) return "";
 	const s = String(str).trim();
-	const compact6 = s.match(/^(\d{2})(\d{2})(\d{2})$/);
+	const compact6 = /^(\d{2})(\d{2})(\d{2})$/.exec(s);
 	if (compact6) return `${compact6[1]}:${compact6[2]}:${compact6[3]}`;
-	const compact5 = s.match(/^(\d{1})(\d{2})(\d{2})$/);
+	const compact5 = /^(\d{1})(\d{2})(\d{2})$/.exec(s);
 	if (compact5) return `0${compact5[1]}:${compact5[2]}:${compact5[3]}`;
-	const compact4 = s.match(/^(\d{2})(\d{2})$/);
+	const compact4 = /^(\d{2})(\d{2})$/.exec(s);
 	if (compact4) return `${compact4[1]}:${compact4[2]}:00`;
-	const compact3 = s.match(/^(\d{1})(\d{2})$/);
+	const compact3 = /^(\d{1})(\d{2})$/.exec(s);
 	if (compact3) return `0${compact3[1]}:${compact3[2]}:00`;
 	const secs = toSeconds(s);
 	if (secs == null) return s; // keep as-is (text label like '↓')
@@ -117,17 +117,15 @@ function displayTextPlaceholder(
 
 // Compute TRViS-formatted time strings for an array of rows (HH-omission rule).
 function computeRowFormats(
-	rows: ReadonlyArray<
-		Pick<
-			TimetableRow,
-			| "showHH"
-			| "isPass"
-			| "arrive"
-			| "departure"
-			| "arriveDisplayText"
-			| "departureDisplayText"
-		>
-	>
+	rows: readonly Pick<
+		TimetableRow,
+		| "showHH"
+		| "isPass"
+		| "arrive"
+		| "departure"
+		| "arriveDisplayText"
+		| "departureDisplayText"
+	>[]
 ): RowFormat[] {
 	let lastHH: number | null = null;
 	return rows.map((row) => {

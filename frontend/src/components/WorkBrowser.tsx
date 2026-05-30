@@ -8,7 +8,10 @@ import { TimetableGrid } from "./TimetableGrid";
 
 import type { AppliedRow } from "./ApplyPatternDialog";
 import type { Strings } from "../i18n/strings";
-import type { Color as EntityColor, Train as EntityTrain } from "../types/entities";
+import type {
+	Color as EntityColor,
+	Train as EntityTrain,
+} from "../types/entities";
 import type {
 	Direction,
 	Line,
@@ -57,24 +60,25 @@ type TextKey =
 	| "remarks"
 	| "trainInfo";
 
-interface TrainInfoDialogProps {
-	train: Train;
-	onSave: (t: Train) => void;
-	onDelete?: (id: string) => void;
-	onClose: () => void;
-	t: Strings;
-}
+type TrainInfoDialogProps = {
+	readonly train: Train;
+	readonly onSave: (t: Train) => void;
+	readonly onDelete?: (id: string) => void;
+	readonly onClose: () => void;
+	readonly t: Strings;
+};
 
-function TrainInfoDialog({
+const TrainInfoDialog = ({
 	train,
 	onSave,
 	onDelete,
 	onClose,
 	t,
-}: TrainInfoDialogProps) {
+}: TrainInfoDialogProps) => {
 	const [d, setD] = useState<Train>({ ...train });
-	const set = <K extends keyof Train>(k: K, v: Train[K]) =>
+	const set = <K extends keyof Train>(k: K, v: Train[K]) => {
 		setD((p) => ({ ...p, [k]: v }));
+	};
 
 	// BBCode-aware textarea helper: ta(key, rows, placeholder, bbcode, labelText)
 	const ta = (
@@ -93,7 +97,9 @@ function TrainInfoDialog({
 				<BBCodeField
 					label={labelText}
 					value={d[k] || ""}
-					onChange={(v) => set(k, v)}
+					onChange={(v) => {
+						set(k, v);
+					}}
 					placeholder={ph}
 					multiline
 					rows={rows}
@@ -102,10 +108,12 @@ function TrainInfoDialog({
 		}
 		return (
 			<div className="field">
-				{labelText && <label>{labelText}</label>}
+				{labelText ? <label>{labelText}</label> : null}
 				<textarea
 					value={d[k] || ""}
-					onChange={(e) => set(k, e.target.value)}
+					onChange={(e) => {
+						set(k, e.target.value);
+					}}
 					rows={rows}
 					placeholder={ph}
 					style={{
@@ -130,18 +138,24 @@ function TrainInfoDialog({
 		<div
 			className="modal-backdrop"
 			onClick={(e) => e.target === e.currentTarget && onClose()}>
-			<div className="modal" style={{ maxWidth: 760, width: "100%" }}>
+			<div
+				className="modal"
+				style={{ maxWidth: 760, width: "100%" }}>
 				<div className="modal-header">
 					<span className="modal-title">
 						🚆 {train.trainNumber} — {t.trainInfo}
 					</span>
-					<button className="btn btn-ghost btn-sm" onClick={onClose}>
+					<button
+						className="btn btn-ghost btn-sm"
+						onClick={onClose}>
 						✕
 					</button>
 				</div>
 				<div className="modal-body">
 					{/* 基本 */}
-					<div className="section-title" style={{ marginBottom: 8 }}>
+					<div
+						className="section-title"
+						style={{ marginBottom: 8 }}>
 						基本情報
 					</div>
 					<div
@@ -155,7 +169,9 @@ function TrainInfoDialog({
 							<label>{t.trainNumber}</label>
 							<input
 								value={d.trainNumber || ""}
-								onChange={(e) => set("trainNumber", e.target.value)}
+								onChange={(e) => {
+									set("trainNumber", e.target.value);
+								}}
 								style={{
 									fontFamily: "var(--font-mono)",
 									fontWeight: 600,
@@ -166,9 +182,9 @@ function TrainInfoDialog({
 							<label>{t.direction}</label>
 							<select
 								value={d.direction}
-								onChange={(e) =>
-									set("direction", +e.target.value as Direction)
-								}>
+								onChange={(e) => {
+									set("direction", +e.target.value as Direction);
+								}}>
 								<option value={1}>{t.downDir}</option>
 								<option value={-1}>{t.upDir}</option>
 							</select>
@@ -177,7 +193,9 @@ function TrainInfoDialog({
 							<label>{t.destination}</label>
 							<input
 								value={d.destination || ""}
-								onChange={(e) => set("destination", e.target.value)}
+								onChange={(e) => {
+									set("destination", e.target.value);
+								}}
 							/>
 						</div>
 						<div className="field">
@@ -186,13 +204,17 @@ function TrainInfoDialog({
 								type="number"
 								min={1}
 								value={d.carCount || 0}
-								onChange={(e) => set("carCount", +e.target.value)}
+								onChange={(e) => {
+									set("carCount", +e.target.value);
+								}}
 							/>
 						</div>
 					</div>
 
 					{/* 走行特性 (multiline) — BBCode対応 */}
-					<div className="section-title" style={{ marginBottom: 8 }}>
+					<div
+						className="section-title"
+						style={{ marginBottom: 8 }}>
 						走行特性（複数行可）
 					</div>
 					<div
@@ -217,7 +239,9 @@ function TrainInfoDialog({
 					</div>
 
 					{/* 運用情報 */}
-					<div className="section-title" style={{ marginBottom: 8 }}>
+					<div
+						className="section-title"
+						style={{ marginBottom: 8 }}>
 						運用情報
 					</div>
 					<div
@@ -231,7 +255,9 @@ function TrainInfoDialog({
 							<label>{t.workType}</label>
 							<input
 								value={d.workType || ""}
-								onChange={(e) => set("workType", e.target.value)}
+								onChange={(e) => {
+									set("workType", e.target.value);
+								}}
 								placeholder="旅客 / 貨物 等"
 							/>
 						</div>
@@ -239,7 +265,9 @@ function TrainInfoDialog({
 							<label>次の列車ID</label>
 							<input
 								value={d.nextTrainId || ""}
-								onChange={(e) => set("nextTrainId", e.target.value)}
+								onChange={(e) => {
+									set("nextTrainId", e.target.value);
+								}}
 								placeholder="—"
 							/>
 						</div>
@@ -248,7 +276,9 @@ function TrainInfoDialog({
 							<input
 								type="number"
 								value={d.dayCount || 0}
-								onChange={(e) => set("dayCount", +e.target.value)}
+								onChange={(e) => {
+									set("dayCount", +e.target.value);
+								}}
 							/>
 						</div>
 						<div
@@ -265,9 +295,9 @@ function TrainInfoDialog({
 								<input
 									type="checkbox"
 									checked={!!d.isRideOnMoving}
-									onChange={(e) =>
-										set("isRideOnMoving", e.target.checked)
-									}
+									onChange={(e) => {
+										set("isRideOnMoving", e.target.checked);
+									}}
 									style={{ accentColor: "var(--color-accent)" }}
 								/>
 								<span style={{ fontSize: 13 }}>便乗</span>
@@ -305,7 +335,9 @@ function TrainInfoDialog({
 					</div>
 
 					{/* 注意事項 — BBCode対応 */}
-					<div className="section-title" style={{ marginBottom: 8 }}>
+					<div
+						className="section-title"
+						style={{ marginBottom: 8 }}>
 						注意事項
 					</div>
 					<div
@@ -358,7 +390,9 @@ function TrainInfoDialog({
 						}}>
 						🗑 {t.delete}
 					</button>
-					<button className="btn btn-secondary" onClick={onClose}>
+					<button
+						className="btn btn-secondary"
+						onClick={onClose}>
 						{t.cancel}
 					</button>
 					<button
@@ -373,21 +407,21 @@ function TrainInfoDialog({
 			</div>
 		</div>
 	);
-}
+};
 
-interface TrainHeaderBarProps {
-	train: Train;
-	onOpenDialog: () => void;
-	onApplyPattern: () => void;
-	t: Strings;
-}
+type TrainHeaderBarProps = {
+	readonly train: Train;
+	readonly onOpenDialog: () => void;
+	readonly onApplyPattern: () => void;
+	readonly t: Strings;
+};
 
-function TrainHeaderBar({
+const TrainHeaderBar = ({
 	train,
 	onOpenDialog,
 	onApplyPattern,
 	t,
-}: TrainHeaderBarProps) {
+}: TrainHeaderBarProps) => {
 	const fl = (s?: string) => (s ? String(s).split("\n")[0] : "");
 	return (
 		<div
@@ -417,12 +451,10 @@ function TrainHeaderBar({
 						}}>
 						{train.trainNumber}
 					</span>
-					<span
-						className={`chip ${train.direction === 1 ? "green" : "amber"}`}>
+					<span className={`chip ${train.direction === 1 ? "green" : "amber"}`}>
 						{train.direction === 1 ? t.downDir : t.upDir}
 					</span>
-					<span
-						style={{ fontSize: 13, color: "var(--color-text-muted)" }}>
+					<span style={{ fontSize: 13, color: "var(--color-text-muted)" }}>
 						→
 					</span>
 					<span style={{ fontSize: 14, fontWeight: 500 }}>
@@ -440,9 +472,7 @@ function TrainHeaderBar({
 					}}>
 					{fl(train.speedType) && <span>{fl(train.speedType)}</span>}
 					{train.carCount > 0 && <span>· {train.carCount}両</span>}
-					{fl(train.maxSpeed) && (
-						<span>· {fl(train.maxSpeed)} km/h</span>
-					)}
+					{fl(train.maxSpeed) && <span>· {fl(train.maxSpeed)} km/h</span>}
 					{fl(train.nominalTractiveCapacity) && (
 						<span>· 牽引{fl(train.nominalTractiveCapacity)}</span>
 					)}
@@ -461,25 +491,25 @@ function TrainHeaderBar({
 			</div>
 		</div>
 	);
-}
+};
 
-interface TrainListPanelProps {
-	trains: Train[];
-	selectedId: string | null;
-	onSelect: (id: string) => void;
-	onAdd: () => void;
-	onAddViaPattern: () => void;
-	t: Strings;
-}
+type TrainListPanelProps = {
+	readonly trains: Train[];
+	readonly selectedId: string | null;
+	readonly onSelect: (id: string) => void;
+	readonly onAdd: () => void;
+	readonly onAddViaPattern: () => void;
+	readonly t: Strings;
+};
 
-function TrainListPanel({
+const TrainListPanel = ({
 	trains,
 	selectedId,
 	onSelect,
 	onAdd,
 	onAddViaPattern,
 	t,
-}: TrainListPanelProps) {
+}: TrainListPanelProps) => {
 	return (
 		<div
 			style={{
@@ -498,8 +528,7 @@ function TrainListPanel({
 					alignItems: "center",
 				}}>
 				<strong style={{ fontSize: 13 }}>{t.trains}</strong>
-				<span
-					style={{ fontSize: 11, color: "var(--color-text-muted)" }}>
+				<span style={{ fontSize: 11, color: "var(--color-text-muted)" }}>
 					({trains.length})
 				</span>
 				<div style={{ flex: 1 }} />
@@ -509,13 +538,17 @@ function TrainListPanel({
 					title={t.newStopPattern}>
 					🧩
 				</button>
-				<button className="btn btn-primary btn-xs" onClick={onAdd}>
+				<button
+					className="btn btn-primary btn-xs"
+					onClick={onAdd}>
 					＋ {t.newTrain}
 				</button>
 			</div>
 			<div style={{ flex: 1, overflow: "auto" }}>
 				{trains.length === 0 ? (
-					<div className="empty-state" style={{ padding: "40px 16px" }}>
+					<div
+						className="empty-state"
+						style={{ padding: "40px 16px" }}>
 						<svg
 							width="40"
 							height="40"
@@ -523,9 +556,23 @@ function TrainListPanel({
 							fill="none"
 							stroke="currentColor"
 							strokeWidth="1.5">
-							<rect x="4" y="6" width="16" height="11" rx="2" />
-							<circle cx="8" cy="18" r="1.5" />
-							<circle cx="16" cy="18" r="1.5" />
+							<rect
+								x="4"
+								y="6"
+								width="16"
+								height="11"
+								rx="2"
+							/>
+							<circle
+								cx="8"
+								cy="18"
+								r="1.5"
+							/>
+							<circle
+								cx="16"
+								cy="18"
+								r="1.5"
+							/>
 						</svg>
 						<p style={{ fontSize: 12 }}>{t.noTrains}</p>
 					</div>
@@ -533,7 +580,9 @@ function TrainListPanel({
 					trains.map((tr) => (
 						<div
 							key={tr.id}
-							onClick={() => onSelect(tr.id)}
+							onClick={() => {
+								onSelect(tr.id);
+							}}
 							style={{
 								padding: "10px 12px",
 								cursor: "pointer",
@@ -605,33 +654,37 @@ function TrainListPanel({
 			</div>
 		</div>
 	);
-}
+};
 
-interface WorkBrowserProps {
-	work: Work;
-	onCreateTrain: (draft: EntityTrainDraft) => void;
-	onUpdateTrain: (vars: EntityTrainUpdate) => void;
-	onDeleteTrain: (id: string) => void;
-	onSelectTrain: (id: string | null) => void;
-	onOpenStopPatternWizard: () => void;
-	onApplyPattern: (args: {
+type WorkBrowserProps = {
+	readonly work: Work;
+	readonly onCreateTrain: (draft: EntityTrainDraft) => void;
+	readonly onUpdateTrain: (vars: EntityTrainUpdate) => void;
+	readonly onDeleteTrain: (id: string) => void;
+	readonly onSelectTrain: (id: string | null) => void;
+	readonly onOpenStopPatternWizard: () => void;
+	readonly onApplyPattern: (args: {
 		rows: AppliedRow[];
 		direction: Direction;
 		destination: string;
 		existingTrain: Train | null;
 	}) => void;
-	stopPatterns: StopPattern[];
-	stations: Station[];
-	colors: EntityColor[];
-	stationsOnLine: StationOnLine[];
-	lines: Line[];
-	onCreateRow: (trainId: string, row: TimetableRow) => void;
-	onUpdateRow: (trainId: string, rowId: string, row: TimetableRow) => void;
-	onDeleteRow: (trainId: string, rowId: string) => void;
-	t: Strings;
-}
+	readonly stopPatterns: StopPattern[];
+	readonly stations: Station[];
+	readonly colors: EntityColor[];
+	readonly stationsOnLine: StationOnLine[];
+	readonly lines: Line[];
+	readonly onCreateRow: (trainId: string, row: TimetableRow) => void;
+	readonly onUpdateRow: (
+		trainId: string,
+		rowId: string,
+		row: TimetableRow
+	) => void;
+	readonly onDeleteRow: (trainId: string, rowId: string) => void;
+	readonly t: Strings;
+};
 
-export function WorkBrowser({
+export const WorkBrowser = ({
 	work,
 	onCreateTrain,
 	onUpdateTrain,
@@ -647,15 +700,13 @@ export function WorkBrowser({
 	onUpdateRow,
 	onDeleteRow,
 	t,
-}: WorkBrowserProps) {
+}: WorkBrowserProps) => {
 	const [selectedTrainId, setSelectedTrainId] = useState<string | null>(
 		work.trains.length > 0 ? (work.trains[0]?.id ?? null) : null
 	);
 	const [showInfo, setShowInfo] = useState(false);
 	const [showApplyPattern, setShowApplyPattern] = useState(false);
-	const [applyTargetTrain, setApplyTargetTrain] = useState<Train | null>(
-		null
-	);
+	const [applyTargetTrain, setApplyTargetTrain] = useState<Train | null>(null);
 	const selectedTrain = work.trains.find((tr) => tr.id === selectedTrainId);
 
 	const selectTrain = (id: string | null) => {
@@ -720,7 +771,9 @@ export function WorkBrowser({
 				selectedId={selectedTrainId}
 				onSelect={selectTrain}
 				onAdd={addTrain}
-				onAddViaPattern={() => setShowApplyPattern(true)}
+				onAddViaPattern={() => {
+					setShowApplyPattern(true);
+				}}
 				t={t}
 			/>
 			<div
@@ -734,7 +787,9 @@ export function WorkBrowser({
 					<>
 						<TrainHeaderBar
 							train={selectedTrain}
-							onOpenDialog={() => setShowInfo(true)}
+							onOpenDialog={() => {
+								setShowInfo(true);
+							}}
 							onApplyPattern={() => {
 								setApplyTargetTrain(selectedTrain);
 								setShowApplyPattern(true);
@@ -746,21 +801,29 @@ export function WorkBrowser({
 								train={selectedTrain}
 								stations={stations}
 								colors={colors}
-								onCreateRow={(r) => onCreateRow(selectedTrain.id, r)}
-								onUpdateRow={(rowId, r) => onUpdateRow(selectedTrain.id, rowId, r)}
-								onDeleteRow={(rowId) => onDeleteRow(selectedTrain.id, rowId)}
+								onCreateRow={(r) => {
+									onCreateRow(selectedTrain.id, r);
+								}}
+								onUpdateRow={(rowId, r) => {
+									onUpdateRow(selectedTrain.id, rowId, r);
+								}}
+								onDeleteRow={(rowId) => {
+									onDeleteRow(selectedTrain.id, rowId);
+								}}
 								t={t}
 							/>
 						</div>
-						{showInfo && (
+						{showInfo ? (
 							<TrainInfoDialog
 								train={selectedTrain}
 								onSave={updateTrain}
 								onDelete={onDeleteTrain}
-								onClose={() => setShowInfo(false)}
+								onClose={() => {
+									setShowInfo(false);
+								}}
 								t={t}
 							/>
-						)}
+						) : null}
 					</>
 				) : (
 					<div
@@ -773,15 +836,22 @@ export function WorkBrowser({
 							fill="none"
 							stroke="currentColor"
 							strokeWidth="1">
-							<rect x="3" y="6" width="18" height="12" rx="2" />
+							<rect
+								x="3"
+								y="6"
+								width="18"
+								height="12"
+								rx="2"
+							/>
 							<path d="M3 10h18M9 14h.01M15 14h.01" />
 						</svg>
 						<p>{t.noTrains}</p>
-						<div
-							style={{ display: "flex", gap: 8, marginTop: 4 }}>
+						<div style={{ display: "flex", gap: 8, marginTop: 4 }}>
 							<button
 								className="btn btn-secondary btn-sm"
-								onClick={() => setShowApplyPattern(true)}>
+								onClick={() => {
+									setShowApplyPattern(true);
+								}}>
 								🧩 パターンから作成
 							</button>
 							<button
@@ -794,7 +864,7 @@ export function WorkBrowser({
 				)}
 			</div>
 
-			{showApplyPattern && (
+			{showApplyPattern ? (
 				<ApplyPatternDialog
 					stopPatterns={stopPatterns || []}
 					stations={stations || []}
@@ -815,7 +885,7 @@ export function WorkBrowser({
 						setApplyTargetTrain(null);
 					}}
 				/>
-			)}
+			) : null}
 		</div>
 	);
-}
+};

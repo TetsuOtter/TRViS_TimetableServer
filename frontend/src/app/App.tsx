@@ -19,17 +19,17 @@ import {
 	useUpdateLine,
 } from "../api/hooks/useLines";
 import {
-	useCreateProject,
-	useDeleteProject,
-	useProjects,
-	useUpdateProject,
-} from "../api/hooks/useProjects";
-import {
 	useCreateProjectStation,
 	useDeleteProjectStation,
 	useProjectStations,
 	useUpdateProjectStation,
 } from "../api/hooks/useProjectStations";
+import {
+	useCreateProject,
+	useDeleteProject,
+	useProjects,
+	useUpdateProject,
+} from "../api/hooks/useProjects";
 import {
 	useAllStationsOnLine,
 	useCreateStationOnLine,
@@ -84,7 +84,7 @@ import {
 	TRANSFER_VERSION,
 } from "../api/transfer";
 import { AppShell } from "../components/AppShell";
-import AuthControls from "../components/auth/AuthControls";
+import { ColorManager } from "../components/ColorManager";
 import {
 	ConfirmDialog,
 	ContextMenu,
@@ -92,11 +92,11 @@ import {
 	WorkDialog,
 	WorkGroupDialog,
 } from "../components/EntityDialogs";
-import { ColorManager } from "../components/ColorManager";
 import { LineManager } from "../components/LineManager";
 import { ProjectListScreen } from "../components/ProjectList";
 import { StopPatternWizard } from "../components/StopPatternWizard";
 import { WorkBrowser } from "../components/WorkBrowser";
+import AuthControls from "../components/auth/AuthControls";
 
 import { useSettings } from "./SettingsContext";
 
@@ -341,39 +341,39 @@ function downloadJson(filename: string, obj: unknown) {
 
 type Screen = "projects" | "work" | "lines" | "colors";
 
-interface ContextMenuState {
+type ContextMenuState = {
 	x: number;
 	y: number;
 	items: ContextMenuItem[];
-}
-interface ConfirmState {
+};
+type ConfirmState = {
 	title: string;
 	message: string;
 	onConfirm: () => void;
-}
+};
 
-interface SidebarTreeProps {
-	project?: Project;
-	currentScreen: Screen;
-	currentWG: string | null;
-	currentWork: string | null;
-	onSelect: (wgId: string, wId: string) => void;
-	onSelectLines: () => void;
-	onSelectColors: () => void;
-	onAddWG: () => void;
-	onWGContext: (x: number, y: number, wg: WorkGroup) => void;
-	onWorkContext: (
+type SidebarTreeProps = {
+	readonly project?: Project;
+	readonly currentScreen: Screen;
+	readonly currentWG: string | null;
+	readonly currentWork: string | null;
+	readonly onSelect: (wgId: string, wId: string) => void;
+	readonly onSelectLines: () => void;
+	readonly onSelectColors: () => void;
+	readonly onAddWG: () => void;
+	readonly onWGContext: (x: number, y: number, wg: WorkGroup) => void;
+	readonly onWorkContext: (
 		x: number,
 		y: number,
 		wg: WorkGroup,
 		w: Work
 	) => void;
-	onAddWork: (wg: WorkGroup) => void;
-	onExport: () => void;
-	t: ReturnType<typeof useSettings>["t"];
-}
+	readonly onAddWork: (wg: WorkGroup) => void;
+	readonly onExport: () => void;
+	readonly t: ReturnType<typeof useSettings>["t"];
+};
 
-function SidebarTree({
+const SidebarTree = ({
 	project,
 	currentScreen,
 	currentWG,
@@ -387,7 +387,7 @@ function SidebarTree({
 	onAddWork,
 	onExport,
 	t,
-}: SidebarTreeProps) {
+}: SidebarTreeProps) => {
 	const [openWG, setOpenWG] = useState<Set<string>>(
 		() => new Set((project?.workGroups || []).map((wg) => wg.id))
 	);
@@ -404,7 +404,9 @@ function SidebarTree({
 			<div
 				className="sidebar-section"
 				style={{ flex: 1, overflow: "auto" }}>
-				<div className="sidebar-label" style={{ paddingBottom: 6 }}>
+				<div
+					className="sidebar-label"
+					style={{ paddingBottom: 6 }}>
 					{project.name}
 				</div>
 				{project.workGroups.map((wg) => (
@@ -412,7 +414,9 @@ function SidebarTree({
 						<div style={{ display: "flex", alignItems: "center" }}>
 							<button
 								className={`sidebar-item ${currentScreen === "work" && currentWG === wg.id && !currentWork ? "active" : ""}`}
-								onClick={() => toggle(wg.id)}
+								onClick={() => {
+									toggle(wg.id);
+								}}
 								onContextMenu={(e) => {
 									e.preventDefault();
 									onWGContext(e.clientX, e.clientY, wg);
@@ -446,15 +450,12 @@ function SidebarTree({
 									<button
 										key={w.id}
 										className={`sidebar-item indent ${currentScreen === "work" && currentWork === w.id ? "active" : ""}`}
-										onClick={() => onSelect(wg.id, w.id)}
+										onClick={() => {
+											onSelect(wg.id, w.id);
+										}}
 										onContextMenu={(e) => {
 											e.preventDefault();
-											onWorkContext(
-												e.clientX,
-												e.clientY,
-												wg,
-												w
-											);
+											onWorkContext(e.clientX, e.clientY, wg, w);
 										}}>
 										<span
 											style={{
@@ -484,9 +485,10 @@ function SidebarTree({
 								<button
 									className="sidebar-item indent"
 									style={{ opacity: 0.7, fontSize: 11 }}
-									onClick={() => onAddWork(wg)}>
-									<span style={{ fontSize: 11 }}>＋</span>{" "}
-									{t.newWork}
+									onClick={() => {
+										onAddWork(wg);
+									}}>
+									<span style={{ fontSize: 11 }}>＋</span> {t.newWork}
 								</button>
 							</>
 						)}
@@ -523,11 +525,10 @@ function SidebarTree({
 			</div>
 		</>
 	);
-}
+};
 
-export function App() {
-	const { theme, toggleTheme, lang, toggleLang, density, t } =
-		useSettings();
+export const App = () => {
+	const { theme, toggleTheme, lang, toggleLang, density, t } = useSettings();
 
 	const {
 		data: apiProjects,
@@ -620,12 +621,8 @@ export function App() {
 		work?: Work;
 		new?: boolean;
 	} | null>(null);
-	const [confirmDialog, setConfirmDialog] = useState<ConfirmState | null>(
-		null
-	);
-	const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(
-		null
-	);
+	const [confirmDialog, setConfirmDialog] = useState<ConfirmState | null>(null);
+	const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
 
 	const baseProject = apiProjects?.find((p) => p.id === projectId);
 
@@ -710,7 +707,14 @@ export function App() {
 			setCurrentWork(firstWorkId);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [screen, projectId, currentWGValid, firstWGId, currentWorkValid, firstWorkId]);
+	}, [
+		screen,
+		projectId,
+		currentWGValid,
+		firstWGId,
+		currentWorkValid,
+		firstWorkId,
+	]);
 
 	// Auto-select first line when navigating to the lines screen with no line selected.
 	useEffect(() => {
@@ -741,8 +745,7 @@ export function App() {
 					setScreen("work");
 				},
 			});
-		if (screen === "work" && wg)
-			bc.push({ label: wg.name, onClick: () => {} });
+		if (screen === "work" && wg) bc.push({ label: wg.name, onClick: () => {} });
 		if (screen === "work" && work)
 			bc.push({ label: work.name, onClick: () => {} });
 		if (screen === "lines")
@@ -759,10 +762,11 @@ export function App() {
 
 	/* ─── Project CRUD ─── */
 	const saveProject = (
-		draft: Partial<Pick<Project, "id">> &
-			Pick<Project, "name" | "description">
+		draft: Partial<Pick<Project, "id">> & Pick<Project, "name" | "description">
 	) => {
-		const onError = (e: Error) => alert(e.message);
+		const onError = (e: Error) => {
+			alert(e.message);
+		};
 		if (draft.id !== undefined && draft.id !== "") {
 			updateProjectMutation.mutate(
 				{ id: draft.id, name: draft.name, description: draft.description },
@@ -777,7 +781,9 @@ export function App() {
 	};
 	const deleteProject = (p: EntityProject) => {
 		deleteProjectMutation.mutate(p.id, {
-			onError: (e) => alert(e.message),
+			onError: (e) => {
+				alert(e.message);
+			},
 		});
 		if (projectId === p.id) {
 			setProjectId(null);
@@ -794,18 +800,28 @@ export function App() {
 		if (draft.id !== undefined && draft.id !== "") {
 			updateWGMutation.mutate(
 				{ id: draft.id, name: draft.name, description: draft.description },
-				{ onError: (e: Error) => alert(e.message) }
+				{
+					onError: (e: Error) => {
+						alert(e.message);
+					},
+				}
 			);
 		} else {
 			createWGMutation.mutate(
 				{ name: draft.name, description: draft.description },
-				{ onError: (e: Error) => alert(e.message) }
+				{
+					onError: (e: Error) => {
+						alert(e.message);
+					},
+				}
 			);
 		}
 	};
 	const deleteWG = (wgId: string) => {
 		deleteWGMutation.mutate(wgId, {
-			onError: (e: Error) => alert(e.message),
+			onError: (e: Error) => {
+				alert(e.message);
+			},
 		});
 		if (currentWG === wgId) {
 			setCurrentWG(null);
@@ -821,7 +837,9 @@ export function App() {
 			Pick<Work, "name" | "affectDate" | "remarks">
 	) => {
 		if (project === undefined) return;
-		const onError = (e: Error) => alert(e.message);
+		const onError = (e: Error) => {
+			alert(e.message);
+		};
 		if (draft.id !== undefined && draft.id !== "") {
 			const existing = (apiWorks ?? []).find((w) => w.id === draft.id);
 			updateWorkMutation.mutate(
@@ -837,8 +855,7 @@ export function App() {
 					affixContent: existing?.affixContent,
 					remarks: draft.remarks,
 					hasETrainTimetable: existing?.hasETrainTimetable,
-					eTrainTimetableContentType:
-						existing?.eTrainTimetableContentType,
+					eTrainTimetableContentType: existing?.eTrainTimetableContentType,
 					eTrainTimetableContent: existing?.eTrainTimetableContent,
 				},
 				{ onError }
@@ -871,7 +888,9 @@ export function App() {
 	};
 	const deleteWork = (workId: string) => {
 		deleteWorkMutation.mutate(workId, {
-			onError: (e: Error) => alert(e.message),
+			onError: (e: Error) => {
+				alert(e.message);
+			},
 		});
 		if (currentWork === workId) {
 			setCurrentWork(null);
@@ -884,7 +903,9 @@ export function App() {
 		draft: Omit<EntityTrain, "id" | "workId" | "createdAt">
 	) => {
 		createTrainMutation.mutate(draft, {
-			onError: (e: Error) => alert(e.message),
+			onError: (e: Error) => {
+				alert(e.message);
+			},
 		});
 	};
 	const handleUpdateTrain = (
@@ -894,12 +915,18 @@ export function App() {
 		const existing = (apiTrains ?? []).find((t) => t.id === vars.id);
 		updateTrainMutation.mutate(
 			{ ...vars, description: existing?.description ?? "" },
-			{ onError: (e: Error) => alert(e.message) }
+			{
+				onError: (e: Error) => {
+					alert(e.message);
+				},
+			}
 		);
 	};
 	const handleDeleteTrain = (trainId: string) => {
 		deleteTrainMutation.mutate(trainId, {
-			onError: (e: Error) => alert(e.message),
+			onError: (e: Error) => {
+				alert(e.message);
+			},
 		});
 		if (currentTrain === trainId) {
 			setCurrentTrain(null);
@@ -907,21 +934,40 @@ export function App() {
 	};
 
 	/* ─── TimetableRow CRUD (wired from WorkBrowser → TimetableGrid) ─── */
-	const handleCreateRow = (trainId: string, row: ModelTimetableRow) =>
+	const handleCreateRow = (trainId: string, row: ModelTimetableRow) => {
 		createTimetableRowMutation.mutate(
 			{ trainId, draft: modelRowToEntityDraft(row) },
-			{ onError: (e: Error) => alert(e.message) }
+			{
+				onError: (e: Error) => {
+					alert(e.message);
+				},
+			}
 		);
-	const handleUpdateRow = (trainId: string, rowId: string, row: ModelTimetableRow) =>
+	};
+	const handleUpdateRow = (
+		trainId: string,
+		rowId: string,
+		row: ModelTimetableRow
+	) => {
 		updateTimetableRowMutation.mutate(
 			{ trainId, rowId, draft: modelRowToEntityDraft(row) },
-			{ onError: (e: Error) => alert(e.message) }
+			{
+				onError: (e: Error) => {
+					alert(e.message);
+				},
+			}
 		);
-	const handleDeleteRow = (trainId: string, rowId: string) =>
+	};
+	const handleDeleteRow = (trainId: string, rowId: string) => {
 		deleteTimetableRowMutation.mutate(
 			{ trainId, rowId },
-			{ onError: (e: Error) => alert(e.message) }
+			{
+				onError: (e: Error) => {
+					alert(e.message);
+				},
+			}
 		);
+	};
 
 	/* ─── ApplyPattern handler ─── */
 
@@ -930,7 +976,12 @@ export function App() {
 	const parseTimePart = (t: string, idx: number): number | undefined =>
 		t !== "" ? parseInt(t.split(":")[idx] ?? "0", 10) : undefined;
 
-	const modelRowToEntityDraft = (r: ModelTimetableRow): Omit<EntityTimetableRow, "id" | "trainId" | "createdAt" | "updatedAt"> => ({
+	const modelRowToEntityDraft = (
+		r: ModelTimetableRow
+	): Omit<
+		EntityTimetableRow,
+		"id" | "trainId" | "createdAt" | "updatedAt"
+	> => ({
 		stationId: r.stationId,
 		stationTrackId: r.stationTrackId,
 		colorIdMarker: r.colorIdMarker,
@@ -946,8 +997,14 @@ export function App() {
 		departureTimeHh: parseTimePart(r.departure, 0),
 		departureTimeMm: parseTimePart(r.departure, 1),
 		departureTimeSs: parseTimePart(r.departure, 2),
-		arriveStr: r.arriveDisplayText && r.arriveDisplayText !== "" ? r.arriveDisplayText : undefined,
-		departureStr: r.departureDisplayText && r.departureDisplayText !== "" ? r.departureDisplayText : undefined,
+		arriveStr:
+			r.arriveDisplayText && r.arriveDisplayText !== ""
+				? r.arriveDisplayText
+				: undefined,
+		departureStr:
+			r.departureDisplayText && r.departureDisplayText !== ""
+				? r.departureDisplayText
+				: undefined,
 		runInLimit: r.runInLimit !== "" ? r.runInLimit : undefined,
 		runOutLimit: r.runOutLimit !== "" ? r.runOutLimit : undefined,
 		remarks: r.remarks !== "" ? r.remarks : undefined,
@@ -1040,7 +1097,9 @@ export function App() {
 		draft: Omit<EntityLine, "id" | "projectId" | "createdAt">
 	) => {
 		createLineMutation.mutate(draft, {
-			onError: (e: Error) => alert(e.message),
+			onError: (e: Error) => {
+				alert(e.message);
+			},
 		});
 	};
 	const handleUpdateLine = (
@@ -1048,12 +1107,16 @@ export function App() {
 			Omit<EntityLine, "id" | "projectId" | "createdAt">
 	) => {
 		updateLineMutation.mutate(vars, {
-			onError: (e: Error) => alert(e.message),
+			onError: (e: Error) => {
+				alert(e.message);
+			},
 		});
 	};
 	const handleDeleteLine = (lineId: string) => {
 		deleteLineMutation.mutate(lineId, {
-			onError: (e: Error) => alert(e.message),
+			onError: (e: Error) => {
+				alert(e.message);
+			},
 		});
 		if (currentLine === lineId) {
 			setCurrentLine(null);
@@ -1065,7 +1128,9 @@ export function App() {
 		draft: Omit<EntityColor, "id" | "projectId" | "createdAt">
 	) => {
 		createColorMutation.mutate(draft, {
-			onError: (e: Error) => alert(e.message),
+			onError: (e: Error) => {
+				alert(e.message);
+			},
 		});
 	};
 	const handleUpdateColor = (
@@ -1073,12 +1138,16 @@ export function App() {
 			Omit<EntityColor, "id" | "projectId" | "createdAt">
 	) => {
 		updateColorMutation.mutate(vars, {
-			onError: (e: Error) => alert(e.message),
+			onError: (e: Error) => {
+				alert(e.message);
+			},
 		});
 	};
 	const handleDeleteColor = (colorId: string) => {
 		deleteColorMutation.mutate(colorId, {
-			onError: (e: Error) => alert(e.message),
+			onError: (e: Error) => {
+				alert(e.message);
+			},
 		});
 	};
 
@@ -1087,7 +1156,9 @@ export function App() {
 		draft: Omit<EntityProjectStation, "id" | "projectId" | "createdAt">
 	) => {
 		createProjectStationMutation.mutate(draft, {
-			onError: (e: Error) => alert(e.message),
+			onError: (e: Error) => {
+				alert(e.message);
+			},
 		});
 	};
 	const handleUpdateStation = (
@@ -1095,12 +1166,16 @@ export function App() {
 			Omit<EntityProjectStation, "id" | "projectId" | "createdAt">
 	) => {
 		updateProjectStationMutation.mutate(vars, {
-			onError: (e: Error) => alert(e.message),
+			onError: (e: Error) => {
+				alert(e.message);
+			},
 		});
 	};
 	const handleDeleteStation = (stationId: string) => {
 		deleteProjectStationMutation.mutate(stationId, {
-			onError: (e: Error) => alert(e.message),
+			onError: (e: Error) => {
+				alert(e.message);
+			},
 		});
 	};
 
@@ -1109,7 +1184,9 @@ export function App() {
 		draft: Omit<EntityStationOnLine, "id" | "projectId" | "createdAt">
 	) => {
 		createStationOnLineMutation.mutate(draft, {
-			onError: (e: Error) => alert(e.message),
+			onError: (e: Error) => {
+				alert(e.message);
+			},
 		});
 	};
 	const handleUpdateStationOnLine = (
@@ -1117,12 +1194,16 @@ export function App() {
 			Omit<EntityStationOnLine, "id" | "projectId" | "createdAt">
 	) => {
 		updateStationOnLineMutation.mutate(vars, {
-			onError: (e: Error) => alert(e.message),
+			onError: (e: Error) => {
+				alert(e.message);
+			},
 		});
 	};
 	const handleDeleteStationOnLine = (stationOnLineId: string) => {
 		deleteStationOnLineMutation.mutate(stationOnLineId, {
-			onError: (e: Error) => alert(e.message),
+			onError: (e: Error) => {
+				alert(e.message);
+			},
 		});
 	};
 	const handleReorderStationsOnLine = (
@@ -1131,7 +1212,9 @@ export function App() {
 	) => {
 		updates.forEach((vars) => {
 			updateStationOnLineMutation.mutate(vars, {
-				onError: (e: Error) => alert(e.message),
+				onError: (e: Error) => {
+					alert(e.message);
+				},
 			});
 		});
 	};
@@ -1193,7 +1276,9 @@ export function App() {
 
 	const handleDeleteStopPattern = (id: string) => {
 		deleteStopPatternMutation.mutate(id, {
-			onError: (e: Error) => alert(e.message),
+			onError: (e: Error) => {
+				alert(e.message);
+			},
 		});
 	};
 
@@ -1206,7 +1291,7 @@ export function App() {
 				fromProjectStationId:
 					p.fromStationId !== "" ? p.fromStationId : undefined,
 				toProjectStationId: p.toStationId !== "" ? p.toStationId : undefined,
-				direction: p.direction as number | undefined,
+				direction: p.direction,
 			});
 			const newId = fromApiStopPattern(created).id;
 			const drafts = rows.map((r, idx) => ({
@@ -1346,14 +1431,20 @@ export function App() {
 				setCurrentWG(wgId);
 				setCurrentWork(wId);
 			}}
-			onSelectLines={() => setScreen("lines")}
-			onSelectColors={() => setScreen("colors")}
-			onAddWG={() => setEditingWG({ new: true })}
+			onSelectLines={() => {
+				setScreen("lines");
+			}}
+			onSelectColors={() => {
+				setScreen("colors");
+			}}
+			onAddWG={() => {
+				setEditingWG({ new: true });
+			}}
 			onAddWork={(w) => {
-					setCurrentWG(w.id);
-					setEditingWork({ wgId: w.id, new: true });
-				}}
-			onWGContext={(x, y, wgRef) =>
+				setCurrentWG(w.id);
+				setEditingWork({ wgId: w.id, new: true });
+			}}
+			onWGContext={(x, y, wgRef) => {
 				setContextMenu({
 					x,
 					y,
@@ -1361,7 +1452,9 @@ export function App() {
 						{
 							icon: "✏️",
 							label: t.edit,
-							onClick: () => setEditingWG({ wg: wgRef }),
+							onClick: () => {
+								setEditingWG({ wg: wgRef });
+							},
 						},
 						{
 							icon: "＋",
@@ -1378,17 +1471,20 @@ export function App() {
 							icon: "🗑",
 							label: t.delete,
 							danger: true,
-							onClick: () =>
+							onClick: () => {
 								setConfirmDialog({
 									title: "ワークグループを削除",
 									message: `「${wgRef.name}」を削除します。配下の ${wgRef.works.length} 件のワークも一緒に削除されます。`,
-									onConfirm: () => deleteWG(wgRef.id),
-								}),
+									onConfirm: () => {
+										deleteWG(wgRef.id);
+									},
+								});
+							},
 						},
 					],
-				})
-			}
-			onWorkContext={(x, y, wgRef, w) =>
+				});
+			}}
+			onWorkContext={(x, y, wgRef, w) => {
 				setContextMenu({
 					x,
 					y,
@@ -1396,24 +1492,27 @@ export function App() {
 						{
 							icon: "✏️",
 							label: t.edit,
-							onClick: () =>
-								setEditingWork({ wgId: wgRef.id, work: w }),
+							onClick: () => {
+								setEditingWork({ wgId: wgRef.id, work: w });
+							},
 						},
 						{
 							icon: "🗑",
 							label: t.delete,
 							danger: true,
-							onClick: () =>
+							onClick: () => {
 								setConfirmDialog({
 									title: "ワークを削除",
 									message: `「${w.name}」を削除します。配下の ${w.trains?.length || 0} 列車も削除されます。`,
-									onConfirm: () =>
-										deleteWork(w.id),
-								}),
+									onConfirm: () => {
+										deleteWork(w.id);
+									},
+								});
+							},
 						},
 					],
-				})
-			}
+				});
+			}}
 			onExport={() => exportProject(projectId)}
 			t={t}
 		/>
@@ -1442,8 +1541,10 @@ export function App() {
 							void refetchProjects();
 						}}
 						onOpen={handleOpenProject}
-						onNew={() => setEditingProject({ new: true })}
-						onEdit={(p) =>
+						onNew={() => {
+							setEditingProject({ new: true });
+						}}
+						onEdit={(p) => {
 							setEditingProject({
 								project: {
 									id: p.id,
@@ -1451,15 +1552,17 @@ export function App() {
 									description: p.description,
 									workGroups: [],
 								},
-							})
-						}
-						onDelete={(p) =>
+							});
+						}}
+						onDelete={(p) => {
 							setConfirmDialog({
 								title: "プロジェクトを削除",
 								message: `「${p.name}」を削除します。配下の全ワークグループ・ワーク・列車も削除されます。`,
-								onConfirm: () => deleteProject(p),
-							})
-						}
+								onConfirm: () => {
+									deleteProject(p);
+								},
+							});
+						}}
 						onImport={importJson}
 						onExport={(pid) =>
 							pid !== undefined ? exportProject(pid) : exportAll()
@@ -1467,16 +1570,16 @@ export function App() {
 						t={t}
 					/>
 				)}
-				{projectId && screen === "work" && work && (
+				{projectId && screen === "work" && work ? (
 					<WorkBrowser
 						work={work}
 						onCreateTrain={handleCreateTrain}
 						onUpdateTrain={handleUpdateTrain}
 						onDeleteTrain={handleDeleteTrain}
 						onSelectTrain={setCurrentTrain}
-						onOpenStopPatternWizard={() =>
-							setShowStopPattern(true)
-						}
+						onOpenStopPatternWizard={() => {
+							setShowStopPattern(true);
+						}}
 						onApplyPattern={(args) => {
 							void handleApplyPattern(args);
 						}}
@@ -1493,32 +1596,36 @@ export function App() {
 						onDeleteRow={handleDeleteRow}
 						t={t}
 					/>
-				)}
-				{projectId && screen === "work" && !work && (
-					<div className="empty-state" style={{ padding: 60 }}>
+				) : null}
+				{projectId && screen === "work" && !work ? (
+					<div
+						className="empty-state"
+						style={{ padding: 60 }}>
 						<p>このワークグループにはワークがありません。</p>
-						{wg && (
+						{wg ? (
 							<button
 								className="btn btn-primary btn-sm"
-								onClick={() =>
+								onClick={() => {
 									setEditingWork({
 										wgId: wg.id,
 										new: true,
-									})
-								}>
+									});
+								}}>
 								＋ {t.newWork}
 							</button>
-						)}
-						{!wg && project && (
+						) : null}
+						{!wg && project ? (
 							<button
 								className="btn btn-primary btn-sm"
-								onClick={() => setEditingWG({ new: true })}>
+								onClick={() => {
+									setEditingWG({ new: true });
+								}}>
 								＋ {t.newWorkGroup}
 							</button>
-						)}
+						) : null}
 					</div>
-				)}
-				{projectId && screen === "lines" && (
+				) : null}
+				{projectId && screen === "lines" ? (
 					<LineManager
 						lines={modelLines}
 						stations={modelProjectStations}
@@ -1550,8 +1657,8 @@ export function App() {
 						}}
 						t={t}
 					/>
-				)}
-				{projectId && screen === "colors" && (
+				) : null}
+				{projectId && screen === "colors" ? (
 					<ColorManager
 						colors={apiColors ?? []}
 						onCreate={handleCreateColor}
@@ -1559,69 +1666,81 @@ export function App() {
 						onDelete={handleDeleteColor}
 						t={t}
 					/>
-				)}
+				) : null}
 			</AppShell>
 
 			{showStopPattern &&
-				(editingPattern === null || apiEditingRows !== undefined) && (
-					<StopPatternWizard
-						key={editingPattern?.id ?? "new"}
-						lines={modelLines}
-						stations={modelProjectStations}
-						stationsOnLine={modelAllStationsOnLine}
-						t={t}
-						editPattern={liveEditingPattern}
-						onSave={(sp) => {
-							void handleSaveStopPattern(sp);
-						}}
-						onClose={() => {
-							setShowStopPattern(false);
-							setEditingPattern(null);
-						}}
-					/>
-				)}
+			(editingPattern === null || apiEditingRows !== undefined) ? (
+				<StopPatternWizard
+					key={editingPattern?.id ?? "new"}
+					lines={modelLines}
+					stations={modelProjectStations}
+					stationsOnLine={modelAllStationsOnLine}
+					t={t}
+					editPattern={liveEditingPattern}
+					onSave={(sp) => {
+						void handleSaveStopPattern(sp);
+					}}
+					onClose={() => {
+						setShowStopPattern(false);
+						setEditingPattern(null);
+					}}
+				/>
+			) : null}
 
 			{/* Entity dialogs */}
-			{editingProject && (
+			{editingProject ? (
 				<ProjectDialog
 					project={editingProject.project}
 					onSave={saveProject}
-					onClose={() => setEditingProject(null)}
+					onClose={() => {
+						setEditingProject(null);
+					}}
 					t={t}
 				/>
-			)}
-			{editingWG && (
+			) : null}
+			{editingWG ? (
 				<WorkGroupDialog
 					workGroup={editingWG.wg}
 					onSave={saveWG}
-					onClose={() => setEditingWG(null)}
+					onClose={() => {
+						setEditingWG(null);
+					}}
 					t={t}
 				/>
-			)}
-			{editingWork && (
+			) : null}
+			{editingWork ? (
 				<WorkDialog
 					work={editingWork.work}
-					onSave={(draft) => saveWork(editingWork.wgId, draft)}
-					onClose={() => setEditingWork(null)}
+					onSave={(draft) => {
+						saveWork(editingWork.wgId, draft);
+					}}
+					onClose={() => {
+						setEditingWork(null);
+					}}
 					t={t}
 				/>
-			)}
-			{confirmDialog && (
+			) : null}
+			{confirmDialog ? (
 				<ConfirmDialog
 					title={confirmDialog.title}
 					message={confirmDialog.message}
 					onConfirm={confirmDialog.onConfirm}
-					onClose={() => setConfirmDialog(null)}
+					onClose={() => {
+						setConfirmDialog(null);
+					}}
 				/>
-			)}
-			{contextMenu && (
+			) : null}
+			{contextMenu ? (
 				<ContextMenu
 					x={contextMenu.x}
 					y={contextMenu.y}
 					items={contextMenu.items}
-					onClose={() => setContextMenu(null)}
+					onClose={() => {
+						setContextMenu(null);
+					}}
 				/>
-			)}
+			) : null}
 		</div>
 	);
-}
+};

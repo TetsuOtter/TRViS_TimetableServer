@@ -15,7 +15,9 @@ const SignInUpDialog = () => {
 		<div
 			className="modal-backdrop"
 			onClick={(e) => e.target === e.currentTarget && closeSignIn()}>
-			<div className="modal" style={{ maxWidth: 420 }}>
+			<div
+				className="modal"
+				style={{ maxWidth: 420 }}>
 				<div className="modal-header">
 					<span className="modal-title">{t.signInUp}</span>
 					<button

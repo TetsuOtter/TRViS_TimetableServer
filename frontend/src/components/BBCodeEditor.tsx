@@ -1,12 +1,6 @@
 // BBCodeEditor.tsx — Rich BBCode editor dialog + inline preview utilities
 // Supports: [b], [i], [u], [s], [color=], [size=], [font=]  (with =false cancel)
-import {
-	useState,
-	useRef,
-	useEffect,
-	useCallback,
-	Fragment,
-} from "react";
+import { useState, useRef, useEffect, useCallback, Fragment } from "react";
 import type { CSSProperties, ReactNode, RefObject } from "react";
 
 /* ─────────────────────────────────────────────────────────
@@ -39,11 +33,12 @@ function parseBBCode(text: string): Token[] {
 		});
 		last = m.index + m[0].length;
 	}
-	if (last < text.length) tokens.push({ type: "text", value: text.slice(last) });
+	if (last < text.length)
+		tokens.push({ type: "text", value: text.slice(last) });
 	return tokens;
 }
 
-interface BBStyleState {
+type BBStyleState = {
 	bold?: boolean;
 	italic?: boolean;
 	underline?: boolean;
@@ -51,14 +46,14 @@ interface BBStyleState {
 	color?: string;
 	size?: number;
 	font?: string;
-}
+};
 
-export interface BBCodePreviewProps {
-	value?: string;
-	style?: CSSProperties;
-}
+export type BBCodePreviewProps = {
+	readonly value?: string;
+	readonly style?: CSSProperties;
+};
 
-export function BBCodePreview({ value, style }: BBCodePreviewProps) {
+export const BBCodePreview = ({ value, style }: BBCodePreviewProps) => {
 	const tokens = parseBBCode(value || "");
 	// Walk tokens building a style stack
 	const stack: BBStyleState[] = [{}]; // each entry: {bold, italic, underline, strike, color, size, font}
@@ -87,12 +82,14 @@ export function BBCodePreview({ value, style }: BBCodePreviewProps) {
 			};
 			// Remove undefined keys
 			(Object.keys(css) as (keyof CSSProperties)[]).forEach(
-				(k) => css[k] === undefined && delete css[k],
+				(k) => css[k] === undefined && delete css[k]
 			);
 			parts.push(
-				<span key={ki++} style={css}>
+				<span
+					key={ki++}
+					style={css}>
 					{tok.value}
-				</span>,
+				</span>
 			);
 		} else {
 			const { close, name, attr } = tok;
@@ -117,22 +114,22 @@ export function BBCodePreview({ value, style }: BBCodePreviewProps) {
 			{parts.length ? parts : value || ""}
 		</span>
 	);
-}
+};
 
 /* ─────────────────────────────────────────────────────────
    2. Inline label — shows plain text with tags greyed out
 ──────────────────────────────────────────────────────────── */
-export interface BBCodeInlineLabelProps {
-	value?: string;
-	style?: CSSProperties;
-	emptyPlaceholder?: string;
-}
+export type BBCodeInlineLabelProps = {
+	readonly value?: string;
+	readonly style?: CSSProperties;
+	readonly emptyPlaceholder?: string;
+};
 
-export function BBCodeInlineLabel({
+export const BBCodeInlineLabel = ({
 	value,
 	style,
 	emptyPlaceholder = "—",
-}: BBCodeInlineLabelProps) {
+}: BBCodeInlineLabelProps) => {
 	if (!value)
 		return (
 			<span style={{ opacity: 0.35, fontStyle: "italic", ...style }}>
@@ -155,43 +152,70 @@ export function BBCodeInlineLabel({
 					color: "var(--color-accent)",
 					opacity: 0.55,
 					fontSize: "0.85em",
-				}}
-			>
+				}}>
 				{m[1]}
-			</span>,
+			</span>
 		);
 		last = m.index + m[0].length;
 	}
 	if (last < value.length)
 		parts.push(<span key={i++}>{value.slice(last)}</span>);
 	return <span style={{ whiteSpace: "pre-wrap", ...style }}>{parts}</span>;
-}
+};
 
 /* ─────────────────────────────────────────────────────────
    3. Tag insertion toolbar
 ──────────────────────────────────────────────────────────── */
-interface ToolbarButton {
+type ToolbarButton = {
 	label: string;
 	style: CSSProperties;
 	tag: string;
 	title: string;
 	noAttr: boolean;
-}
+};
 
 const TOOLBAR_BUTTONS: ToolbarButton[] = [
-	{ label: "B", style: { fontWeight: "bold" }, tag: "b", title: "太字", noAttr: true },
-	{ label: "I", style: { fontStyle: "italic" }, tag: "i", title: "斜体", noAttr: true },
-	{ label: "U", style: { textDecoration: "underline" }, tag: "u", title: "下線", noAttr: true },
-	{ label: "S", style: { textDecoration: "line-through" }, tag: "s", title: "取消線", noAttr: true },
+	{
+		label: "B",
+		style: { fontWeight: "bold" },
+		tag: "b",
+		title: "太字",
+		noAttr: true,
+	},
+	{
+		label: "I",
+		style: { fontStyle: "italic" },
+		tag: "i",
+		title: "斜体",
+		noAttr: true,
+	},
+	{
+		label: "U",
+		style: { textDecoration: "underline" },
+		tag: "u",
+		title: "下線",
+		noAttr: true,
+	},
+	{
+		label: "S",
+		style: { textDecoration: "line-through" },
+		tag: "s",
+		title: "取消線",
+		noAttr: true,
+	},
 ];
 
-interface BBCodeToolbarProps {
-	textareaRef: RefObject<HTMLTextAreaElement>;
-	value: string;
-	onChange: (v: string) => void;
-}
+type BBCodeToolbarProps = {
+	readonly textareaRef: RefObject<HTMLTextAreaElement | null>;
+	readonly value: string;
+	readonly onChange: (v: string) => void;
+};
 
-function BBCodeToolbar({ textareaRef, value, onChange }: BBCodeToolbarProps) {
+const BBCodeToolbar = ({
+	textareaRef,
+	value,
+	onChange,
+}: BBCodeToolbarProps) => {
 	const [colorPicker, setColorPicker] = useState(false);
 	const [colorVal, setColorVal] = useState("#e74c3c");
 	const [sizeVal, setSizeVal] = useState("14");
@@ -221,10 +245,12 @@ function BBCodeToolbar({ textareaRef, value, onChange }: BBCodeToolbarProps) {
 				el.setSelectionRange(cur, cur);
 			}, 0);
 		},
-		[textareaRef, value, onChange],
+		[textareaRef, value, onChange]
 	);
 
-	const insertSimple = (tag: string) => insertTag(`[${tag}]`, `[/${tag}]`);
+	const insertSimple = (tag: string) => {
+		insertTag(`[${tag}]`, `[/${tag}]`);
+	};
 	const insertColor = () => {
 		insertTag(`[color=${colorVal}]`, `[/color]`);
 		setColorPicker(false);
@@ -283,8 +309,7 @@ function BBCodeToolbar({ textareaRef, value, onChange }: BBCodeToolbarProps) {
 				borderBottom: "1px solid var(--color-border)",
 				background: "var(--color-bg)",
 				borderRadius: "var(--radius) var(--radius) 0 0",
-			}}
-		>
+			}}>
 			{TOOLBAR_BUTTONS.map((btn) => (
 				<button
 					key={btn.tag}
@@ -293,8 +318,7 @@ function BBCodeToolbar({ textareaRef, value, onChange }: BBCodeToolbarProps) {
 					onMouseDown={(e) => {
 						e.preventDefault();
 						insertSimple(btn.tag);
-					}}
-				>
+					}}>
 					{btn.label}
 				</button>
 			))}
@@ -318,8 +342,7 @@ function BBCodeToolbar({ textareaRef, value, onChange }: BBCodeToolbarProps) {
 						setColorPicker((v) => !v);
 						setShowSize(false);
 						setShowFont(false);
-					}}
-				>
+					}}>
 					<span
 						style={{
 							display: "inline-block",
@@ -333,7 +356,7 @@ function BBCodeToolbar({ textareaRef, value, onChange }: BBCodeToolbarProps) {
 					/>
 					色
 				</button>
-				{colorPicker && (
+				{colorPicker ? (
 					<div style={popBase}>
 						<label style={{ fontSize: 12, color: "var(--color-text-muted)" }}>
 							カラー (light)
@@ -342,7 +365,9 @@ function BBCodeToolbar({ textareaRef, value, onChange }: BBCodeToolbarProps) {
 							<input
 								type="color"
 								value={colorVal}
-								onChange={(e) => setColorVal(e.target.value)}
+								onChange={(e) => {
+									setColorVal(e.target.value);
+								}}
 								style={{
 									width: 36,
 									height: 28,
@@ -354,7 +379,9 @@ function BBCodeToolbar({ textareaRef, value, onChange }: BBCodeToolbarProps) {
 							/>
 							<input
 								value={colorVal}
-								onChange={(e) => setColorVal(e.target.value)}
+								onChange={(e) => {
+									setColorVal(e.target.value);
+								}}
 								style={{
 									flex: 1,
 									padding: "4px 6px",
@@ -412,12 +439,11 @@ function BBCodeToolbar({ textareaRef, value, onChange }: BBCodeToolbarProps) {
 							onMouseDown={(e) => {
 								e.preventDefault();
 								insertColor();
-							}}
-						>
+							}}>
 							挿入
 						</button>
 					</div>
-				)}
+				) : null}
 			</div>
 
 			{/* Size */}
@@ -430,11 +456,10 @@ function BBCodeToolbar({ textareaRef, value, onChange }: BBCodeToolbarProps) {
 						setShowSize((v) => !v);
 						setColorPicker(false);
 						setShowFont(false);
-					}}
-				>
+					}}>
 					サイズ
 				</button>
-				{showSize && (
+				{showSize ? (
 					<div style={popBase}>
 						<label style={{ fontSize: 12, color: "var(--color-text-muted)" }}>
 							フォントサイズ (px)
@@ -457,8 +482,7 @@ function BBCodeToolbar({ textareaRef, value, onChange }: BBCodeToolbarProps) {
 											sizeVal === String(s)
 												? "var(--color-accent)"
 												: "var(--color-text)",
-									}}
-								>
+									}}>
 									{s}
 								</button>
 							))}
@@ -466,7 +490,9 @@ function BBCodeToolbar({ textareaRef, value, onChange }: BBCodeToolbarProps) {
 						<input
 							type="number"
 							value={sizeVal}
-							onChange={(e) => setSizeVal(e.target.value)}
+							onChange={(e) => {
+								setSizeVal(e.target.value);
+							}}
 							min={6}
 							max={72}
 							style={{
@@ -491,12 +517,11 @@ function BBCodeToolbar({ textareaRef, value, onChange }: BBCodeToolbarProps) {
 							onMouseDown={(e) => {
 								e.preventDefault();
 								insertSize();
-							}}
-						>
+							}}>
 							挿入
 						</button>
 					</div>
-				)}
+				) : null}
 			</div>
 
 			{/* Font */}
@@ -509,46 +534,50 @@ function BBCodeToolbar({ textareaRef, value, onChange }: BBCodeToolbarProps) {
 						setShowFont((v) => !v);
 						setColorPicker(false);
 						setShowSize(false);
-					}}
-				>
+					}}>
 					フォント
 				</button>
-				{showFont && (
+				{showFont ? (
 					<div style={popBase}>
 						<label style={{ fontSize: 12, color: "var(--color-text-muted)" }}>
 							フォントファミリー
 						</label>
 						<div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
-							{["Meiryo", "Yu Gothic", "MS Gothic", "Arial", "Times New Roman"].map(
-								(f) => (
-									<button
-										key={f}
-										onMouseDown={(e) => {
-											e.preventDefault();
-											setFontVal(f);
-										}}
-										style={{
-											...btnBase,
-											fontFamily: f,
-											background:
-												fontVal === f
-													? "var(--color-accent-bg)"
-													: "var(--color-bg)",
-											color:
-												fontVal === f
-													? "var(--color-accent)"
-													: "var(--color-text)",
-											fontSize: 12,
-										}}
-									>
-										{f}
-									</button>
-								),
-							)}
+							{[
+								"Meiryo",
+								"Yu Gothic",
+								"MS Gothic",
+								"Arial",
+								"Times New Roman",
+							].map((f) => (
+								<button
+									key={f}
+									onMouseDown={(e) => {
+										e.preventDefault();
+										setFontVal(f);
+									}}
+									style={{
+										...btnBase,
+										fontFamily: f,
+										background:
+											fontVal === f
+												? "var(--color-accent-bg)"
+												: "var(--color-bg)",
+										color:
+											fontVal === f
+												? "var(--color-accent)"
+												: "var(--color-text)",
+										fontSize: 12,
+									}}>
+									{f}
+								</button>
+							))}
 						</div>
 						<input
 							value={fontVal}
-							onChange={(e) => setFontVal(e.target.value)}
+							onChange={(e) => {
+								setFontVal(e.target.value);
+							}}
 							placeholder="フォント名を入力"
 							style={{
 								padding: "4px 6px",
@@ -572,12 +601,11 @@ function BBCodeToolbar({ textareaRef, value, onChange }: BBCodeToolbarProps) {
 							onMouseDown={(e) => {
 								e.preventDefault();
 								insertFont();
-							}}
-						>
+							}}>
 							挿入
 						</button>
 					</div>
-				)}
+				) : null}
 			</div>
 
 			<div style={{ flex: 1 }} />
@@ -589,34 +617,33 @@ function BBCodeToolbar({ textareaRef, value, onChange }: BBCodeToolbarProps) {
 				onMouseDown={(e) => {
 					e.preventDefault();
 					onChange(value.replace(/\[[^\]]*\]/g, ""));
-				}}
-			>
+				}}>
 				タグ削除
 			</button>
 		</div>
 	);
-}
+};
 
 /* ─────────────────────────────────────────────────────────
    4. Full BBCode Editor Dialog
 ──────────────────────────────────────────────────────────── */
 type EditorTab = "edit" | "preview" | "split";
 
-export interface BBCodeEditorDialogProps {
-	title: string;
-	value: string;
-	onSave: (v: string) => void;
-	onClose: () => void;
-	multiline?: boolean;
-}
+export type BBCodeEditorDialogProps = {
+	readonly title: string;
+	readonly value: string;
+	readonly onSave: (v: string) => void;
+	readonly onClose: () => void;
+	readonly multiline?: boolean;
+};
 
-export function BBCodeEditorDialog({
+export const BBCodeEditorDialog = ({
 	title,
 	value,
 	onSave,
 	onClose,
 	multiline = true,
-}: BBCodeEditorDialogProps) {
+}: BBCodeEditorDialogProps) => {
 	const [draft, setDraft] = useState(value || "");
 	const [tab, setTab] = useState<EditorTab>("edit"); // 'edit' | 'preview' | 'split'
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -627,12 +654,16 @@ export function BBCodeEditorDialog({
 			if (e.key === "Escape") onClose();
 		};
 		window.addEventListener("keydown", handler);
-		return () => window.removeEventListener("keydown", handler);
+		return () => {
+			window.removeEventListener("keydown", handler);
+		};
 	}, [onClose]);
 
 	const tabBtn = (id: EditorTab, label: string) => (
 		<button
-			onClick={() => setTab(id)}
+			onClick={() => {
+				setTab(id);
+			}}
 			style={{
 				padding: "4px 12px",
 				fontSize: 12,
@@ -642,8 +673,7 @@ export function BBCodeEditorDialog({
 				background: tab === id ? "var(--color-accent)" : "transparent",
 				color: tab === id ? "#fff" : "var(--color-text-muted)",
 				fontWeight: tab === id ? 600 : 400,
-			}}
-		>
+			}}>
 			{label}
 		</button>
 	);
@@ -677,8 +707,7 @@ export function BBCodeEditorDialog({
 	return (
 		<div
 			className="modal-backdrop"
-			onClick={(e) => e.target === e.currentTarget && onClose()}
-		>
+			onClick={(e) => e.target === e.currentTarget && onClose()}>
 			<div
 				className="modal"
 				style={{
@@ -687,12 +716,13 @@ export function BBCodeEditorDialog({
 					display: "flex",
 					flexDirection: "column",
 					maxHeight: "85vh",
-				}}
-			>
+				}}>
 				{/* Header */}
 				<div className="modal-header">
 					<span className="modal-title">✏️ {title}</span>
-					<button className="btn btn-ghost btn-sm" onClick={onClose}>
+					<button
+						className="btn btn-ghost btn-sm"
+						onClick={onClose}>
 						✕
 					</button>
 				</div>
@@ -706,8 +736,7 @@ export function BBCodeEditorDialog({
 						padding: "6px 12px",
 						borderBottom: "1px solid var(--color-border)",
 						background: "var(--color-bg)",
-					}}
-				>
+					}}>
 					{tabBtn("edit", "編集")}
 					{tabBtn("preview", "プレビュー")}
 					{tabBtn("split", "分割")}
@@ -726,8 +755,7 @@ export function BBCodeEditorDialog({
 						overflow: "hidden",
 						display: "flex",
 						flexDirection: "column",
-					}}
-				>
+					}}>
 					{/* Edit only */}
 					{tab === "edit" && (
 						<div
@@ -736,8 +764,7 @@ export function BBCodeEditorDialog({
 								flexDirection: "column",
 								flex: 1,
 								overflow: "hidden",
-							}}
-						>
+							}}>
 							<BBCodeToolbar
 								textareaRef={textareaRef}
 								value={draft}
@@ -746,7 +773,9 @@ export function BBCodeEditorDialog({
 							<textarea
 								ref={textareaRef}
 								value={draft}
-								onChange={(e) => setDraft(e.target.value)}
+								onChange={(e) => {
+									setDraft(e.target.value);
+								}}
 								rows={multiline ? 8 : 2}
 								style={{
 									...sharedTextareaStyle,
@@ -773,8 +802,7 @@ export function BBCodeEditorDialog({
 					{/* Split */}
 					{tab === "split" && (
 						<div
-							style={{ display: "flex", flex: 1, overflow: "hidden", gap: 0 }}
-						>
+							style={{ display: "flex", flex: 1, overflow: "hidden", gap: 0 }}>
 							<div
 								style={{
 									flex: 1,
@@ -782,8 +810,7 @@ export function BBCodeEditorDialog({
 									flexDirection: "column",
 									overflow: "hidden",
 									borderRight: "1px solid var(--color-border)",
-								}}
-							>
+								}}>
 								<BBCodeToolbar
 									textareaRef={textareaRef}
 									value={draft}
@@ -792,7 +819,9 @@ export function BBCodeEditorDialog({
 								<textarea
 									ref={textareaRef}
 									value={draft}
-									onChange={(e) => setDraft(e.target.value)}
+									onChange={(e) => {
+										setDraft(e.target.value);
+									}}
 									style={{
 										...sharedTextareaStyle,
 										minHeight: 160,
@@ -809,8 +838,7 @@ export function BBCodeEditorDialog({
 									background: "var(--color-bg)",
 									fontSize: 14,
 									lineHeight: 1.8,
-								}}
-							>
+								}}>
 								<div
 									style={{
 										fontSize: 10,
@@ -818,8 +846,7 @@ export function BBCodeEditorDialog({
 										marginBottom: 6,
 										fontWeight: 600,
 										letterSpacing: "0.05em",
-									}}
-								>
+									}}>
 									プレビュー
 								</div>
 								{draft ? (
@@ -830,8 +857,7 @@ export function BBCodeEditorDialog({
 											opacity: 0.35,
 											fontStyle: "italic",
 											fontSize: 13,
-										}}
-									>
+										}}>
 										（内容なし）
 									</span>
 								)}
@@ -847,8 +873,7 @@ export function BBCodeEditorDialog({
 							fontSize: 11,
 							color: "var(--color-text-muted)",
 							flex: 1,
-						}}
-					>
+						}}>
 						{draft.length} 文字
 						{/\[[^\]]*\]/.test(draft) && (
 							<span
@@ -856,13 +881,14 @@ export function BBCodeEditorDialog({
 									marginLeft: 8,
 									color: "var(--color-accent)",
 									fontWeight: 500,
-								}}
-							>
+								}}>
 								• BBコード使用中
 							</span>
 						)}
 					</span>
-					<button className="btn btn-secondary" onClick={onClose}>
+					<button
+						className="btn btn-secondary"
+						onClick={onClose}>
 						キャンセル
 					</button>
 					<button
@@ -870,25 +896,24 @@ export function BBCodeEditorDialog({
 						onClick={() => {
 							onSave(draft);
 							onClose();
-						}}
-					>
+						}}>
 						保存
 					</button>
 				</div>
 			</div>
 		</div>
 	);
-}
+};
 
 /* ─────────────────────────────────────────────────────────
    5. Convenience hook: open BBCode editor
 ──────────────────────────────────────────────────────────── */
-interface BBCodeEditorState {
+type BBCodeEditorState = {
 	title: string;
 	value: string;
 	multiline: boolean;
 	onSave: (v: string) => void;
-}
+};
 
 export function useBBCodeEditor() {
 	const [state, setState] = useState<BBCodeEditorState | null>(null); // {title, value, multiline, onSave}
@@ -897,13 +922,15 @@ export function useBBCodeEditor() {
 			title: string,
 			value: string,
 			onSave: (v: string) => void,
-			multiline = true,
+			multiline = true
 		) => {
 			setState({ title, value, onSave, multiline });
 		},
-		[],
+		[]
 	);
-	const close = useCallback(() => setState(null), []);
+	const close = useCallback(() => {
+		setState(null);
+	}, []);
 	const dialog = state ? (
 		<BBCodeEditorDialog
 			title={state.title}
@@ -919,17 +946,17 @@ export function useBBCodeEditor() {
 /* ─────────────────────────────────────────────────────────
    6. BBCode-aware input field (inline textarea + edit button)
 ──────────────────────────────────────────────────────────── */
-export interface BBCodeFieldProps {
-	label?: string;
-	value: string;
-	onChange: (v: string) => void;
-	placeholder?: string;
-	multiline?: boolean;
-	rows?: number;
-	fieldStyle?: CSSProperties;
-}
+export type BBCodeFieldProps = {
+	readonly label?: string;
+	readonly value: string;
+	readonly onChange: (v: string) => void;
+	readonly placeholder?: string;
+	readonly multiline?: boolean;
+	readonly rows?: number;
+	readonly fieldStyle?: CSSProperties;
+};
 
-export function BBCodeField({
+export const BBCodeField = ({
 	label,
 	value,
 	onChange,
@@ -937,16 +964,18 @@ export function BBCodeField({
 	multiline = false,
 	rows = 2,
 	fieldStyle,
-}: BBCodeFieldProps) {
+}: BBCodeFieldProps) => {
 	const { open, dialog } = useBBCodeEditor();
 	const hasBB = /\[[^\]]*\]/.test(value || "");
 
 	return (
-		<div className="field" style={fieldStyle}>
-			{label && (
+		<div
+			className="field"
+			style={fieldStyle}>
+			{label ? (
 				<label style={{ display: "flex", alignItems: "center", gap: 4 }}>
 					{label}
-					{hasBB && (
+					{hasBB ? (
 						<span
 							style={{
 								fontSize: 10,
@@ -955,15 +984,16 @@ export function BBCodeField({
 								background: "var(--color-accent-bg)",
 								color: "var(--color-accent)",
 								fontWeight: 600,
-							}}
-						>
+							}}>
 							BB
 						</span>
-					)}
+					) : null}
 					<button
 						type="button"
 						title="リッチエディタで編集"
-						onClick={() => open(label, value, onChange, multiline)}
+						onClick={() => {
+							open(label, value, onChange, multiline);
+						}}
 						style={{
 							marginLeft: "auto",
 							padding: "1px 7px",
@@ -976,16 +1006,17 @@ export function BBCodeField({
 							display: "flex",
 							alignItems: "center",
 							gap: 3,
-						}}
-					>
+						}}>
 						✏️ リッチ編集
 					</button>
 				</label>
-			)}
+			) : null}
 			{multiline ? (
 				<textarea
 					value={value || ""}
-					onChange={(e) => onChange(e.target.value)}
+					onChange={(e) => {
+						onChange(e.target.value);
+					}}
 					rows={rows}
 					placeholder={placeholder}
 					style={{
@@ -1005,7 +1036,9 @@ export function BBCodeField({
 			) : (
 				<input
 					value={value || ""}
-					onChange={(e) => onChange(e.target.value)}
+					onChange={(e) => {
+						onChange(e.target.value);
+					}}
 					placeholder={placeholder}
 					style={{ width: "100%" }}
 				/>
@@ -1013,32 +1046,34 @@ export function BBCodeField({
 			{dialog}
 		</div>
 	);
-}
+};
 
 /* ─────────────────────────────────────────────────────────
    7. Compact BBCode trigger button (for table cells, etc.)
 ──────────────────────────────────────────────────────────── */
-export interface BBCodeEditButtonProps {
-	title?: string;
-	value: string;
-	onChange: (v: string) => void;
-	multiline?: boolean;
-}
+export type BBCodeEditButtonProps = {
+	readonly title?: string;
+	readonly value: string;
+	readonly onChange: (v: string) => void;
+	readonly multiline?: boolean;
+};
 
-export function BBCodeEditButton({
+export const BBCodeEditButton = ({
 	title,
 	value,
 	onChange,
 	multiline = false,
-}: BBCodeEditButtonProps) {
+}: BBCodeEditButtonProps) => {
 	const { open, dialog } = useBBCodeEditor();
 	const hasBB = /\[[^\]]*\]/.test(value || "");
 	return (
-		<Fragment>
+		<>
 			<button
 				type="button"
 				title={`BBコードエディタで編集: ${title}`}
-				onClick={() => open(title ?? "", value, onChange, multiline)}
+				onClick={() => {
+					open(title ?? "", value, onChange, multiline);
+				}}
 				style={{
 					padding: "2px 5px",
 					fontSize: 10,
@@ -1050,11 +1085,10 @@ export function BBCodeEditButton({
 					flexShrink: 0,
 					lineHeight: 1.4,
 					whiteSpace: "nowrap",
-				}}
-			>
+				}}>
 				{hasBB ? "BB✓" : "BB"}
 			</button>
 			{dialog}
-		</Fragment>
+		</>
 	);
-}
+};

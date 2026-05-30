@@ -12,8 +12,8 @@ import {
 	useUpdateStationTrack,
 } from "../api/hooks/useStationTracks";
 
-import type { StationTrack } from "../types/entities";
 import type { Strings } from "../i18n/strings";
+import type { StationTrack } from "../types/entities";
 
 type TrackDraft = Omit<StationTrack, "id" | "stationId" | "createdAt">;
 
@@ -24,19 +24,19 @@ const EMPTY: TrackDraft = {
 	runOutLimit: undefined,
 };
 
-interface StationTrackManagerProps {
-	stationId: string;
-	stationName: string;
-	onClose: () => void;
-	t: Strings;
-}
+type StationTrackManagerProps = {
+	readonly stationId: string;
+	readonly stationName: string;
+	readonly onClose: () => void;
+	readonly t: Strings;
+};
 
-export function StationTrackManager({
+export const StationTrackManager = ({
 	stationId,
 	stationName,
 	onClose,
 	t,
-}: StationTrackManagerProps) {
+}: StationTrackManagerProps) => {
 	const { data: tracks, isLoading } = useStationTracks(stationId);
 	const createMut = useCreateStationTrack(stationId);
 	const updateMut = useUpdateStationTrack(stationId);
@@ -64,26 +64,36 @@ export function StationTrackManager({
 	};
 	const save = () => {
 		if (draft.name.trim() === "") return;
-		const onError = (e: Error) => alert(e.message);
+		const onError = (e: Error) => {
+			alert(e.message);
+		};
 		if (editingId === "new") {
 			createMut.mutate(draft, { onError, onSuccess: cancel });
 		} else if (editingId !== null) {
-			updateMut.mutate({ id: editingId, ...draft }, { onError, onSuccess: cancel });
+			updateMut.mutate(
+				{ id: editingId, ...draft },
+				{ onError, onSuccess: cancel }
+			);
 		}
 	};
-	const set = <K extends keyof TrackDraft>(k: K, v: TrackDraft[K]) =>
+	const set = <K extends keyof TrackDraft>(k: K, v: TrackDraft[K]) => {
 		setDraft((p) => ({ ...p, [k]: v }));
+	};
 
 	return (
 		<div
 			className="modal-backdrop"
 			onClick={(e) => e.target === e.currentTarget && onClose()}>
-			<div className="modal" style={{ maxWidth: 520 }}>
+			<div
+				className="modal"
+				style={{ maxWidth: 520 }}>
 				<div className="modal-header">
 					<span className="modal-title">
 						🛤 {t.trackManager} — {stationName}
 					</span>
-					<button className="btn btn-ghost btn-sm" onClick={onClose}>
+					<button
+						className="btn btn-ghost btn-sm"
+						onClick={onClose}>
 						✕
 					</button>
 				</div>
@@ -107,7 +117,9 @@ export function StationTrackManager({
 										autoFocus
 										value={draft.name}
 										placeholder="1 / 上2 ..."
-										onChange={(e) => set("name", e.target.value)}
+										onChange={(e) => {
+											set("name", e.target.value);
+										}}
 										style={inputStyle}
 									/>
 								</label>
@@ -117,14 +129,14 @@ export function StationTrackManager({
 										type="number"
 										min={0}
 										value={draft.runInLimit ?? ""}
-										onChange={(e) =>
+										onChange={(e) => {
 											set(
 												"runInLimit",
 												e.target.value === ""
 													? undefined
 													: Number(e.target.value)
-											)
-										}
+											);
+										}}
 										style={inputStyle}
 									/>
 								</label>
@@ -134,14 +146,14 @@ export function StationTrackManager({
 										type="number"
 										min={0}
 										value={draft.runOutLimit ?? ""}
-										onChange={(e) =>
+										onChange={(e) => {
 											set(
 												"runOutLimit",
 												e.target.value === ""
 													? undefined
 													: Number(e.target.value)
-											)
-										}
+											);
+										}}
 										style={inputStyle}
 									/>
 								</label>
@@ -150,7 +162,9 @@ export function StationTrackManager({
 								<div style={labelStyle}>{t.description}</div>
 								<input
 									value={draft.description}
-									onChange={(e) => set("description", e.target.value)}
+									onChange={(e) => {
+										set("description", e.target.value);
+									}}
 									style={inputStyle}
 								/>
 							</label>
@@ -160,7 +174,9 @@ export function StationTrackManager({
 									gap: 8,
 									justifyContent: "flex-end",
 								}}>
-								<button className="btn btn-ghost btn-sm" onClick={cancel}>
+								<button
+									className="btn btn-ghost btn-sm"
+									onClick={cancel}>
 									{t.cancel}
 								</button>
 								<button
@@ -203,7 +219,7 @@ export function StationTrackManager({
 									}}>
 									<div style={{ flex: 1, minWidth: 0 }}>
 										<span style={{ fontWeight: 500 }}>{tr.name}</span>
-										{tr.description && (
+										{tr.description ? (
 											<span
 												style={{
 													marginLeft: 8,
@@ -212,7 +228,7 @@ export function StationTrackManager({
 												}}>
 												{tr.description}
 											</span>
-										)}
+										) : null}
 									</div>
 									{(tr.runInLimit != null || tr.runOutLimit != null) && (
 										<span
@@ -226,17 +242,21 @@ export function StationTrackManager({
 									)}
 									<button
 										className="btn btn-ghost btn-sm"
-										onClick={() => startEdit(tr)}>
+										onClick={() => {
+											startEdit(tr);
+										}}>
 										{t.edit}
 									</button>
 									<button
 										className="btn btn-ghost btn-sm"
 										style={{ color: "var(--color-danger)" }}
-										onClick={() =>
+										onClick={() => {
 											deleteMut.mutate(tr.id, {
-												onError: (e: Error) => alert(e.message),
-											})
-										}>
+												onError: (e: Error) => {
+													alert(e.message);
+												},
+											});
+										}}>
 										🗑
 									</button>
 								</div>
@@ -256,7 +276,7 @@ export function StationTrackManager({
 			</div>
 		</div>
 	);
-}
+};
 
 const labelStyle: React.CSSProperties = {
 	fontSize: 12,

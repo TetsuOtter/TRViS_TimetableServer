@@ -2,7 +2,10 @@
 // Ported 1:1 from the design prototype ApplyPatternDialog.jsx.
 import { useState, useMemo, Fragment } from "react";
 import type { CSSProperties } from "react";
+
 import { TRViSTime } from "../lib/timeUtils";
+
+import type { Strings } from "../i18n/strings";
 import type {
 	Line,
 	Station,
@@ -13,7 +16,6 @@ import type {
 	TimetableRow,
 	Direction,
 } from "../types/model";
-import type { Strings } from "../i18n/strings";
 
 /* ── Time helpers (use TRViSTime) ────────────────────────────────────────── */
 const toSec = (s: string | null | undefined): number | null =>
@@ -22,7 +24,7 @@ const fmtSec = (s: number | null | undefined): string =>
 	TRViSTime.fromSeconds(s);
 
 /* A flattened, computed timetable row built from a chain of patterns. */
-interface ChainRow {
+type ChainRow = {
 	stationId: string;
 	stationName: string;
 	fullName: string;
@@ -35,12 +37,12 @@ interface ChainRow {
 	driveTime_SS: number;
 	dwellTime_MM: number;
 	dwellTime_SS: number;
-}
+};
 
-interface PreviewRow extends ChainRow {
+type PreviewRow = {
 	arrive: string;
 	departure: string;
-}
+} & ChainRow;
 
 type ApplyMode = "new" | "replace" | "append" | "prepend";
 
@@ -54,24 +56,21 @@ function patternStations(
 	stationsOnLine: StationOnLine[]
 ): ChainRow[] {
 	const lineSols = stationsOnLine
-		.filter(sol => sol.lineId === pattern.lineId)
+		.filter((sol) => sol.lineId === pattern.lineId)
 		.sort((a, b) => (a.location_m || 0) - (b.location_m || 0));
 	const lineEntries = lineSols
-		.map(sol => ({
+		.map((sol) => ({
 			sol,
-			station: stations.find(s => s.id === sol.stationId),
+			station: stations.find((s) => s.id === sol.stationId),
 		}))
-		.filter(
-			(x): x is { sol: StationOnLine; station: Station } =>
-				Boolean(x.station)
+		.filter((x): x is { sol: StationOnLine; station: Station } =>
+			Boolean(x.station)
 		);
 
 	const fi = lineEntries.findIndex(
-		x => x.station.id === pattern.fromStationId
+		(x) => x.station.id === pattern.fromStationId
 	);
-	const ti = lineEntries.findIndex(
-		x => x.station.id === pattern.toStationId
-	);
+	const ti = lineEntries.findIndex((x) => x.station.id === pattern.toStationId);
 	if (fi < 0 || ti < 0 || fi === ti) return [];
 	const ordered =
 		fi < ti
@@ -80,7 +79,7 @@ function patternStations(
 
 	return ordered.map(({ sol, station: st }) => {
 		const row: Partial<StopPatternRow> =
-			(pattern.stopRows || []).find(r => r.stationId === st.id) || {};
+			(pattern.stopRows || []).find((r) => r.stationId === st.id) || {};
 		return {
 			stationId: st.id,
 			stationName: st.stationName,
@@ -118,9 +117,7 @@ function buildChain(
 			const last = result[result.length - 1];
 			// skip first row of new segment if it matches last row of current chain
 			result.push(
-				...(first && last && first.stationId === last.stationId
-					? rows.slice(1)
-					: rows)
+				...(first && first.stationId === last?.stationId ? rows.slice(1) : rows)
 			);
 		}
 	}
@@ -169,8 +166,7 @@ function computeTimes(
 				});
 				curDepSec = arrSec;
 			} else {
-				const effectiveDwell =
-					junctionSec != null ? junctionSec : dwellSec;
+				const effectiveDwell = junctionSec != null ? junctionSec : dwellSec;
 				const depSec = arrSec + effectiveDwell;
 				result.push({
 					...row,
@@ -185,23 +181,23 @@ function computeTimes(
 }
 
 /* ── Small number input ───────────────────────────────────────────────────── */
-interface NumInputProps {
-	value: number;
-	onChange: (v: number) => void;
-	min?: number;
-	max?: number;
-	disabled?: boolean;
-	style?: CSSProperties;
-}
+type NumInputProps = {
+	readonly value: number;
+	readonly onChange: (v: number) => void;
+	readonly min?: number;
+	readonly max?: number;
+	readonly disabled?: boolean;
+	readonly style?: CSSProperties;
+};
 
-function NumInput({
+const NumInput = ({
 	value,
 	onChange,
 	min = 0,
 	max = 999,
 	disabled,
 	style,
-}: NumInputProps) {
+}: NumInputProps) => {
 	return (
 		<input
 			type="number"
@@ -209,41 +205,35 @@ function NumInput({
 			min={min}
 			max={max}
 			disabled={disabled}
-			onChange={e => onChange(+e.target.value)}
+			onChange={(e) => {
+				onChange(+e.target.value);
+			}}
 			style={{
 				width: "100%",
 				textAlign: "center",
 				border: "1px solid var(--color-border)",
 				borderRadius: 3,
 				padding: "2px 4px",
-				background: disabled
-					? "var(--color-bg)"
-					: "var(--color-content)",
-				color: disabled
-					? "var(--color-text-muted)"
-					: "var(--color-text)",
+				background: disabled ? "var(--color-bg)" : "var(--color-content)",
+				color: disabled ? "var(--color-text-muted)" : "var(--color-text)",
 				fontFamily: "var(--font-mono)",
 				fontSize: 12,
 				...style,
 			}}
 		/>
 	);
-}
+};
 
 /* ── Pattern chip (in chain) ─────────────────────────────────────────────── */
-interface PatternChipProps {
-	pattern: StopPattern;
-	stations: Station[];
-	onRemove: () => void;
-}
+type PatternChipProps = {
+	readonly pattern: StopPattern;
+	readonly stations: Station[];
+	readonly onRemove: () => void;
+};
 
-function PatternChip({
-	pattern,
-	stations,
-	onRemove,
-}: PatternChipProps) {
-	const fromSt = stations.find(s => s.id === pattern.fromStationId);
-	const toSt = stations.find(s => s.id === pattern.toStationId);
+const PatternChip = ({ pattern, stations, onRemove }: PatternChipProps) => {
+	const fromSt = stations.find((s) => s.id === pattern.fromStationId);
+	const toSt = stations.find((s) => s.id === pattern.toStationId);
 	return (
 		<div
 			style={{
@@ -257,14 +247,12 @@ function PatternChip({
 				fontSize: 12,
 				flexShrink: 0,
 				whiteSpace: "nowrap",
-			}}
-		>
+			}}>
 			<span
 				style={{
 					color: "var(--color-accent)",
 					fontWeight: 600,
-				}}
-			>
+				}}>
 				{pattern.name || "(無名)"}
 			</span>
 			<span style={{ color: "var(--color-text-muted)" }}>
@@ -281,33 +269,32 @@ function PatternChip({
 					fontSize: 13,
 					padding: "0 2px",
 					lineHeight: 1,
-				}}
-			>
+				}}>
 				✕
 			</button>
 		</div>
 	);
-}
+};
 
 /* ── Main dialog ─────────────────────────────────────────────────────────── */
 // mode: 'new' | 'prepend' | 'append' | 'replace'
-export interface ApplyPatternDialogProps {
-	stopPatterns: StopPattern[];
-	stations: Station[];
-	stationsOnLine: StationOnLine[];
-	lines: Line[];
-	t: Strings;
-	existingTrain: Train | null;
-	onApply: (r: {
+export type ApplyPatternDialogProps = {
+	readonly stopPatterns: StopPattern[];
+	readonly stations: Station[];
+	readonly stationsOnLine: StationOnLine[];
+	readonly lines: Line[];
+	readonly t: Strings;
+	readonly existingTrain: Train | null;
+	readonly onApply: (r: {
 		rows: AppliedRow[];
 		direction: Direction;
 		destination: string;
 		mode?: "replace" | "append" | "prepend";
 	}) => void;
-	onClose: () => void;
-}
+	readonly onClose: () => void;
+};
 
-export function ApplyPatternDialog({
+export const ApplyPatternDialog = ({
 	stopPatterns,
 	stations,
 	stationsOnLine,
@@ -316,46 +303,46 @@ export function ApplyPatternDialog({
 	onClose,
 	t,
 	existingTrain,
-}: ApplyPatternDialogProps) {
+}: ApplyPatternDialogProps) => {
 	const [chain, setChain] = useState<string[]>([]);
 	const [startDep, setStartDep] = useState("09:00:00");
 	const [filterLineId, setFilterLine] = useState("");
-	const [junctionDwells, setJDwells] = useState<
-		Record<string, number>
-	>({}); // stationId → seconds
+	const [junctionDwells, setJDwells] = useState<Record<string, number>>({}); // stationId → seconds
 	const [applyMode, setApplyMode] = useState<ApplyMode>(
 		existingTrain ? "replace" : "new"
 	);
 
 	const addPattern = (id: string) => {
-		if (!chain.includes(id)) setChain(c => [...c, id]);
+		if (!chain.includes(id)) setChain((c) => [...c, id]);
 	};
-	const removePattern = (idx: number) =>
-		setChain(c => c.filter((_, i) => i !== idx));
+	const removePattern = (idx: number) => {
+		setChain((c) => c.filter((_, i) => i !== idx));
+	};
 	const moveUp = (idx: number) => {
 		if (idx === 0) return;
-		setChain(c => {
+		setChain((c) => {
 			const n = [...c];
-			const a = n[idx - 1] as string;
-			const b = n[idx] as string;
+			const a = n[idx - 1]!;
+			const b = n[idx]!;
 			n[idx - 1] = b;
 			n[idx] = a;
 			return n;
 		});
 	};
-	const moveDown = (idx: number) =>
-		setChain(c => {
+	const moveDown = (idx: number) => {
+		setChain((c) => {
 			if (idx >= c.length - 1) return c;
 			const n = [...c];
-			const a = n[idx] as string;
-			const b = n[idx + 1] as string;
+			const a = n[idx]!;
+			const b = n[idx + 1]!;
 			n[idx] = b;
 			n[idx + 1] = a;
 			return n;
 		});
+	};
 
 	const chainPatterns = chain
-		.map(id => stopPatterns.find(p => p.id === id))
+		.map((id) => stopPatterns.find((p) => p.id === id))
 		.filter((p): p is StopPattern => Boolean(p));
 
 	// Detect boundary stations (last of pattern[i] = first of pattern[i+1])
@@ -373,8 +360,7 @@ export function ApplyPatternDialog({
 				aRows.length &&
 				bRows.length &&
 				aLast &&
-				bFirst &&
-				aLast.stationId === bFirst.stationId
+				aLast.stationId === bFirst?.stationId
 			) {
 				ids.add(aLast.stationId);
 			}
@@ -401,7 +387,7 @@ export function ApplyPatternDialog({
 	);
 
 	const availablePatterns = stopPatterns.filter(
-		p => !filterLineId || p.lineId === filterLineId
+		(p) => !filterLineId || p.lineId === filterLineId
 	);
 
 	// Infer direction from first pattern
@@ -409,15 +395,13 @@ export function ApplyPatternDialog({
 		const firstP = chainPatterns[0];
 		if (!firstP) return 1;
 		const lineSols = stationsOnLine
-			.filter(sol => sol.lineId === firstP.lineId)
-			.sort(
-				(a, b) => (a.location_m || 0) - (b.location_m || 0)
-			);
+			.filter((sol) => sol.lineId === firstP.lineId)
+			.sort((a, b) => (a.location_m || 0) - (b.location_m || 0));
 		const ls = lineSols
-			.map(sol => stations.find(s => s.id === sol.stationId))
+			.map((sol) => stations.find((s) => s.id === sol.stationId))
 			.filter((s): s is Station => Boolean(s));
-		const fi = ls.findIndex(s => s.id === firstP.fromStationId);
-		const ti = ls.findIndex(s => s.id === firstP.toStationId);
+		const fi = ls.findIndex((s) => s.id === firstP.fromStationId);
+		const ti = ls.findIndex((s) => s.id === firstP.toStationId);
 		return fi >= 0 && ti >= 0 ? (fi < ti ? 1 : -1) : 1;
 	};
 
@@ -449,8 +433,7 @@ export function ApplyPatternDialog({
 			return tr;
 		});
 		const direction = inferDirection();
-		const destination =
-			previewRows[previewRows.length - 1]?.stationName || "";
+		const destination = previewRows[previewRows.length - 1]?.stationName || "";
 		const result: {
 			rows: AppliedRow[];
 			direction: Direction;
@@ -462,14 +445,14 @@ export function ApplyPatternDialog({
 		onClose();
 	};
 
-	const setJD = (stationId: string, secs: number) =>
-		setJDwells(d => ({ ...d, [stationId]: secs }));
+	const setJD = (stationId: string, secs: number) => {
+		setJDwells((d) => ({ ...d, [stationId]: secs }));
+	};
 
 	return (
 		<div
 			className="modal-backdrop"
-			onClick={e => e.target === e.currentTarget && onClose()}
-		>
+			onClick={(e) => e.target === e.currentTarget && onClose()}>
 			<div
 				className="modal"
 				style={{
@@ -478,8 +461,7 @@ export function ApplyPatternDialog({
 					height: "88vh",
 					display: "flex",
 					flexDirection: "column",
-				}}
-			>
+				}}>
 				<div className="modal-header">
 					<span className="modal-title">
 						🧩 停車パターンから列車を
@@ -487,8 +469,7 @@ export function ApplyPatternDialog({
 					</span>
 					<button
 						className="btn btn-ghost btn-sm"
-						onClick={onClose}
-					>
+						onClick={onClose}>
 						✕
 					</button>
 				</div>
@@ -499,8 +480,7 @@ export function ApplyPatternDialog({
 						display: "grid",
 						gridTemplateColumns: "260px 1fr",
 						overflow: "hidden",
-					}}
-				>
+					}}>
 					{/* ── Left: pattern library ──────────────────────────────────── */}
 					<div
 						style={{
@@ -508,15 +488,12 @@ export function ApplyPatternDialog({
 							display: "flex",
 							flexDirection: "column",
 							overflow: "hidden",
-						}}
-					>
+						}}>
 						<div
 							style={{
 								padding: "10px 12px",
-								borderBottom:
-									"1px solid var(--color-border)",
-							}}
-						>
+								borderBottom: "1px solid var(--color-border)",
+							}}>
 							<div
 								style={{
 									fontSize: 11,
@@ -525,29 +502,28 @@ export function ApplyPatternDialog({
 									textTransform: "uppercase",
 									letterSpacing: "0.06em",
 									marginBottom: 6,
-								}}
-							>
+								}}>
 								停車パターン一覧
 							</div>
 							<select
 								value={filterLineId}
-								onChange={e =>
-									setFilterLine(e.target.value)
-								}
+								onChange={(e) => {
+									setFilterLine(e.target.value);
+								}}
 								style={{
 									width: "100%",
 									padding: "5px 8px",
-									border:
-										"1px solid var(--color-border)",
+									border: "1px solid var(--color-border)",
 									borderRadius: "var(--radius)",
 									background: "var(--color-content)",
 									color: "var(--color-text)",
 									fontSize: 12,
-								}}
-							>
+								}}>
 								<option value="">すべての路線</option>
-								{lines.map(l => (
-									<option key={l.id} value={l.id}>
+								{lines.map((l) => (
+									<option
+										key={l.id}
+										value={l.id}>
 										{l.name}
 									</option>
 								))}
@@ -560,93 +536,78 @@ export function ApplyPatternDialog({
 										padding: 16,
 										fontSize: 12,
 										color: "var(--color-text-muted)",
-									}}
-								>
+									}}>
 									停車パターンがありません。路線・駅管理から作成してください。
 								</div>
 							)}
-							{availablePatterns.map(p => {
-								const line = lines.find(
-									l => l.id === p.lineId
-								);
-								const fromSt = stations.find(
-									s => s.id === p.fromStationId
-								);
-								const toSt = stations.find(
-									s => s.id === p.toStationId
-								);
+							{availablePatterns.map((p) => {
+								const line = lines.find((l) => l.id === p.lineId);
+								const fromSt = stations.find((s) => s.id === p.fromStationId);
+								const toSt = stations.find((s) => s.id === p.toStationId);
 								const inChain = chain.includes(p.id);
 								return (
 									<div
 										key={p.id}
-										onClick={() => addPattern(p.id)}
+										onClick={() => {
+											addPattern(p.id);
+										}}
 										style={{
 											padding: "10px 12px",
-											borderBottom:
-												"1px solid var(--color-border)",
+											borderBottom: "1px solid var(--color-border)",
 											cursor: "pointer",
 											background: inChain
 												? "var(--color-accent-bg)"
 												: "transparent",
 											opacity: inChain ? 0.7 : 1,
-										}}
-									>
+										}}>
 										<div
 											style={{
 												display: "flex",
 												alignItems: "center",
 												gap: 6,
 												marginBottom: 4,
-											}}
-										>
+											}}>
 											<span
 												style={{
 													fontWeight: 600,
 													fontSize: 13,
-												}}
-											>
+												}}>
 												{p.name || "(無名)"}
 											</span>
 											<span
 												className={`chip ${
-													p.direction === 1
-														? "green"
-														: "amber"
+													p.direction === 1 ? "green" : "amber"
 												}`}
 												style={{
 													fontSize: 9,
 													padding: "1px 5px",
-												}}
-											>
+												}}>
 												{p.direction === 1 ? "↓" : "↑"}
 											</span>
-											{inChain && (
+											{inChain ? (
 												<span
 													className="chip"
 													style={{
 														fontSize: 9,
 														padding: "1px 5px",
 														marginLeft: "auto",
-													}}
-												>
+													}}>
 													追加済
 												</span>
-											)}
+											) : null}
 										</div>
 										<div
 											style={{
 												fontSize: 11,
 												color: "var(--color-text-muted)",
-											}}
-										>
+											}}>
 											{line?.name}
 										</div>
 										<div
 											style={{
 												fontSize: 12,
 												marginTop: 2,
-											}}
-										>
+											}}>
 											<span style={{ fontWeight: 500 }}>
 												{fromSt?.stationName}
 											</span>
@@ -654,8 +615,7 @@ export function ApplyPatternDialog({
 												style={{
 													color: "var(--color-text-muted)",
 													margin: "0 4px",
-												}}
-											>
+												}}>
 												→
 											</span>
 											<span style={{ fontWeight: 500 }}>
@@ -667,21 +627,10 @@ export function ApplyPatternDialog({
 												fontSize: 11,
 												color: "var(--color-text-muted)",
 												marginTop: 2,
-											}}
-										>
-											停車{" "}
-											{
-												(p.stopRows || []).filter(
-													r => !r.isPass
-												).length
-											}
+											}}>
+											停車 {(p.stopRows || []).filter((r) => !r.isPass).length}
 											駅 · 通過{" "}
-											{
-												(p.stopRows || []).filter(
-													r => r.isPass
-												).length
-											}
-											駅
+											{(p.stopRows || []).filter((r) => r.isPass).length}駅
 										</div>
 									</div>
 								);
@@ -695,17 +644,14 @@ export function ApplyPatternDialog({
 							display: "flex",
 							flexDirection: "column",
 							overflow: "hidden",
-						}}
-					>
+						}}>
 						{/* Chain selector */}
 						<div
 							style={{
 								padding: "10px 14px",
-								borderBottom:
-									"1px solid var(--color-border)",
+								borderBottom: "1px solid var(--color-border)",
 								background: "var(--color-bg)",
-							}}
-						>
+							}}>
 							<div
 								style={{
 									fontSize: 11,
@@ -714,8 +660,7 @@ export function ApplyPatternDialog({
 									textTransform: "uppercase",
 									letterSpacing: "0.06em",
 									marginBottom: 6,
-								}}
-							>
+								}}>
 								適用順（クリックして追加、ドラッグで並べ替え）
 							</div>
 							{chain.length === 0 ? (
@@ -724,8 +669,7 @@ export function ApplyPatternDialog({
 										fontSize: 12,
 										color: "var(--color-text-muted)",
 										padding: "6px 0",
-									}}
-								>
+									}}>
 									← 左のパターンをクリックして追加
 								</div>
 							) : (
@@ -735,12 +679,9 @@ export function ApplyPatternDialog({
 										flexWrap: "wrap",
 										gap: 6,
 										alignItems: "center",
-									}}
-								>
+									}}>
 									{chain.map((id, idx) => {
-										const p = stopPatterns.find(
-											x => x.id === id
-										);
+										const p = stopPatterns.find((x) => x.id === id);
 										if (!p) return null;
 										return (
 											<Fragment key={id}>
@@ -749,62 +690,46 @@ export function ApplyPatternDialog({
 														display: "flex",
 														alignItems: "center",
 														gap: 4,
-													}}
-												>
+													}}>
 													<span
 														style={{
 															fontSize: 11,
 															color: "var(--color-text-muted)",
-														}}
-													>
+														}}>
 														{idx + 1}.
 													</span>
 													<PatternChip
 														pattern={p}
 														stations={stations}
-														onRemove={() =>
-															removePattern(idx)
-														}
+														onRemove={() => {
+															removePattern(idx);
+														}}
 													/>
 													<div
 														style={{
 															display: "flex",
 															gap: 2,
-														}}
-													>
+														}}>
 														<button
 															className="btn btn-ghost btn-xs"
-															onClick={() =>
-																moveUp(idx)
-															}
+															onClick={() => {
+																moveUp(idx);
+															}}
 															disabled={idx === 0}
 															style={{
-																opacity:
-																	idx === 0
-																		? 0.3
-																		: 1,
-															}}
-														>
+																opacity: idx === 0 ? 0.3 : 1,
+															}}>
 															↑
 														</button>
 														<button
 															className="btn btn-ghost btn-xs"
-															onClick={() =>
-																moveDown(idx)
-															}
-															disabled={
-																idx ===
-																chain.length - 1
-															}
-															style={{
-																opacity:
-																	idx ===
-																	chain.length -
-																		1
-																		? 0.3
-																		: 1,
+															onClick={() => {
+																moveDown(idx);
 															}}
-														>
+															disabled={idx === chain.length - 1}
+															style={{
+																opacity: idx === chain.length - 1 ? 0.3 : 1,
+															}}>
 															↓
 														</button>
 													</div>
@@ -814,8 +739,7 @@ export function ApplyPatternDialog({
 														style={{
 															fontSize: 13,
 															color: "var(--color-accent)",
-														}}
-													>
+														}}>
 														+
 													</span>
 												)}
@@ -831,11 +755,9 @@ export function ApplyPatternDialog({
 							<div
 								style={{
 									padding: "8px 14px",
-									borderBottom:
-										"1px solid var(--color-border)",
+									borderBottom: "1px solid var(--color-border)",
 									background: "var(--color-bg)",
-								}}
-							>
+								}}>
 								<div
 									style={{
 										fontSize: 11,
@@ -844,8 +766,7 @@ export function ApplyPatternDialog({
 										textTransform: "uppercase",
 										letterSpacing: "0.06em",
 										marginBottom: 6,
-									}}
-								>
+									}}>
 									パターン接続駅の停車時間
 									<span
 										style={{
@@ -855,8 +776,7 @@ export function ApplyPatternDialog({
 											marginLeft: 8,
 											color: "var(--color-text-muted)",
 											fontSize: 11,
-										}}
-									>
+										}}>
 										（各パターンの終着→次パターン始発での停車時間）
 									</span>
 								</div>
@@ -865,14 +785,10 @@ export function ApplyPatternDialog({
 										display: "flex",
 										gap: 16,
 										flexWrap: "wrap",
-									}}
-								>
-									{[...boundaryIds].map(stId => {
-										const st = stations.find(
-											s => s.id === stId
-										);
-										const secs =
-											junctionDwells[stId] ?? 0;
+									}}>
+									{[...boundaryIds].map((stId) => {
+										const st = stations.find((s) => s.id === stId);
+										const secs = junctionDwells[stId] ?? 0;
 										const mm = Math.floor(secs / 60);
 										const ss = secs % 60;
 										return (
@@ -883,21 +799,18 @@ export function ApplyPatternDialog({
 													alignItems: "center",
 													gap: 8,
 													fontSize: 13,
-												}}
-											>
+												}}>
 												<span
 													style={{
 														fontWeight: 500,
-													}}
-												>
+													}}>
 													{st?.stationName}
 												</span>
 												<span
 													style={{
 														color: "var(--color-text-muted)",
 														fontSize: 11,
-													}}
-												>
+													}}>
 													停車時間:
 												</span>
 												<div
@@ -905,34 +818,26 @@ export function ApplyPatternDialog({
 														display: "flex",
 														alignItems: "center",
 														gap: 4,
-													}}
-												>
+													}}>
 													<NumInput
 														value={mm}
-														onChange={v =>
-															setJD(
-																stId,
-																v * 60 + ss
-															)
-														}
+														onChange={(v) => {
+															setJD(stId, v * 60 + ss);
+														}}
 														style={{ width: 44 }}
 													/>
 													<span
 														style={{
 															fontSize: 11,
 															color: "var(--color-text-muted)",
-														}}
-													>
+														}}>
 														分
 													</span>
 													<NumInput
 														value={ss}
-														onChange={v =>
-															setJD(
-																stId,
-																mm * 60 + v
-															)
-														}
+														onChange={(v) => {
+															setJD(stId, mm * 60 + v);
+														}}
 														max={59}
 														style={{ width: 44 }}
 													/>
@@ -940,8 +845,7 @@ export function ApplyPatternDialog({
 														style={{
 															fontSize: 11,
 															color: "var(--color-text-muted)",
-														}}
-													>
+														}}>
 														秒
 													</span>
 												</div>
@@ -956,43 +860,38 @@ export function ApplyPatternDialog({
 						<div
 							style={{
 								padding: "8px 14px",
-								borderBottom:
-									"1px solid var(--color-border)",
+								borderBottom: "1px solid var(--color-border)",
 								display: "flex",
 								alignItems: "center",
 								gap: 20,
 								flexWrap: "wrap",
-							}}
-						>
+							}}>
 							<div
 								style={{
 									display: "flex",
 									alignItems: "center",
 									gap: 8,
-								}}
-							>
+								}}>
 								<span
 									style={{
 										fontSize: 12,
 										color: "var(--color-text-muted)",
 										whiteSpace: "nowrap",
-									}}
-								>
+									}}>
 									始発駅 発車時刻:
 								</span>
 								<input
 									type="text"
 									value={startDep}
-									onChange={e =>
-										setStartDep(e.target.value)
-									}
+									onChange={(e) => {
+										setStartDep(e.target.value);
+									}}
 									onBlur={normalizeStart}
 									placeholder="09:00:00"
 									style={{
 										width: 88,
 										padding: "4px 8px",
-										border:
-											"1px solid var(--color-border)",
+										border: "1px solid var(--color-border)",
 										borderRadius: "var(--radius)",
 										fontFamily: "var(--font-mono)",
 										fontSize: 13,
@@ -1002,20 +901,18 @@ export function ApplyPatternDialog({
 									}}
 								/>
 							</div>
-							{existingTrain && (
+							{existingTrain ? (
 								<div
 									style={{
 										display: "flex",
 										alignItems: "center",
 										gap: 8,
-									}}
-								>
+									}}>
 									<span
 										style={{
 											fontSize: 12,
 											color: "var(--color-text-muted)",
-										}}
-									>
+										}}>
 										適用方法:
 									</span>
 									{/* append/prepend permanently disabled — not deferrable without a backend
@@ -1025,7 +922,7 @@ export function ApplyPatternDialog({
 								    station km, never from insertion order. A positional append/prepend
 								    cannot round-trip through the API and would silently re-sort. Same
 								    root cause as the removed drag-reorder in TimetableGrid. */}
-								{(
+									{(
 										[
 											["replace", "既存の行を置き換え"],
 											["append", "末尾に追加"],
@@ -1041,57 +938,44 @@ export function ApplyPatternDialog({
 												fontSize: 12,
 												cursor: v === "replace" ? "pointer" : "not-allowed",
 												opacity: v === "replace" ? 1 : 0.4,
-											}}
-										>
+											}}>
 											<input
 												type="radio"
 												value={v}
 												checked={applyMode === v}
 												disabled={v !== "replace"}
-												onChange={() =>
-													setApplyMode(v)
-												}
+												onChange={() => {
+													setApplyMode(v);
+												}}
 												style={{
-													accentColor:
-														"var(--color-accent)",
+													accentColor: "var(--color-accent)",
 												}}
 											/>
 											{l}
 										</label>
 									))}
 								</div>
-							)}
+							) : null}
 							{chainRows.length > 0 && (
 								<span
 									style={{
 										fontSize: 12,
 										color: "var(--color-text-muted)",
 										marginLeft: "auto",
-									}}
-								>
+									}}>
 									合計 {chainRows.length} 駅 · 通過{" "}
-									{
-										chainRows.filter(r => r.isPass)
-											.length
-									}{" "}
-									· 停車{" "}
-									{
-										chainRows.filter(r => !r.isPass)
-											.length
-									}
+									{chainRows.filter((r) => r.isPass).length} · 停車{" "}
+									{chainRows.filter((r) => !r.isPass).length}
 								</span>
 							)}
 						</div>
 
 						{/* Preview table */}
-						<div
-							style={{ flex: 1, overflow: "auto" }}
-						>
+						<div style={{ flex: 1, overflow: "auto" }}>
 							{previewRows.length === 0 ? (
 								<div
 									className="empty-state"
-									style={{ padding: 40 }}
-								>
+									style={{ padding: 40 }}>
 									<p>
 										パターンを選択し始発時刻を入力すると、時刻表プレビューが表示されます。
 									</p>
@@ -1102,23 +986,18 @@ export function ApplyPatternDialog({
 										width: "100%",
 										borderCollapse: "collapse",
 										fontSize: 12,
-									}}
-								>
+									}}>
 									<thead
 										style={{
 											position: "sticky",
 											top: 0,
 											zIndex: 5,
-										}}
-									>
+										}}>
 										<tr
 											style={{
-												background:
-													"var(--color-content)",
-												borderBottom:
-													"2px solid var(--color-border)",
-											}}
-										>
+												background: "var(--color-content)",
+												borderBottom: "2px solid var(--color-border)",
+											}}>
 											{[
 												"#",
 												"駅名",
@@ -1133,33 +1012,25 @@ export function ApplyPatternDialog({
 													key={i}
 													style={{
 														padding: "6px 8px",
-														textAlign:
-															i <= 1
-																? "left"
-																: "center",
+														textAlign: i <= 1 ? "left" : "center",
 														fontSize: 11,
 														fontWeight: 600,
 														color: "var(--color-text-muted)",
-														textTransform:
-															"uppercase",
-														letterSpacing:
-															"0.04em",
+														textTransform: "uppercase",
+														letterSpacing: "0.04em",
 														width:
 															i === 0
 																? 28
 																: i === 1
-																? undefined
-																: i >= 2 &&
-																  i <= 3
-																? 80
-																: i === 4
-																? 44
-																: i === 5 ||
-																  i === 6
-																? 36
-																: 80,
-													}}
-												>
+																	? undefined
+																	: i >= 2 && i <= 3
+																		? 80
+																		: i === 4
+																			? 44
+																			: i === 5 || i === 6
+																				? 36
+																				: 80,
+													}}>
 													{h}
 												</th>
 											))}
@@ -1167,103 +1038,83 @@ export function ApplyPatternDialog({
 									</thead>
 									<tbody>
 										{previewRows.map((row, i) => {
-											const isLast =
-												i ===
-												previewRows.length - 1;
+											const isLast = i === previewRows.length - 1;
 											const bg = row.isPass
 												? "var(--color-pass-bg)"
 												: row.isOperationOnlyStop
-												? "var(--color-oponly-bg)"
-												: isLast
-												? "var(--color-laststop-bg)"
-												: "transparent";
+													? "var(--color-oponly-bg)"
+													: isLast
+														? "var(--color-laststop-bg)"
+														: "transparent";
 											const isBoundary =
-												boundaryIds.has(
-													row.stationId
-												) &&
+												boundaryIds.has(row.stationId) &&
 												i > 0 &&
-												i <
-													previewRows.length - 1;
+												i < previewRows.length - 1;
 											return (
 												<tr
 													key={i}
 													style={{
-														borderBottom:
-															"1px solid var(--color-border)",
+														borderBottom: "1px solid var(--color-border)",
 														background: bg,
-													}}
-												>
+													}}>
 													<td
 														style={{
 															padding: "5px 8px",
-															fontFamily:
-																"var(--font-mono)",
+															fontFamily: "var(--font-mono)",
 															fontSize: 11,
 															color: "var(--color-text-muted)",
-														}}
-													>
+														}}>
 														{i + 1}
 													</td>
 													<td
 														style={{
 															padding: "5px 8px",
 															fontWeight: 500,
-														}}
-													>
+														}}>
 														{row.stationName}
-														{isLast && (
+														{isLast ? (
 															<span
 																style={{
 																	marginLeft: 6,
 																	fontSize: 10,
 																	color: "var(--color-success)",
 																	fontWeight: 700,
-																}}
-															>
+																}}>
 																終
 															</span>
-														)}
-														{isBoundary && (
+														) : null}
+														{isBoundary ? (
 															<span
 																style={{
 																	marginLeft: 4,
 																	fontSize: 9,
 																	color: "var(--color-accent)",
 																	fontWeight: 600,
-																}}
-															>
+																}}>
 																接
 															</span>
-														)}
+														) : null}
 													</td>
 													<td
 														style={{
 															padding: "5px 8px",
-															textAlign:
-																"center",
-															fontFamily:
-																"var(--font-mono)",
+															textAlign: "center",
+															fontFamily: "var(--font-mono)",
 															fontSize: 11,
-														}}
-													>
+														}}>
 														{row.isPass ? (
 															<span
 																style={{
 																	opacity: 0.3,
-																}}
-															>
+																}}>
 																—
 															</span>
 														) : (
-															TRViSTime.display(
-																row.arrive,
-																false
-															) || (
+															TRViSTime.display(row.arrive, false) || (
 																<span
 																	style={{
 																		opacity: 0.25,
-																	}}
-																>
+																	}}>
 																	──:──
 																</span>
 															)
@@ -1272,22 +1123,15 @@ export function ApplyPatternDialog({
 													<td
 														style={{
 															padding: "5px 8px",
-															textAlign:
-																"center",
-															fontFamily:
-																"var(--font-mono)",
+															textAlign: "center",
+															fontFamily: "var(--font-mono)",
 															fontSize: 11,
-														}}
-													>
-														{TRViSTime.display(
-															row.departure,
-															false
-														) || (
+														}}>
+														{TRViSTime.display(row.departure, false) || (
 															<span
 																style={{
 																	opacity: 0.25,
-																}}
-															>
+																}}>
 																──:──
 															</span>
 														)}
@@ -1295,55 +1139,39 @@ export function ApplyPatternDialog({
 													<td
 														style={{
 															padding: "5px 8px",
-															textAlign:
-																"center",
-															fontFamily:
-																"var(--font-mono)",
+															textAlign: "center",
+															fontFamily: "var(--font-mono)",
 															fontSize: 11,
 															color: "var(--color-text-muted)",
-														}}
-													>
+														}}>
 														{row.trackName}
 													</td>
 													<td
 														style={{
 															padding: "5px 8px",
-															textAlign:
-																"center",
-														}}
-													>
-														{row.isPass && "✓"}
+															textAlign: "center",
+														}}>
+														{row.isPass ? "✓" : null}
 													</td>
 													<td
 														style={{
 															padding: "5px 8px",
-															textAlign:
-																"center",
-														}}
-													>
-														{row.isOperationOnlyStop &&
-															"✓"}
+															textAlign: "center",
+														}}>
+														{row.isOperationOnlyStop ? "✓" : null}
 													</td>
 													<td
 														style={{
 															padding: "5px 8px",
-															textAlign:
-																"center",
-															fontFamily:
-																"var(--font-mono)",
+															textAlign: "center",
+															fontFamily: "var(--font-mono)",
 															fontSize: 11,
 															color: "var(--color-text-muted)",
-														}}
-													>
+														}}>
 														{i > 0
-															? `${
-																	row.driveTime_MM
-															  }:${String(
+															? `${row.driveTime_MM}:${String(
 																	row.driveTime_SS
-															  ).padStart(
-																	2,
-																	"0"
-															  )}`
+																).padStart(2, "0")}`
 															: "—"}
 													</td>
 												</tr>
@@ -1359,30 +1187,26 @@ export function ApplyPatternDialog({
 				<div className="modal-footer">
 					<button
 						className="btn btn-secondary"
-						onClick={onClose}
-					>
+						onClick={onClose}>
 						{t.cancel}
 					</button>
 					<button
 						className="btn btn-primary"
 						onClick={handleApply}
-						disabled={
-							previewRows.length === 0 || !startDep
-						}
-					>
+						disabled={previewRows.length === 0 || !startDep}>
 						✓{" "}
 						{existingTrain
 							? `この内容で列車を${
 									applyMode === "replace"
 										? "置き換え"
 										: applyMode === "append"
-										? "末尾に追加"
-										: "先頭に挿入"
-							  }`
+											? "末尾に追加"
+											: "先頭に挿入"
+								}`
 							: "この内容で列車を作成"}
 					</button>
 				</div>
 			</div>
 		</div>
 	);
-}
+};

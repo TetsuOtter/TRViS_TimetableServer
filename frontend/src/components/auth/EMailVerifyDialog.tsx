@@ -39,7 +39,9 @@ const EMailVerifyDialog = () => {
 		<div
 			className="modal-backdrop"
 			onClick={(e) => e.target === e.currentTarget && closeVerify()}>
-			<div className="modal" style={{ maxWidth: 460 }}>
+			<div
+				className="modal"
+				style={{ maxWidth: 460 }}>
 				<div className="modal-header">
 					<span className="modal-title">
 						{isVerifyForNewUser
@@ -60,9 +62,7 @@ const EMailVerifyDialog = () => {
 							? "TRViS Data Editor を利用するには、メールアドレスの確認が必要です。"
 							: "確認用リンクをメールアドレス宛に送信しました。"}
 					</p>
-					<p>
-						受信箱を確認し、案内に従ってメールアドレスを確認してください。
-					</p>
+					<p>受信箱を確認し、案内に従ってメールアドレスを確認してください。</p>
 				</div>
 				<div className="modal-footer">
 					<button
@@ -76,7 +76,9 @@ const EMailVerifyDialog = () => {
 						onClick={handleReload}>
 						確認しました（再読み込み）
 					</button>
-					<button className="btn btn-ghost" onClick={closeVerify}>
+					<button
+						className="btn btn-ghost"
+						onClick={closeVerify}>
 						閉じる
 					</button>
 				</div>
