@@ -14,26 +14,39 @@
     }
   ],
   "require": {
-    "php": "^8.2",
-    "google/cloud-core": "1.72.0",
-    "kreait/firebase-php": "^7.24",
+    "php": ">=8.4.1",
+    "google/auth": "1.50.1",
+    "google/cloud-core": "1.72.1",
+    "guzzlehttp/guzzle": "7.10.4",
+    "guzzlehttp/psr7": "2.10.1",
+    "kreait/firebase-php": "^8.2",
     "monolog/monolog": "^3.10",
     "neomerx/cors-psr7": "^3.0",
     "php-di/slim-bridge": "^3.4",
     "ramsey/uuid": "^4.9",
     "slim/psr7": "^1.8",
-    "symfony/cache": "^7.4",
-    "symfony/console": "7.4.9",
-    "symfony/lock": "^7.4",
-    "symfony/rate-limiter": "^7.4",
-    "symfony/string": "7.4.8",
-    "symfony/yaml": "7.4.10"
+    "symfony/cache": "8.0.12",
+    "symfony/console": "8.0.11",
+    "symfony/lock": "8.0.9",
+    "symfony/options-resolver": "8.0.8",
+    "symfony/polyfill-intl-grapheme": "1.37.0",
+    "symfony/polyfill-intl-normalizer": "1.37.0",
+    "symfony/polyfill-mbstring": "1.37.0",
+    "symfony/rate-limiter": "8.0.13",
+    "symfony/string": "8.0.13",
+    "symfony/var-exporter": "8.0.9",
+    "symfony/yaml": "8.0.12"
   },
   "require-dev": {
     "overtrue/phplint": "^9.7",
-    "phpunit/phpunit": "^11.5",
+    "phpunit/phpunit": "13.1.11",
+    "sebastian/environment": "9.3.1",
     "squizlabs/php_codesniffer": "^4.0",
-    "zircote/swagger-php": "^4.10"
+    "symfony/event-dispatcher": "8.0.9",
+    "symfony/finder": "8.0.8",
+    "symfony/process": "8.0.13",
+    "symfony/type-info": "8.0.9",
+    "zircote/swagger-php": "^6.1"
   },
   "autoload": {
     "psr-4": { "dev_t0r\\": "src/" }
@@ -56,7 +69,7 @@
   "config": {
     "sort-packages": true,
     "platform": {
-      "php": "8.2"
+      "php": "8.4.1"
     }
   }
 }

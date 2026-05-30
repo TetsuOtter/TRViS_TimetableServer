@@ -108,35 +108,24 @@ final class RegisterDependencies
 			\Kreait\Firebase\Factory::class => \DI\factory(function (
 				string $projectId,
 				string $serviceAccountFile,
-				string $mode,
-				\Psr\Log\LoggerInterface $logger,
 				?string $apiTokenCacheDir,
 				?string $authPubKeyCacheDir
 			) {
-				$factory = (new \Kreait\Firebase\Factory())
+				return (new \Kreait\Firebase\Factory())
 					->withAuthTokenCache(new \Symfony\Component\Cache\Adapter\FilesystemAdapter(directory: $apiTokenCacheDir))
 					->withVerifierCache(new \Symfony\Component\Cache\Adapter\FilesystemAdapter(directory: $authPubKeyCacheDir))
 					->withProjectId($projectId)
 					->withServiceAccount($serviceAccountFile);
-				// M8: Firebase Auth HTTP round-trips can carry ID tokens / refresh
-				// material / SA-derived bearers. Keep them out of the shared production
-				// log sink; only wire the HTTP logger in non-production modes.
-				if ($mode !== 'production') {
-					$factory = $factory->withHttpLogger($logger);
-				}
-				return $factory;
 			})
 				->parameter('projectId', \DI\get('firebase.project_id'))
 				->parameter('serviceAccountFile', \DI\get('firebase.sa_file'))
-				->parameter('mode', \DI\get('mode'))
-				->parameter('logger', \DI\get(\Psr\Log\LoggerInterface::class))
 				->parameter('apiTokenCacheDir', \DI\get('firebase.api_token_cache_dir'))
 				->parameter('authPubKeyCacheDir', \DI\get('firebase.auth.pubkey_cache_dir'))
 			,
 			\Kreait\Firebase\Contract\Auth::class => \DI\factory([\Kreait\Firebase\Factory::class, 'createAuth']),
 
 				// H4: rate-limiter storage. CacheStorage over a FilesystemAdapter
-				// (no APCu/Redis in the php:8.2-apache image). The cache dir is
+				// (no APCu/Redis in the php:8.4-apache image). The cache dir is
 				// under sys_get_temp_dir() by default (always writable in the
 				// container; deliberately NOT under backend/cache because compose
 				// bind-mounts ./backend read-only). Injected via DI so tests swap

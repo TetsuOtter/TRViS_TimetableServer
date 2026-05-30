@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   phpunit:
-    name: PHPUnit (PHP 8.2 / MySQL 8.0)
+    name: PHPUnit (PHP 8.4 / MySQL 8.0)
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -46,12 +46,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6.0.2
 
-      - name: Setup PHP 8.2
-        # 正準ランタイムは backend/Dockerfile の php:8.2-apache。
-        # ローカルの PHP 8.5 で出る implicit-nullable deprecation を CI に持ち込まない。
+      - name: Setup PHP 8.4
+        # 正準ランタイムは backend/Dockerfile の php:8.4-apache。
         uses: shivammathur/setup-php@2.37.0
         with:
-          php-version: "8.2"
+          php-version: "8.4"
           extensions: mbstring, intl, pdo_mysql, bcmath
           coverage: none
 
@@ -64,9 +63,9 @@ jobs:
         uses: actions/cache@v5.0.5
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
-          key: composer-${{ runner.os }}-php82-${{ hashFiles('backend/composer.lock') }}
+          key: composer-${{ runner.os }}-php84-${{ hashFiles('backend/composer.lock') }}
           restore-keys: |
-            composer-${{ runner.os }}-php82-
+            composer-${{ runner.os }}-php84-
 
       - name: Install dependencies
         working-directory: backend

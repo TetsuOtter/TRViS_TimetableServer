@@ -23,9 +23,9 @@ final class RetValueOrError
 	private function __construct(
 		bool $isError = false,
 		mixed $value = null,
-		int $statusCode = null,
-		string $errorMsg = null,
-		int $errorCode = null,
+		?int $statusCode = null,
+		?string $errorMsg = null,
+		?int $errorCode = null,
 		private readonly ?int $totalCount = null,
 	) {
 		$this->isError = $isError;
@@ -41,7 +41,7 @@ final class RetValueOrError
 	 */
 	public static function withValue(
 		mixed $value,
-		int $statusCode = null,
+		?int $statusCode = null,
 	): self {
 		return new self(
 			value: $value,
@@ -78,7 +78,7 @@ final class RetValueOrError
 	public static function withTotalCount(
 		RetValueOrError $value,
 		RetValueOrError $totalCount,
-		int $statusCode = null,
+		?int $statusCode = null,
 	): self {
 		// selectPageTotalCount は PDO 経由で COUNT(*) を文字列として返すため、
 		// ?int $totalCount へ渡す前にここで一元的に int 化する
@@ -97,7 +97,7 @@ final class RetValueOrError
 	public static function withError(
 		int $statusCode,
 		string $errorMsg,
-		int $errorCode = null,
+		?int $errorCode = null,
 	): self {
 		return new self(
 			isError: true,
@@ -108,7 +108,7 @@ final class RetValueOrError
 	}
 	public static function withBadReq(
 		string $errorMsg,
-		int $errorCode = null,
+		?int $errorCode = null,
 	): self {
 		return self::withError(
 			statusCode: Constants::HTTP_BAD_REQUEST,
@@ -117,7 +117,7 @@ final class RetValueOrError
 		);
 	}
 
-	public function getResponseWithJson(ResponseInterface $response, int $statusCode = null): ResponseInterface
+	public function getResponseWithJson(ResponseInterface $response, ?int $statusCode = null): ResponseInterface
 	{
 		if ($this->isError) {
 			return Utils::withError($response, $this->statusCode, $this->errorMsg, $this->errorCode);

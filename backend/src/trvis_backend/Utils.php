@@ -49,7 +49,7 @@ final class Utils
 		\Psr\Http\Message\ResponseInterface $oldResponse,
 		int $statusCode,
 		string $message,
-		int $errorCode = null,
+		?int $errorCode = null,
 	): \Psr\Http\Message\ResponseInterface {
 		if ($errorCode === null) {
 			$errorCode = $statusCode;
