@@ -54,6 +54,17 @@ final class MyAuthMiddleware implements MiddlewareInterface
 				$routeName = RouteContext::fromRequest($request)->getRoute()?->getName();
 				$checkIfRevoked = $routeName !== null
 					&& in_array($routeName, self::ROUTES_REQUIRING_REVOCATION_CHECK, true);
+				// 失効チェック (verifyIdToken の第2引数) は、SA 鍵で署名した
+				// リクエストを Firebase の Secure Token API に投げてユーザーの
+				// 失効状態を引く実装。Auth Emulator にはその基盤が無く、かつ
+				// emulator 用 SA は意図的なプレースホルダ鍵 (非 PEM) なので、
+				// 失効チェックを行うと OpenSSL の署名段階で必ず例外になり、
+				// createProject 等 ROUTES_REQUIRING_REVOCATION_CHECK の経路が
+				// emulator 環境で常に 401 になる。emulator 利用時は失効チェックを
+				// 無効化する (dev/test 専用。本番= emulator host 未設定では従来通り)。
+				if (getenv('FIREBASE_AUTH_EMULATOR_HOST') !== false) {
+					$checkIfRevoked = false;
+				}
 				$verifiedIdToken = $this->auth->verifyIdToken($tokenStr, $checkIfRevoked);
 
 				$request = $request->withAttribute($this::ATTR_NAME_TOKEN_OBJ, $verifiedIdToken);

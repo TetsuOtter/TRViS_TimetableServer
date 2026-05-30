@@ -58,6 +58,12 @@ final class RequestValidator
 				if ($validateResult->isError) {
 					return $validateResult;
 				}
+				// $item is a foreach copy; the rules above mutate it by reference
+				// (e.g. normalizing color_8bit / lonlat arrays into value objects).
+				// Without writing the copy back, those conversions are lost and the
+				// downstream model carries the raw array — surfacing as a NOT NULL /
+				// type error at insert time. Propagate the normalized element.
+				$d[$i] = $item;
 			}
 			return RetValueOrError::withValue(null);
 		}

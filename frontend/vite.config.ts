@@ -8,4 +8,15 @@ export default defineConfig({
 	esbuild: {
 		drop: ["console", "debugger"],
 	},
+	// Dev-only: proxy API calls to the dockerized backend (php at :8080) so
+	// `yarn dev` on localhost:5173 talks to the same /api/v1 surface as the
+	// nginx-proxied production stack. Has no effect on `vite build`/`preview`.
+	server: {
+		proxy: {
+			"/api": {
+				target: "http://localhost:8080",
+				changeOrigin: true,
+			},
+		},
+	},
 });

@@ -8,6 +8,7 @@ use dev_t0r\trvis_backend\auth\MyAuthMiddleware;
 use dev_t0r\trvis_backend\Constants;
 use dev_t0r\trvis_backend\model\InviteKeyPrivilegeType;
 use dev_t0r\trvis_backend\service\ProjectsService;
+use dev_t0r\trvis_backend\service\ProjectTransferService;
 use dev_t0r\trvis_backend\Utils;
 use dev_t0r\trvis_backend\validator\EnumValidationRule;
 use dev_t0r\trvis_backend\validator\PagingQueryValidator;
@@ -33,6 +34,7 @@ use Ramsey\Uuid\Uuid;
 class ProjectApi
 {
 	private readonly ProjectsService $projectsService;
+	private readonly ProjectTransferService $transferService;
 	private readonly RequestValidator $bodyValidator;
 
 	public function __construct(
@@ -40,6 +42,7 @@ class ProjectApi
 		private readonly LoggerInterface $logger,
 	) {
 		$this->projectsService = new ProjectsService($db, $logger);
+		$this->transferService = new ProjectTransferService($db, $logger);
 		$this->bodyValidator = new RequestValidator(
 			RequestValidator::getDescriptionValidationRule(),
 			RequestValidator::getNameValidationRule(),
@@ -76,11 +79,25 @@ class ProjectApi
 				'name' => 'createProject',
 			],
 			[
+				'methods' => ['POST'],
+				'basePath' => '/api/v1',
+				'path' => '/projects/import',
+				'handler' => [self::class, 'importProject'],
+				'name' => 'importProject',
+			],
+			[
 				'methods' => ['GET'],
 				'basePath' => '/api/v1',
 				'path' => '/projects/{projectId}',
 				'handler' => [self::class, 'getProject'],
 				'name' => 'getProject',
+			],
+			[
+				'methods' => ['GET'],
+				'basePath' => '/api/v1',
+				'path' => '/projects/{projectId}/export',
+				'handler' => [self::class, 'exportProject'],
+				'name' => 'exportProject',
 			],
 			[
 				'methods' => ['PUT'],
@@ -304,6 +321,112 @@ class ProjectApi
 		return $this->projectsService->selectProjectOne(
 			currentUserId: $userId,
 			projectsId: $uuid,
+		)->getResponseWithJson($response);
+	}
+
+	#[OA\Get(
+		path: '/projects/{projectId}/export',
+		operationId: 'exportProject',
+		tags: ['project'],
+		summary: 'エクスポートする',
+		description: "Project の全グラフ (子エンティティを含む) を1つの ProjectGraph として取得する。\n\nこのProjectへのREAD権限が必要です。",
+		security: [['bearerAuth' => []]],
+		parameters: [
+			new OA\PathParameter(
+				name: 'projectId',
+				description: 'ProjectのID',
+				required: true,
+				schema: new OA\Schema(type: 'string', format: 'uuid'),
+			),
+		],
+		responses: [
+			new OA\Response(
+				response: 200,
+				description: '取得成功',
+				content: new OA\JsonContent(ref: '#/components/schemas/ProjectGraph'),
+			),
+			new OA\Response(
+				response: 400,
+				description: 'リクエストが不正 (Projectが大きすぎる等)',
+				content: new OA\JsonContent(ref: '#/components/schemas/ApiErrorData'),
+			),
+			new OA\Response(
+				response: 401,
+				description: '認証トークンのエラー',
+				content: new OA\JsonContent(ref: '#/components/schemas/ApiErrorData'),
+			),
+			new OA\Response(
+				response: 404,
+				description: 'コンテンツが存在しない',
+				content: new OA\JsonContent(ref: '#/components/schemas/ApiErrorData'),
+			),
+		],
+	)]
+	public function exportProject(
+		ServerRequestInterface $request,
+		ResponseInterface $response,
+		string $projectId
+	): ResponseInterface {
+		$userId = MyAuthMiddleware::getUserIdOrAnonymous($request);
+		if (!Uuid::isValid($projectId)) {
+			$this->logger->warning("Invalid UUID format ({projectId})", ['projectId' => $projectId]);
+			return Utils::withUuidError($response);
+		}
+
+		return $this->transferService->export(
+			projectsId: Uuid::fromString($projectId),
+			userId: $userId,
+		)->getResponseWithJson($response);
+	}
+
+	#[OA\Post(
+		path: '/projects/import',
+		operationId: 'importProject',
+		tags: ['project'],
+		summary: 'インポートする',
+		description: "ProjectGraph を読み込み、新しい Project として全グラフを複製する。すべての id はサーバ側で再採番される。\n\nこの操作にはサインインが必要です。",
+		security: [['bearerAuth' => []]],
+		requestBody: new OA\RequestBody(
+			description: 'インポートする ProjectGraph',
+			required: true,
+			content: new OA\JsonContent(ref: '#/components/schemas/ProjectGraph'),
+		),
+		responses: [
+			new OA\Response(
+				response: 201,
+				description: '作成成功 (作成された Project を返す)',
+				content: new OA\JsonContent(ref: '#/components/schemas/Project'),
+			),
+			new OA\Response(
+				response: 400,
+				description: 'リクエストが不正 (payloadが大きすぎる等)',
+				content: new OA\JsonContent(ref: '#/components/schemas/ApiErrorData'),
+			),
+			new OA\Response(
+				response: 401,
+				description: '認証トークンのエラー',
+				content: new OA\JsonContent(ref: '#/components/schemas/ApiErrorData'),
+			),
+		],
+	)]
+	public function importProject(
+		ServerRequestInterface $request,
+		ResponseInterface $response
+	): ResponseInterface {
+		$userId = MyAuthMiddleware::getUserIdOrNull($request);
+		if ($userId === null) {
+			$this->logger->warning("Token was not set");
+			return Utils::withError($response, Constants::HTTP_UNAUTHORIZED, "Token was not set");
+		}
+
+		$body = $request->getParsedBody();
+		if (!is_array($body) && !is_object($body)) {
+			return Utils::withError($response, Constants::HTTP_BAD_REQUEST, "Invalid request body");
+		}
+
+		return $this->transferService->import(
+			userId: $userId,
+			graph: $body,
 		)->getResponseWithJson($response);
 	}
 

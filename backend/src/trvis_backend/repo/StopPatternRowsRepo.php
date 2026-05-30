@@ -537,7 +537,7 @@ final class StopPatternRowsRepo implements IMyRepoSelectPrivilegeType
 			) VALUES (
 				:stop_pattern_rows_id,
 				:stop_patterns_id,
-				(SELECT sp.projects_id FROM stop_patterns sp WHERE sp.stop_patterns_id = :stop_patterns_id),
+				(SELECT sp.projects_id FROM stop_patterns sp WHERE sp.stop_patterns_id = :stop_patterns_id_for_projects),
 				:project_stations_id,
 				:owner,
 				:sort_key,
@@ -563,6 +563,9 @@ final class StopPatternRowsRepo implements IMyRepoSelectPrivilegeType
 
 		$query->bindValue(':stop_pattern_rows_id', $stopPatternRowId->getBytes(), PDO::PARAM_STR);
 		$query->bindValue(':stop_patterns_id', $stopPatternsId->getBytes(), PDO::PARAM_STR);
+		// Native prepares forbid reusing a named placeholder; the projects_id
+		// subquery binds the same value under a distinct name.
+		$query->bindValue(':stop_patterns_id_for_projects', $stopPatternsId->getBytes(), PDO::PARAM_STR);
 		$query->bindValue(':project_stations_id', $projectStationsId->getBytes(), PDO::PARAM_STR);
 		$query->bindValue(':owner', $owner, PDO::PARAM_STR);
 		$query->bindValue(':sort_key', $sortKey, PDO::PARAM_INT);

@@ -140,20 +140,30 @@ function TimeCell({
 	const commit = () => {
 		setEditing(false);
 		const trimmed = draft.trim();
+		// Emit exactly ONE change per commit. Previously the valid-time branch
+		// called onChange(value) AND onChangeText("") — two separate updateRow()
+		// calls that each spread the SAME stale rows[idx], so the second
+		// (text="") clobbered the first's value back to empty and fired a racing
+		// null PUT (which aborted). Each consumer handler now sets BOTH the time
+		// and its display-text in a single update, so one call suffices here.
 		if (trimmed === "") {
 			onChange("");
-			onChangeText && onChangeText("");
 			return;
 		}
 		const normalized = TRViSTime.normalize(trimmed);
 		const isTime = /^\d{1,3}:\d{2}:\d{2}$/.test(normalized);
 		if (isTime) {
 			onChange(normalized);
-			onChangeText && onChangeText("");
+		} else if (onChangeText) {
+			onChangeText(trimmed);
 		} else {
 			onChange("");
-			onChangeText && onChangeText(trimmed);
 		}
+	};
+
+	const startEditing = (initialDraft: string) => {
+		setDraft(initialDraft);
+		setEditing(true);
 	};
 
 	useEffect(() => {
@@ -198,10 +208,7 @@ function TimeCell({
 		return (
 			<span
 				className="time-display"
-				onClick={() => {
-					setDraft(displayText);
-					setEditing(true);
-				}}
+				onClick={() => startEditing(displayText)}
 				title={`表示文字列: ${displayText} — クリックして編集`}
 				style={{ textAlign: "center", justifyContent: "center" }}>
 				<span
@@ -222,10 +229,7 @@ function TimeCell({
 	return (
 		<span
 			className="time-display"
-			onClick={() => {
-				setDraft(editDraft);
-				setEditing(true);
-			}}
+			onClick={() => startEditing(editDraft)}
 			title={value ? `${value} — クリックして編集` : "クリックして編集"}
 			style={{ textAlign: "center", justifyContent: "center" }}>
 			{hasFormatted ? (
@@ -989,12 +993,13 @@ interface StationRowProps {
 	fmt: Partial<RowFormat>;
 	colors: EntityColor[];
 	onUpdateRow: <K extends keyof TimetableRow>(idx: number, key: K, val: TimetableRow[K]) => void;
+	onUpdateRowFields: (idx: number, partial: Partial<TimetableRow>) => void;
 	onDeleteRow: (idx: number) => void;
 	onOpenDetail: () => void;
 	t: Strings;
 }
 
-function StationRow({ row, idx, isLast, fmt, colors, onUpdateRow, onDeleteRow, onOpenDetail, t }: StationRowProps) {
+function StationRow({ row, idx, isLast, fmt, colors, onUpdateRow, onUpdateRowFields, onDeleteRow, onOpenDetail, t }: StationRowProps) {
 	const [remarksDraft, setRemarksDraft] = useState(row.remarks);
 
 	// Reseed when the row data changes (e.g. after a mutation refetch).
@@ -1053,8 +1058,8 @@ function StationRow({ row, idx, isLast, fmt, colors, onUpdateRow, onDeleteRow, o
 					value={row.arrive}
 					displayText={row.arriveDisplayText || undefined}
 					formattedValue={row.arriveDisplayText ? undefined : fmt.arriveFormatted}
-					onChange={(v) => onUpdateRow(idx, "arrive", v)}
-					onChangeText={(v) => onUpdateRow(idx, "arriveDisplayText", v)}
+					onChange={(v) => onUpdateRowFields(idx, { arrive: v, arriveDisplayText: "" })}
+					onChangeText={(v) => onUpdateRowFields(idx, { arrive: "", arriveDisplayText: v })}
 					muted={!!row.arriveHidden}
 				/>
 			</td>
@@ -1077,8 +1082,8 @@ function StationRow({ row, idx, isLast, fmt, colors, onUpdateRow, onDeleteRow, o
 						value={row.departure}
 						displayText={row.departureDisplayText || undefined}
 						formattedValue={row.departureDisplayText ? undefined : fmt.departureFormatted}
-						onChange={(v) => onUpdateRow(idx, "departure", v)}
-						onChangeText={(v) => onUpdateRow(idx, "departureDisplayText", v)}
+						onChange={(v) => onUpdateRowFields(idx, { departure: v, departureDisplayText: "" })}
+						onChangeText={(v) => onUpdateRowFields(idx, { departure: "", departureDisplayText: v })}
 						muted={!!row.departureHidden}
 					/>
 				)}
@@ -1278,6 +1283,20 @@ export function TimetableGrid({ train, stations, colors, onCreateRow, onUpdateRo
 		[rows, onUpdateRow]
 	);
 
+	// Apply several fields in ONE update (one spread, one PUT). Needed where two
+	// related fields change together (time vs its display-text): two single-key
+	// updateRow calls would each read the same stale rows[idx] and the second
+	// would clobber the first.
+	const updateRowFields = useCallback(
+		(idx: number, partial: Partial<TimetableRow>) => {
+			const row = rows[idx];
+			if (!row) return;
+			onUpdateRow(row.id, { ...row, ...partial });
+		},
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+		[rows, onUpdateRow]
+	);
+
 	const deleteRow = (idx: number) => {
 		const row = rows[idx];
 		if (!row) return;
@@ -1383,6 +1402,7 @@ export function TimetableGrid({ train, stations, colors, onCreateRow, onUpdateRo
 									fmt={fmt}
 									colors={colors}
 									onUpdateRow={updateRow}
+									onUpdateRowFields={updateRowFields}
 									onDeleteRow={deleteRow}
 									onOpenDetail={() => setDetailRow(row)}
 									t={t}

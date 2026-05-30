@@ -31,6 +31,7 @@ import {
 	useUpdateProjectStation,
 } from "../api/hooks/useProjectStations";
 import {
+	useAllStationsOnLine,
 	useCreateStationOnLine,
 	useDeleteStationOnLine,
 	useStationsOnLine,
@@ -74,6 +75,14 @@ import {
 	useWorks,
 } from "../api/hooks/useWorks";
 import { queryKeys } from "../api/queryKeys";
+import {
+	exportProjectGraph,
+	importProjectGraph,
+	extractGraphs,
+	TRANSFER_KIND,
+	BUNDLE_KIND,
+	TRANSFER_VERSION,
+} from "../api/transfer";
 import { AppShell } from "../components/AppShell";
 import AuthControls from "../components/auth/AuthControls";
 import {
@@ -88,7 +97,6 @@ import { LineManager } from "../components/LineManager";
 import { ProjectListScreen } from "../components/ProjectList";
 import { StopPatternWizard } from "../components/StopPatternWizard";
 import { WorkBrowser } from "../components/WorkBrowser";
-import { createInitialData } from "../data/sampleData";
 
 import { useSettings } from "./SettingsContext";
 
@@ -107,7 +115,6 @@ import type {
 	Work as EntityWork,
 } from "../types/entities";
 import type {
-	AppData,
 	Line,
 	Project,
 	Station,
@@ -316,14 +323,6 @@ function modelStopRowToEntityDraft(
 	};
 }
 
-function uid(prefix: string): string {
-	return (
-		prefix +
-		Date.now().toString(36) +
-		Math.random().toString(36).slice(2, 6)
-	);
-}
-
 function downloadJson(filename: string, obj: unknown) {
 	const blob = new Blob([JSON.stringify(obj, null, 2)], {
 		type: "application/json",
@@ -526,16 +525,6 @@ function SidebarTree({
 	);
 }
 
-interface ImportedJson {
-	kind?: string;
-	projects?: Project[];
-	lines?: Line[];
-	stations?: AppData["stations"];
-	stationsOnLine?: StationOnLine[];
-	stopPatterns?: StopPattern[];
-	project?: Project;
-}
-
 export function App() {
 	const { theme, toggleTheme, lang, toggleLang, density, t } =
 		useSettings();
@@ -550,7 +539,6 @@ export function App() {
 	const updateProjectMutation = useUpdateProject();
 	const deleteProjectMutation = useDeleteProject();
 
-	const [data, setData] = useState<AppData>(() => createInitialData());
 	const [projectId, setProjectId] = useState<string | null>(null);
 
 	const { data: apiWorkGroups } = useWorkGroups(projectId ?? "");
@@ -597,6 +585,11 @@ export function App() {
 	const createStationOnLineMutation = useCreateStationOnLine(currentLine ?? "");
 	const updateStationOnLineMutation = useUpdateStationOnLine(currentLine ?? "");
 	const deleteStationOnLineMutation = useDeleteStationOnLine(currentLine ?? "");
+	// All lines' stationsOnLine combined — needed by ApplyPatternDialog and
+	// StopPatternWizard which may reference stop patterns on non-current lines.
+	const apiAllStationsOnLine = useAllStationsOnLine(
+		(apiLines ?? []).map((l) => l.id)
+	);
 
 	const [showStopPattern, setShowStopPattern] = useState(false);
 	const [editingPattern, setEditingPattern] = useState<StopPattern | null>(
@@ -682,6 +675,9 @@ export function App() {
 	const modelStationsOnLine = (apiStationsOnLine ?? []).map(
 		entityStationOnLineToModel
 	);
+	const modelAllStationsOnLine = apiAllStationsOnLine.map(
+		entityStationOnLineToModel
+	);
 	const modelStopPatterns = (apiStopPatterns ?? []).map((sp) =>
 		entityStopPatternToModel(
 			sp,
@@ -691,24 +687,30 @@ export function App() {
 		)
 	);
 
+	// Auto-select a WG (then its first work) when on the work screen. The work
+	// list (apiWorks) only loads for the *current* WG, so a WG must be selected
+	// before any works appear. WGs and works load asynchronously, so this must
+	// re-run as that data arrives — keying only on [screen, projectId] fires
+	// before apiWorkGroups is ready (e.g. a cold reload), leaves currentWG null,
+	// and the sidebar then shows every WG with 0 works. Drive it off scalar
+	// validity/first-id signals instead so each stage settles once its data is in.
+	const firstWGId = apiWorkGroups?.[0]?.id;
+	const currentWGValid =
+		currentWG != null && !!apiWorkGroups?.some((g) => g.id === currentWG);
+	const firstWorkId = wg?.works[0]?.id;
+	const currentWorkValid =
+		currentWork != null && !!wg?.works.some((w) => w.id === currentWork);
 	useEffect(() => {
-		if (
-			screen === "work" &&
-			project &&
-			(!currentWork || !wg?.works.find((w) => w.id === currentWork))
-		) {
-			const firstWG = project.workGroups[0];
-			const firstWork = firstWG?.works[0];
-			if (firstWG && firstWork) {
-				setCurrentWG(firstWG.id);
-				setCurrentWork(firstWork.id);
-			} else if (firstWG) {
-				setCurrentWG(firstWG.id);
-				setCurrentWork(null);
-			}
+		if (screen !== "work" || !project) return;
+		if (!currentWGValid && firstWGId) {
+			// No (valid) WG selected yet — pick the first once WGs have loaded.
+			setCurrentWG(firstWGId);
+		} else if (currentWGValid && !currentWorkValid && firstWorkId) {
+			// WG selected and its works have loaded — pick the first work.
+			setCurrentWork(firstWorkId);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [screen, projectId]);
+	}, [screen, projectId, currentWGValid, firstWGId, currentWorkValid, firstWorkId]);
 
 	// Auto-select first line when navigating to the lines screen with no line selected.
 	useEffect(() => {
@@ -1238,90 +1240,84 @@ export function App() {
 		}
 	};
 
-	/* ─── JSON Import / Export ─── */
-	const exportProject = (pid: string) => {
-		const p = data.projects.find((x) => x.id === pid);
-		if (!p) return;
-		const safeName = (p.name || "project").replace(/[^\w.-]+/g, "_");
-		downloadJson(`${safeName}.json`, {
-			version: 1,
-			kind: "trvis-project",
-			exportedAt: new Date().toISOString(),
-			project: p,
-			lines: data.lines,
-			stations: data.stations,
-			stationsOnLine: data.stationsOnLine,
-			stopPatterns: data.stopPatterns,
-		});
-	};
-	const exportAll = () => {
-		downloadJson("trvis-all.json", {
-			version: 1,
-			kind: "trvis-all",
-			exportedAt: new Date().toISOString(),
-			...data,
-		});
-	};
-	const mergeById = <T extends { id: string }>(
-		existing: T[],
-		incoming: T[]
-	): T[] => {
-		const map = new Map(existing.map((x) => [x.id, x]));
-		incoming.forEach((x) => map.set(x.id, x));
-		return [...map.values()];
-	};
-	const importJson = (raw: unknown) => {
+	/* ─── JSON Import / Export (dedicated backend API) ─── */
+	// The graph is fetched/sent opaquely; the client only wraps it in a small
+	// metadata envelope for the file (and a BUNDLE_KIND array for "export all").
+
+	const exportProject = async (pid: string) => {
+		const p = apiProjects?.find((x) => x.id === pid);
+		if (p === undefined) {
+			alert("プロジェクトが見つかりません。");
+			return;
+		}
 		try {
-			if (typeof raw !== "object" || raw === null) {
-				alert("未対応のJSON形式です。");
+			const graph = await exportProjectGraph(pid);
+			const safeName = (p.name || "project").replace(/[^\w.-]+/g, "_");
+			downloadJson(`${safeName}.json`, {
+				version: TRANSFER_VERSION,
+				kind: TRANSFER_KIND,
+				exportedAt: new Date().toISOString(),
+				graph,
+			});
+		} catch (e) {
+			alert(
+				"エクスポートに失敗しました: " +
+					(e instanceof Error ? e.message : String(e))
+			);
+		}
+	};
+	const exportAll = async () => {
+		const projects = apiProjects ?? [];
+		if (projects.length === 0) {
+			alert("エクスポートできるプロジェクトがありません。");
+			return;
+		}
+		try {
+			// Export sequentially rather than Promise.all(...) — a fan-out of one
+			// full-graph export per project (potentially hundreds) overwhelms the
+			// backend and stalls the download. A simple awaiting loop bounds
+			// concurrency to one; output is identical.
+			const graphs: unknown[] = [];
+			for (const p of projects) {
+				graphs.push(await exportProjectGraph(p.id));
+			}
+			downloadJson("trvis-all.json", {
+				version: TRANSFER_VERSION,
+				kind: BUNDLE_KIND,
+				exportedAt: new Date().toISOString(),
+				graphs,
+			});
+		} catch (e) {
+			alert(
+				"エクスポートに失敗しました: " +
+					(e instanceof Error ? e.message : String(e))
+			);
+		}
+	};
+	const importJson = async (raw: unknown) => {
+		try {
+			const graphs = extractGraphs(raw);
+			if (graphs.length === 0) {
+				alert(
+					"未対応のJSON形式です（旧サンプル形式は廃止。trvis-project-graph 形式のみ取込可）。"
+				);
 				return;
 			}
-			const json = raw as ImportedJson;
-			if (json.kind === "trvis-all" && Array.isArray(json.projects)) {
-				if (
-					!confirm(
-						`全データ (${json.projects.length} プロジェクト) を読み込みます。現在のデータは置き換えられます。よろしいですか？`
-					)
+			if (
+				!confirm(
+					`${graphs.length} プロジェクトを新規取込します（既存データは変更されません）。よろしいですか？`
 				)
-					return;
-				setData({
-					projects: json.projects,
-					lines: json.lines || [],
-					stations: json.stations || [],
-					stationsOnLine: json.stationsOnLine || [],
-					stopPatterns: json.stopPatterns || [],
-				});
-			} else if (json.kind === "trvis-project" && json.project) {
-				setData((d) => {
-					const incoming = json.project as Project;
-					const exists = d.projects.some(
-						(p) => p.id === incoming.id
-					);
-					const newProj: Project = exists
-						? {
-								...incoming,
-								id: uid("p"),
-								name: incoming.name + " (取込)",
-							}
-						: incoming;
-					return {
-						...d,
-						projects: [...d.projects, newProj],
-						lines: mergeById(d.lines, json.lines || []),
-						stations: mergeById(d.stations, json.stations || []),
-						stationsOnLine: mergeById(
-							d.stationsOnLine,
-							json.stationsOnLine || []
-						),
-						stopPatterns: mergeById(
-							d.stopPatterns,
-							json.stopPatterns || []
-						),
-					};
-				});
-			} else {
-				alert("未対応のJSON形式です。");
+			) {
+				return;
 			}
+			const results = [];
+			for (const g of graphs) {
+				results.push(await importProjectGraph(g));
+			}
+			await queryClient.invalidateQueries({
+				queryKey: queryKeys.projects(),
+			});
+			alert(`取込完了: ${results.length} プロジェクトを作成しました。`);
 		} catch (e) {
 			alert(
 				"インポートに失敗しました: " +
@@ -1487,8 +1483,11 @@ export function App() {
 						stopPatterns={modelStopPatterns}
 						stations={modelProjectStations}
 						colors={apiColors ?? []}
-						stationsOnLine={data.stationsOnLine}
-						lines={data.lines}
+						// All lines' stationsOnLine so ApplyPatternDialog can
+						// resolve stop patterns that reference any line in the project,
+						// not just the currently selected one.
+						stationsOnLine={modelAllStationsOnLine}
+						lines={modelLines}
 						onCreateRow={handleCreateRow}
 						onUpdateRow={handleUpdateRow}
 						onDeleteRow={handleDeleteRow}
@@ -1569,7 +1568,7 @@ export function App() {
 						key={editingPattern?.id ?? "new"}
 						lines={modelLines}
 						stations={modelProjectStations}
-						stationsOnLine={modelStationsOnLine}
+						stationsOnLine={modelAllStationsOnLine}
 						t={t}
 						editPattern={liveEditingPattern}
 						onSave={(sp) => {

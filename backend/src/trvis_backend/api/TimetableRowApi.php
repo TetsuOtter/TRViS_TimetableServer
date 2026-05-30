@@ -620,10 +620,13 @@ class TimetableRowApi
 			'description' => Utils::getValueOrNull($body, 'description'),
 			'drive_time_mm' => Utils::getValueOrNull($body, 'drive_time_mm'),
 			'drive_time_ss' => Utils::getValueOrNull($body, 'drive_time_ss'),
-			'is_operation_only_stop' => Utils::getValueOrNull($body, 'is_operation_only_stop'),
-			'is_pass' => Utils::getValueOrNull($body, 'is_pass'),
-			'has_bracket' => Utils::getValueOrNull($body, 'has_bracket'),
-			'is_last_stop' => Utils::getValueOrNull($body, 'is_last_stop'),
+			// Use getBoolValueOrNull: getValueOrNull collapses a present
+			// `false` to null (getValue's absent-sentinel is also false), which
+			// would NULL these NOT NULL columns on UPDATE → SQLSTATE 23000.
+			'is_operation_only_stop' => Utils::getBoolValueOrNull($body, 'is_operation_only_stop'),
+			'is_pass' => Utils::getBoolValueOrNull($body, 'is_pass'),
+			'has_bracket' => Utils::getBoolValueOrNull($body, 'has_bracket'),
+			'is_last_stop' => Utils::getBoolValueOrNull($body, 'is_last_stop'),
 			'arrive_time_hh' => Utils::getValueOrNull($body, 'arrive_time_hh'),
 			'arrive_time_mm' => Utils::getValueOrNull($body, 'arrive_time_mm'),
 			'arrive_time_ss' => Utils::getValueOrNull($body, 'arrive_time_ss'),

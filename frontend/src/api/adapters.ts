@@ -18,6 +18,11 @@ import type { components } from "./schema";
 
 import type { Color, Line, Project, ProjectStation, StationOnLine, StationTrack, StopPattern, StopPatternRow, TimetableRow, Train, Work, WorkGroup } from "../types/entities";
 
+// MySQL tinyint(1) booleans arrive as 0/1 (the schema types them boolean).
+// Coerce to a real boolean, preserving undefined for absent fields.
+const toBool = (v: boolean | number | undefined): boolean | undefined =>
+	v === undefined ? undefined : Boolean(v);
+
 // `affect_date` is an OpenAPI `format: date` (a calendar date, no time/zone) —
 // unlike `created_at` etc. which are `date-time`. Round-trip it via LOCAL date
 // parts so the day the user picked is preserved regardless of timezone.
@@ -240,7 +245,7 @@ export const fromApiTrain = (api: ApiTrain): Train => ({
 	beforeDeparture: api.before_departure,
 	afterArrive: api.after_arrive,
 	trainInfo: api.train_info,
-	isRideOnMoving: api.is_ride_on_moving,
+	isRideOnMoving: toBool(api.is_ride_on_moving),
 	createdAt: api.created_at !== undefined ? new Date(api.created_at) : undefined,
 });
 
@@ -284,10 +289,14 @@ export const fromApiTimetableRow = (api: ApiTimetableRow): TimetableRow => ({
 	description: api.description,
 	driveTimeMm: api.drive_time_mm,
 	driveTimeSs: api.drive_time_ss,
-	isOperationOnlyStop: api.is_operation_only_stop,
-	isPass: api.is_pass,
-	hasBracket: api.has_bracket,
-	isLastStop: api.is_last_stop,
+	// MySQL tinyint(1) comes back over the wire as 0/1 (not JSON true/false),
+	// even though the schema types them as boolean. Coerce to real booleans so
+	// round-tripping an edit doesn't re-send 0/1 — the backend's BoolValidationRule
+	// rejects non-bool with HTTP 400. Preserve undefined for absent fields.
+	isOperationOnlyStop: toBool(api.is_operation_only_stop),
+	isPass: toBool(api.is_pass),
+	hasBracket: toBool(api.has_bracket),
+	isLastStop: toBool(api.is_last_stop),
 	arriveTimeHh: api.arrive_time_hh,
 	arriveTimeMm: api.arrive_time_mm,
 	arriveTimeSs: api.arrive_time_ss,
@@ -311,7 +320,10 @@ export const toApiTimetableRow = (
 	stations_id: x.stationId,
 	station_tracks_id: x.stationTrackId,
 	colors_id_marker: x.colorIdMarker,
-	description: x.description,
+	// description is required (non-null) by the backend. Newly-constructed rows
+	// (e.g. the 行を追加 picker, apply-pattern) don't set it, so default to "" —
+	// same convention as train create/update (App.tsx handleUpdateTrain).
+	description: x.description ?? "",
 	drive_time_mm: x.driveTimeMm,
 	drive_time_ss: x.driveTimeSs,
 	is_operation_only_stop: x.isOperationOnlyStop,
@@ -330,7 +342,13 @@ export const toApiTimetableRow = (
 	arrive_str: x.arriveStr,
 	departure_str: x.departureStr,
 	marker_text: x.markerText,
-	work_type: x.workType,
+	// work_type is UNIMPLEMENTED (実装準備中): the backend column is a TINYINT
+	// enum whose only case is `none = 0`, so any free-text value (e.g. "荷役")
+	// is rejected with `Unknown WorkAtStationType`, which would brick the WHOLE
+	// row save and drop co-edited fields. Until the enum is implemented, omit it
+	// from the write path so the field degrades gracefully (silently discarded),
+	// exactly like the other model-only fields (showHH, arriveHidden). The input
+	// is still editable in the UI — see UNIMPLEMENTED.md §3-3.
 });
 
 // StationOnLine
@@ -347,7 +365,7 @@ export const fromApiStationOnLine = (api: ApiStationOnLine): StationOnLine => ({
 	locationM: api.location_m ?? 0,
 	longitude: api.location_lonlat?.longitude,
 	latitude: api.location_lonlat?.latitude,
-	trackHiddenByDefault: api.track_hidden_by_default,
+	trackHiddenByDefault: toBool(api.track_hidden_by_default),
 	createdAt:
 		api.created_at !== undefined ? new Date(api.created_at) : undefined,
 });
@@ -404,21 +422,21 @@ export const fromApiStopPatternRow = (
 	projectStationId: api.project_stations_id ?? "",
 	sortKey: api.sort_key,
 	trackName: api.track_name,
-	trackHidden: api.track_hidden,
-	isOperationOnlyStop: api.is_operation_only_stop,
-	isPass: api.is_pass,
+	trackHidden: toBool(api.track_hidden),
+	isOperationOnlyStop: toBool(api.is_operation_only_stop),
+	isPass: toBool(api.is_pass),
 	driveTimeMm: api.drive_time_mm,
 	driveTimeSs: api.drive_time_ss,
 	dwellTimeMm: api.dwell_time_mm,
 	dwellTimeSs: api.dwell_time_ss,
-	showArrive: api.show_arrive,
-	showDeparture: api.show_departure,
+	showArrive: toBool(api.show_arrive),
+	showDeparture: toBool(api.show_departure),
 	arriveStr: api.arrive_str,
 	departureStr: api.departure_str,
 	runInLimit: api.run_in_limit,
 	runOutLimit: api.run_out_limit,
 	remarks: api.remarks,
-	alwaysShowHh: api.always_show_hh,
+	alwaysShowHh: toBool(api.always_show_hh),
 	createdAt:
 		api.created_at !== undefined ? new Date(api.created_at) : undefined,
 });

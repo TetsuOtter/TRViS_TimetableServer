@@ -50,6 +50,11 @@ abstract class IntegrationTestCase extends TestCase
 				// FOUND_ROWS; AUTOCOMMIT=false is prod-only and orthogonal to
 				// H7, so it is intentionally not set here.)
 				PDO::MYSQL_ATTR_FOUND_ROWS => true,
+				// Mirror dev/prod (config.docker.inc.php) which runs native
+				// prepares. Without this the harness defaults to emulated
+				// prepares and silently tolerates reused named placeholders
+				// (HY093) that break the real app — exactly the §0-3 drift.
+				PDO::ATTR_EMULATE_PREPARES => false,
 			]);
 		} catch (\PDOException $e) {
 			self::$skipReason = 'Test DB unavailable (' . $e->getMessage() . ')';
