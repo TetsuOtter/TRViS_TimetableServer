@@ -165,10 +165,11 @@ App.tsx は API（TanStack Query）から描画する一方、`data = useState(c
 App.tsx:1490-1491 が WorkBrowser に `stationsOnLine={data.stationsOnLine}` /
 `lines={data.lines}`（サンプル）を渡す。結果、列車のパターン適用ダイアログの路線
 ドロップダウンに実プロジェクトの路線でなくサンプル（l1/l2）が出る。
-- **[修正済(一部)]** App.tsx:1490-1491 を `modelLines` / `modelStationsOnLine`
-  （API 由来）に変更。路線ドロップダウンの実データ化を達成、tsc グリーン。
-  ※ 残課題: `modelStationsOnLine` は選択中 line 単位の取得のため、別 line の
-  パターンの経由駅解決には不足。プロジェクト全体の stationsOnLine 供給は follow-up。
+- **[修正済]** App.tsx の `stationsOnLine` を全ライン分に拡張。
+  `useAllStationsOnLine(allLineIds)` を追加し、WorkBrowser (ApplyPatternDialog) と
+  StopPatternWizard に `modelAllStationsOnLine` を渡す。各ラインのデータは同一
+  queryKey でキャッシュ共有されるため重複リクエストなし。LineManager は引き続き
+  `modelStationsOnLine`（選択中ライン）を使用（CRUD スコープが currentLine 単位）。
 
 ---
 

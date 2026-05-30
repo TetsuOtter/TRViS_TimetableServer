@@ -31,6 +31,7 @@ import {
 	useUpdateProjectStation,
 } from "../api/hooks/useProjectStations";
 import {
+	useAllStationsOnLine,
 	useCreateStationOnLine,
 	useDeleteStationOnLine,
 	useStationsOnLine,
@@ -584,6 +585,11 @@ export function App() {
 	const createStationOnLineMutation = useCreateStationOnLine(currentLine ?? "");
 	const updateStationOnLineMutation = useUpdateStationOnLine(currentLine ?? "");
 	const deleteStationOnLineMutation = useDeleteStationOnLine(currentLine ?? "");
+	// All lines' stationsOnLine combined — needed by ApplyPatternDialog and
+	// StopPatternWizard which may reference stop patterns on non-current lines.
+	const apiAllStationsOnLine = useAllStationsOnLine(
+		(apiLines ?? []).map((l) => l.id)
+	);
 
 	const [showStopPattern, setShowStopPattern] = useState(false);
 	const [editingPattern, setEditingPattern] = useState<StopPattern | null>(
@@ -667,6 +673,9 @@ export function App() {
 
 	const modelLines = (apiLines ?? []).map(entityLineToModel);
 	const modelStationsOnLine = (apiStationsOnLine ?? []).map(
+		entityStationOnLineToModel
+	);
+	const modelAllStationsOnLine = apiAllStationsOnLine.map(
 		entityStationOnLineToModel
 	);
 	const modelStopPatterns = (apiStopPatterns ?? []).map((sp) =>
@@ -1474,13 +1483,10 @@ export function App() {
 						stopPatterns={modelStopPatterns}
 						stations={modelProjectStations}
 						colors={apiColors ?? []}
-						// Use the API-backed lines/stations-on-line, not the
-						// in-memory sample `data` (which made the apply-pattern
-						// dialog's line dropdown show fictional sample lines).
-						// NOTE: modelStationsOnLine is scoped to the currently
-						// selected line (useStationsOnLine(currentLine)); full
-						// cross-line provisioning is a follow-up (see UNIMPLEMENTED.md §2-4).
-						stationsOnLine={modelStationsOnLine}
+						// All lines' stationsOnLine so ApplyPatternDialog can
+						// resolve stop patterns that reference any line in the project,
+						// not just the currently selected one.
+						stationsOnLine={modelAllStationsOnLine}
 						lines={modelLines}
 						onCreateRow={handleCreateRow}
 						onUpdateRow={handleUpdateRow}
@@ -1562,7 +1568,7 @@ export function App() {
 						key={editingPattern?.id ?? "new"}
 						lines={modelLines}
 						stations={modelProjectStations}
-						stationsOnLine={modelStationsOnLine}
+						stationsOnLine={modelAllStationsOnLine}
 						t={t}
 						editPattern={liveEditingPattern}
 						onSave={(sp) => {
