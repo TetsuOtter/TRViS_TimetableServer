@@ -17,6 +17,7 @@
 import type { components } from "./schema";
 import type {
 	Color,
+	InviteKey,
 	Line,
 	Project,
 	ProjectStation,
@@ -479,4 +480,37 @@ export const toApiStopPatternRow = (
 	run_out_limit: x.runOutLimit,
 	remarks: x.remarks,
 	always_show_hh: x.alwaysShowHh,
+});
+
+// InviteKey
+
+type ApiInviteKey = components["schemas"]["InviteKey"];
+
+export const fromApiInviteKey = (api: ApiInviteKey): InviteKey => ({
+	id: api.invite_keys_id ?? "",
+	workGroupId: api.work_groups_id ?? "",
+	description: api.description,
+	privilegeType: api.privilege_type,
+	validFrom:
+		api.valid_from !== undefined ? new Date(api.valid_from) : undefined,
+	expiresAt:
+		api.expires_at !== undefined ? new Date(api.expires_at) : undefined,
+	useLimit: api.use_limit,
+	disabledAt:
+		api.disabled_at !== undefined ? new Date(api.disabled_at) : undefined,
+	createdAt:
+		api.created_at !== undefined ? new Date(api.created_at) : undefined,
+});
+
+export const toApiInviteKey = (
+	x: Pick<
+		InviteKey,
+		"description" | "privilegeType" | "validFrom" | "expiresAt" | "useLimit"
+	>
+): ApiInviteKey => ({
+	description: x.description,
+	privilege_type: x.privilegeType,
+	valid_from: x.validFrom?.toISOString(),
+	expires_at: x.expiresAt?.toISOString(),
+	use_limit: x.useLimit,
 });

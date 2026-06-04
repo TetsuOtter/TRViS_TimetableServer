@@ -176,6 +176,18 @@ export type StopPattern = {
 	createdAt?: Date;
 };
 
+export type InviteKey = {
+	id: string;
+	workGroupId: string;
+	description: string;
+	privilegeType?: "read" | "write" | "admin";
+	validFrom?: Date;
+	expiresAt?: Date;
+	useLimit?: number;
+	disabledAt?: Date;
+	createdAt?: Date;
+};
+
 export type StopPatternRow = {
 	id: string;
 	projectId: string;
