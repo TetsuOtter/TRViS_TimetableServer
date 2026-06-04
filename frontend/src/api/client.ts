@@ -33,6 +33,16 @@ export class ApiError extends Error {
 const rawBase = import.meta.env.VITE_API_BASE_URL ?? "/api/v1";
 const baseUrl = rawBase.replace(/\/+$/, "");
 
+/**
+ * Absolute base URL for the API (resolves relative VITE_API_BASE_URL against
+ * window.location.origin so QR-code / app-link generators can build full URLs).
+ */
+export function getAbsoluteApiBase(): string {
+	return rawBase.startsWith("http")
+		? baseUrl
+		: window.location.origin + baseUrl;
+}
+
 export const getCurrentIdToken = async (): Promise<string> => {
 	const u = auth.currentUser;
 	if (u === null) return "";

@@ -95,6 +95,7 @@ import {
 import { LineManager } from "../components/LineManager";
 import { ProjectListScreen } from "../components/ProjectList";
 import { StopPatternWizard } from "../components/StopPatternWizard";
+import { TRViSShareDialog } from "../components/TRViSShareDialog";
 import { WorkBrowser } from "../components/WorkBrowser";
 import AuthControls from "../components/auth/AuthControls";
 
@@ -623,6 +624,7 @@ export const App = () => {
 	} | null>(null);
 	const [confirmDialog, setConfirmDialog] = useState<ConfirmState | null>(null);
 	const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
+	const [shareProjectId, setShareProjectId] = useState<string | null>(null);
 
 	const baseProject = apiProjects?.find((p) => p.id === projectId);
 
@@ -1567,6 +1569,9 @@ export const App = () => {
 						onExport={(pid) =>
 							pid !== undefined ? exportProject(pid) : exportAll()
 						}
+						onShare={(pid) => {
+							setShareProjectId(pid);
+						}}
 						t={t}
 					/>
 				)}
@@ -1739,6 +1744,18 @@ export const App = () => {
 					onClose={() => {
 						setContextMenu(null);
 					}}
+				/>
+			) : null}
+			{shareProjectId !== null ? (
+				<TRViSShareDialog
+					projectId={shareProjectId}
+					projectName={
+						apiProjects?.find((p) => p.id === shareProjectId)?.name ?? shareProjectId
+					}
+					onClose={() => {
+						setShareProjectId(null);
+					}}
+					t={t}
 				/>
 			) : null}
 		</div>

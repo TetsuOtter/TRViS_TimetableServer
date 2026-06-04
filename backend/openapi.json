@@ -2026,6 +2026,79 @@
                 ]
             }
         },
+        "/projects/{projectId}/trvis": {
+            "get": {
+                "tags": [
+                    "project"
+                ],
+                "summary": "TRViS ネイティブ形式でダウンロードする",
+                "description": "Project の全グラフを TRViS アプリが読み込める JSON 形式 (WorkGroup[]) で返す。\n\n`trvis://app/open/json?path=<このエンドポイントのURL>` の形式でアプリリンクを構成することで、TRViS アプリから直接開くことができる。\n\nこのProjectへのREAD権限が必要です。",
+                "operationId": "downloadProjectForTRViS",
+                "parameters": [
+                    {
+                        "name": "projectId",
+                        "in": "path",
+                        "description": "ProjectのID",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "取得成功",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "description": "TRViS ネイティブ形式の WorkGroup 配列",
+                                    "items": {
+                                        "type": "object"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "リクエストが不正 (Projectが大きすぎる等)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "認証トークンのエラー",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorData"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "コンテンツが存在しない",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApiErrorData"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
         "/projects/import": {
             "post": {
                 "tags": [

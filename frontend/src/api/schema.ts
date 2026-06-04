@@ -331,6 +331,26 @@ export type paths = {
 		patch?: never;
 		trace?: never;
 	};
+	"/projects/{projectId}/trvis": {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * TRViS ネイティブ形式でダウンロードする
+		 * @description Project の全グラフを TRViS アプリが読み込める JSON 形式 (WorkGroup[]) で返す。
+		 */
+		get: operations["downloadProjectForTRViS"];
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	"/projects/import": {
 		parameters: {
 			query?: never;
@@ -5871,6 +5891,48 @@ export type operations = {
 			};
 			/** @description 許可されていない操作を行おうとした */
 			403: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description コンテンツが存在しない */
+			404: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+		};
+	};
+	downloadProjectForTRViS: {
+		parameters: {
+			query?: never;
+			header?: never;
+			path: {
+				/** @description ProjectのID */
+				projectId: string;
+			};
+			cookie?: never;
+		};
+		requestBody?: never;
+		responses: {
+			/** @description 取得成功 */
+			200: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": Record<string, unknown>[];
+				};
+			};
+			/** @description リクエストが不正 (Projectが大きすぎる等) */
+			400: {
+				headers: Record<string, unknown>;
+				content: {
+					"application/json": components["schemas"]["ApiErrorData"];
+				};
+			};
+			/** @description 認証トークンのエラー */
+			401: {
 				headers: Record<string, unknown>;
 				content: {
 					"application/json": components["schemas"]["ApiErrorData"];

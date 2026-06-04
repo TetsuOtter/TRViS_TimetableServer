@@ -100,6 +100,13 @@ class ProjectApi
 				'name' => 'exportProject',
 			],
 			[
+				'methods' => ['GET'],
+				'basePath' => '/api/v1',
+				'path' => '/projects/{projectId}/trvis',
+				'handler' => [self::class, 'downloadProjectForTRViS'],
+				'name' => 'downloadProjectForTRViS',
+			],
+			[
 				'methods' => ['PUT'],
 				'basePath' => '/api/v1',
 				'path' => '/projects/{projectId}',
@@ -374,6 +381,68 @@ class ProjectApi
 		}
 
 		return $this->transferService->export(
+			projectsId: Uuid::fromString($projectId),
+			userId: $userId,
+		)->getResponseWithJson($response);
+	}
+
+	#[OA\Get(
+		path: '/projects/{projectId}/trvis',
+		operationId: 'downloadProjectForTRViS',
+		tags: ['project'],
+		summary: 'TRViS ネイティブ形式でダウンロードする',
+		description: "Project の全グラフを TRViS アプリが読み込める JSON 形式 (WorkGroup[]) で返す。\n\n`trvis://app/open/json?path=<このエンドポイントのURL>` の形式でアプリリンクを構成することで、TRViS アプリから直接開くことができる。\n\nこのProjectへのREAD権限が必要です。",
+		security: [['bearerAuth' => []]],
+		parameters: [
+			new OA\PathParameter(
+				name: 'projectId',
+				description: 'ProjectのID',
+				required: true,
+				schema: new OA\Schema(type: 'string', format: 'uuid'),
+			),
+		],
+		responses: [
+			new OA\Response(
+				response: 200,
+				description: '取得成功',
+				content: new OA\MediaType(
+					mediaType: 'application/json',
+					schema: new OA\Schema(
+						type: 'array',
+						description: 'TRViS ネイティブ形式の WorkGroup 配列',
+						items: new OA\Schema(type: 'object'),
+					),
+				),
+			),
+			new OA\Response(
+				response: 400,
+				description: 'リクエストが不正 (Projectが大きすぎる等)',
+				content: new OA\JsonContent(ref: '#/components/schemas/ApiErrorData'),
+			),
+			new OA\Response(
+				response: 401,
+				description: '認証トークンのエラー',
+				content: new OA\JsonContent(ref: '#/components/schemas/ApiErrorData'),
+			),
+			new OA\Response(
+				response: 404,
+				description: 'コンテンツが存在しない',
+				content: new OA\JsonContent(ref: '#/components/schemas/ApiErrorData'),
+			),
+		],
+	)]
+	public function downloadProjectForTRViS(
+		ServerRequestInterface $request,
+		ResponseInterface $response,
+		string $projectId
+	): ResponseInterface {
+		$userId = MyAuthMiddleware::getUserIdOrAnonymous($request);
+		if (!Uuid::isValid($projectId)) {
+			$this->logger->warning("Invalid UUID format ({projectId})", ['projectId' => $projectId]);
+			return Utils::withUuidError($response);
+		}
+
+		return $this->transferService->downloadForTRViS(
 			projectsId: Uuid::fromString($projectId),
 			userId: $userId,
 		)->getResponseWithJson($response);
