@@ -354,6 +354,7 @@ type ConfirmState = {
 
 type SidebarTreeProps = {
 	readonly project?: Project;
+	readonly isLoadingWorkGroups: boolean;
 	readonly currentScreen: Screen;
 	readonly currentWG: string | null;
 	readonly currentWork: string | null;
@@ -375,6 +376,7 @@ type SidebarTreeProps = {
 
 const SidebarTree = ({
 	project,
+	isLoadingWorkGroups,
 	currentScreen,
 	currentWG,
 	currentWork,
@@ -409,6 +411,17 @@ const SidebarTree = ({
 					style={{ paddingBottom: 6 }}>
 					{project.name}
 				</div>
+				{isLoadingWorkGroups && project.workGroups.length === 0 ? (
+					<div
+						style={{
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+							padding: "16px 0",
+						}}>
+						<span className="spinner" />
+					</div>
+				) : null}
 				{project.workGroups.map((wg) => (
 					<div key={wg.id}>
 						<div style={{ display: "flex", alignItems: "center" }}>
@@ -542,7 +555,7 @@ export const App = () => {
 
 	const [projectId, setProjectId] = useState<string | null>(null);
 
-	const { data: apiWorkGroups } = useWorkGroups(projectId ?? "");
+	const { data: apiWorkGroups, isLoading: workGroupsLoading } = useWorkGroups(projectId ?? "");
 	const createWGMutation = useCreateWorkGroup(projectId ?? "");
 	const updateWGMutation = useUpdateWorkGroup(projectId ?? "");
 	const deleteWGMutation = useDeleteWorkGroup(projectId ?? "");
@@ -556,7 +569,7 @@ export const App = () => {
 	const updateWorkMutation = useUpdateWork(currentWG ?? "");
 	const deleteWorkMutation = useDeleteWork(currentWG ?? "");
 
-	const { data: apiTrains } = useTrains(currentWork ?? "");
+	const { data: apiTrains, isLoading: trainsLoading } = useTrains(currentWork ?? "");
 	const createTrainMutation = useCreateTrain(currentWork ?? "");
 	const updateTrainMutation = useUpdateTrain(currentWork ?? "");
 	const deleteTrainMutation = useDeleteTrain(currentWork ?? "");
@@ -567,7 +580,7 @@ export const App = () => {
 	const deleteTimetableRowMutation = useDeleteTimetableRow();
 
 	const [currentLine, setCurrentLine] = useState<string | null>(null);
-	const { data: apiLines } = useLines(projectId ?? "");
+	const { data: apiLines, isLoading: linesLoading } = useLines(projectId ?? "");
 	const createLineMutation = useCreateLine(projectId ?? "");
 	const updateLineMutation = useUpdateLine(projectId ?? "");
 	const deleteLineMutation = useDeleteLine(projectId ?? "");
@@ -577,7 +590,7 @@ export const App = () => {
 	const updateProjectStationMutation = useUpdateProjectStation(projectId ?? "");
 	const deleteProjectStationMutation = useDeleteProjectStation(projectId ?? "");
 
-	const { data: apiColors } = useColors(projectId ?? "");
+	const { data: apiColors, isLoading: colorsLoading } = useColors(projectId ?? "");
 	const createColorMutation = useCreateColor(projectId ?? "");
 	const updateColorMutation = useUpdateColor(projectId ?? "");
 	const deleteColorMutation = useDeleteColor(projectId ?? "");
@@ -1423,6 +1436,7 @@ export const App = () => {
 	const sidebarContent = projectId ? (
 		<SidebarTree
 			project={project}
+			isLoadingWorkGroups={workGroupsLoading}
 			currentScreen={screen}
 			currentWG={currentWG}
 			currentWork={currentWork}
@@ -1573,6 +1587,7 @@ export const App = () => {
 				{projectId && screen === "work" && work ? (
 					<WorkBrowser
 						work={work}
+						isLoadingTrains={trainsLoading}
 						onCreateTrain={handleCreateTrain}
 						onUpdateTrain={handleUpdateTrain}
 						onDeleteTrain={handleDeleteTrain}
@@ -1628,6 +1643,7 @@ export const App = () => {
 				{projectId && screen === "lines" ? (
 					<LineManager
 						lines={modelLines}
+						isLoading={linesLoading}
 						stations={modelProjectStations}
 						stationsOnLine={modelStationsOnLine}
 						stopPatterns={modelStopPatterns}
@@ -1661,6 +1677,7 @@ export const App = () => {
 				{projectId && screen === "colors" ? (
 					<ColorManager
 						colors={apiColors ?? []}
+						isLoading={colorsLoading}
 						onCreate={handleCreateColor}
 						onUpdate={handleUpdateColor}
 						onDelete={handleDeleteColor}

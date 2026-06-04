@@ -28,6 +28,7 @@ export type ColorDraft = Omit<Color, "id" | "projectId" | "createdAt">;
 
 type ColorManagerProps = {
 	readonly colors: Color[];
+	readonly isLoading: boolean;
 	readonly onCreate: (draft: ColorDraft) => void;
 	readonly onUpdate: (vars: { id: string } & ColorDraft) => void;
 	readonly onDelete: (id: string) => void;
@@ -44,6 +45,7 @@ const EMPTY: ColorDraft = {
 
 export const ColorManager = ({
 	colors,
+	isLoading,
 	onCreate,
 	onUpdate,
 	onDelete,
@@ -116,7 +118,12 @@ export const ColorManager = ({
 				/>
 			)}
 
-			{colors.length === 0 && editingId === null ? (
+			{isLoading && colors.length === 0 && editingId === null ? (
+				<div className="loading-center">
+					<span className="spinner" />
+					読み込み中...
+				</div>
+			) : colors.length === 0 && editingId === null ? (
 				<p style={{ color: "var(--color-text-muted)", padding: "24px 0" }}>
 					{t.noColors}
 				</p>

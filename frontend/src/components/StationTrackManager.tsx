@@ -190,7 +190,9 @@ export const StationTrackManager = ({
 					)}
 
 					{isLoading ? (
-						<p style={{ color: "var(--color-text-muted)" }}>…</p>
+						<div className="loading-center" style={{ padding: "16px 0" }}>
+							<span className="spinner" />
+						</div>
 					) : (tracks ?? []).length === 0 && editingId === null ? (
 						<p
 							style={{

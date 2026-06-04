@@ -1916,6 +1916,7 @@ const LineDialog = ({
 /* ─── Main ─── */
 export type LineManagerProps = {
 	readonly lines: Line[];
+	readonly isLoading: boolean;
 	readonly stations: Station[];
 	readonly stationsOnLine: StationOnLine[];
 	readonly stopPatterns: StopPattern[];
@@ -1940,6 +1941,7 @@ export type LineManagerProps = {
 
 export const LineManager = ({
 	lines,
+	isLoading,
 	stations,
 	stationsOnLine,
 	stopPatterns,
@@ -2114,7 +2116,11 @@ export const LineManager = ({
 							}}>
 							路線一覧 ({lines.length})
 						</div>
-						{lines.length === 0 && (
+						{isLoading && lines.length === 0 ? (
+							<div className="loading-center" style={{ padding: "16px 8px" }}>
+								<span className="spinner" />
+							</div>
+						) : lines.length === 0 ? (
 							<div
 								style={{
 									padding: "12px 8px",
@@ -2123,7 +2129,7 @@ export const LineManager = ({
 								}}>
 								路線がありません。
 							</div>
-						)}
+						) : null}
 						{lines.map((l) => {
 							const sc = stationsOnLine.filter(
 								(sol) => sol.lineId === l.id
