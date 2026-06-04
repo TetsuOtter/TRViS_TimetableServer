@@ -104,13 +104,8 @@ export const ProjectListScreen = ({
 				</button>
 			</div>
 			{isLoading && projects.length === 0 ? (
-				<div
-					style={{
-						display: "flex",
-						justifyContent: "center",
-						padding: "40px 0",
-						color: "var(--color-text-muted)",
-					}}>
+				<div className="loading-center">
+					<span className="spinner" />
 					読み込み中...
 				</div>
 			) : null}

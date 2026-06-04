@@ -245,6 +245,21 @@ input, select, textarea { font-family: var(--font-main); }
 .empty-state p { font-size: 13px; max-width: 280px; line-height: 1.6; }
 .section-title { font-size: 13px; font-weight: 600; color: var(--color-text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
 
+/* Loading spinner */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner {
+  width: 18px; height: 18px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+.loading-center {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; padding: 40px 20px; color: var(--color-text-muted); font-size: 13px;
+}
+
 /* responsive */
 @media (max-width: 768px) {
   :root { --sidebar-w: 0px; }

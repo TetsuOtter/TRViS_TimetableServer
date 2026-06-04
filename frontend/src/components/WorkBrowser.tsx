@@ -495,6 +495,7 @@ const TrainHeaderBar = ({
 
 type TrainListPanelProps = {
 	readonly trains: Train[];
+	readonly isLoadingTrains: boolean;
 	readonly selectedId: string | null;
 	readonly onSelect: (id: string) => void;
 	readonly onAdd: () => void;
@@ -504,6 +505,7 @@ type TrainListPanelProps = {
 
 const TrainListPanel = ({
 	trains,
+	isLoadingTrains,
 	selectedId,
 	onSelect,
 	onAdd,
@@ -545,7 +547,12 @@ const TrainListPanel = ({
 				</button>
 			</div>
 			<div style={{ flex: 1, overflow: "auto" }}>
-				{trains.length === 0 ? (
+				{isLoadingTrains && trains.length === 0 ? (
+					<div className="loading-center">
+						<span className="spinner" />
+						読み込み中...
+					</div>
+				) : trains.length === 0 ? (
 					<div
 						className="empty-state"
 						style={{ padding: "40px 16px" }}>
@@ -658,6 +665,7 @@ const TrainListPanel = ({
 
 type WorkBrowserProps = {
 	readonly work: Work;
+	readonly isLoadingTrains: boolean;
 	readonly onCreateTrain: (draft: EntityTrainDraft) => void;
 	readonly onUpdateTrain: (vars: EntityTrainUpdate) => void;
 	readonly onDeleteTrain: (id: string) => void;
@@ -686,6 +694,7 @@ type WorkBrowserProps = {
 
 export const WorkBrowser = ({
 	work,
+	isLoadingTrains,
 	onCreateTrain,
 	onUpdateTrain,
 	onDeleteTrain,
@@ -768,6 +777,7 @@ export const WorkBrowser = ({
 			}}>
 			<TrainListPanel
 				trains={work.trains}
+				isLoadingTrains={isLoadingTrains}
 				selectedId={selectedTrainId}
 				onSelect={selectTrain}
 				onAdd={addTrain}
