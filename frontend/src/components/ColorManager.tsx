@@ -32,6 +32,7 @@ type ColorManagerProps = {
 	readonly onCreate: (draft: ColorDraft) => void;
 	readonly onUpdate: (vars: { id: string } & ColorDraft) => void;
 	readonly onDelete: (id: string) => void;
+	readonly canWrite?: boolean;
 	readonly t: Strings;
 };
 
@@ -49,6 +50,7 @@ export const ColorManager = ({
 	onCreate,
 	onUpdate,
 	onDelete,
+	canWrite = true,
 	t,
 }: ColorManagerProps) => {
 	// editingId === "new" → the add form; a real id → editing that color.
@@ -99,7 +101,7 @@ export const ColorManager = ({
 					marginBottom: 16,
 				}}>
 				<h2 style={{ fontSize: 18, fontWeight: 600 }}>🎨 {t.colorManager}</h2>
-				{editingId === null && (
+				{editingId === null && canWrite && (
 					<button
 						className="btn btn-primary btn-sm"
 						onClick={startNew}>
@@ -175,21 +177,25 @@ export const ColorManager = ({
 								}}>
 								{toHex(c.red, c.green, c.blue)}
 							</span>
-							<button
-								className="btn btn-ghost btn-sm"
-								onClick={() => {
-									startEdit(c);
-								}}>
-								{t.edit}
-							</button>
-							<button
-								className="btn btn-ghost btn-sm"
-								style={{ color: "var(--color-danger)" }}
-								onClick={() => {
-									onDelete(c.id);
-								}}>
-								🗑
-							</button>
+							{canWrite && (
+								<>
+									<button
+										className="btn btn-ghost btn-sm"
+										onClick={() => {
+											startEdit(c);
+										}}>
+										{t.edit}
+									</button>
+									<button
+										className="btn btn-ghost btn-sm"
+										style={{ color: "var(--color-danger)" }}
+										onClick={() => {
+											onDelete(c.id);
+										}}>
+										🗑
+									</button>
+								</>
+							)}
 						</div>
 					))}
 				</div>

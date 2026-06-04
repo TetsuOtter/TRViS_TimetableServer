@@ -26,6 +26,7 @@ type ProjectListScreenProps = {
 	readonly onExport: (id?: string) => void;
 	readonly onShare: (id: string) => void;
 	readonly onUseInviteKey: () => void;
+	readonly isAuthenticated: boolean;
 	readonly t: Strings;
 };
 
@@ -42,6 +43,7 @@ export const ProjectListScreen = ({
 	onExport,
 	onShare,
 	onUseInviteKey,
+	isAuthenticated,
 	t,
 }: ProjectListScreenProps) => {
 	const [menu, setMenu] = useState<MenuState | null>(null);
@@ -100,16 +102,20 @@ export const ProjectListScreen = ({
 					onChange={handleImport}
 					style={{ display: "none" }}
 				/>
-				<button
-					className="btn btn-secondary btn-sm"
-					onClick={onUseInviteKey}>
-					🔑 {t.useInviteKey}
-				</button>
-				<button
-					className="btn btn-secondary btn-sm"
-					onClick={() => fileInputRef.current?.click()}>
-					📥 {t.import}
-				</button>
+				{isAuthenticated && (
+					<button
+						className="btn btn-secondary btn-sm"
+						onClick={onUseInviteKey}>
+						🔑 {t.useInviteKey}
+					</button>
+				)}
+				{isAuthenticated && (
+					<button
+						className="btn btn-secondary btn-sm"
+						onClick={() => fileInputRef.current?.click()}>
+						📥 {t.import}
+					</button>
+				)}
 				<button
 					className="btn btn-secondary btn-sm"
 					onClick={() => {
@@ -117,11 +123,13 @@ export const ProjectListScreen = ({
 					}}>
 					📤 {t.export}
 				</button>
-				<button
-					className="btn btn-primary btn-sm"
-					onClick={onNew}>
-					＋ {t.newProject}
-				</button>
+				{isAuthenticated && (
+					<button
+						className="btn btn-primary btn-sm"
+						onClick={onNew}>
+						＋ {t.newProject}
+					</button>
+				)}
 			</div>
 			<div style={{ marginBottom: 16 }}>
 				<input
@@ -249,12 +257,14 @@ export const ProjectListScreen = ({
 							</p>
 						</div>
 					))}
-					<div
-						className="card-add"
-						onClick={onNew}>
-						<div className="card-add-icon">＋</div>
-						<div>{t.newProject}</div>
-					</div>
+					{isAuthenticated && (
+						<div
+							className="card-add"
+							onClick={onNew}>
+							<div className="card-add-icon">＋</div>
+							<div>{t.newProject}</div>
+						</div>
+					)}
 				</div>
 			)}
 
@@ -273,13 +283,18 @@ export const ProjectListScreen = ({
 								onOpen(menu.project.id);
 							},
 						},
-						{
-							icon: "✏️",
-							label: t.edit,
-							onClick: () => {
-								onEdit(menu.project);
-							},
-						},
+						...(menu.project.privilegeType === "write" ||
+						menu.project.privilegeType === "admin"
+							? [
+									{
+										icon: "✏️",
+										label: t.edit,
+										onClick: () => {
+											onEdit(menu.project);
+										},
+									},
+								]
+							: []),
 						{
 							icon: "📤",
 							label: "JSONとしてエクスポート",
@@ -294,14 +309,19 @@ export const ProjectListScreen = ({
 								onShare(menu.project.id);
 							},
 						},
-						{
-							icon: "🗑",
-							label: t.delete,
-							danger: true,
-							onClick: () => {
-								onDelete(menu.project);
-							},
-						},
+						...(menu.project.privilegeType === "write" ||
+						menu.project.privilegeType === "admin"
+							? [
+									{
+										icon: "🗑",
+										label: t.delete,
+										danger: true,
+										onClick: () => {
+											onDelete(menu.project);
+										},
+									},
+								]
+							: []),
 					]}
 				/>
 			)}

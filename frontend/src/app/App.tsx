@@ -101,6 +101,7 @@ import { UseInviteKeyDialog } from "../components/UseInviteKeyDialog";
 import { WorkBrowser } from "../components/WorkBrowser";
 import AuthControls from "../components/auth/AuthControls";
 
+import { useAuth } from "./AuthContext";
 import { useSettings } from "./SettingsContext";
 
 import type { AppliedRow } from "../components/ApplyPatternDialog";
@@ -376,6 +377,7 @@ type SidebarTreeProps = {
 	) => void;
 	readonly onAddWork: (wg: WorkGroup) => void;
 	readonly onExport: () => void;
+	readonly canWrite: boolean;
 	readonly t: ReturnType<typeof useSettings>["t"];
 };
 
@@ -395,6 +397,7 @@ const SidebarTree = ({
 	onWorkContext,
 	onAddWork,
 	onExport,
+	canWrite,
 	t,
 }: SidebarTreeProps) => {
 	const [openWG, setOpenWG] = useState<Set<string>>(
@@ -438,6 +441,7 @@ const SidebarTree = ({
 									toggle(wg.id);
 								}}
 								onContextMenu={(e) => {
+									if (!canWrite) return;
 									e.preventDefault();
 									onWGContext(e.clientX, e.clientY, wg);
 								}}
@@ -474,6 +478,7 @@ const SidebarTree = ({
 											onSelect(wg.id, w.id);
 										}}
 										onContextMenu={(e) => {
+											if (!canWrite) return;
 											e.preventDefault();
 											onWorkContext(e.clientX, e.clientY, wg, w);
 										}}>
@@ -502,28 +507,32 @@ const SidebarTree = ({
 										</span>
 									</button>
 								))}
-								<button
-									className="sidebar-item indent"
-									style={{ opacity: 0.7, fontSize: 11 }}
-									onClick={() => {
-										onAddWork(wg);
-									}}>
-									<span style={{ fontSize: 11 }}>＋</span> {t.newWork}
-								</button>
+								{canWrite && (
+									<button
+										className="sidebar-item indent"
+										style={{ opacity: 0.7, fontSize: 11 }}
+										onClick={() => {
+											onAddWork(wg);
+										}}>
+										<span style={{ fontSize: 11 }}>＋</span> {t.newWork}
+									</button>
+								)}
 							</>
 						)}
 					</div>
 				))}
 				<div style={{ height: 8 }} />
-				<button
-					className="sidebar-item"
-					style={{
-						color: "var(--color-sidebar-text)",
-						fontSize: 12,
-					}}
-					onClick={onAddWG}>
-					<span style={{ fontSize: 11 }}>＋</span> {t.newWorkGroup}
-				</button>
+				{canWrite && (
+					<button
+						className="sidebar-item"
+						style={{
+							color: "var(--color-sidebar-text)",
+							fontSize: 12,
+						}}
+						onClick={onAddWG}>
+						<span style={{ fontSize: 11 }}>＋</span> {t.newWorkGroup}
+					</button>
+				)}
 			</div>
 			<div className="sidebar-footer">
 				<button
@@ -555,6 +564,7 @@ const SidebarTree = ({
 };
 
 export const App = () => {
+	const { user } = useAuth();
 	const { theme, toggleTheme, lang, toggleLang, density, t } = useSettings();
 
 	const {
@@ -655,6 +665,10 @@ export const App = () => {
 	const [shareProjectId, setShareProjectId] = useState<string | null>(null);
 
 	const baseProject = apiProjects?.find((p) => p.id === projectId);
+	const isAuthenticated = user !== null;
+	const canWrite =
+		baseProject?.privilegeType === "write" ||
+		baseProject?.privilegeType === "admin";
 
 	const modelProjectStations = (apiProjectStations ?? []).map(
 		entityProjectStationToModel
@@ -1479,6 +1493,7 @@ export const App = () => {
 				setCurrentWG(w.id);
 				setEditingWork({ wgId: w.id, new: true });
 			}}
+			canWrite={canWrite}
 			onWGContext={(x, y, wgRef) => {
 				setContextMenu({
 					x,
@@ -1608,6 +1623,7 @@ export const App = () => {
 						onUseInviteKey={() => {
 							setShowUseInviteKey(true);
 						}}
+						isAuthenticated={isAuthenticated}
 						t={t}
 					/>
 				)}
@@ -1636,6 +1652,7 @@ export const App = () => {
 						onCreateRow={handleCreateRow}
 						onUpdateRow={handleUpdateRow}
 						onDeleteRow={handleDeleteRow}
+						canWrite={canWrite}
 						t={t}
 					/>
 				) : null}
@@ -1644,7 +1661,7 @@ export const App = () => {
 						className="empty-state"
 						style={{ padding: 60 }}>
 						<p>このワークグループにはワークがありません。</p>
-						{wg ? (
+						{wg && canWrite ? (
 							<button
 								className="btn btn-primary btn-sm"
 								onClick={() => {
@@ -1656,7 +1673,7 @@ export const App = () => {
 								＋ {t.newWork}
 							</button>
 						) : null}
-						{!wg && project ? (
+						{!wg && project && canWrite ? (
 							<button
 								className="btn btn-primary btn-sm"
 								onClick={() => {
@@ -1698,6 +1715,7 @@ export const App = () => {
 						onDuplicateStopPattern={(p) => {
 							void handleDuplicateStopPattern(p);
 						}}
+						canWrite={canWrite}
 						t={t}
 					/>
 				) : null}
@@ -1708,6 +1726,7 @@ export const App = () => {
 						onCreate={handleCreateColor}
 						onUpdate={handleUpdateColor}
 						onDelete={handleDeleteColor}
+						canWrite={canWrite}
 						t={t}
 					/>
 				) : null}
@@ -1721,6 +1740,7 @@ export const App = () => {
 			</AppShell>
 
 			{showStopPattern &&
+			canWrite &&
 			(editingPattern === null || apiEditingRows !== undefined) ? (
 				<StopPatternWizard
 					key={editingPattern?.id ?? "new"}

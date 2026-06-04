@@ -108,6 +108,7 @@ type TimeCellProps = {
 	readonly placeholder?: string;
 	readonly muted?: boolean;
 	readonly formattedValue?: string | null;
+	readonly readOnly?: boolean;
 };
 
 // TimeCell stores/emits HH:MM:SS internally (or free-text via onChangeText).
@@ -121,6 +122,7 @@ const TimeCell = ({
 	placeholder = "──:──",
 	muted,
 	formattedValue,
+	readOnly,
 }: TimeCellProps) => {
 	const [editing, setEditing] = useState(false);
 	const [draft, setDraft] = useState("");
@@ -207,11 +209,9 @@ const TimeCell = ({
 		return (
 			<span
 				className="time-display"
-				onClick={() => {
-					startEditing(displayText);
-				}}
-				title={`表示文字列: ${displayText} — クリックして編集`}
-				style={{ textAlign: "center", justifyContent: "center" }}>
+				onClick={readOnly ? undefined : () => { startEditing(displayText); }}
+				title={readOnly ? `表示文字列: ${displayText}` : `表示文字列: ${displayText} — クリックして編集`}
+				style={{ textAlign: "center", justifyContent: "center", cursor: readOnly ? "default" : undefined }}>
 				<span
 					style={{
 						fontFamily: "var(--font-mono)",
@@ -230,11 +230,9 @@ const TimeCell = ({
 	return (
 		<span
 			className="time-display"
-			onClick={() => {
-				startEditing(editDraft);
-			}}
-			title={value ? `${value} — クリックして編集` : "クリックして編集"}
-			style={{ textAlign: "center", justifyContent: "center" }}>
+			onClick={readOnly ? undefined : () => { startEditing(editDraft); }}
+			title={readOnly ? (value ?? "") : (value ? `${value} — クリックして編集` : "クリックして編集")}
+			style={{ textAlign: "center", justifyContent: "center", cursor: readOnly ? "default" : undefined }}>
 			{hasFormatted ? (
 				formattedValue ? (
 					<AlignedTime
@@ -905,10 +903,12 @@ const RowDetailModal = ({
 const TrackCell = ({
 	row,
 	onChange,
+	disabled,
 	t,
 }: {
 	readonly row: TimetableRow;
 	readonly onChange: (id: string | undefined) => void;
+	readonly disabled?: boolean;
 	readonly t: Strings;
 }) => {
 	const [open, setOpen] = useState(false);
@@ -924,7 +924,7 @@ const TrackCell = ({
 			<button
 				type="button"
 				className="track-pick"
-				disabled={stationId === ""}
+				disabled={stationId === "" || disabled}
 				onClick={() => {
 					setOpen(true);
 				}}
@@ -988,11 +988,13 @@ const ColorCell = ({
 	row,
 	colors,
 	onChange,
+	disabled,
 	t,
 }: {
 	readonly row: TimetableRow;
 	readonly colors: EntityColor[];
 	readonly onChange: (id: string | undefined) => void;
+	readonly disabled?: boolean;
 	readonly t: Strings;
 }) => {
 	const selected = row.colorIdMarker
@@ -1024,6 +1026,7 @@ const ColorCell = ({
 			<select
 				className="color-select"
 				value={row.colorIdMarker ?? ""}
+				disabled={disabled}
 				style={deleted ? { color: "var(--color-danger)" } : undefined}
 				onChange={(e) => {
 					onChange(e.target.value === "" ? undefined : e.target.value);
@@ -1063,6 +1066,7 @@ type StationRowProps = {
 	) => void;
 	readonly onDeleteRow: (idx: number) => void;
 	readonly onOpenDetail: () => void;
+	readonly canWrite: boolean;
 	readonly t: Strings;
 };
 
@@ -1076,6 +1080,7 @@ const StationRow = ({
 	onUpdateRowFields,
 	onDeleteRow,
 	onOpenDetail,
+	canWrite,
 	t,
 }: StationRowProps) => {
 	const [remarksDraft, setRemarksDraft] = useState(row.remarks);
@@ -1116,11 +1121,13 @@ const StationRow = ({
 			<td>
 				<div
 					className="station-cell"
-					onDoubleClick={onOpenDetail}
+					onDoubleClick={canWrite ? onOpenDetail : undefined}
 					title={
 						row.stationDeleted
 							? "この駅は削除されています"
-							: "ダブルクリックで詳細編集"
+							: canWrite
+								? "ダブルクリックで詳細編集"
+								: undefined
 					}>
 					<span
 						className={`station-name ${!row.stationName ? "empty" : ""} ${row.stationDeleted ? "tombstone" : ""}`}>
@@ -1149,6 +1156,7 @@ const StationRow = ({
 						onUpdateRowFields(idx, { arrive: "", arriveDisplayText: v });
 					}}
 					muted={!!row.arriveHidden}
+					readOnly={!canWrite}
 				/>
 			</td>
 			<td style={row.isPass ? { color: "oklch(0.55 0.12 15)" } : {}}>
@@ -1185,6 +1193,7 @@ const StationRow = ({
 							});
 						}}
 						muted={!!row.departureHidden}
+						readOnly={!canWrite}
 					/>
 				)}
 			</td>
@@ -1193,6 +1202,7 @@ const StationRow = ({
 					type="checkbox"
 					className="toggle-check"
 					checked={!!row.isPass}
+					disabled={!canWrite}
 					onChange={(e) => {
 						onUpdateRow(idx, "isPass", e.target.checked);
 					}}
@@ -1204,6 +1214,7 @@ const StationRow = ({
 					onChange={(id) => {
 						onUpdateRow(idx, "stationTrackId", id);
 					}}
+					disabled={!canWrite}
 					t={t}
 				/>
 			</td>
@@ -1214,6 +1225,7 @@ const StationRow = ({
 					onChange={(id) => {
 						onUpdateRow(idx, "colorIdMarker", id);
 					}}
+					disabled={!canWrite}
 					t={t}
 				/>
 			</td>
@@ -1222,10 +1234,13 @@ const StationRow = ({
 					<input
 						className="remarks-input"
 						value={remarksDraft || ""}
+						readOnly={!canWrite}
 						onChange={(e) => {
+							if (!canWrite) return;
 							setRemarksDraft(e.target.value);
 						}}
 						onBlur={(e) => {
+							if (!canWrite) return;
 							const v = e.target.value;
 							if (v !== row.remarks) {
 								onUpdateRow(idx, "remarks", v);
@@ -1233,25 +1248,30 @@ const StationRow = ({
 						}}
 						placeholder="—"
 					/>
-					<BBCodeEditButton
-						title="記事"
-						value={remarksDraft || ""}
-						onChange={(v) => {
-							setRemarksDraft(v);
-							onUpdateRow(idx, "remarks", v);
-						}}
-						multiline={false}
-					/>
+					{canWrite && (
+						<BBCodeEditButton
+							title="記事"
+							value={remarksDraft || ""}
+							onChange={(v) => {
+								setRemarksDraft(v);
+								onUpdateRow(idx, "remarks", v);
+							}}
+							multiline={false}
+						/>
+					)}
 				</div>
 			</td>
 			<td>
 				<div className="actions-cell">
+					{canWrite && (
 					<button
 						className="row-action-btn"
 						onClick={onOpenDetail}
 						title={t.detail}>
 						⚙
 					</button>
+					)}
+					{canWrite && (
 					<button
 						className="row-action-btn del"
 						onClick={() => {
@@ -1260,6 +1280,7 @@ const StationRow = ({
 						title={t.delete}>
 						✕
 					</button>
+					)}
 				</div>
 			</td>
 		</tr>
@@ -1386,6 +1407,7 @@ type TimetableGridProps = {
 	readonly onCreateRow: (row: TimetableRow) => void;
 	readonly onUpdateRow: (rowId: string, row: TimetableRow) => void;
 	readonly onDeleteRow: (rowId: string) => void;
+	readonly canWrite?: boolean;
 	readonly t: Strings;
 };
 
@@ -1396,6 +1418,7 @@ export const TimetableGrid = ({
 	onCreateRow,
 	onUpdateRow,
 	onDeleteRow,
+	canWrite = true,
 	t,
 }: TimetableGridProps) => {
 	const rows = train.timetableRows ?? [];
@@ -1550,6 +1573,7 @@ export const TimetableGrid = ({
 									onOpenDetail={() => {
 										setDetailRow(row);
 									}}
+									canWrite={canWrite}
 									t={t}
 								/>
 							);
@@ -1559,13 +1583,15 @@ export const TimetableGrid = ({
 			</div>
 
 			<div className="add-row-bar">
-				<button
-					className="btn btn-secondary btn-sm"
-					onClick={() => {
-						setShowPicker(true);
-					}}>
-					＋ {t.addRow}
-				</button>
+				{canWrite && (
+					<button
+						className="btn btn-secondary btn-sm"
+						onClick={() => {
+							setShowPicker(true);
+						}}>
+						＋ {t.addRow}
+					</button>
+				)}
 				{rows.length > 0 && (
 					<span style={{ fontSize: 11, color: "var(--color-text-muted)" }}>
 						{rows.length} 駅 · 通過 {rows.filter((r) => r.isPass).length} · 運停{" "}

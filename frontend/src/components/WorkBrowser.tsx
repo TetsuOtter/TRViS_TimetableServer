@@ -413,6 +413,7 @@ type TrainHeaderBarProps = {
 	readonly train: Train;
 	readonly onOpenDialog: () => void;
 	readonly onApplyPattern: () => void;
+	readonly canWrite: boolean;
 	readonly t: Strings;
 };
 
@@ -420,6 +421,7 @@ const TrainHeaderBar = ({
 	train,
 	onOpenDialog,
 	onApplyPattern,
+	canWrite,
 	t,
 }: TrainHeaderBarProps) => {
 	const fl = (s?: string) => (s ? String(s).split("\n")[0] : "");
@@ -477,17 +479,21 @@ const TrainHeaderBar = ({
 						<span>· 牽引{fl(train.nominalTractiveCapacity)}</span>
 					)}
 				</span>
-				<button
-					className="btn btn-ghost btn-sm"
-					onClick={onApplyPattern}
-					title="停車パターンを適用">
-					🧩 パターン適用
-				</button>
-				<button
-					className="btn btn-secondary btn-sm"
-					onClick={onOpenDialog}>
-					⚙ {t.trainInfo}
-				</button>
+				{canWrite && (
+					<>
+						<button
+							className="btn btn-ghost btn-sm"
+							onClick={onApplyPattern}
+							title="停車パターンを適用">
+							🧩 パターン適用
+						</button>
+						<button
+							className="btn btn-secondary btn-sm"
+							onClick={onOpenDialog}>
+							⚙ {t.trainInfo}
+						</button>
+					</>
+				)}
 			</div>
 		</div>
 	);
@@ -500,6 +506,7 @@ type TrainListPanelProps = {
 	readonly onSelect: (id: string) => void;
 	readonly onAdd: () => void;
 	readonly onAddViaPattern: () => void;
+	readonly canWrite: boolean;
 	readonly t: Strings;
 };
 
@@ -510,6 +517,7 @@ const TrainListPanel = ({
 	onSelect,
 	onAdd,
 	onAddViaPattern,
+	canWrite,
 	t,
 }: TrainListPanelProps) => {
 	return (
@@ -534,17 +542,21 @@ const TrainListPanel = ({
 					({trains.length})
 				</span>
 				<div style={{ flex: 1 }} />
-				<button
-					className="btn btn-ghost btn-xs"
-					onClick={onAddViaPattern}
-					title={t.newStopPattern}>
-					🧩
-				</button>
-				<button
-					className="btn btn-primary btn-xs"
-					onClick={onAdd}>
-					＋ {t.newTrain}
-				</button>
+				{canWrite && (
+					<>
+						<button
+							className="btn btn-ghost btn-xs"
+							onClick={onAddViaPattern}
+							title={t.newStopPattern}>
+							🧩
+						</button>
+						<button
+							className="btn btn-primary btn-xs"
+							onClick={onAdd}>
+							＋ {t.newTrain}
+						</button>
+					</>
+				)}
 			</div>
 			<div style={{ flex: 1, overflow: "auto" }}>
 				{isLoadingTrains && trains.length === 0 ? (
@@ -689,6 +701,7 @@ type WorkBrowserProps = {
 		row: TimetableRow
 	) => void;
 	readonly onDeleteRow: (trainId: string, rowId: string) => void;
+	readonly canWrite?: boolean;
 	readonly t: Strings;
 };
 
@@ -708,6 +721,7 @@ export const WorkBrowser = ({
 	onCreateRow,
 	onUpdateRow,
 	onDeleteRow,
+	canWrite = true,
 	t,
 }: WorkBrowserProps) => {
 	const [selectedTrainId, setSelectedTrainId] = useState<string | null>(
@@ -784,6 +798,7 @@ export const WorkBrowser = ({
 				onAddViaPattern={() => {
 					setShowApplyPattern(true);
 				}}
+				canWrite={canWrite}
 				t={t}
 			/>
 			<div
@@ -804,6 +819,7 @@ export const WorkBrowser = ({
 								setApplyTargetTrain(selectedTrain);
 								setShowApplyPattern(true);
 							}}
+							canWrite={canWrite}
 							t={t}
 						/>
 						<div style={{ flex: 1, overflow: "hidden" }}>
@@ -820,6 +836,7 @@ export const WorkBrowser = ({
 								onDeleteRow={(rowId) => {
 									onDeleteRow(selectedTrain.id, rowId);
 								}}
+								canWrite={canWrite}
 								t={t}
 							/>
 						</div>
@@ -856,20 +873,22 @@ export const WorkBrowser = ({
 							<path d="M3 10h18M9 14h.01M15 14h.01" />
 						</svg>
 						<p>{t.noTrains}</p>
-						<div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-							<button
-								className="btn btn-secondary btn-sm"
-								onClick={() => {
-									setShowApplyPattern(true);
-								}}>
-								🧩 パターンから作成
-							</button>
-							<button
-								className="btn btn-primary btn-sm"
-								onClick={addTrain}>
-								＋ {t.newTrain}
-							</button>
-						</div>
+						{canWrite && (
+							<div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+								<button
+									className="btn btn-secondary btn-sm"
+									onClick={() => {
+										setShowApplyPattern(true);
+									}}>
+									🧩 パターンから作成
+								</button>
+								<button
+									className="btn btn-primary btn-sm"
+									onClick={addTrain}>
+									＋ {t.newTrain}
+								</button>
+							</div>
+						)}
 					</div>
 				)}
 			</div>

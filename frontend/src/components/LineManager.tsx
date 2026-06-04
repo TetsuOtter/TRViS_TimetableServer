@@ -153,6 +153,7 @@ type StationsTabProps = {
 	readonly onCreateStation: (draft: EntityStationDraft) => void;
 	readonly onUpdateStation: (vars: EntityStationUpdate) => void;
 	readonly onDeleteStation: (id: string) => void;
+	readonly canWrite: boolean;
 	readonly t: Strings;
 };
 
@@ -163,6 +164,7 @@ const StationsTab = ({
 	onCreateStation,
 	onUpdateStation,
 	onDeleteStation,
+	canWrite,
 	t,
 }: StationsTabProps) => {
 	const [editingId, setEditingId] = useState<string | null>(null); // station id or 'new'
@@ -386,22 +388,22 @@ const StationsTab = ({
 								<tr
 									key={s.id}
 									onClick={() => {
-										if (!isEditing) startEdit(s);
+										if (!isEditing && canWrite) startEdit(s);
 									}}
 									style={{
 										borderTop: "1px solid var(--color-border)",
 										background: isEditing
 											? "var(--color-accent-bg)"
 											: "transparent",
-										cursor: isEditing ? "default" : "pointer",
+										cursor: isEditing || !canWrite ? "default" : "pointer",
 										transition: "background .1s",
 									}}
 									onMouseEnter={(e) => {
-										if (!isEditing)
+										if (!isEditing && canWrite)
 											e.currentTarget.style.background = "var(--color-bg)";
 									}}
 									onMouseLeave={(e) => {
-										if (!isEditing)
+										if (!isEditing && canWrite)
 											e.currentTarget.style.background = "transparent";
 									}}>
 									<td
@@ -668,30 +670,34 @@ const StationsTab = ({
 													textAlign: "right",
 													whiteSpace: "nowrap",
 												}}>
-												<button
-													className="btn btn-ghost btn-xs"
-													title={t.trackManager}
-													onClick={(e) => {
-														e.stopPropagation();
-														setTracksStation({
-															id: s.id,
-															name: s.stationName,
-														});
-													}}>
-													🛤
-												</button>
-												<button
-													className="btn btn-ghost btn-xs"
-													style={{
-														color: "var(--color-danger)",
-														opacity: 0.7,
-													}}
-													onClick={(e) => {
-														e.stopPropagation();
-														deleteStation(s.id);
-													}}>
-													🗑
-												</button>
+												{canWrite && (
+													<>
+														<button
+															className="btn btn-ghost btn-xs"
+															title={t.trackManager}
+															onClick={(e) => {
+																e.stopPropagation();
+																setTracksStation({
+																	id: s.id,
+																	name: s.stationName,
+																});
+															}}>
+															🛤
+														</button>
+														<button
+															className="btn btn-ghost btn-xs"
+															style={{
+																color: "var(--color-danger)",
+																opacity: 0.7,
+															}}
+															onClick={(e) => {
+																e.stopPropagation();
+																deleteStation(s.id);
+															}}>
+															🗑
+														</button>
+													</>
+												)}
 											</td>
 										</>
 									)}
@@ -837,7 +843,7 @@ const StationsTab = ({
 									</button>
 								</td>
 							</tr>
-						) : (
+						) : canWrite ? (
 							<tr
 								style={{
 									borderTop: "1px dashed var(--color-border)",
@@ -872,7 +878,7 @@ const StationsTab = ({
 									</button>
 								</td>
 							</tr>
-						)}
+						) : null}
 					</tbody>
 				</table>
 			</div>
@@ -985,6 +991,7 @@ type LineStationsTabProps = {
 	readonly onUpdateStationOnLine: (vars: EntitySolUpdate) => void;
 	readonly onDeleteStationOnLine: (id: string) => void;
 	readonly onReorderStationsOnLine: (updates: EntitySolUpdate[]) => void;
+	readonly canWrite?: boolean;
 };
 
 const LineStationsTab = ({
@@ -996,6 +1003,7 @@ const LineStationsTab = ({
 	onUpdateStationOnLine,
 	onDeleteStationOnLine,
 	onReorderStationsOnLine,
+	canWrite = true,
 }: LineStationsTabProps) => {
 	const [editingId, setEditingId] = useState<string | null>(null); // sol.id or 'new'
 	const [draft, setDraft] = useState<SolDraft>({
@@ -1233,11 +1241,12 @@ const LineStationsTab = ({
 							return (
 								<tr
 									key={sol.id}
-									draggable={!isEditing}
+									draggable={!isEditing && canWrite}
 									onDragStart={(e) => {
-										onDragStart(e, sol.id);
+										if (canWrite) onDragStart(e, sol.id);
 									}}
 									onDragOver={(e) => {
+										if (!canWrite) return;
 										e.preventDefault();
 										setDragOver(sol.id);
 									}}
@@ -1245,10 +1254,10 @@ const LineStationsTab = ({
 										setDragOver(null);
 									}}
 									onDrop={(e) => {
-										onDrop(e, sol.id);
+										if (canWrite) onDrop(e, sol.id);
 									}}
 									onClick={() => {
-										if (!isEditing) startEditSol(sol);
+										if (!isEditing && canWrite) startEditSol(sol);
 									}}
 									style={{
 										borderTop:
@@ -1518,18 +1527,20 @@ const LineStationsTab = ({
 													padding: "4px 6px",
 													textAlign: "right",
 												}}>
-												<button
-													className="btn btn-ghost btn-xs"
-													style={{
-														color: "var(--color-danger)",
-														opacity: 0.6,
-													}}
-													onClick={(e) => {
-														e.stopPropagation();
-														removeSol(sol.id, sol.station.stationName);
-													}}>
-													🗑
-												</button>
+												{canWrite && (
+													<button
+														className="btn btn-ghost btn-xs"
+														style={{
+															color: "var(--color-danger)",
+															opacity: 0.6,
+														}}
+														onClick={(e) => {
+															e.stopPropagation();
+															removeSol(sol.id, sol.station.stationName);
+														}}>
+														🗑
+													</button>
+												)}
 											</td>
 										</>
 									)}
@@ -1665,7 +1676,7 @@ const LineStationsTab = ({
 									</button>
 								</td>
 							</tr>
-						) : (
+						) : canWrite ? (
 							<tr
 								style={{
 									borderTop: "1px dashed var(--color-border)",
@@ -1700,7 +1711,7 @@ const LineStationsTab = ({
 									</button>
 								</td>
 							</tr>
-						)}
+						) : null}
 					</tbody>
 				</table>
 			</div>
@@ -1716,6 +1727,7 @@ type StopPatternCardProps = {
 	readonly onEdit: () => void;
 	readonly onDuplicate: () => void;
 	readonly onDelete: (id: string) => void;
+	readonly canWrite?: boolean;
 };
 
 const StopPatternCard = ({
@@ -1725,6 +1737,7 @@ const StopPatternCard = ({
 	onEdit,
 	onDuplicate,
 	onDelete,
+	canWrite = true,
 }: StopPatternCardProps) => {
 	const line = lines.find((l) => l.id === pattern.lineId);
 	const fromSt = stations.find((s) => s.id === pattern.fromStationId);
@@ -1777,37 +1790,39 @@ const StopPatternCard = ({
 			<div style={{ fontSize: 11, color: "var(--color-text-muted)" }}>
 				停車 {stops}駅 · 通過 {passes}駅
 			</div>
-			<div
-				style={{
-					display: "flex",
-					gap: 4,
-					marginTop: 4,
-					borderTop: "1px solid var(--color-border)",
-					paddingTop: 8,
-				}}>
-				<button
-					className="btn btn-secondary btn-xs"
-					style={{ flex: 1 }}
-					onClick={onEdit}>
-					✏ 編集
-				</button>
-				<button
-					className="btn btn-ghost btn-xs"
-					style={{ flex: 1 }}
-					onClick={onDuplicate}
-					title="複製">
-					⎘ 複製
-				</button>
-				<button
-					className="btn btn-ghost btn-xs"
-					onClick={() => {
-						if (confirm(`「${pattern.name}」を削除しますか？`))
-							onDelete(pattern.id);
-					}}
-					style={{ color: "var(--color-danger)" }}>
-					🗑
-				</button>
-			</div>
+			{canWrite && (
+				<div
+					style={{
+						display: "flex",
+						gap: 4,
+						marginTop: 4,
+						borderTop: "1px solid var(--color-border)",
+						paddingTop: 8,
+					}}>
+					<button
+						className="btn btn-secondary btn-xs"
+						style={{ flex: 1 }}
+						onClick={onEdit}>
+						✏ 編集
+					</button>
+					<button
+						className="btn btn-ghost btn-xs"
+						style={{ flex: 1 }}
+						onClick={onDuplicate}
+						title="複製">
+						⎘ 複製
+					</button>
+					<button
+						className="btn btn-ghost btn-xs"
+						onClick={() => {
+							if (confirm(`「${pattern.name}」を削除しますか？`))
+								onDelete(pattern.id);
+						}}
+						style={{ color: "var(--color-danger)" }}>
+						🗑
+					</button>
+				</div>
+			)}
 		</div>
 	);
 };
@@ -1951,6 +1966,7 @@ export type LineManagerProps = {
 	readonly onEditStopPattern: (p: StopPattern) => void;
 	readonly onDeleteStopPattern: (id: string) => void;
 	readonly onDuplicateStopPattern: (p: StopPattern) => void;
+	readonly canWrite?: boolean;
 	readonly t: Strings;
 };
 
@@ -1976,6 +1992,7 @@ export const LineManager = ({
 	onEditStopPattern,
 	onDeleteStopPattern,
 	onDuplicateStopPattern,
+	canWrite = true,
 	t,
 }: LineManagerProps) => {
 	const [mainTab, setMainTab] = useState<"lines" | "stations">("lines");
@@ -2055,7 +2072,7 @@ export const LineManager = ({
 					路線・駅・停車パターンを管理します
 				</span>
 				<div style={{ flex: 1 }} />
-				{mainTab === "lines" && (
+				{mainTab === "lines" && canWrite && (
 					<button
 						className="btn btn-secondary btn-sm"
 						onClick={() => {
@@ -2198,19 +2215,21 @@ export const LineManager = ({
 											<span>🧩 {pc}</span>
 										</div>
 									</button>
-									<button
-										className="btn btn-ghost btn-xs"
-										style={{
-											position: "absolute",
-											right: 4,
-											top: 6,
-										}}
-										onClick={(e) => {
-											e.stopPropagation();
-											setLineDialog(l);
-										}}>
-										⚙
-									</button>
+									{canWrite && (
+										<button
+											className="btn btn-ghost btn-xs"
+											style={{
+												position: "absolute",
+												right: 4,
+												top: 6,
+											}}
+											onClick={(e) => {
+												e.stopPropagation();
+												setLineDialog(l);
+											}}>
+											⚙
+										</button>
+									)}
 								</div>
 							);
 						})}
@@ -2259,6 +2278,7 @@ export const LineManager = ({
 										onUpdateStationOnLine={onUpdateStationOnLine}
 										onDeleteStationOnLine={onDeleteStationOnLine}
 										onReorderStationsOnLine={onReorderStationsOnLine}
+										canWrite={canWrite}
 									/>
 								)}
 
@@ -2279,11 +2299,13 @@ export const LineManager = ({
 												{activeLine.name} の停車パターン
 											</strong>
 											<div style={{ flex: 1 }} />
-											<button
-												className="btn btn-primary btn-sm"
-												onClick={onOpenStopPatternWizard}>
-												🧩 ウィザードで作成
-											</button>
+											{canWrite && (
+												<button
+													className="btn btn-primary btn-sm"
+													onClick={onOpenStopPatternWizard}>
+													🧩 ウィザードで作成
+												</button>
+											)}
 										</div>
 										{linePatterns.length === 0 ? (
 											<div
@@ -2328,6 +2350,7 @@ export const LineManager = ({
 															onDuplicateStopPattern(p);
 														}}
 														onDelete={deletePattern}
+														canWrite={canWrite}
 													/>
 												))}
 											</div>
@@ -2349,6 +2372,7 @@ export const LineManager = ({
 					onCreateStation={onCreateStation}
 					onUpdateStation={onUpdateStation}
 					onDeleteStation={onDeleteStation}
+					canWrite={canWrite}
 					t={t}
 				/>
 			)}
