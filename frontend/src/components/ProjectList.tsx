@@ -41,7 +41,16 @@ export const ProjectListScreen = ({
 	t,
 }: ProjectListScreenProps) => {
 	const [menu, setMenu] = useState<MenuState | null>(null);
+	const [searchQuery, setSearchQuery] = useState("");
 	const fileInputRef = useRef<HTMLInputElement>(null);
+
+	const filteredProjects = searchQuery
+		? projects.filter(
+				(p) =>
+					p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+					p.description.toLowerCase().includes(searchQuery.toLowerCase())
+			)
+		: projects;
 
 	const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
@@ -75,7 +84,9 @@ export const ProjectListScreen = ({
 					{t.projects}
 				</h1>
 				<span style={{ fontSize: 13, color: "var(--color-text-muted)" }}>
-					{projects.length} 件
+					{searchQuery
+						? `${filteredProjects.length} / ${projects.length} 件`
+						: `${projects.length} 件`}
 				</span>
 				<div style={{ flex: 1 }} />
 				<input
@@ -102,6 +113,26 @@ export const ProjectListScreen = ({
 					onClick={onNew}>
 					＋ {t.newProject}
 				</button>
+			</div>
+			<div style={{ marginBottom: 16 }}>
+				<input
+					type="search"
+					placeholder={t.search}
+					value={searchQuery}
+					onChange={(e) => {
+						setSearchQuery(e.target.value);
+					}}
+					style={{
+						width: "100%",
+						padding: "8px 12px",
+						fontSize: 14,
+						border: "1px solid var(--color-border)",
+						borderRadius: 6,
+						background: "var(--color-bg-input, var(--color-bg))",
+						color: "var(--color-text)",
+						boxSizing: "border-box",
+					}}
+				/>
 			</div>
 			{isLoading && projects.length === 0 ? (
 				<div className="loading-center">
@@ -135,7 +166,7 @@ export const ProjectListScreen = ({
 				<div
 					className="card-grid"
 					style={{ padding: 0 }}>
-					{projects.map((p) => (
+					{filteredProjects.map((p) => (
 						<div
 							key={p.id}
 							className="card project-card"
