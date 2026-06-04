@@ -267,7 +267,7 @@ const StationsTab = ({
 		e: KeyboardEvent<HTMLInputElement>,
 		isLast: boolean
 	) => {
-		if (e.key === "Enter") {
+		if (e.key === "Enter" && !e.nativeEvent.isComposing) {
 			e.preventDefault();
 			commit();
 		}
@@ -418,29 +418,33 @@ const StationsTab = ({
 									{isEditing ? (
 										<>
 											<td style={{ padding: "4px 4px" }}>
-												<ICell
-													inputRef={firstInputRef}
-													value={draft.stationName}
-													onChange={(v) => {
-														set("stationName", v as string);
-													}}
-													onKeyDown={(e) => {
-														handleKeyDown(e, false);
-													}}
-													placeholder="横浜"
-												/>
+												<form onSubmit={(e) => { e.preventDefault(); commit(); }} style={{ margin: 0 }}>
+													<ICell
+														inputRef={firstInputRef}
+														value={draft.stationName}
+														onChange={(v) => {
+															set("stationName", v as string);
+														}}
+														onKeyDown={(e) => {
+															if (e.key === "Escape") { e.preventDefault(); cancelEdit(); }
+														}}
+														placeholder="横浜"
+													/>
+												</form>
 											</td>
 											<td style={{ padding: "4px 4px" }}>
-												<ICell
-													value={draft.fullName}
-													onChange={(v) => {
-														set("fullName", v as string);
-													}}
-													onKeyDown={(e) => {
-														handleKeyDown(e, false);
-													}}
-													placeholder="横浜駅"
-												/>
+												<form onSubmit={(e) => { e.preventDefault(); commit(); }} style={{ margin: 0 }}>
+													<ICell
+														value={draft.fullName}
+														onChange={(v) => {
+															set("fullName", v as string);
+														}}
+														onKeyDown={(e) => {
+															if (e.key === "Escape") { e.preventDefault(); cancelEdit(); }
+														}}
+														placeholder="横浜駅"
+													/>
+												</form>
 											</td>
 											<td style={{ padding: "4px 4px" }}>
 												<ICell
@@ -712,29 +716,33 @@ const StationsTab = ({
 									新
 								</td>
 								<td style={{ padding: "4px 4px" }}>
-									<ICell
-										inputRef={firstInputRef}
-										value={draft.stationName}
-										onChange={(v) => {
-											set("stationName", v as string);
-										}}
-										onKeyDown={(e) => {
-											handleKeyDown(e, false);
-										}}
-										placeholder="駅名（短）"
-									/>
+									<form onSubmit={(e) => { e.preventDefault(); commit(); }} style={{ margin: 0 }}>
+										<ICell
+											inputRef={firstInputRef}
+											value={draft.stationName}
+											onChange={(v) => {
+												set("stationName", v as string);
+											}}
+											onKeyDown={(e) => {
+												if (e.key === "Escape") { e.preventDefault(); cancelEdit(); }
+											}}
+											placeholder="駅名（短）"
+										/>
+									</form>
 								</td>
 								<td style={{ padding: "4px 4px" }}>
-									<ICell
-										value={draft.fullName}
-										onChange={(v) => {
-											set("fullName", v as string);
-										}}
-										onKeyDown={(e) => {
-											handleKeyDown(e, false);
-										}}
-										placeholder="フルネーム"
-									/>
+									<form onSubmit={(e) => { e.preventDefault(); commit(); }} style={{ margin: 0 }}>
+										<ICell
+											value={draft.fullName}
+											onChange={(v) => {
+												set("fullName", v as string);
+											}}
+											onKeyDown={(e) => {
+												if (e.key === "Escape") { e.preventDefault(); cancelEdit(); }
+											}}
+											placeholder="フルネーム"
+										/>
+									</form>
 								</td>
 								<td style={{ padding: "4px 4px" }}>
 									<ICell
@@ -915,39 +923,46 @@ const QuickAddBar = ({ stations, onAdd }: QuickAddBarProps) => {
 				flex: 1,
 				alignItems: "center",
 			}}>
-			<input
-				ref={ref}
-				value={name}
-				onChange={(e) => {
-					setName(e.target.value);
+			<form
+				onSubmit={(e) => {
+					e.preventDefault();
+					submit();
 				}}
-				onKeyDown={(e) => {
-					if (e.key === "Enter") {
-						e.preventDefault();
-						submit();
-					}
-				}}
-				placeholder="駅名を入力してEnter — 複数連続で追加できます"
 				style={{
+					display: "flex",
+					gap: 6,
 					flex: 1,
-					padding: "5px 10px",
-					border: "1px solid var(--color-border)",
-					borderRadius: "var(--radius)",
-					fontSize: 13,
-					background: "var(--color-content)",
-					color: "var(--color-text)",
-					outline: "none",
-					fontFamily: "var(--font-main)",
-				}}
-				onFocus={(e) => (e.target.style.borderColor = "var(--color-accent)")}
-				onBlur={(e) => (e.target.style.borderColor = "var(--color-border)")}
-			/>
-			<button
-				className="btn btn-primary btn-sm"
-				onClick={submit}
-				disabled={!name.trim()}>
-				追加
-			</button>
+					alignItems: "center",
+					margin: 0,
+				}}>
+				<input
+					ref={ref}
+					value={name}
+					onChange={(e) => {
+						setName(e.target.value);
+					}}
+					placeholder="駅名を入力してEnter — 複数連続で追加できます"
+					style={{
+						flex: 1,
+						padding: "5px 10px",
+						border: "1px solid var(--color-border)",
+						borderRadius: "var(--radius)",
+						fontSize: 13,
+						background: "var(--color-content)",
+						color: "var(--color-text)",
+						outline: "none",
+						fontFamily: "var(--font-main)",
+					}}
+					onFocus={(e) => (e.target.style.borderColor = "var(--color-accent)")}
+					onBlur={(e) => (e.target.style.borderColor = "var(--color-border)")}
+				/>
+				<button
+					type="submit"
+					className="btn btn-primary btn-sm"
+					disabled={!name.trim()}>
+					追加
+				</button>
+			</form>
 			<span
 				style={{
 					fontSize: 11,
@@ -1088,7 +1103,7 @@ const LineStationsTab = ({
 	const handleKeyDown = (
 		e: KeyboardEvent<HTMLInputElement | HTMLSelectElement>
 	) => {
-		if (e.key === "Enter") {
+		if (e.key === "Enter" && !e.nativeEvent.isComposing) {
 			e.preventDefault();
 			commitSol();
 		}
