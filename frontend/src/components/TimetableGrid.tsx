@@ -179,7 +179,7 @@ const TimeCell = ({
 				}}
 				onBlur={commit}
 				onKeyDown={(e) => {
-					if (e.key === "Enter" || e.key === "Tab") {
+					if ((e.key === "Enter" && !e.nativeEvent.isComposing) || e.key === "Tab") {
 						e.preventDefault();
 						commit();
 						onKeyDown?.(e);

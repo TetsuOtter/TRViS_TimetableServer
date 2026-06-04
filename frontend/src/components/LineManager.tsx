@@ -267,7 +267,7 @@ const StationsTab = ({
 		e: KeyboardEvent<HTMLInputElement>,
 		isLast: boolean
 	) => {
-		if (e.key === "Enter") {
+		if (e.key === "Enter" && !e.nativeEvent.isComposing) {
 			e.preventDefault();
 			commit();
 		}
@@ -922,7 +922,7 @@ const QuickAddBar = ({ stations, onAdd }: QuickAddBarProps) => {
 					setName(e.target.value);
 				}}
 				onKeyDown={(e) => {
-					if (e.key === "Enter") {
+					if (e.key === "Enter" && !e.nativeEvent.isComposing) {
 						e.preventDefault();
 						submit();
 					}
@@ -1088,7 +1088,7 @@ const LineStationsTab = ({
 	const handleKeyDown = (
 		e: KeyboardEvent<HTMLInputElement | HTMLSelectElement>
 	) => {
-		if (e.key === "Enter") {
+		if (e.key === "Enter" && !e.nativeEvent.isComposing) {
 			e.preventDefault();
 			commitSol();
 		}
