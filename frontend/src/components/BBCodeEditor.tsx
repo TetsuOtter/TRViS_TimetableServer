@@ -1,6 +1,6 @@
 // BBCodeEditor.tsx — Rich BBCode editor dialog + inline preview utilities
 // Supports: [b], [i], [u], [s], [color=], [size=], [font=]  (with =false cancel)
-import { useState, useRef, useEffect, useCallback, Fragment } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import type { CSSProperties, ReactNode, RefObject } from "react";
 
 /* ─────────────────────────────────────────────────────────
