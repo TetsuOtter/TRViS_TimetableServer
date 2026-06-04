@@ -48,7 +48,7 @@ jobs:
 
       - name: Setup PHP 8.4
         # 正準ランタイムは backend/Dockerfile の php:8.4-apache。
-        uses: shivammathur/setup-php@2.37.0
+        uses: shivammathur/setup-php@2.37.1
         with:
           php-version: "8.4"
           extensions: mbstring, intl, pdo_mysql, bcmath
