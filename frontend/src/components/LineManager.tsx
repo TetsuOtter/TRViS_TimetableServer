@@ -1,15 +1,9 @@
 // LineManager.tsx — Line & station management (inline editing)
 // Ported 1:1 from the design prototype LineManager.jsx.
-import {
-	useState,
-	useMemo,
-	useRef,
-	useEffect,
-	useCallback,
-} from "react";
-import { StationTrackManager } from "./StationTrackManager";
-
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import type { CSSProperties, KeyboardEvent, RefObject } from "react";
+
+import { StationTrackManager } from "./StationTrackManager";
 
 import type { Strings } from "../i18n/strings";
 import type {
@@ -17,12 +11,7 @@ import type {
 	ProjectStation as EntityProjectStation,
 	StationOnLine as EntityStationOnLine,
 } from "../types/entities";
-import type {
-	Line,
-	Station,
-	StationOnLine,
-	StopPattern,
-} from "../types/model";
+import type { Line, Station, StationOnLine, StopPattern } from "../types/model";
 
 /* ─── Model → entity-draft converters ─── */
 type EntityLineDraft = Omit<EntityLine, "id" | "projectId" | "createdAt">;
@@ -73,44 +62,44 @@ function modelSolToDraft(sol: StationOnLine): EntitySolDraft {
 }
 
 /* A station-on-line joined with its station for display in LineStationsTab. */
-interface LineStationEntry extends StationOnLine {
+type LineStationEntry = {
 	station: Station;
-}
+} & StationOnLine;
 
 /* Local draft shape for the global Stations tab (geo fields may be ''). */
-interface StationDraft {
+type StationDraft = {
 	stationName: string;
 	fullName: string;
 	longitude_deg: number | "";
 	latitude_deg: number | "";
 	onStationDetectRadius_m: number | "";
 	alwaysShowHH: boolean;
-}
+};
 
 /* Local draft shape for the line-stations tab. */
-interface SolDraft {
+type SolDraft = {
 	stationId?: string;
 	location_m: number;
 	longitude_deg: number | "";
 	latitude_deg: number | "";
 	trackHiddenByDefault: boolean;
-}
+};
 
 /* ─── Inline-editable cell ─── */
-interface ICellProps {
-	value: string | number;
-	onChange: (v: string | number) => void;
-	onKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void;
-	placeholder?: string;
-	type?: string;
-	step?: string;
-	style?: CSSProperties;
-	inputRef?: RefObject<HTMLInputElement>;
-	mono?: boolean;
-	alignRight?: boolean;
-}
+type ICellProps = {
+	readonly value: string | number;
+	readonly onChange: (v: string | number) => void;
+	readonly onKeyDown?: (e: KeyboardEvent<HTMLInputElement>) => void;
+	readonly placeholder?: string;
+	readonly type?: string;
+	readonly step?: string;
+	readonly style?: CSSProperties;
+	readonly inputRef?: RefObject<HTMLInputElement | null>;
+	readonly mono?: boolean;
+	readonly alignRight?: boolean;
+};
 
-function ICell({
+const ICell = ({
 	value,
 	onChange,
 	onKeyDown,
@@ -121,22 +110,22 @@ function ICell({
 	inputRef,
 	mono,
 	alignRight,
-}: ICellProps) {
+}: ICellProps) => {
 	return (
 		<input
 			ref={inputRef}
 			type={type}
 			step={step}
 			value={value}
-			onChange={e =>
+			onChange={(e) => {
 				onChange(
 					type === "number"
 						? e.target.value === ""
 							? ""
 							: +e.target.value
 						: e.target.value
-				)
-			}
+				);
+			}}
 			onKeyDown={onKeyDown}
 			placeholder={placeholder}
 			style={{
@@ -154,20 +143,20 @@ function ICell({
 			}}
 		/>
 	);
-}
+};
 
 /* ─── Global Stations Tab (inline editing) ─── */
-interface StationsTabProps {
-	stations: Station[];
-	stationsOnLine: StationOnLine[];
-	lines: Line[];
-	onCreateStation: (draft: EntityStationDraft) => void;
-	onUpdateStation: (vars: EntityStationUpdate) => void;
-	onDeleteStation: (id: string) => void;
-	t: Strings;
-}
+type StationsTabProps = {
+	readonly stations: Station[];
+	readonly stationsOnLine: StationOnLine[];
+	readonly lines: Line[];
+	readonly onCreateStation: (draft: EntityStationDraft) => void;
+	readonly onUpdateStation: (vars: EntityStationUpdate) => void;
+	readonly onDeleteStation: (id: string) => void;
+	readonly t: Strings;
+};
 
-function StationsTab({
+const StationsTab = ({
 	stations,
 	stationsOnLine,
 	lines,
@@ -175,7 +164,7 @@ function StationsTab({
 	onUpdateStation,
 	onDeleteStation,
 	t,
-}: StationsTabProps) {
+}: StationsTabProps) => {
 	const [editingId, setEditingId] = useState<string | null>(null); // station id or 'new'
 	// The station whose tracks are being managed in the modal (null = closed).
 	const [tracksStation, setTracksStation] = useState<{
@@ -195,8 +184,8 @@ function StationsTab({
 	const linesForStation = useCallback(
 		(sid: string): Line[] =>
 			stationsOnLine
-				.filter(sol => sol.stationId === sid)
-				.map(sol => lines.find(l => l.id === sol.lineId))
+				.filter((sol) => sol.stationId === sid)
+				.map((sol) => lines.find((l) => l.id === sol.lineId))
 				.filter((l): l is Line => Boolean(l)),
 		[stationsOnLine, lines]
 	);
@@ -258,10 +247,12 @@ function StationsTab({
 		setEditingId(null);
 	};
 
-	const cancelEdit = () => setEditingId(null);
+	const cancelEdit = () => {
+		setEditingId(null);
+	};
 
 	const deleteStation = (id: string) => {
-		const s = stations.find(x => x.id === id);
+		const s = stations.find((x) => x.id === id);
 		if (
 			!confirm(
 				`「${s?.stationName}」を削除しますか？\n路線の紐付けも削除されます。`
@@ -290,8 +281,9 @@ function StationsTab({
 		}
 	};
 
-	const set = <K extends keyof StationDraft>(k: K, v: StationDraft[K]) =>
-		setDraft(p => ({ ...p, [k]: v }));
+	const set = <K extends keyof StationDraft>(k: K, v: StationDraft[K]) => {
+		setDraft((p) => ({ ...p, [k]: v }));
+	};
 
 	const COL_W = {
 		num: 36,
@@ -332,8 +324,7 @@ function StationsTab({
 						letterSpacing: "0.05em",
 						width: w,
 						whiteSpace: "nowrap",
-					}}
-				>
+					}}>
 					{h}
 				</th>
 			))}
@@ -351,15 +342,13 @@ function StationsTab({
 					background: "var(--color-content)",
 					borderBottom: "1px solid var(--color-border)",
 					alignItems: "center",
-				}}
-			>
+				}}>
 				<span
 					style={{
 						fontSize: 12,
 						color: "var(--color-text-muted)",
 						whiteSpace: "nowrap",
-					}}
-				>
+					}}>
 					クイック追加:
 				</span>
 				<QuickAddBar
@@ -374,15 +363,13 @@ function StationsTab({
 					borderRadius: "var(--radius)",
 					margin: "12px",
 					overflow: "hidden",
-				}}
-			>
+				}}>
 				<table
 					style={{
 						width: "100%",
 						borderCollapse: "collapse",
 						fontSize: 13,
-					}}
-				>
+					}}>
 					<thead>
 						<HeaderRow />
 					</thead>
@@ -409,15 +396,14 @@ function StationsTab({
 										cursor: isEditing ? "default" : "pointer",
 										transition: "background .1s",
 									}}
-									onMouseEnter={e => {
+									onMouseEnter={(e) => {
 										if (!isEditing)
 											e.currentTarget.style.background = "var(--color-bg)";
 									}}
-									onMouseLeave={e => {
+									onMouseLeave={(e) => {
 										if (!isEditing)
 											e.currentTarget.style.background = "transparent";
-									}}
-								>
+									}}>
 									<td
 										style={{
 											padding: "6px 8px",
@@ -425,8 +411,7 @@ function StationsTab({
 											fontFamily: "var(--font-mono)",
 											fontSize: 11,
 											textAlign: "center",
-										}}
-									>
+										}}>
 										{i + 1}
 									</td>
 
@@ -436,16 +421,24 @@ function StationsTab({
 												<ICell
 													inputRef={firstInputRef}
 													value={draft.stationName}
-													onChange={v => set("stationName", v as string)}
-													onKeyDown={e => handleKeyDown(e, false)}
+													onChange={(v) => {
+														set("stationName", v as string);
+													}}
+													onKeyDown={(e) => {
+														handleKeyDown(e, false);
+													}}
 													placeholder="横浜"
 												/>
 											</td>
 											<td style={{ padding: "4px 4px" }}>
 												<ICell
 													value={draft.fullName}
-													onChange={v => set("fullName", v as string)}
-													onKeyDown={e => handleKeyDown(e, false)}
+													onChange={(v) => {
+														set("fullName", v as string);
+													}}
+													onKeyDown={(e) => {
+														handleKeyDown(e, false);
+													}}
 													placeholder="横浜駅"
 												/>
 											</td>
@@ -454,10 +447,12 @@ function StationsTab({
 													type="number"
 													step="0.000001"
 													value={draft.longitude_deg}
-													onChange={v =>
-														set("longitude_deg", v as number | "")
-													}
-													onKeyDown={e => handleKeyDown(e, false)}
+													onChange={(v) => {
+														set("longitude_deg", v as number | "");
+													}}
+													onKeyDown={(e) => {
+														handleKeyDown(e, false);
+													}}
 													placeholder="139.621"
 													mono
 													alignRight
@@ -468,10 +463,12 @@ function StationsTab({
 													type="number"
 													step="0.000001"
 													value={draft.latitude_deg}
-													onChange={v =>
-														set("latitude_deg", v as number | "")
-													}
-													onKeyDown={e => handleKeyDown(e, false)}
+													onChange={(v) => {
+														set("latitude_deg", v as number | "");
+													}}
+													onKeyDown={(e) => {
+														handleKeyDown(e, false);
+													}}
 													placeholder="35.466"
 													mono
 													alignRight
@@ -481,13 +478,12 @@ function StationsTab({
 												<ICell
 													type="number"
 													value={draft.onStationDetectRadius_m}
-													onChange={v =>
-														set(
-															"onStationDetectRadius_m",
-															v as number | ""
-														)
-													}
-													onKeyDown={e => handleKeyDown(e, false)}
+													onChange={(v) => {
+														set("onStationDetectRadius_m", v as number | "");
+													}}
+													onKeyDown={(e) => {
+														handleKeyDown(e, false);
+													}}
 													mono
 													alignRight
 												/>
@@ -496,14 +492,13 @@ function StationsTab({
 												style={{
 													padding: "4px 8px",
 													textAlign: "center",
-												}}
-											>
+												}}>
 												<input
 													type="checkbox"
 													checked={!!draft.alwaysShowHH}
-													onChange={e =>
-														set("alwaysShowHH", e.target.checked)
-													}
+													onChange={(e) => {
+														set("alwaysShowHH", e.target.checked);
+													}}
 													style={{
 														accentColor: "var(--color-accent)",
 														width: 14,
@@ -518,12 +513,11 @@ function StationsTab({
 													fontSize: 11,
 													color: "var(--color-text-muted)",
 												}}
-												colSpan={1}
-											>
+												colSpan={1}>
 												{usedLines.length === 0 ? (
 													<span>未使用</span>
 												) : (
-													usedLines.map(l => (
+													usedLines.map((l) => (
 														<span
 															key={l.id}
 															className="chip"
@@ -531,8 +525,7 @@ function StationsTab({
 																fontSize: 10,
 																padding: "1px 5px",
 																marginRight: 2,
-															}}
-														>
+															}}>
 															{l.name}
 														</span>
 													))
@@ -543,25 +536,22 @@ function StationsTab({
 													padding: "4px 6px",
 													textAlign: "right",
 													whiteSpace: "nowrap",
-												}}
-											>
+												}}>
 												<button
 													className="btn btn-primary btn-xs"
 													style={{ marginRight: 4 }}
-													onClick={e => {
+													onClick={(e) => {
 														e.stopPropagation();
 														commit();
-													}}
-												>
+													}}>
 													✓ 確定
 												</button>
 												<button
 													className="btn btn-ghost btn-xs"
-													onClick={e => {
+													onClick={(e) => {
 														e.stopPropagation();
 														cancelEdit();
-													}}
-												>
+													}}>
 													✕
 												</button>
 											</td>
@@ -572,8 +562,7 @@ function StationsTab({
 												style={{
 													padding: "6px 8px",
 													fontWeight: 500,
-												}}
-											>
+												}}>
 												{s.stationName}
 											</td>
 											<td
@@ -581,8 +570,7 @@ function StationsTab({
 													padding: "6px 8px",
 													color: "var(--color-text-muted)",
 													fontSize: 12,
-												}}
-											>
+												}}>
 												{s.fullName}
 											</td>
 											<td
@@ -594,11 +582,8 @@ function StationsTab({
 													color: hasGeo
 														? "var(--color-text)"
 														: "var(--color-text-muted)",
-												}}
-											>
-												{hasGeo
-													? (+(s.longitude_deg as number)).toFixed(4)
-													: "—"}
+												}}>
+												{hasGeo ? (+s.longitude_deg!).toFixed(4) : "—"}
 											</td>
 											<td
 												style={{
@@ -609,11 +594,8 @@ function StationsTab({
 													color: hasGeo
 														? "var(--color-text)"
 														: "var(--color-text-muted)",
-												}}
-											>
-												{hasGeo
-													? (+(s.latitude_deg as number)).toFixed(4)
-													: "—"}
+												}}>
+												{hasGeo ? (+s.latitude_deg!).toFixed(4) : "—"}
 											</td>
 											<td
 												style={{
@@ -622,21 +604,18 @@ function StationsTab({
 													fontFamily: "var(--font-mono)",
 													fontSize: 12,
 													color: "var(--color-text-muted)",
-												}}
-											>
+												}}>
 												{s.onStationDetectRadius_m || 300} m
 											</td>
 											<td
 												style={{
 													padding: "6px 8px",
 													textAlign: "center",
-												}}
-											>
+												}}>
 												{s.alwaysShowHH ? (
 													<span
 														className="chip green"
-														style={{ fontSize: 10, padding: "1px 5px" }}
-													>
+														style={{ fontSize: 10, padding: "1px 5px" }}>
 														ON
 													</span>
 												) : (
@@ -644,8 +623,7 @@ function StationsTab({
 														style={{
 															color: "var(--color-text-muted)",
 															fontSize: 12,
-														}}
-													>
+														}}>
 														—
 													</span>
 												)}
@@ -656,27 +634,24 @@ function StationsTab({
 														display: "flex",
 														gap: 3,
 														flexWrap: "wrap",
-													}}
-												>
+													}}>
 													{usedLines.length === 0 ? (
 														<span
 															style={{
 																fontSize: 11,
 																color: "var(--color-text-muted)",
-															}}
-														>
+															}}>
 															未使用
 														</span>
 													) : (
-														usedLines.map(l => (
+														usedLines.map((l) => (
 															<span
 																key={l.id}
 																className="chip"
 																style={{
 																	fontSize: 10,
 																	padding: "1px 5px",
-																}}
-															>
+																}}>
 																{l.name}
 															</span>
 														))
@@ -688,19 +663,17 @@ function StationsTab({
 													padding: "4px 6px",
 													textAlign: "right",
 													whiteSpace: "nowrap",
-												}}
-											>
+												}}>
 												<button
 													className="btn btn-ghost btn-xs"
 													title={t.trackManager}
-													onClick={e => {
+													onClick={(e) => {
 														e.stopPropagation();
 														setTracksStation({
 															id: s.id,
 															name: s.stationName,
 														});
-													}}
-												>
+													}}>
 													🛤
 												</button>
 												<button
@@ -709,11 +682,10 @@ function StationsTab({
 														color: "var(--color-danger)",
 														opacity: 0.7,
 													}}
-													onClick={e => {
+													onClick={(e) => {
 														e.stopPropagation();
 														deleteStation(s.id);
-													}}
-												>
+													}}>
 													🗑
 												</button>
 											</td>
@@ -729,32 +701,38 @@ function StationsTab({
 								style={{
 									background: "var(--color-accent-bg)",
 									borderTop: "2px dashed var(--color-accent)",
-								}}
-							>
+								}}>
 								<td
 									style={{
 										padding: "4px 8px",
 										color: "var(--color-text-muted)",
 										fontSize: 11,
 										textAlign: "center",
-									}}
-								>
+									}}>
 									新
 								</td>
 								<td style={{ padding: "4px 4px" }}>
 									<ICell
 										inputRef={firstInputRef}
 										value={draft.stationName}
-										onChange={v => set("stationName", v as string)}
-										onKeyDown={e => handleKeyDown(e, false)}
+										onChange={(v) => {
+											set("stationName", v as string);
+										}}
+										onKeyDown={(e) => {
+											handleKeyDown(e, false);
+										}}
 										placeholder="駅名（短）"
 									/>
 								</td>
 								<td style={{ padding: "4px 4px" }}>
 									<ICell
 										value={draft.fullName}
-										onChange={v => set("fullName", v as string)}
-										onKeyDown={e => handleKeyDown(e, false)}
+										onChange={(v) => {
+											set("fullName", v as string);
+										}}
+										onKeyDown={(e) => {
+											handleKeyDown(e, false);
+										}}
 										placeholder="フルネーム"
 									/>
 								</td>
@@ -763,8 +741,12 @@ function StationsTab({
 										type="number"
 										step="0.000001"
 										value={draft.longitude_deg}
-										onChange={v => set("longitude_deg", v as number | "")}
-										onKeyDown={e => handleKeyDown(e, false)}
+										onChange={(v) => {
+											set("longitude_deg", v as number | "");
+										}}
+										onKeyDown={(e) => {
+											handleKeyDown(e, false);
+										}}
 										placeholder="経度"
 										mono
 										alignRight
@@ -775,8 +757,12 @@ function StationsTab({
 										type="number"
 										step="0.000001"
 										value={draft.latitude_deg}
-										onChange={v => set("latitude_deg", v as number | "")}
-										onKeyDown={e => handleKeyDown(e, false)}
+										onChange={(v) => {
+											set("latitude_deg", v as number | "");
+										}}
+										onKeyDown={(e) => {
+											handleKeyDown(e, false);
+										}}
 										placeholder="緯度"
 										mono
 										alignRight
@@ -786,21 +772,23 @@ function StationsTab({
 									<ICell
 										type="number"
 										value={draft.onStationDetectRadius_m}
-										onChange={v =>
-											set("onStationDetectRadius_m", v as number | "")
-										}
-										onKeyDown={e => handleKeyDown(e, true)}
+										onChange={(v) => {
+											set("onStationDetectRadius_m", v as number | "");
+										}}
+										onKeyDown={(e) => {
+											handleKeyDown(e, true);
+										}}
 										mono
 										alignRight
 									/>
 								</td>
-								<td
-									style={{ padding: "4px 8px", textAlign: "center" }}
-								>
+								<td style={{ padding: "4px 8px", textAlign: "center" }}>
 									<input
 										type="checkbox"
 										checked={!!draft.alwaysShowHH}
-										onChange={e => set("alwaysShowHH", e.target.checked)}
+										onChange={(e) => {
+											set("alwaysShowHH", e.target.checked);
+										}}
 										style={{
 											accentColor: "var(--color-accent)",
 											width: 14,
@@ -813,8 +801,7 @@ function StationsTab({
 										padding: "4px 8px",
 										fontSize: 11,
 										color: "var(--color-text-muted)",
-									}}
-								>
+									}}>
 									—
 								</td>
 								<td
@@ -822,25 +809,22 @@ function StationsTab({
 										padding: "4px 6px",
 										textAlign: "right",
 										whiteSpace: "nowrap",
-									}}
-								>
+									}}>
 									<button
 										className="btn btn-primary btn-xs"
 										style={{ marginRight: 4 }}
-										onClick={e => {
+										onClick={(e) => {
 											e.stopPropagation();
 											commit();
-										}}
-									>
+										}}>
 										✓ 確定
 									</button>
 									<button
 										className="btn btn-ghost btn-xs"
-										onClick={e => {
+										onClick={(e) => {
 											e.stopPropagation();
 											cancelEdit();
-										}}
-									>
+										}}>
 										✕
 									</button>
 								</td>
@@ -849,9 +833,10 @@ function StationsTab({
 							<tr
 								style={{
 									borderTop: "1px dashed var(--color-border)",
-								}}
-							>
-								<td colSpan={9} style={{ padding: "6px 8px" }}>
+								}}>
+								<td
+									colSpan={9}
+									style={{ padding: "6px 8px" }}>
 									<button
 										onClick={startNew}
 										style={{
@@ -868,18 +853,13 @@ function StationsTab({
 											borderRadius: "var(--radius)",
 											transition: "color .1s",
 										}}
-										onMouseEnter={e =>
-											(e.currentTarget.style.color =
-												"var(--color-accent)")
+										onMouseEnter={(e) =>
+											(e.currentTarget.style.color = "var(--color-accent)")
 										}
-										onMouseLeave={e =>
-											(e.currentTarget.style.color =
-												"var(--color-text-muted)")
-										}
-									>
-										<span style={{ fontSize: 16, lineHeight: 1 }}>
-											＋
-										</span>{" "}
+										onMouseLeave={(e) =>
+											(e.currentTarget.style.color = "var(--color-text-muted)")
+										}>
+										<span style={{ fontSize: 16, lineHeight: 1 }}>＋</span>{" "}
 										新しい駅を追加
 									</button>
 								</td>
@@ -892,21 +872,23 @@ function StationsTab({
 				<StationTrackManager
 					stationId={tracksStation.id}
 					stationName={tracksStation.name}
-					onClose={() => setTracksStation(null)}
+					onClose={() => {
+						setTracksStation(null);
+					}}
 					t={t}
 				/>
 			)}
 		</div>
 	);
-}
+};
 
 /* ─── Quick-add bar ─── */
-interface QuickAddBarProps {
-	stations: Station[];
-	onAdd: (draft: EntityStationDraft) => void;
-}
+type QuickAddBarProps = {
+	readonly stations: Station[];
+	readonly onAdd: (draft: EntityStationDraft) => void;
+};
 
-function QuickAddBar({ stations, onAdd }: QuickAddBarProps) {
+const QuickAddBar = ({ stations, onAdd }: QuickAddBarProps) => {
 	const [name, setName] = useState("");
 	const ref = useRef<HTMLInputElement>(null);
 
@@ -932,13 +914,14 @@ function QuickAddBar({ stations, onAdd }: QuickAddBarProps) {
 				gap: 6,
 				flex: 1,
 				alignItems: "center",
-			}}
-		>
+			}}>
 			<input
 				ref={ref}
 				value={name}
-				onChange={e => setName(e.target.value)}
-				onKeyDown={e => {
+				onChange={(e) => {
+					setName(e.target.value);
+				}}
+				onKeyDown={(e) => {
 					if (e.key === "Enter") {
 						e.preventDefault();
 						submit();
@@ -956,18 +939,13 @@ function QuickAddBar({ stations, onAdd }: QuickAddBarProps) {
 					outline: "none",
 					fontFamily: "var(--font-main)",
 				}}
-				onFocus={e =>
-					(e.target.style.borderColor = "var(--color-accent)")
-				}
-				onBlur={e =>
-					(e.target.style.borderColor = "var(--color-border)")
-				}
+				onFocus={(e) => (e.target.style.borderColor = "var(--color-accent)")}
+				onBlur={(e) => (e.target.style.borderColor = "var(--color-border)")}
 			/>
 			<button
 				className="btn btn-primary btn-sm"
 				onClick={submit}
-				disabled={!name.trim()}
-			>
+				disabled={!name.trim()}>
 				追加
 			</button>
 			<span
@@ -975,27 +953,26 @@ function QuickAddBar({ stations, onAdd }: QuickAddBarProps) {
 					fontSize: 11,
 					color: "var(--color-text-muted)",
 					whiteSpace: "nowrap",
-				}}
-			>
+				}}>
 				{stations.length}駅登録済み
 			</span>
 		</div>
 	);
-}
+};
 
 /* ─── Line Stations Tab (inline editing with drag-reorder) ─── */
-interface LineStationsTabProps {
-	activeLine: Line;
-	lineStations: LineStationEntry[];
-	stations: Station[];
-	stationsOnLine: StationOnLine[];
-	onCreateStationOnLine: (draft: EntitySolDraft) => void;
-	onUpdateStationOnLine: (vars: EntitySolUpdate) => void;
-	onDeleteStationOnLine: (id: string) => void;
-	onReorderStationsOnLine: (updates: EntitySolUpdate[]) => void;
-}
+type LineStationsTabProps = {
+	readonly activeLine: Line;
+	readonly lineStations: LineStationEntry[];
+	readonly stations: Station[];
+	readonly stationsOnLine: StationOnLine[];
+	readonly onCreateStationOnLine: (draft: EntitySolDraft) => void;
+	readonly onUpdateStationOnLine: (vars: EntitySolUpdate) => void;
+	readonly onDeleteStationOnLine: (id: string) => void;
+	readonly onReorderStationsOnLine: (updates: EntitySolUpdate[]) => void;
+};
 
-function LineStationsTab({
+const LineStationsTab = ({
 	activeLine,
 	lineStations,
 	stations,
@@ -1004,7 +981,7 @@ function LineStationsTab({
 	onUpdateStationOnLine,
 	onDeleteStationOnLine,
 	onReorderStationsOnLine,
-}: LineStationsTabProps) {
+}: LineStationsTabProps) => {
 	const [editingId, setEditingId] = useState<string | null>(null); // sol.id or 'new'
 	const [draft, setDraft] = useState<SolDraft>({
 		location_m: 0,
@@ -1017,8 +994,8 @@ function LineStationsTab({
 	const firstSelectRef = useRef<HTMLSelectElement>(null);
 
 	// available stations not yet on this line
-	const usedIds = new Set(lineStations.map(s => s.stationId));
-	const available = stations.filter(s => !usedIds.has(s.id));
+	const usedIds = new Set(lineStations.map((s) => s.stationId));
+	const available = stations.filter((s) => !usedIds.has(s.id));
 
 	const startEditSol = (sol: LineStationEntry) => {
 		setEditingId(sol.id);
@@ -1035,7 +1012,7 @@ function LineStationsTab({
 		// guess next km: last station + 5000 m
 		const lastKm =
 			lineStations.length > 0
-				? Math.max(...lineStations.map(s => s.location_m || 0))
+				? Math.max(...lineStations.map((s) => s.location_m || 0))
 				: 0;
 		setDraft({
 			stationId: "",
@@ -1081,7 +1058,7 @@ function LineStationsTab({
 			});
 			onCreateStationOnLine(modelSolToDraft(sol));
 		} else if (editingId !== null) {
-			const existing = stationsOnLine.find(sol => sol.id === editingId);
+			const existing = stationsOnLine.find((sol) => sol.id === editingId);
 			if (existing !== undefined) {
 				const sol = buildSol({
 					id: existing.id,
@@ -1094,7 +1071,9 @@ function LineStationsTab({
 		setEditingId(null);
 	};
 
-	const cancelEdit = () => setEditingId(null);
+	const cancelEdit = () => {
+		setEditingId(null);
+	};
 
 	const removeSol = (solId: string, stName: string) => {
 		if (!confirm(`「${stName}」をこの路線から除外しますか？`)) return;
@@ -1102,8 +1081,9 @@ function LineStationsTab({
 		if (editingId === solId) setEditingId(null);
 	};
 
-	const set = <K extends keyof SolDraft>(k: K, v: SolDraft[K]) =>
-		setDraft(p => ({ ...p, [k]: v }));
+	const set = <K extends keyof SolDraft>(k: K, v: SolDraft[K]) => {
+		setDraft((p) => ({ ...p, [k]: v }));
+	};
 
 	const handleKeyDown = (
 		e: KeyboardEvent<HTMLInputElement | HTMLSelectElement>
@@ -1138,10 +1118,10 @@ function LineStationsTab({
 			return;
 		}
 		const mine = [
-			...stationsOnLine.filter(sol => sol.lineId === activeLine.id),
+			...stationsOnLine.filter((sol) => sol.lineId === activeLine.id),
 		].sort((a, b) => (a.location_m || 0) - (b.location_m || 0));
-		const fromIdx = mine.findIndex(s => s.id === dragItem.current);
-		const toIdx = mine.findIndex(s => s.id === targetId);
+		const fromIdx = mine.findIndex((s) => s.id === dragItem.current);
+		const toIdx = mine.findIndex((s) => s.id === targetId);
 		const [moved] = mine.splice(fromIdx, 1);
 		if (!moved) {
 			setDragOver(null);
@@ -1174,12 +1154,9 @@ function LineStationsTab({
 					gap: 8,
 					marginBottom: 10,
 					alignItems: "center",
-				}}
-			>
+				}}>
 				<strong style={{ fontSize: 14 }}>{activeLine.name}</strong>
-				<span
-					style={{ fontSize: 11, color: "var(--color-text-muted)" }}
-				>
+				<span style={{ fontSize: 11, color: "var(--color-text-muted)" }}>
 					· キロ程順 · 行をクリックで編集 · ドラッグで並べ替え
 				</span>
 			</div>
@@ -1189,15 +1166,13 @@ function LineStationsTab({
 					border: "1px solid var(--color-border)",
 					borderRadius: "var(--radius)",
 					overflow: "hidden",
-				}}
-			>
+				}}>
 				<table
 					style={{
 						width: "100%",
 						borderCollapse: "collapse",
 						fontSize: 13,
-					}}
-				>
+					}}>
 					<thead>
 						<tr style={{ background: "var(--color-bg)" }}>
 							{(
@@ -1210,11 +1185,7 @@ function LineStationsTab({
 									["番線非表示", "72px", "center"],
 									["位置上書き", "72px", "center"],
 									["", "64px", "right"],
-								] as [
-									string,
-									string,
-									CSSProperties["textAlign"]
-								][]
+								] as [string, string, CSSProperties["textAlign"]][]
 							).map(([h, w, align], i) => (
 								<th
 									key={i}
@@ -1228,8 +1199,7 @@ function LineStationsTab({
 										letterSpacing: "0.05em",
 										width: w || undefined,
 										whiteSpace: "nowrap",
-									}}
-								>
+									}}>
 									{h}
 								</th>
 							))}
@@ -1249,13 +1219,19 @@ function LineStationsTab({
 								<tr
 									key={sol.id}
 									draggable={!isEditing}
-									onDragStart={e => onDragStart(e, sol.id)}
-									onDragOver={e => {
+									onDragStart={(e) => {
+										onDragStart(e, sol.id);
+									}}
+									onDragOver={(e) => {
 										e.preventDefault();
 										setDragOver(sol.id);
 									}}
-									onDragLeave={() => setDragOver(null)}
-									onDrop={e => onDrop(e, sol.id)}
+									onDragLeave={() => {
+										setDragOver(null);
+									}}
+									onDrop={(e) => {
+										onDrop(e, sol.id);
+									}}
 									onClick={() => {
 										if (!isEditing) startEditSol(sol);
 									}}
@@ -1270,15 +1246,14 @@ function LineStationsTab({
 										cursor: isEditing ? "default" : "pointer",
 										transition: "background .1s",
 									}}
-									onMouseEnter={e => {
+									onMouseEnter={(e) => {
 										if (!isEditing)
 											e.currentTarget.style.background = "var(--color-bg)";
 									}}
-									onMouseLeave={e => {
+									onMouseLeave={(e) => {
 										if (!isEditing)
 											e.currentTarget.style.background = "transparent";
-									}}
-								>
+									}}>
 									{/* drag handle */}
 									<td
 										style={{
@@ -1288,8 +1263,7 @@ function LineStationsTab({
 											fontSize: 12,
 											cursor: "grab",
 											userSelect: "none",
-										}}
-									>
+										}}>
 										⠿
 									</td>
 									<td
@@ -1299,8 +1273,7 @@ function LineStationsTab({
 											fontFamily: "var(--font-mono)",
 											fontSize: 11,
 											textAlign: "center",
-										}}
-									>
+										}}>
 										{i + 1}
 									</td>
 
@@ -1311,40 +1284,36 @@ function LineStationsTab({
 												style={{
 													padding: "6px 8px",
 													fontWeight: 500,
-												}}
-											>
+												}}>
 												<span
 													style={
 														sol.stationDeleted
 															? {
-																color: "var(--color-danger)",
-																textDecoration: "line-through",
-															}
+																	color: "var(--color-danger)",
+																	textDecoration: "line-through",
+																}
 															: undefined
-													}
-												>
+													}>
 													{sol.station.stationName}
 												</span>
-												{sol.stationDeleted && (
+												{sol.stationDeleted ? (
 													<span
 														style={{
 															marginLeft: 6,
 															fontSize: 10,
 															fontWeight: 600,
 															color: "var(--color-danger)",
-														}}
-													>
+														}}>
 														(削除済み)
 													</span>
-												)}
+												) : null}
 											</td>
 											<td
 												style={{
 													padding: "4px 4px",
 													fontSize: 12,
 													color: "var(--color-text-muted)",
-												}}
-											>
+												}}>
 												{sol.station.fullName}
 											</td>
 											<td style={{ padding: "4px 4px" }}>
@@ -1353,18 +1322,14 @@ function LineStationsTab({
 														display: "flex",
 														alignItems: "center",
 														gap: 4,
-													}}
-												>
+													}}>
 													<ICell
 														inputRef={firstInputRef}
 														type="number"
 														value={draft.location_m}
-														onChange={v =>
-															set(
-																"location_m",
-																v === "" ? 0 : (v as number)
-															)
-														}
+														onChange={(v) => {
+															set("location_m", v === "" ? 0 : (v as number));
+														}}
 														onKeyDown={handleKeyDown}
 														mono
 														alignRight
@@ -1375,8 +1340,7 @@ function LineStationsTab({
 															fontSize: 11,
 															color: "var(--color-text-muted)",
 															whiteSpace: "nowrap",
-														}}
-													>
+														}}>
 														m
 													</span>
 												</div>
@@ -1385,17 +1349,13 @@ function LineStationsTab({
 												style={{
 													padding: "4px 8px",
 													textAlign: "center",
-												}}
-											>
+												}}>
 												<input
 													type="checkbox"
 													checked={!!draft.trackHiddenByDefault}
-													onChange={e =>
-														set(
-															"trackHiddenByDefault",
-															e.target.checked
-														)
-													}
+													onChange={(e) => {
+														set("trackHiddenByDefault", e.target.checked);
+													}}
 													title="番線をデフォルトで非表示にする"
 													style={{
 														accentColor: "var(--color-accent)",
@@ -1411,50 +1371,40 @@ function LineStationsTab({
 													textAlign: "center",
 													fontSize: 11,
 													color: "var(--color-text-muted)",
-												}}
-											>
-												<span title="位置上書きはモーダルで設定">
-													—
-												</span>
+												}}>
+												<span title="位置上書きはモーダルで設定">—</span>
 											</td>
 											<td
 												style={{
 													padding: "4px 6px",
 													textAlign: "right",
 													whiteSpace: "nowrap",
-												}}
-											>
+												}}>
 												<button
 													className="btn btn-primary btn-xs"
 													style={{ marginRight: 4 }}
-													onClick={e => {
+													onClick={(e) => {
 														e.stopPropagation();
 														commitSol();
-													}}
-												>
+													}}>
 													✓
 												</button>
 												<button
 													className="btn btn-ghost btn-xs"
 													style={{ marginRight: 4 }}
-													onClick={e => {
+													onClick={(e) => {
 														e.stopPropagation();
 														cancelEdit();
-													}}
-												>
+													}}>
 													✕
 												</button>
 												<button
 													className="btn btn-ghost btn-xs"
 													style={{ color: "var(--color-danger)" }}
-													onClick={e => {
+													onClick={(e) => {
 														e.stopPropagation();
-														removeSol(
-															sol.id,
-															sol.station.stationName
-														);
-													}}
-												>
+														removeSol(sol.id, sol.station.stationName);
+													}}>
 													🗑
 												</button>
 											</td>
@@ -1465,40 +1415,36 @@ function LineStationsTab({
 												style={{
 													padding: "6px 8px",
 													fontWeight: 500,
-												}}
-											>
+												}}>
 												<span
 													style={
 														sol.stationDeleted
 															? {
-																color: "var(--color-danger)",
-																textDecoration: "line-through",
-															}
+																	color: "var(--color-danger)",
+																	textDecoration: "line-through",
+																}
 															: undefined
-													}
-												>
+													}>
 													{sol.station.stationName}
 												</span>
-												{sol.stationDeleted && (
+												{sol.stationDeleted ? (
 													<span
 														style={{
 															marginLeft: 6,
 															fontSize: 10,
 															fontWeight: 600,
 															color: "var(--color-danger)",
-														}}
-													>
+														}}>
 														(削除済み)
 													</span>
-												)}
+												) : null}
 											</td>
 											<td
 												style={{
 													padding: "6px 8px",
 													color: "var(--color-text-muted)",
 													fontSize: 12,
-												}}
-											>
+												}}>
 												{sol.station.fullName}
 											</td>
 											<td
@@ -1507,21 +1453,18 @@ function LineStationsTab({
 													textAlign: "right",
 													fontFamily: "var(--font-mono)",
 													fontSize: 12,
-												}}
-											>
+												}}>
 												{((sol.location_m || 0) / 1000).toFixed(1)} km
 											</td>
 											<td
 												style={{
 													padding: "6px 8px",
 													textAlign: "center",
-												}}
-											>
+												}}>
 												{sol.trackHiddenByDefault ? (
 													<span
 														className="chip amber"
-														style={{ fontSize: 10 }}
-													>
+														style={{ fontSize: 10 }}>
 														非表示
 													</span>
 												) : (
@@ -1529,8 +1472,7 @@ function LineStationsTab({
 														style={{
 															color: "var(--color-text-muted)",
 															fontSize: 12,
-														}}
-													>
+														}}>
 														—
 													</span>
 												)}
@@ -1539,13 +1481,11 @@ function LineStationsTab({
 												style={{
 													padding: "6px 8px",
 													textAlign: "center",
-												}}
-											>
+												}}>
 												{hasOverride ? (
 													<span
 														className="chip amber"
-														style={{ fontSize: 10 }}
-													>
+														style={{ fontSize: 10 }}>
 														上書き
 													</span>
 												) : (
@@ -1553,8 +1493,7 @@ function LineStationsTab({
 														style={{
 															color: "var(--color-text-muted)",
 															fontSize: 12,
-														}}
-													>
+														}}>
 														—
 													</span>
 												)}
@@ -1563,22 +1502,17 @@ function LineStationsTab({
 												style={{
 													padding: "4px 6px",
 													textAlign: "right",
-												}}
-											>
+												}}>
 												<button
 													className="btn btn-ghost btn-xs"
 													style={{
 														color: "var(--color-danger)",
 														opacity: 0.6,
 													}}
-													onClick={e => {
+													onClick={(e) => {
 														e.stopPropagation();
-														removeSol(
-															sol.id,
-															sol.station.stationName
-														);
-													}}
-												>
+														removeSol(sol.id, sol.station.stationName);
+													}}>
 													🗑
 												</button>
 											</td>
@@ -1594,8 +1528,7 @@ function LineStationsTab({
 								style={{
 									background: "var(--color-accent-bg)",
 									borderTop: "2px dashed var(--color-accent)",
-								}}
-							>
+								}}>
 								<td
 									colSpan={2}
 									style={{
@@ -1603,15 +1536,18 @@ function LineStationsTab({
 										color: "var(--color-text-muted)",
 										fontSize: 11,
 										textAlign: "center",
-									}}
-								>
+									}}>
 									新
 								</td>
-								<td colSpan={2} style={{ padding: "4px 6px" }}>
+								<td
+									colSpan={2}
+									style={{ padding: "4px 6px" }}>
 									<select
 										ref={firstSelectRef}
 										value={draft.stationId}
-										onChange={e => set("stationId", e.target.value)}
+										onChange={(e) => {
+											set("stationId", e.target.value);
+										}}
 										onKeyDown={handleKeyDown}
 										style={{
 											width: "100%",
@@ -1622,11 +1558,12 @@ function LineStationsTab({
 											background: "var(--color-content)",
 											color: "var(--color-text)",
 											outline: "none",
-										}}
-									>
+										}}>
 										<option value="">── 駅を選択 ──</option>
-										{available.map(s => (
-											<option key={s.id} value={s.id}>
+										{available.map((s) => (
+											<option
+												key={s.id}
+												value={s.id}>
 												{s.stationName}（{s.fullName}）
 											</option>
 										))}
@@ -1637,8 +1574,7 @@ function LineStationsTab({
 												fontSize: 11,
 												color: "var(--color-text-muted)",
 												marginTop: 4,
-											}}
-										>
+											}}>
 											追加できる駅がありません。「駅（全体）」タブから先に登録してください。
 										</div>
 									)}
@@ -1649,17 +1585,13 @@ function LineStationsTab({
 											display: "flex",
 											alignItems: "center",
 											gap: 4,
-										}}
-									>
+										}}>
 										<ICell
 											type="number"
 											value={draft.location_m}
-											onChange={v =>
-												set(
-													"location_m",
-													v === "" ? 0 : (v as number)
-												)
-											}
+											onChange={(v) => {
+												set("location_m", v === "" ? 0 : (v as number));
+											}}
 											onKeyDown={handleKeyDown}
 											mono
 											alignRight
@@ -1669,8 +1601,7 @@ function LineStationsTab({
 											style={{
 												fontSize: 11,
 												color: "var(--color-text-muted)",
-											}}
-										>
+											}}>
 											m
 										</span>
 									</div>
@@ -1679,14 +1610,13 @@ function LineStationsTab({
 									style={{
 										padding: "4px 8px",
 										textAlign: "center",
-									}}
-								>
+									}}>
 									<input
 										type="checkbox"
 										checked={!!draft.trackHiddenByDefault}
-										onChange={e =>
-											set("trackHiddenByDefault", e.target.checked)
-										}
+										onChange={(e) => {
+											set("trackHiddenByDefault", e.target.checked);
+										}}
 										style={{
 											accentColor: "var(--color-accent)",
 											width: 14,
@@ -1700,25 +1630,22 @@ function LineStationsTab({
 										padding: "4px 6px",
 										textAlign: "right",
 										whiteSpace: "nowrap",
-									}}
-								>
+									}}>
 									<button
 										className="btn btn-primary btn-xs"
 										style={{ marginRight: 4 }}
-										onClick={e => {
+										onClick={(e) => {
 											e.stopPropagation();
 											commitSol();
-										}}
-									>
+										}}>
 										✓ 追加
 									</button>
 									<button
 										className="btn btn-ghost btn-xs"
-										onClick={e => {
+										onClick={(e) => {
 											e.stopPropagation();
 											cancelEdit();
-										}}
-									>
+										}}>
 										✕
 									</button>
 								</td>
@@ -1727,9 +1654,10 @@ function LineStationsTab({
 							<tr
 								style={{
 									borderTop: "1px dashed var(--color-border)",
-								}}
-							>
-								<td colSpan={8} style={{ padding: "6px 8px" }}>
+								}}>
+								<td
+									colSpan={8}
+									style={{ padding: "6px 8px" }}>
 									<button
 										onClick={startNew}
 										style={{
@@ -1746,18 +1674,13 @@ function LineStationsTab({
 											borderRadius: "var(--radius)",
 											transition: "color .1s",
 										}}
-										onMouseEnter={e =>
-											(e.currentTarget.style.color =
-												"var(--color-accent)")
+										onMouseEnter={(e) =>
+											(e.currentTarget.style.color = "var(--color-accent)")
 										}
-										onMouseLeave={e =>
-											(e.currentTarget.style.color =
-												"var(--color-text-muted)")
-										}
-									>
-										<span style={{ fontSize: 16, lineHeight: 1 }}>
-											＋
-										</span>{" "}
+										onMouseLeave={(e) =>
+											(e.currentTarget.style.color = "var(--color-text-muted)")
+										}>
+										<span style={{ fontSize: 16, lineHeight: 1 }}>＋</span>{" "}
 										既存の駅を路線に追加
 									</button>
 								</td>
@@ -1768,31 +1691,31 @@ function LineStationsTab({
 			</div>
 		</div>
 	);
-}
+};
 
 /* ─── Stop pattern card ─── */
-interface StopPatternCardProps {
-	pattern: StopPattern;
-	lines: Line[];
-	stations: Station[];
-	onEdit: () => void;
-	onDuplicate: () => void;
-	onDelete: (id: string) => void;
-}
+type StopPatternCardProps = {
+	readonly pattern: StopPattern;
+	readonly lines: Line[];
+	readonly stations: Station[];
+	readonly onEdit: () => void;
+	readonly onDuplicate: () => void;
+	readonly onDelete: (id: string) => void;
+};
 
-function StopPatternCard({
+const StopPatternCard = ({
 	pattern,
 	lines,
 	stations,
 	onEdit,
 	onDuplicate,
 	onDelete,
-}: StopPatternCardProps) {
-	const line = lines.find(l => l.id === pattern.lineId);
-	const fromSt = stations.find(s => s.id === pattern.fromStationId);
-	const toSt = stations.find(s => s.id === pattern.toStationId);
-	const stops = (pattern.stopRows || []).filter(r => !r.isPass).length;
-	const passes = (pattern.stopRows || []).filter(r => r.isPass).length;
+}: StopPatternCardProps) => {
+	const line = lines.find((l) => l.id === pattern.lineId);
+	const fromSt = stations.find((s) => s.id === pattern.fromStationId);
+	const toSt = stations.find((s) => s.id === pattern.toStationId);
+	const stops = (pattern.stopRows || []).filter((r) => !r.isPass).length;
+	const passes = (pattern.stopRows || []).filter((r) => r.isPass).length;
 	return (
 		<div
 			className="card"
@@ -1801,15 +1724,13 @@ function StopPatternCard({
 				display: "flex",
 				flexDirection: "column",
 				gap: 8,
-			}}
-		>
+			}}>
 			<div
 				style={{
 					display: "flex",
 					alignItems: "center",
 					gap: 6,
-				}}
-			>
+				}}>
 				<strong
 					style={{
 						fontSize: 14,
@@ -1817,21 +1738,14 @@ function StopPatternCard({
 						overflow: "hidden",
 						textOverflow: "ellipsis",
 						whiteSpace: "nowrap",
-					}}
-				>
+					}}>
 					{pattern.name || "(無名)"}
 				</strong>
-				<span
-					className={`chip ${
-						pattern.direction === 1 ? "green" : "amber"
-					}`}
-				>
+				<span className={`chip ${pattern.direction === 1 ? "green" : "amber"}`}>
 					{pattern.direction === 1 ? "↓" : "↑"}
 				</span>
 			</div>
-			<div
-				style={{ fontSize: 12, color: "var(--color-text-muted)" }}
-			>
+			<div style={{ fontSize: 12, color: "var(--color-text-muted)" }}>
 				{line?.name}
 			</div>
 			<div
@@ -1840,19 +1754,12 @@ function StopPatternCard({
 					alignItems: "center",
 					gap: 6,
 					fontSize: 13,
-				}}
-			>
-				<span style={{ fontWeight: 500 }}>
-					{fromSt?.stationName || "?"}
-				</span>
+				}}>
+				<span style={{ fontWeight: 500 }}>{fromSt?.stationName || "?"}</span>
 				<span style={{ color: "var(--color-text-muted)" }}>→</span>
-				<span style={{ fontWeight: 500 }}>
-					{toSt?.stationName || "?"}
-				</span>
+				<span style={{ fontWeight: 500 }}>{toSt?.stationName || "?"}</span>
 			</div>
-			<div
-				style={{ fontSize: 11, color: "var(--color-text-muted)" }}
-			>
+			<div style={{ fontSize: 11, color: "var(--color-text-muted)" }}>
 				停車 {stops}駅 · 通過 {passes}駅
 			</div>
 			<div
@@ -1862,21 +1769,18 @@ function StopPatternCard({
 					marginTop: 4,
 					borderTop: "1px solid var(--color-border)",
 					paddingTop: 8,
-				}}
-			>
+				}}>
 				<button
 					className="btn btn-secondary btn-xs"
 					style={{ flex: 1 }}
-					onClick={onEdit}
-				>
+					onClick={onEdit}>
 					✏ 編集
 				</button>
 				<button
 					className="btn btn-ghost btn-xs"
 					style={{ flex: 1 }}
 					onClick={onDuplicate}
-					title="複製"
-				>
+					title="複製">
 					⎘ 複製
 				</button>
 				<button
@@ -1885,31 +1789,36 @@ function StopPatternCard({
 						if (confirm(`「${pattern.name}」を削除しますか？`))
 							onDelete(pattern.id);
 					}}
-					style={{ color: "var(--color-danger)" }}
-				>
+					style={{ color: "var(--color-danger)" }}>
 					🗑
 				</button>
 			</div>
 		</div>
 	);
-}
+};
 
 /* ─── Line edit dialog (kept for line create/edit) ─── */
-interface LineDraft {
+type LineDraft = {
 	id?: string;
 	name: string;
 	description: string;
-}
+};
 
-interface LineDialogProps {
-	line: Partial<Line>;
-	onSave: (line: LineDraft) => void;
-	onDelete: (id: string) => void;
-	onClose: () => void;
-	t: Strings;
-}
+type LineDialogProps = {
+	readonly line: Partial<Line>;
+	readonly onSave: (line: LineDraft) => void;
+	readonly onDelete: (id: string) => void;
+	readonly onClose: () => void;
+	readonly t: Strings;
+};
 
-function LineDialog({ line, onSave, onDelete, onClose, t }: LineDialogProps) {
+const LineDialog = ({
+	line,
+	onSave,
+	onDelete,
+	onClose,
+	t,
+}: LineDialogProps) => {
 	const [d, setD] = useState<LineDraft>({
 		name: line?.name || "",
 		description: line?.description || "",
@@ -1917,28 +1826,30 @@ function LineDialog({ line, onSave, onDelete, onClose, t }: LineDialogProps) {
 	return (
 		<div
 			className="modal-backdrop"
-			onClick={e => e.target === e.currentTarget && onClose()}
-		>
-			<div className="modal" style={{ maxWidth: 460 }}>
+			onClick={(e) => e.target === e.currentTarget && onClose()}>
+			<div
+				className="modal"
+				style={{ maxWidth: 460 }}>
 				<div className="modal-header">
 					<span className="modal-title">
 						🛤 {line?.id ? t.edit : t.addLine}
 					</span>
 					<button
 						className="btn btn-ghost btn-sm"
-						onClick={onClose}
-					>
+						onClick={onClose}>
 						✕
 					</button>
 				</div>
 				<div className="modal-body">
-					<div className="field" style={{ marginBottom: 12 }}>
+					<div
+						className="field"
+						style={{ marginBottom: 12 }}>
 						<label>路線名</label>
 						<input
 							value={d.name}
-							onChange={e =>
-								setD(p => ({ ...p, name: e.target.value }))
-							}
+							onChange={(e) => {
+								setD((p) => ({ ...p, name: e.target.value }));
+							}}
 							placeholder="例: 東海道本線"
 							autoFocus
 						/>
@@ -1947,9 +1858,9 @@ function LineDialog({ line, onSave, onDelete, onClose, t }: LineDialogProps) {
 						<label>{t.description}</label>
 						<textarea
 							value={d.description}
-							onChange={e =>
-								setD(p => ({ ...p, description: e.target.value }))
-							}
+							onChange={(e) => {
+								setD((p) => ({ ...p, description: e.target.value }));
+							}}
 							rows={3}
 							placeholder="例: 東京〜小田原間"
 							style={{
@@ -1969,26 +1880,22 @@ function LineDialog({ line, onSave, onDelete, onClose, t }: LineDialogProps) {
 					</div>
 				</div>
 				<div className="modal-footer">
-					{line?.id && (
+					{line?.id ? (
 						<button
 							className="btn btn-danger btn-sm"
 							style={{ marginRight: "auto" }}
 							onClick={() => {
-								if (
-									confirm(`「${line.name}」を削除しますか？`)
-								) {
-									onDelete(line.id as string);
+								if (confirm(`「${line.name}」を削除しますか？`)) {
+									onDelete(line.id!);
 									onClose();
 								}
-							}}
-						>
+							}}>
 							🗑 {t.delete}
 						</button>
-					)}
+					) : null}
 					<button
 						className="btn btn-secondary"
-						onClick={onClose}
-					>
+						onClick={onClose}>
 						{t.cancel}
 					</button>
 					<button
@@ -1997,42 +1904,41 @@ function LineDialog({ line, onSave, onDelete, onClose, t }: LineDialogProps) {
 							if (!d.name.trim()) return;
 							onSave(d);
 							onClose();
-						}}
-					>
+						}}>
 						{t.save}
 					</button>
 				</div>
 			</div>
 		</div>
 	);
-}
+};
 
 /* ─── Main ─── */
-export interface LineManagerProps {
-	lines: Line[];
-	stations: Station[];
-	stationsOnLine: StationOnLine[];
-	stopPatterns: StopPattern[];
-	activeLineId: string;
-	onSelectLine: (id: string) => void;
-	onCreateLine: (draft: EntityLineDraft) => void;
-	onUpdateLine: (vars: EntityLineUpdate) => void;
-	onDeleteLine: (id: string) => void;
-	onCreateStation: (draft: EntityStationDraft) => void;
-	onUpdateStation: (vars: EntityStationUpdate) => void;
-	onDeleteStation: (id: string) => void;
-	onCreateStationOnLine: (draft: EntitySolDraft) => void;
-	onUpdateStationOnLine: (vars: EntitySolUpdate) => void;
-	onDeleteStationOnLine: (id: string) => void;
-	onReorderStationsOnLine: (updates: EntitySolUpdate[]) => void;
-	onOpenStopPatternWizard: () => void;
-	onEditStopPattern: (p: StopPattern) => void;
-	onDeleteStopPattern: (id: string) => void;
-	onDuplicateStopPattern: (p: StopPattern) => void;
-	t: Strings;
-}
+export type LineManagerProps = {
+	readonly lines: Line[];
+	readonly stations: Station[];
+	readonly stationsOnLine: StationOnLine[];
+	readonly stopPatterns: StopPattern[];
+	readonly activeLineId: string;
+	readonly onSelectLine: (id: string) => void;
+	readonly onCreateLine: (draft: EntityLineDraft) => void;
+	readonly onUpdateLine: (vars: EntityLineUpdate) => void;
+	readonly onDeleteLine: (id: string) => void;
+	readonly onCreateStation: (draft: EntityStationDraft) => void;
+	readonly onUpdateStation: (vars: EntityStationUpdate) => void;
+	readonly onDeleteStation: (id: string) => void;
+	readonly onCreateStationOnLine: (draft: EntitySolDraft) => void;
+	readonly onUpdateStationOnLine: (vars: EntitySolUpdate) => void;
+	readonly onDeleteStationOnLine: (id: string) => void;
+	readonly onReorderStationsOnLine: (updates: EntitySolUpdate[]) => void;
+	readonly onOpenStopPatternWizard: () => void;
+	readonly onEditStopPattern: (p: StopPattern) => void;
+	readonly onDeleteStopPattern: (id: string) => void;
+	readonly onDuplicateStopPattern: (p: StopPattern) => void;
+	readonly t: Strings;
+};
 
-export function LineManager({
+export const LineManager = ({
 	lines,
 	stations,
 	stationsOnLine,
@@ -2054,27 +1960,23 @@ export function LineManager({
 	onDeleteStopPattern,
 	onDuplicateStopPattern,
 	t,
-}: LineManagerProps) {
+}: LineManagerProps) => {
 	const [mainTab, setMainTab] = useState<"lines" | "stations">("lines");
-	const [lineTab, setLineTab] = useState<"stations" | "patterns">(
-		"stations"
-	);
+	const [lineTab, setLineTab] = useState<"stations" | "patterns">("stations");
 	const [lineDialog, setLineDialog] = useState<Partial<Line> | null>(null);
 
-	const activeLine = lines.find(l => l.id === activeLineId);
+	const activeLine = lines.find((l) => l.id === activeLineId);
 	const lineStations = useMemo<LineStationEntry[]>(
 		() =>
 			activeLine
 				? stationsOnLine
-						.filter(sol => sol.lineId === activeLineId)
-						.map(sol => {
+						.filter((sol) => sol.lineId === activeLineId)
+						.map((sol) => {
 							// A soft-deleted referenced station is absent from the
 							// live `stations` list; fall back to the backend-resolved
 							// name (sol.stationName) so the row tombstones instead of
 							// silently vanishing from the line editor.
-							const liveStation = stations.find(
-								s => s.id === sol.stationId
-							);
+							const liveStation = stations.find((s) => s.id === sol.stationId);
 							const station: Station | undefined =
 								liveStation ??
 								(sol.stationName !== undefined
@@ -2086,21 +1988,14 @@ export function LineManager({
 									: undefined);
 							return { ...sol, station };
 						})
-						.filter(
-							(x): x is LineStationEntry => Boolean(x.station)
-						)
-						.sort(
-							(a, b) =>
-								(a.location_m || 0) - (b.location_m || 0)
-						)
+						.filter((x): x is LineStationEntry => Boolean(x.station))
+						.sort((a, b) => (a.location_m || 0) - (b.location_m || 0))
 				: [],
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 		[activeLine, stationsOnLine, stations]
 	);
 
-	const linePatterns = stopPatterns.filter(
-		p => p.lineId === activeLineId
-	);
+	const linePatterns = stopPatterns.filter((p) => p.lineId === activeLineId);
 
 	const saveLine = (line: LineDraft) => {
 		if (line.id !== undefined && line.id !== "") {
@@ -2112,7 +2007,7 @@ export function LineManager({
 	const deleteLine = (id: string) => {
 		onDeleteLine(id);
 		if (activeLineId === id) {
-			const nextLine = lines.find(l => l.id !== id);
+			const nextLine = lines.find((l) => l.id !== id);
 			onSelectLine(nextLine !== undefined ? nextLine.id : "");
 		}
 	};
@@ -2128,32 +2023,27 @@ export function LineManager({
 				flexDirection: "column",
 				gap: 14,
 				minHeight: "100%",
-			}}
-		>
+			}}>
 			{/* Header */}
 			<div
 				style={{
 					display: "flex",
 					alignItems: "center",
 					gap: 12,
-				}}
-			>
-				<h2
-					style={{ fontSize: 18, fontWeight: 600, margin: 0 }}
-				>
+				}}>
+				<h2 style={{ fontSize: 18, fontWeight: 600, margin: 0 }}>
 					{t.lineManager}
 				</h2>
-				<span
-					style={{ fontSize: 12, color: "var(--color-text-muted)" }}
-				>
+				<span style={{ fontSize: 12, color: "var(--color-text-muted)" }}>
 					路線・駅・停車パターンを管理します
 				</span>
 				<div style={{ flex: 1 }} />
 				{mainTab === "lines" && (
 					<button
 						className="btn btn-secondary btn-sm"
-						onClick={() => setLineDialog({})}
-					>
+						onClick={() => {
+							setLineDialog({});
+						}}>
 						＋ {t.addLine}
 					</button>
 				)}
@@ -2165,8 +2055,7 @@ export function LineManager({
 					display: "flex",
 					gap: 0,
 					borderBottom: "1px solid var(--color-border)",
-				}}
-			>
+				}}>
 				{(
 					[
 						["lines", "🛤 路線"],
@@ -2175,7 +2064,9 @@ export function LineManager({
 				).map(([id, lbl]) => (
 					<button
 						key={id}
-						onClick={() => setMainTab(id)}
+						onClick={() => {
+							setMainTab(id);
+						}}
 						style={{
 							padding: "8px 20px",
 							fontSize: 13,
@@ -2192,8 +2083,7 @@ export function LineManager({
 									? `2px solid var(--color-accent)`
 									: "2px solid transparent",
 							marginBottom: -1,
-						}}
-					>
+						}}>
 						{lbl}
 					</button>
 				))}
@@ -2208,13 +2098,11 @@ export function LineManager({
 						gap: 16,
 						flex: 1,
 						minHeight: 0,
-					}}
-				>
+					}}>
 					{/* line list */}
 					<div
 						className="card"
-						style={{ padding: 8, height: "fit-content" }}
-					>
+						style={{ padding: 8, height: "fit-content" }}>
 						<div
 							style={{
 								padding: "4px 8px 8px",
@@ -2223,8 +2111,7 @@ export function LineManager({
 								color: "var(--color-text-muted)",
 								textTransform: "uppercase",
 								letterSpacing: "0.06em",
-							}}
-						>
+							}}>
 							路線一覧 ({lines.length})
 						</div>
 						{lines.length === 0 && (
@@ -2233,25 +2120,23 @@ export function LineManager({
 									padding: "12px 8px",
 									fontSize: 12,
 									color: "var(--color-text-muted)",
-								}}
-							>
+								}}>
 								路線がありません。
 							</div>
 						)}
-						{lines.map(l => {
+						{lines.map((l) => {
 							const sc = stationsOnLine.filter(
-								sol => sol.lineId === l.id
+								(sol) => sol.lineId === l.id
 							).length;
-							const pc = stopPatterns.filter(
-								p => p.lineId === l.id
-							).length;
+							const pc = stopPatterns.filter((p) => p.lineId === l.id).length;
 							return (
 								<div
 									key={l.id}
-									style={{ position: "relative" }}
-								>
+									style={{ position: "relative" }}>
 									<button
-										onClick={() => onSelectLine(l.id)}
+										onClick={() => {
+											onSelectLine(l.id);
+										}}
 										style={{
 											display: "block",
 											width: "100%",
@@ -2266,21 +2151,18 @@ export function LineManager({
 												activeLineId === l.id
 													? "var(--color-accent)"
 													: "var(--color-text)",
-											fontWeight:
-												activeLineId === l.id ? 600 : 400,
+											fontWeight: activeLineId === l.id ? 600 : 400,
 											fontSize: 13,
 											marginBottom: 2,
 											cursor: "pointer",
 											border: "none",
-										}}
-									>
+										}}>
 										<div
 											style={{
 												whiteSpace: "nowrap",
 												overflow: "hidden",
 												textOverflow: "ellipsis",
-											}}
-										>
+											}}>
 											{l.name}
 										</div>
 										<div
@@ -2290,8 +2172,7 @@ export function LineManager({
 												marginTop: 2,
 												display: "flex",
 												gap: 8,
-											}}
-										>
+											}}>
 											<span>🚉 {sc}</span>
 											<span>🧩 {pc}</span>
 										</div>
@@ -2303,11 +2184,10 @@ export function LineManager({
 											right: 4,
 											top: 6,
 										}}
-										onClick={e => {
+										onClick={(e) => {
 											e.stopPropagation();
 											setLineDialog(l);
-										}}
-									>
+										}}>
 										⚙
 									</button>
 								</div>
@@ -2322,32 +2202,28 @@ export function LineManager({
 							display: "flex",
 							flexDirection: "column",
 							overflow: "hidden",
-						}}
-					>
+						}}>
 						{!activeLine ? (
 							<div
 								className="empty-state"
-								style={{ padding: 60 }}
-							>
+								style={{ padding: 60 }}>
 								<p>路線を選択してください。</p>
 							</div>
 						) : (
 							<>
 								<div className="tabs">
 									<div
-										className={`tab ${
-											lineTab === "stations" ? "active" : ""
-										}`}
-										onClick={() => setLineTab("stations")}
-									>
+										className={`tab ${lineTab === "stations" ? "active" : ""}`}
+										onClick={() => {
+											setLineTab("stations");
+										}}>
 										🚉 経由駅 ({lineStations.length})
 									</div>
 									<div
-										className={`tab ${
-											lineTab === "patterns" ? "active" : ""
-										}`}
-										onClick={() => setLineTab("patterns")}
-									>
+										className={`tab ${lineTab === "patterns" ? "active" : ""}`}
+										onClick={() => {
+											setLineTab("patterns");
+										}}>
 										🧩 停車パターン ({linePatterns.length})
 									</div>
 								</div>
@@ -2370,40 +2246,35 @@ export function LineManager({
 										style={{
 											padding: 16,
 											overflow: "auto",
-										}}
-									>
+										}}>
 										<div
 											style={{
 												display: "flex",
 												gap: 8,
 												marginBottom: 12,
 												alignItems: "center",
-											}}
-										>
+											}}>
 											<strong style={{ fontSize: 14 }}>
 												{activeLine.name} の停車パターン
 											</strong>
 											<div style={{ flex: 1 }} />
 											<button
 												className="btn btn-primary btn-sm"
-												onClick={onOpenStopPatternWizard}
-											>
+												onClick={onOpenStopPatternWizard}>
 												🧩 ウィザードで作成
 											</button>
 										</div>
 										{linePatterns.length === 0 ? (
 											<div
 												className="empty-state"
-												style={{ padding: 40 }}
-											>
+												style={{ padding: 40 }}>
 												<svg
 													width="44"
 													height="44"
 													viewBox="0 0 24 24"
 													fill="none"
 													stroke="currentColor"
-													strokeWidth="1.5"
-												>
+													strokeWidth="1.5">
 													<rect
 														x="3"
 														y="3"
@@ -2422,19 +2293,19 @@ export function LineManager({
 													gridTemplateColumns:
 														"repeat(auto-fill,minmax(240px,1fr))",
 													gap: 12,
-												}}
-											>
-												{linePatterns.map(p => (
+												}}>
+												{linePatterns.map((p) => (
 													<StopPatternCard
 														key={p.id}
 														pattern={p}
 														lines={lines}
 														stations={stations}
-														onEdit={() =>
-															onEditStopPattern &&
-															onEditStopPattern(p)
-														}
-														onDuplicate={() => onDuplicateStopPattern(p)}
+														onEdit={() => {
+															onEditStopPattern && onEditStopPattern(p);
+														}}
+														onDuplicate={() => {
+															onDuplicateStopPattern(p);
+														}}
 														onDelete={deletePattern}
 													/>
 												))}
@@ -2467,10 +2338,12 @@ export function LineManager({
 					line={lineDialog}
 					onSave={saveLine}
 					onDelete={deleteLine}
-					onClose={() => setLineDialog(null)}
+					onClose={() => {
+						setLineDialog(null);
+					}}
 					t={t}
 				/>
 			)}
 		</div>
 	);
-}
+};

@@ -5,8 +5,11 @@ import svgr from "vite-plugin-svgr";
 // https://vitejs.dev/config/
 export default defineConfig({
 	plugins: [react(), svgr()],
-	esbuild: {
-		drop: ["console", "debugger"],
+	build: {
+		minify: "terser",
+		terserOptions: {
+			compress: { drop_console: true, drop_debugger: true },
+		},
 	},
 	// Dev-only: proxy API calls to the dockerized backend (php at :8080) so
 	// `yarn dev` on localhost:5173 talks to the same /api/v1 surface as the

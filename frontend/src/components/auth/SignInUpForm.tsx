@@ -3,12 +3,11 @@
 // to the old MUI form (lengths 8-32, >=1 lower/upper/digit/symbol, ASCII
 // printable except space; email regex /^.+@.+\.[A-Za-z]{2,}$/i).
 import { memo, useCallback, useState } from "react";
+import type { FormEvent } from "react";
 
 import { useAuth } from "../../app/AuthContext";
 import { useT } from "../../app/SettingsContext";
 import { strHasValue } from "../../utils/strHasValue";
-
-import type { FormEvent } from "react";
 
 const PASSWORD_MIN_LENGTH = 8;
 const PASSWORD_MAX_LENGTH = 32;
@@ -16,7 +15,8 @@ const EMAIL_PATTERN = /^.+@.+\.[A-Za-z]{2,}$/i;
 
 function validateEmail(email: string): string | undefined {
 	if (email === "") return "メールアドレスを入力してください";
-	if (!EMAIL_PATTERN.test(email)) return "メールアドレスの形式が正しくありません";
+	if (!EMAIL_PATTERN.test(email))
+		return "メールアドレスの形式が正しくありません";
 	return undefined;
 }
 
@@ -87,7 +87,9 @@ const SignInUpForm = () => {
 
 	return (
 		<form onSubmit={handleSignIn}>
-			<div className="field" style={{ marginBottom: 14 }}>
+			<div
+				className="field"
+				style={{ marginBottom: 14 }}>
 				<label htmlFor="auth-email">{t.email}</label>
 				<input
 					id="auth-email"
@@ -95,19 +97,22 @@ const SignInUpForm = () => {
 					autoComplete="email"
 					disabled={isProcessing}
 					value={email}
-					onChange={(e) => setEmail(e.target.value)}
+					onChange={(e) => {
+						setEmail(e.target.value);
+					}}
 					placeholder="you@example.com"
 					autoFocus
 				/>
 				{strHasValue(emailError) && (
-					<span
-						style={{ fontSize: 12, color: "var(--color-danger)" }}>
+					<span style={{ fontSize: 12, color: "var(--color-danger)" }}>
 						{emailError}
 					</span>
 				)}
 			</div>
 
-			<div className="field" style={{ marginBottom: 6 }}>
+			<div
+				className="field"
+				style={{ marginBottom: 6 }}>
 				<label htmlFor="auth-password">{t.password}</label>
 				<div style={{ display: "flex", gap: 6 }}>
 					<input
@@ -116,7 +121,9 @@ const SignInUpForm = () => {
 						autoComplete="current-password"
 						disabled={isProcessing}
 						value={password}
-						onChange={(e) => setPassword(e.target.value)}
+						onChange={(e) => {
+							setPassword(e.target.value);
+						}}
 						style={{ flex: 1 }}
 					/>
 					<button
@@ -128,13 +135,11 @@ const SignInUpForm = () => {
 					</button>
 				</div>
 				{strHasValue(passwordError) && (
-					<span
-						style={{ fontSize: 12, color: "var(--color-danger)" }}>
+					<span style={{ fontSize: 12, color: "var(--color-danger)" }}>
 						{passwordError}
 					</span>
 				)}
-				<span
-					style={{ fontSize: 11, color: "var(--color-text-muted)" }}>
+				<span style={{ fontSize: 11, color: "var(--color-text-muted)" }}>
 					{PASSWORD_MIN_LENGTH} ～ {PASSWORD_MAX_LENGTH}
 					文字。大文字・小文字・数字・記号を各1文字以上含めてください。
 					<br />
@@ -150,7 +155,7 @@ const SignInUpForm = () => {
 					overflow: "hidden",
 					background: "var(--color-border)",
 				}}>
-				{isProcessing && (
+				{isProcessing ? (
 					<div
 						style={{
 							height: "100%",
@@ -160,7 +165,7 @@ const SignInUpForm = () => {
 							animation: "auth-progress 1s ease-in-out infinite",
 						}}
 					/>
-				)}
+				) : null}
 			</div>
 			<style>
 				{`@keyframes auth-progress {

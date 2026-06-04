@@ -58,7 +58,7 @@ class MyAuthMiddlewareRevocationTest extends TestCase
 	/** A minimal valid UnencryptedToken whose claims()->get('sub') == 'test-uid'. */
 	private function validToken(): UnencryptedToken
 	{
-		$token = $this->createMock(UnencryptedToken::class);
+		$token = $this->createStub(UnencryptedToken::class);
 		$token->method('claims')->willReturn(new DataSet(['sub' => 'test-uid'], ''));
 		return $token;
 	}
@@ -106,7 +106,7 @@ class MyAuthMiddlewareRevocationTest extends TestCase
 	public function testControlRouteSkipsRevocationCheck(): void
 	{
 		$captured = null;
-		$auth = $this->createMock(Auth::class);
+		$auth = $this->createStub(Auth::class);
 		$auth->method('verifyIdToken')->willReturnCallback(
 			function ($token, $checkIfRevoked = false, $leeway = null) use (&$captured) {
 				$captured = $checkIfRevoked;
@@ -140,7 +140,7 @@ class MyAuthMiddlewareRevocationTest extends TestCase
 	{
 		$captured = null;
 		$capturedTokenStr = null;
-		$auth = $this->createMock(Auth::class);
+		$auth = $this->createStub(Auth::class);
 		$auth->method('verifyIdToken')->willReturnCallback(
 			function ($token, $checkIfRevoked = false, $leeway = null) use (&$captured, &$capturedTokenStr) {
 				$captured = $checkIfRevoked;
@@ -159,11 +159,11 @@ class MyAuthMiddlewareRevocationTest extends TestCase
 
 	public function testRevokedTokenOnHighImpactRouteIs401(): void
 	{
-		$auth = $this->createMock(Auth::class);
+		$auth = $this->createStub(Auth::class);
 		$auth->method('verifyIdToken')->willReturnCallback(
 			function ($token, $checkIfRevoked = false, $leeway = null) {
 				if ($checkIfRevoked === true) {
-					throw new RevokedIdToken($this->createMock(Token::class));
+					throw new RevokedIdToken($this->createStub(Token::class));
 				}
 				return $this->validToken();
 			},
@@ -179,13 +179,13 @@ class MyAuthMiddlewareRevocationTest extends TestCase
 
 	public function testRevokedTokenOnControlRouteStillAccepted(): void
 	{
-		$auth = $this->createMock(Auth::class);
+		$auth = $this->createStub(Auth::class);
 		$auth->method('verifyIdToken')->willReturnCallback(
 			function ($token, $checkIfRevoked = false, $leeway = null) {
 				// Would be revoked IF the check were performed; on the control
 				// route $checkIfRevoked is false so a valid token is returned.
 				if ($checkIfRevoked === true) {
-					throw new RevokedIdToken($this->createMock(Token::class));
+					throw new RevokedIdToken($this->createStub(Token::class));
 				}
 				return $this->validToken();
 			},

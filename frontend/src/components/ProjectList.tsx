@@ -14,17 +14,17 @@ type MenuState = {
 };
 
 type ProjectListScreenProps = {
-	projects: Project[];
-	isLoading: boolean;
-	error: Error | null;
-	onRetry: () => void;
-	onOpen: (id: string) => void;
-	onNew: () => void;
-	onEdit: (p: Project) => void;
-	onDelete: (p: Project) => void;
-	onImport: (json: unknown) => void;
-	onExport: (id?: string) => void;
-	t: Strings;
+	readonly projects: Project[];
+	readonly isLoading: boolean;
+	readonly error: Error | null;
+	readonly onRetry: () => void;
+	readonly onOpen: (id: string) => void;
+	readonly onNew: () => void;
+	readonly onEdit: (p: Project) => void;
+	readonly onDelete: (p: Project) => void;
+	readonly onImport: (json: unknown) => void;
+	readonly onExport: (id?: string) => void;
+	readonly t: Strings;
 };
 
 export const ProjectListScreen = ({
@@ -90,14 +90,20 @@ export const ProjectListScreen = ({
 					onClick={() => fileInputRef.current?.click()}>
 					📥 {t.import}
 				</button>
-				<button className="btn btn-secondary btn-sm" onClick={() => onExport()}>
+				<button
+					className="btn btn-secondary btn-sm"
+					onClick={() => {
+						onExport();
+					}}>
 					📤 {t.export}
 				</button>
-				<button className="btn btn-primary btn-sm" onClick={onNew}>
+				<button
+					className="btn btn-primary btn-sm"
+					onClick={onNew}>
 					＋ {t.newProject}
 				</button>
 			</div>
-			{isLoading && projects.length === 0 && (
+			{isLoading && projects.length === 0 ? (
 				<div
 					style={{
 						display: "flex",
@@ -107,7 +113,7 @@ export const ProjectListScreen = ({
 					}}>
 					読み込み中...
 				</div>
-			)}
+			) : null}
 			{error !== null && (
 				<div
 					style={{
@@ -130,13 +136,17 @@ export const ProjectListScreen = ({
 					</button>
 				</div>
 			)}
-			{(isLoading === false || projects.length > 0) && error === null && (
-				<div className="card-grid" style={{ padding: 0 }}>
+			{(!isLoading || projects.length > 0) && error === null && (
+				<div
+					className="card-grid"
+					style={{ padding: 0 }}>
 					{projects.map((p) => (
 						<div
 							key={p.id}
 							className="card project-card"
-							onClick={() => onOpen(p.id)}
+							onClick={() => {
+								onOpen(p.id);
+							}}
 							onContextMenu={(e) => {
 								e.preventDefault();
 								setMenu({ x: e.clientX, y: e.clientY, project: p });
@@ -167,7 +177,13 @@ export const ProjectListScreen = ({
 										fill="none"
 										stroke="currentColor"
 										strokeWidth="2">
-										<rect x="3" y="6" width="18" height="12" rx="2" />
+										<rect
+											x="3"
+											y="6"
+											width="18"
+											height="12"
+											rx="2"
+										/>
 										<path d="M3 10h18" />
 									</svg>
 								</div>
@@ -198,7 +214,9 @@ export const ProjectListScreen = ({
 							</p>
 						</div>
 					))}
-					<div className="card-add" onClick={onNew}>
+					<div
+						className="card-add"
+						onClick={onNew}>
 						<div className="card-add-icon">＋</div>
 						<div>{t.newProject}</div>
 					</div>
@@ -209,28 +227,38 @@ export const ProjectListScreen = ({
 				<ContextMenu
 					x={menu.x}
 					y={menu.y}
-					onClose={() => setMenu(null)}
+					onClose={() => {
+						setMenu(null);
+					}}
 					items={[
 						{
 							icon: "📂",
 							label: "開く",
-							onClick: () => onOpen(menu.project.id),
+							onClick: () => {
+								onOpen(menu.project.id);
+							},
 						},
 						{
 							icon: "✏️",
 							label: t.edit,
-							onClick: () => onEdit(menu.project),
+							onClick: () => {
+								onEdit(menu.project);
+							},
 						},
 						{
 							icon: "📤",
 							label: "JSONとしてエクスポート",
-							onClick: () => onExport(menu.project.id),
+							onClick: () => {
+								onExport(menu.project.id);
+							},
 						},
 						{
 							icon: "🗑",
 							label: t.delete,
 							danger: true,
-							onClick: () => onDelete(menu.project),
+							onClick: () => {
+								onDelete(menu.project);
+							},
 						},
 					]}
 				/>

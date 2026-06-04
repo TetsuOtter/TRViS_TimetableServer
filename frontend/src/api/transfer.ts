@@ -21,12 +21,12 @@ export const TRANSFER_VERSION = 3;
 
 // On-disk single-project file: metadata envelope around the opaque backend
 // ProjectGraph. The "export all" path writes BUNDLE_KIND with a `graphs` array.
-export interface TransferFile {
+export type TransferFile = {
 	version: number;
 	kind: string;
 	exportedAt: string;
 	graph: unknown;
-}
+};
 
 /* ───────────────────────── Export ───────────────────────── */
 
@@ -42,16 +42,18 @@ export async function exportProjectGraph(projectId: string): Promise<unknown> {
 
 /* ───────────────────────── Import ───────────────────────── */
 
-export interface ImportResult {
+export type ImportResult = {
 	projectId: string;
 	name: string;
-}
+};
 
 // POST an opaque graph envelope; the backend creates a fresh Project (201) and
 // returns it. `graph` is cast to `never` only to satisfy the generated request
 // type — the backend reads the raw body, including the readOnly ids the typed
 // request shape omits.
-export async function importProjectGraph(graph: unknown): Promise<ImportResult> {
+export async function importProjectGraph(
+	graph: unknown
+): Promise<ImportResult> {
 	const proj = await unwrapCreated(
 		client.POST("/projects/import", { body: graph as never })
 	);
@@ -74,8 +76,8 @@ function isGraph(x: unknown): boolean {
 // Unwrap a single-file metadata envelope (`{ graph }`) to its backend graph;
 // a bare backend envelope passes through unchanged.
 function unwrapGraph(x: unknown): unknown {
-	if (typeof x === "object" && x !== null && "graph" in (x as object)) {
-		return (x as { graph: unknown }).graph;
+	if (typeof x === "object" && x !== null && "graph" in x) {
+		return x.graph;
 	}
 	return x;
 }

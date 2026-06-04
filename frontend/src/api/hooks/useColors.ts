@@ -44,8 +44,7 @@ export const useUpdateColor = (projectId: string) => {
 	const queryClient = useQueryClient();
 	return useMutation({
 		mutationFn: (
-			vars: Pick<Color, "id"> &
-				Omit<Color, "id" | "projectId" | "createdAt">
+			vars: Pick<Color, "id"> & Omit<Color, "id" | "projectId" | "createdAt">
 		) =>
 			unwrap(
 				client.PUT("/colors/{colorId}", {

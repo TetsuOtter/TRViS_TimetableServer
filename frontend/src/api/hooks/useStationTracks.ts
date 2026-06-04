@@ -28,9 +28,7 @@ export const useStationTracks = (stationId: string, enabled = true) =>
 export const useCreateStationTrack = (stationId: string) => {
 	const queryClient = useQueryClient();
 	return useMutation({
-		mutationFn: (
-			draft: Omit<StationTrack, "id" | "stationId" | "createdAt">
-		) =>
+		mutationFn: (draft: Omit<StationTrack, "id" | "stationId" | "createdAt">) =>
 			unwrap(
 				client.POST("/stations/{stationId}/tracks", {
 					params: { path: { stationId } },

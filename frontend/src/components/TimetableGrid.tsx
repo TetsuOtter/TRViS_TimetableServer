@@ -1,25 +1,22 @@
 // TimetableGrid — spreadsheet-style timetable row editor. Ported from TimetableGrid.jsx.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { CSSProperties } from "react";
 
 import { useStationTracks } from "../api/hooks/useStationTracks";
 import { TRViSTime } from "../lib/timeUtils";
 
-import {
-	BBCodeEditButton,
-	BBCodeField,
-} from "./BBCodeEditor";
+import { BBCodeEditButton, BBCodeField } from "./BBCodeEditor";
 
-import type { RowFormat } from "../lib/timeUtils";
 import type { Strings } from "../i18n/strings";
+import type { RowFormat } from "../lib/timeUtils";
 import type { Color as EntityColor } from "../types/entities";
 import type { ShowHH, Station, TimetableRow, Train } from "../types/model";
-import type { CSSProperties } from "react";
 
-interface ParsedTime {
+type ParsedTime = {
 	hh: string;
 	mm: string;
 	ss: string;
-}
+};
 
 // Parse a TRViS-formatted time string like 'HH:MM:SS', ':MM:SS', 'HH:MM:', ':MM:'
 function parseFormattedTime(str: string | null | undefined): ParsedTime | null {
@@ -29,15 +26,15 @@ function parseFormattedTime(str: string | null | undefined): ParsedTime | null {
 	return { hh: parts[0]!, mm: parts[1]!, ss: parts[2]! };
 }
 
-interface AlignedTimeProps {
-	formatted: string | null;
-	rawValue?: string;
-	muted?: boolean;
-}
+type AlignedTimeProps = {
+	readonly formatted: string | null;
+	readonly rawValue?: string;
+	readonly muted?: boolean;
+};
 
 // Render a formatted time string as fixed-width monospace spans so that
 // omitted HH/SS still occupy the correct horizontal space.
-function AlignedTime({ formatted, rawValue, muted }: AlignedTimeProps) {
+const AlignedTime = ({ formatted, rawValue, muted }: AlignedTimeProps) => {
 	const p = parseFormattedTime(formatted);
 	if (!p) {
 		return (
@@ -99,22 +96,22 @@ function AlignedTime({ formatted, rawValue, muted }: AlignedTimeProps) {
 			</span>
 		</span>
 	);
-}
+};
 
-interface TimeCellProps {
-	value?: string;
-	displayText?: string;
-	onChange: (v: string) => void;
-	onChangeText?: (v: string) => void;
-	onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
-	inputRef?: React.RefObject<HTMLInputElement>;
-	placeholder?: string;
-	muted?: boolean;
-	formattedValue?: string | null;
-}
+type TimeCellProps = {
+	readonly value?: string;
+	readonly displayText?: string;
+	readonly onChange: (v: string) => void;
+	readonly onChangeText?: (v: string) => void;
+	readonly onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+	readonly inputRef?: React.RefObject<HTMLInputElement>;
+	readonly placeholder?: string;
+	readonly muted?: boolean;
+	readonly formattedValue?: string | null;
+};
 
 // TimeCell stores/emits HH:MM:SS internally (or free-text via onChangeText).
-function TimeCell({
+const TimeCell = ({
 	value,
 	displayText,
 	onChange,
@@ -124,7 +121,7 @@ function TimeCell({
 	placeholder = "──:──",
 	muted,
 	formattedValue,
-}: TimeCellProps) {
+}: TimeCellProps) => {
 	const [editing, setEditing] = useState(false);
 	const [draft, setDraft] = useState("");
 	const iRef = useRef<HTMLInputElement>(null);
@@ -177,13 +174,15 @@ function TimeCell({
 				ref={ref}
 				className="time-input"
 				value={draft}
-				onChange={(e) => setDraft(e.target.value)}
+				onChange={(e) => {
+					setDraft(e.target.value);
+				}}
 				onBlur={commit}
 				onKeyDown={(e) => {
 					if (e.key === "Enter" || e.key === "Tab") {
 						e.preventDefault();
 						commit();
-						onKeyDown && onKeyDown(e);
+						onKeyDown?.(e);
 					}
 					if (e.key === "Escape") {
 						setEditing(false);
@@ -208,7 +207,9 @@ function TimeCell({
 		return (
 			<span
 				className="time-display"
-				onClick={() => startEditing(displayText)}
+				onClick={() => {
+					startEditing(displayText);
+				}}
 				title={`表示文字列: ${displayText} — クリックして編集`}
 				style={{ textAlign: "center", justifyContent: "center" }}>
 				<span
@@ -229,7 +230,9 @@ function TimeCell({
 	return (
 		<span
 			className="time-display"
-			onClick={() => startEditing(editDraft)}
+			onClick={() => {
+				startEditing(editDraft);
+			}}
 			title={value ? `${value} — クリックして編集` : "クリックして編集"}
 			style={{ textAlign: "center", justifyContent: "center" }}>
 			{hasFormatted ? (
@@ -250,7 +253,11 @@ function TimeCell({
 					</span>
 				)
 			) : rawDisplay ? (
-				<AlignedTime formatted={rawDisplay} rawValue={value} muted={muted} />
+				<AlignedTime
+					formatted={rawDisplay}
+					rawValue={value}
+					muted={muted}
+				/>
 			) : (
 				<span
 					style={{
@@ -263,14 +270,14 @@ function TimeCell({
 			)}
 		</span>
 	);
-}
+};
 
-interface NumLimitProps {
-	value: number | "";
-	onChange: (v: number | "") => void;
-}
+type NumLimitProps = {
+	readonly value: number | "";
+	readonly onChange: (v: number | "") => void;
+};
 
-function NumLimit({ value, onChange }: NumLimitProps) {
+const NumLimit = ({ value, onChange }: NumLimitProps) => {
 	const v = value === "" || value == null ? "" : value;
 	return (
 		<input
@@ -280,7 +287,10 @@ function NumLimit({ value, onChange }: NumLimitProps) {
 			value={v}
 			onChange={(e) => {
 				const s = e.target.value;
-				if (s === "") return onChange("");
+				if (s === "") {
+					onChange("");
+					return;
+				}
 				const n = Math.max(0, Math.min(999, +s));
 				onChange(Number.isFinite(n) ? n : "");
 			}}
@@ -297,19 +307,19 @@ function NumLimit({ value, onChange }: NumLimitProps) {
 			}}
 		/>
 	);
-}
+};
 
-interface RowDetailModalProps {
-	row: TimetableRow;
-	isFirstRow: boolean;
-	isLastIdx: boolean;
-	allRows: TimetableRow[];
-	t: Strings;
-	onSave: (r: TimetableRow) => void;
-	onClose: () => void;
-}
+type RowDetailModalProps = {
+	readonly row: TimetableRow;
+	readonly isFirstRow: boolean;
+	readonly isLastIdx: boolean;
+	readonly allRows: TimetableRow[];
+	readonly t: Strings;
+	readonly onSave: (r: TimetableRow) => void;
+	readonly onClose: () => void;
+};
 
-function RowDetailModal({
+const RowDetailModal = ({
 	row,
 	isFirstRow,
 	isLastIdx,
@@ -317,10 +327,11 @@ function RowDetailModal({
 	t,
 	onSave,
 	onClose,
-}: RowDetailModalProps) {
+}: RowDetailModalProps) => {
 	const [data, setData] = useState<TimetableRow>({ ...row });
-	const set = <K extends keyof TimetableRow>(k: K, v: TimetableRow[K]) =>
+	const set = <K extends keyof TimetableRow>(k: K, v: TimetableRow[K]) => {
 		setData((d) => ({ ...d, [k]: v }));
+	};
 
 	const lastRowExclude = isLastIdx && data.isLastStop === false;
 
@@ -368,7 +379,6 @@ function RowDetailModal({
 		const depPh = makePh(data.departure, forceShow, lastHHAfterArrive);
 
 		return { arrivePhPlaceholder: arrivePh, departurePhPlaceholder: depPh };
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [
 		data.id,
 		data.arrive,
@@ -380,16 +390,16 @@ function RowDetailModal({
 	]);
 
 	const normalizeTimeField = (val: string): string => {
-		if (!val || !val.trim()) return "";
+		if (!val?.trim()) return "";
 		return TRViSTime.normalize(val.trim());
 	};
 
-	const boolFlags: Array<["isPass" | "isOperationOnlyStop", string, string]> = [
+	const boolFlags: ["isPass" | "isOperationOnlyStop", string, string][] = [
 		["isPass", t.pass, "通過"],
 		["isOperationOnlyStop", t.opStop, "運転停車（客扱いなし）"],
 	];
 
-	const showHHOptions: Array<[ShowHH, string, string]> = [
+	const showHHOptions: [ShowHH, string, string][] = [
 		[undefined, "自動", "HHが前の表示時刻と同じ場合は省略"],
 		[true, "常に表示", "この駅の時刻は常にHHを表示する"],
 		[false, "常に省略", "この駅の時刻は常にHHを省略する"],
@@ -399,436 +409,477 @@ function RowDetailModal({
 		<div
 			className="modal-backdrop"
 			onClick={(e) => e.target === e.currentTarget && onClose()}>
-			<div className="modal" style={{ maxWidth: 620 }}>
+			<div
+				className="modal"
+				style={{ maxWidth: 620 }}>
 				<div className="modal-header">
 					<span className="modal-title">
 						⚙ {row.stationName || "(未設定)"} — {t.detail}
 					</span>
-					<button className="btn btn-ghost btn-sm" onClick={onClose}>
+					<button
+						className="btn btn-ghost btn-sm"
+						onClick={onClose}>
 						✕
 					</button>
 				</div>
 				<div className="modal-body">
-					<>
-						{/* 駅名表示（読み取り専用） */}
-						<div className="field-row" style={{ marginBottom: 12 }}>
-							<div className="field" style={{ flex: 2 }}>
-								<label>{t.stationName}</label>
+					{/* 駅名表示（読み取り専用） */}
+					<div
+						className="field-row"
+						style={{ marginBottom: 12 }}>
+						<div
+							className="field"
+							style={{ flex: 2 }}>
+							<label>{t.stationName}</label>
+							<span
+								style={{
+									padding: "6px 0",
+									display: "block",
+									fontWeight: 500,
+									...(data.stationDeleted
+										? {
+												color: "var(--color-danger)",
+												textDecoration: "line-through",
+											}
+										: {}),
+								}}>
+								{data.stationName || "(未設定)"}
+								{data.stationDeleted ? (
+									<span
+										style={{
+											marginLeft: 6,
+											fontSize: 11,
+											textDecoration: "none",
+										}}>
+										(削除済み)
+									</span>
+								) : null}
+							</span>
+						</div>
+						<div
+							className="field"
+							style={{ flex: 3 }}>
+							<label>駅名フルネーム</label>
+							<span style={{ padding: "6px 0", display: "block" }}>
+								{data.fullName || "—"}
+							</span>
+						</div>
+					</div>
+
+					{/* 着時刻・発時刻・運転時分 */}
+					<div
+						className="field-row"
+						style={{ marginBottom: 12 }}>
+						<div className="field">
+							<label
+								style={{
+									display: "flex",
+									alignItems: "center",
+									gap: 6,
+								}}>
+								着時刻
+								{!data.isPass && (
+									<label
+										style={{
+											display: "flex",
+											alignItems: "center",
+											gap: 3,
+											fontWeight: 400,
+											fontSize: 11,
+											color: "var(--color-text-muted)",
+											cursor: "pointer",
+											marginLeft: "auto",
+											whiteSpace: "nowrap",
+										}}>
+										<input
+											type="checkbox"
+											checked={!!data.arriveHidden}
+											onChange={(e) => {
+												set("arriveHidden", e.target.checked);
+											}}
+											style={{ accentColor: "var(--color-accent)" }}
+										/>
+										非表示
+									</label>
+								)}
+							</label>
+							<input
+								value={data.arrive || ""}
+								onChange={(e) => {
+									set("arrive", e.target.value);
+								}}
+								onBlur={(e) => {
+									const n = normalizeTimeField(e.target.value);
+									set("arrive", n);
+								}}
+								placeholder="HH:MM:SS"
+								disabled={!!data.isPass}
+								style={{
+									fontFamily: "var(--font-mono)",
+									opacity: data.isPass ? 0.4 : 1,
+								}}
+							/>
+						</div>
+						<div className="field">
+							<label
+								style={{
+									display: "flex",
+									alignItems: "center",
+									gap: 6,
+								}}>
+								発時刻
+								<label
+									style={{
+										display: "flex",
+										alignItems: "center",
+										gap: 3,
+										fontWeight: 400,
+										fontSize: 11,
+										color: "var(--color-text-muted)",
+										cursor: "pointer",
+										marginLeft: "auto",
+										whiteSpace: "nowrap",
+									}}>
+									<input
+										type="checkbox"
+										checked={!!data.departureHidden}
+										onChange={(e) => {
+											set("departureHidden", e.target.checked);
+										}}
+										style={{ accentColor: "var(--color-accent)" }}
+									/>
+									非表示
+								</label>
+							</label>
+							<input
+								value={data.departure || ""}
+								onChange={(e) => {
+									set("departure", e.target.value);
+								}}
+								onBlur={(e) => {
+									const n = normalizeTimeField(e.target.value);
+									set("departure", n);
+								}}
+								placeholder="HH:MM:SS"
+								style={{ fontFamily: "var(--font-mono)" }}
+							/>
+						</div>
+						<div
+							className="field"
+							style={{ flex: "0 0 160px" }}>
+							<label>{t.driveTime}</label>
+							<div
+								style={{
+									display: "flex",
+									gap: 4,
+									alignItems: "center",
+								}}>
+								<input
+									type="number"
+									min={0}
+									value={data.driveTime_MM || 0}
+									onChange={(e) => {
+										set("driveTime_MM", +e.target.value);
+									}}
+									style={{
+										width: "100%",
+										padding: "6px 4px",
+										textAlign: "center",
+										border: "1px solid var(--color-border)",
+										borderRadius: 4,
+										background: "var(--color-content)",
+										color: "var(--color-text)",
+										fontFamily: "var(--font-mono)",
+									}}
+								/>
+								<span style={{ opacity: 0.5, fontSize: 11 }}>分</span>
+								<input
+									type="number"
+									min={0}
+									max={59}
+									value={data.driveTime_SS || 0}
+									onChange={(e) => {
+										set("driveTime_SS", +e.target.value);
+									}}
+									style={{
+										width: "100%",
+										padding: "6px 4px",
+										textAlign: "center",
+										border: "1px solid var(--color-border)",
+										borderRadius: 4,
+										background: "var(--color-content)",
+										color: "var(--color-text)",
+										fontFamily: "var(--font-mono)",
+									}}
+								/>
+								<span style={{ opacity: 0.5, fontSize: 11 }}>秒</span>
+							</div>
+						</div>
+					</div>
+
+					{/* 到着・発車時刻欄に表示する文字列 */}
+					<div
+						style={{
+							padding: "10px 12px",
+							background: "var(--color-bg)",
+							borderRadius: "var(--radius)",
+							marginBottom: 12,
+							border: "1px solid var(--color-border)",
+						}}>
+						<div
+							style={{
+								fontSize: 12,
+								fontWeight: 600,
+								color: "var(--color-text-muted)",
+								marginBottom: 8,
+							}}>
+							到着・発車時刻欄に表示する文字列{" "}
+							<span style={{ fontWeight: 400, opacity: 0.7 }}>
+								（時刻の代わりに表示する場合）
+							</span>
+						</div>
+						<div className="field-row">
+							<div className="field">
+								<label style={{ fontSize: 11 }}>着欄の表示文字列</label>
+								<input
+									value={data.arriveDisplayText || ""}
+									onChange={(e) => {
+										set("arriveDisplayText", e.target.value);
+									}}
+									placeholder={arrivePhPlaceholder}
+									style={{
+										fontFamily: "var(--font-mono)",
+										fontSize: 13,
+									}}
+								/>
 								<span
 									style={{
-										padding: "6px 0",
+										fontSize: 10,
+										color: "var(--color-text-muted)",
+										marginTop: 2,
 										display: "block",
-										fontWeight: 500,
-										...(data.stationDeleted
-											? { color: "var(--color-danger)", textDecoration: "line-through" }
-											: {}),
 									}}>
-									{data.stationName || "(未設定)"}
-									{data.stationDeleted && (
-										<span
-											style={{ marginLeft: 6, fontSize: 11, textDecoration: "none" }}>
-											(削除済み)
-										</span>
-									)}
+									空欄なら着時刻を表示
 								</span>
 							</div>
-							<div className="field" style={{ flex: 3 }}>
-								<label>駅名フルネーム</label>
-								<span style={{ padding: "6px 0", display: "block" }}>
-									{data.fullName || "—"}
+							<div className="field">
+								<label style={{ fontSize: 11 }}>発欄の表示文字列</label>
+								<input
+									value={data.departureDisplayText || ""}
+									onChange={(e) => {
+										set("departureDisplayText", e.target.value);
+									}}
+									placeholder={departurePhPlaceholder}
+									style={{
+										fontFamily: "var(--font-mono)",
+										fontSize: 13,
+									}}
+								/>
+								<span
+									style={{
+										fontSize: 10,
+										color: "var(--color-text-muted)",
+										marginTop: 2,
+										display: "block",
+									}}>
+									空欄なら発時刻を表示
 								</span>
 							</div>
 						</div>
+					</div>
 
-							{/* 着時刻・発時刻・運転時分 */}
-							<div className="field-row" style={{ marginBottom: 12 }}>
-								<div className="field">
-									<label
-										style={{
-											display: "flex",
-											alignItems: "center",
-											gap: 6,
-										}}>
-										着時刻
-										{!data.isPass && (
-											<label
-												style={{
-													display: "flex",
-													alignItems: "center",
-													gap: 3,
-													fontWeight: 400,
-													fontSize: 11,
-													color: "var(--color-text-muted)",
-													cursor: "pointer",
-													marginLeft: "auto",
-													whiteSpace: "nowrap",
-												}}>
-												<input
-													type="checkbox"
-													checked={!!data.arriveHidden}
-													onChange={(e) =>
-														set("arriveHidden", e.target.checked)
-													}
-													style={{ accentColor: "var(--color-accent)" }}
-												/>
-												非表示
-											</label>
-										)}
-									</label>
-									<input
-										value={data.arrive || ""}
-										onChange={(e) => set("arrive", e.target.value)}
-										onBlur={(e) => {
-											const n = normalizeTimeField(e.target.value);
-											set("arrive", n);
-										}}
-										placeholder="HH:MM:SS"
-										disabled={!!data.isPass}
-										style={{
-											fontFamily: "var(--font-mono)",
-											opacity: data.isPass ? 0.4 : 1,
-										}}
-									/>
-								</div>
-								<div className="field">
-									<label
-										style={{
-											display: "flex",
-											alignItems: "center",
-											gap: 6,
-										}}>
-										発時刻
-										<label
-											style={{
-												display: "flex",
-												alignItems: "center",
-												gap: 3,
-												fontWeight: 400,
-												fontSize: 11,
-												color: "var(--color-text-muted)",
-												cursor: "pointer",
-												marginLeft: "auto",
-												whiteSpace: "nowrap",
-											}}>
-											<input
-												type="checkbox"
-												checked={!!data.departureHidden}
-												onChange={(e) =>
-													set("departureHidden", e.target.checked)
-												}
-												style={{ accentColor: "var(--color-accent)" }}
-											/>
-											非表示
-										</label>
-									</label>
-									<input
-										value={data.departure || ""}
-										onChange={(e) => set("departure", e.target.value)}
-										onBlur={(e) => {
-											const n = normalizeTimeField(e.target.value);
-											set("departure", n);
-										}}
-										placeholder="HH:MM:SS"
-										style={{ fontFamily: "var(--font-mono)" }}
-									/>
-								</div>
-								<div className="field" style={{ flex: "0 0 160px" }}>
-									<label>{t.driveTime}</label>
-									<div
-										style={{
-											display: "flex",
-											gap: 4,
-											alignItems: "center",
-										}}>
-										<input
-											type="number"
-											min={0}
-											value={data.driveTime_MM || 0}
-											onChange={(e) =>
-												set("driveTime_MM", +e.target.value)
-											}
-											style={{
-												width: "100%",
-												padding: "6px 4px",
-												textAlign: "center",
-												border: "1px solid var(--color-border)",
-												borderRadius: 4,
-												background: "var(--color-content)",
-												color: "var(--color-text)",
-												fontFamily: "var(--font-mono)",
-											}}
-										/>
-										<span style={{ opacity: 0.5, fontSize: 11 }}>分</span>
-										<input
-											type="number"
-											min={0}
-											max={59}
-											value={data.driveTime_SS || 0}
-											onChange={(e) =>
-												set("driveTime_SS", +e.target.value)
-											}
-											style={{
-												width: "100%",
-												padding: "6px 4px",
-												textAlign: "center",
-												border: "1px solid var(--color-border)",
-												borderRadius: 4,
-												background: "var(--color-content)",
-												color: "var(--color-text)",
-												fontFamily: "var(--font-mono)",
-											}}
-										/>
-										<span style={{ opacity: 0.5, fontSize: 11 }}>秒</span>
-									</div>
-								</div>
-							</div>
-
-							{/* 到着・発車時刻欄に表示する文字列 */}
-							<div
+					{/* フラグ群 */}
+					<div
+						style={{
+							display: "grid",
+							gridTemplateColumns: "1fr 1fr",
+							gap: 6,
+							marginBottom: 12,
+							padding: "10px 12px",
+							background: "var(--color-bg)",
+							borderRadius: "var(--radius)",
+						}}>
+						{boolFlags.map(([k, lbl, desc]) => (
+							<label
+								key={k}
 								style={{
-									padding: "10px 12px",
-									background: "var(--color-bg)",
-									borderRadius: "var(--radius)",
-									marginBottom: 12,
-									border: "1px solid var(--color-border)",
-								}}>
-								<div
-									style={{
-										fontSize: 12,
-										fontWeight: 600,
-										color: "var(--color-text-muted)",
-										marginBottom: 8,
-									}}>
-									到着・発車時刻欄に表示する文字列{" "}
-									<span style={{ fontWeight: 400, opacity: 0.7 }}>
-										（時刻の代わりに表示する場合）
-									</span>
-								</div>
-								<div className="field-row">
-									<div className="field">
-										<label style={{ fontSize: 11 }}>着欄の表示文字列</label>
-										<input
-											value={data.arriveDisplayText || ""}
-											onChange={(e) =>
-												set("arriveDisplayText", e.target.value)
-											}
-											placeholder={arrivePhPlaceholder}
-											style={{
-												fontFamily: "var(--font-mono)",
-												fontSize: 13,
-											}}
-										/>
-										<span
-											style={{
-												fontSize: 10,
-												color: "var(--color-text-muted)",
-												marginTop: 2,
-												display: "block",
-											}}>
-											空欄なら着時刻を表示
-										</span>
-									</div>
-									<div className="field">
-										<label style={{ fontSize: 11 }}>発欄の表示文字列</label>
-										<input
-											value={data.departureDisplayText || ""}
-											onChange={(e) =>
-												set("departureDisplayText", e.target.value)
-											}
-											placeholder={departurePhPlaceholder}
-											style={{
-												fontFamily: "var(--font-mono)",
-												fontSize: 13,
-											}}
-										/>
-										<span
-											style={{
-												fontSize: 10,
-												color: "var(--color-text-muted)",
-												marginTop: 2,
-												display: "block",
-											}}>
-											空欄なら発時刻を表示
-										</span>
-									</div>
-								</div>
-							</div>
-
-							{/* フラグ群 */}
-							<div
-								style={{
-									display: "grid",
-									gridTemplateColumns: "1fr 1fr",
+									display: "flex",
+									alignItems: "center",
 									gap: 6,
-									marginBottom: 12,
-									padding: "10px 12px",
-									background: "var(--color-bg)",
-									borderRadius: "var(--radius)",
+									fontSize: 13,
+									cursor: "pointer",
+								}}
+								title={desc}>
+								<input
+									type="checkbox"
+									checked={!!data[k]}
+									onChange={(e) => {
+										set(k, e.target.checked);
+									}}
+									style={{ accentColor: "var(--color-accent)" }}
+								/>
+								{lbl}
+							</label>
+						))}
+						{isFirstRow ? (
+							<label
+								style={{
+									display: "flex",
+									alignItems: "center",
+									gap: 6,
+									fontSize: 13,
+									cursor: "pointer",
+								}}
+								title="始発駅で車両到着時刻を表示">
+								<input
+									type="checkbox"
+									checked={!!data.hasBracket}
+									onChange={(e) => {
+										set("hasBracket", e.target.checked);
+									}}
+									style={{ accentColor: "var(--color-accent)" }}
+								/>
+								{t.bracketTime}
+							</label>
+						) : null}
+						{/* HH表示設定 */}
+						<div
+							style={{
+								gridColumn: "span 2",
+								padding: "8px 10px",
+								background: "var(--color-content)",
+								borderRadius: 4,
+								border: "1px solid var(--color-border)",
+							}}>
+							<div
+								style={{
+									fontSize: 12,
+									fontWeight: 600,
+									color: "var(--color-text-muted)",
+									marginBottom: 6,
 								}}>
-								{boolFlags.map(([k, lbl, desc]) => (
+								HH（時）表示
+							</div>
+							<div style={{ display: "flex", gap: 8 }}>
+								{showHHOptions.map(([val, lbl, desc]) => (
 									<label
-										key={k}
+										key={String(val)}
+										title={desc}
 										style={{
 											display: "flex",
 											alignItems: "center",
-											gap: 6,
-											fontSize: 13,
+											gap: 4,
+											fontSize: 12,
 											cursor: "pointer",
-										}}
-										title={desc}>
+											padding: "3px 8px",
+											borderRadius: 4,
+											background:
+												data.showHH === val
+													? "var(--color-accent-bg)"
+													: "transparent",
+											border: `1px solid ${data.showHH === val ? "var(--color-accent)" : "var(--color-border)"}`,
+										}}>
 										<input
-											type="checkbox"
-											checked={!!data[k]}
-											onChange={(e) => set(k, e.target.checked)}
+											type="radio"
+											name="showHH"
+											checked={data.showHH === val}
+											onChange={() => {
+												set("showHH", val);
+											}}
 											style={{ accentColor: "var(--color-accent)" }}
 										/>
 										{lbl}
 									</label>
 								))}
-								{isFirstRow && (
-									<label
-										style={{
-											display: "flex",
-											alignItems: "center",
-											gap: 6,
-											fontSize: 13,
-											cursor: "pointer",
-										}}
-										title="始発駅で車両到着時刻を表示">
-										<input
-											type="checkbox"
-											checked={!!data.hasBracket}
-											onChange={(e) =>
-												set("hasBracket", e.target.checked)
-											}
-											style={{ accentColor: "var(--color-accent)" }}
-										/>
-										{t.bracketTime}
-									</label>
-								)}
-								{/* HH表示設定 */}
-								<div
+							</div>
+						</div>
+						{isLastIdx ? (
+							<label
+								style={{
+									display: "flex",
+									alignItems: "center",
+									gap: 6,
+									fontSize: 13,
+									cursor: "pointer",
+									gridColumn: "span 2",
+									padding: "6px 8px",
+									background: "var(--color-content)",
+									borderRadius: 4,
+									border: "1px solid var(--color-border)",
+								}}>
+								<input
+									type="checkbox"
+									checked={lastRowExclude}
+									onChange={(e) => {
+										set("isLastStop", !e.target.checked);
+									}}
+									style={{ accentColor: "var(--color-accent)" }}
+								/>
+								<span>
+									この行を<strong>終着駅にしない</strong>
+								</span>
+								<span
 									style={{
-										gridColumn: "span 2",
-										padding: "8px 10px",
-										background: "var(--color-content)",
-										borderRadius: 4,
-										border: "1px solid var(--color-border)",
+										fontSize: 11,
+										color: "var(--color-text-muted)",
+										marginLeft: "auto",
 									}}>
-									<div
-										style={{
-											fontSize: 12,
-											fontWeight: 600,
-											color: "var(--color-text-muted)",
-											marginBottom: 6,
-										}}>
-										HH（時）表示
-									</div>
-									<div style={{ display: "flex", gap: 8 }}>
-										{showHHOptions.map(([val, lbl, desc]) => (
-											<label
-												key={String(val)}
-												title={desc}
-												style={{
-													display: "flex",
-													alignItems: "center",
-													gap: 4,
-													fontSize: 12,
-													cursor: "pointer",
-													padding: "3px 8px",
-													borderRadius: 4,
-													background:
-														data.showHH === val
-															? "var(--color-accent-bg)"
-															: "transparent",
-													border: `1px solid ${data.showHH === val ? "var(--color-accent)" : "var(--color-border)"}`,
-												}}>
-												<input
-													type="radio"
-													name="showHH"
-													checked={data.showHH === val}
-													onChange={() => set("showHH", val)}
-													style={{ accentColor: "var(--color-accent)" }}
-												/>
-												{lbl}
-											</label>
-										))}
-									</div>
-								</div>
-								{isLastIdx && (
-									<label
-										style={{
-											display: "flex",
-											alignItems: "center",
-											gap: 6,
-											fontSize: 13,
-											cursor: "pointer",
-											gridColumn: "span 2",
-											padding: "6px 8px",
-											background: "var(--color-content)",
-											borderRadius: 4,
-											border: "1px solid var(--color-border)",
-										}}>
-										<input
-											type="checkbox"
-											checked={lastRowExclude}
-											onChange={(e) =>
-												set("isLastStop", !e.target.checked)
-											}
-											style={{ accentColor: "var(--color-accent)" }}
-										/>
-										<span>
-											この行を<strong>終着駅にしない</strong>
-										</span>
-										<span
-											style={{
-												fontSize: 11,
-												color: "var(--color-text-muted)",
-												marginLeft: "auto",
-											}}>
-											（既定: 最後の行 = 終着）
-										</span>
-									</label>
-								)}
-							</div>
+									（既定: 最後の行 = 終着）
+								</span>
+							</label>
+						) : null}
+					</div>
 
-							{/* 制限・作業 */}
-							<div className="field-row" style={{ marginBottom: 12 }}>
-								<div className="field">
-									<label>進入制限 (0–999)</label>
-									<NumLimit
-										value={data.runInLimit}
-										onChange={(v) => set("runInLimit", v)}
-									/>
-								</div>
-								<div className="field">
-									<label>進出制限 (0–999)</label>
-									<NumLimit
-										value={data.runOutLimit}
-										onChange={(v) => set("runOutLimit", v)}
-									/>
-								</div>
-								<div className="field" style={{ flex: "0 0 160px" }}>
-									<label>駅作業タイプ</label>
-									<input
-										value={data.workType || ""}
-										onChange={(e) => set("workType", e.target.value)}
-										placeholder="—"
-									/>
-								</div>
-							</div>
-
-							<BBCodeField
-								label={t.remarks}
-								value={data.remarks || ""}
-								onChange={(v) => set("remarks", v)}
-								multiline
-								rows={2}
+					{/* 制限・作業 */}
+					<div
+						className="field-row"
+						style={{ marginBottom: 12 }}>
+						<div className="field">
+							<label>進入制限 (0–999)</label>
+							<NumLimit
+								value={data.runInLimit}
+								onChange={(v) => {
+									set("runInLimit", v);
+								}}
 							/>
-					</>
+						</div>
+						<div className="field">
+							<label>進出制限 (0–999)</label>
+							<NumLimit
+								value={data.runOutLimit}
+								onChange={(v) => {
+									set("runOutLimit", v);
+								}}
+							/>
+						</div>
+						<div
+							className="field"
+							style={{ flex: "0 0 160px" }}>
+							<label>駅作業タイプ</label>
+							<input
+								value={data.workType || ""}
+								onChange={(e) => {
+									set("workType", e.target.value);
+								}}
+								placeholder="—"
+							/>
+						</div>
+					</div>
+
+					<BBCodeField
+						label={t.remarks}
+						value={data.remarks || ""}
+						onChange={(v) => {
+							set("remarks", v);
+						}}
+						multiline
+						rows={2}
+					/>
 				</div>
 				<div className="modal-footer">
-					<button className="btn btn-secondary" onClick={onClose}>
+					<button
+						className="btn btn-secondary"
+						onClick={onClose}>
 						{t.cancel}
 					</button>
 					<button
@@ -843,7 +894,7 @@ function RowDetailModal({
 			</div>
 		</div>
 	);
-}
+};
 
 // Per-row remarks input with local draft to avoid per-keystroke API writes.
 // Track picker for one row, scoped to the row's station (station_tracks belong
@@ -851,18 +902,21 @@ function RowDetailModal({
 // picker is opened — so opening a timetable doesn't fan out a tracks query per
 // station. Display uses the backend-embedded row.trackName; a soft-deleted
 // track keeps its id selected and surfaces as a "(削除済み)" tombstone.
-function TrackCell({
+const TrackCell = ({
 	row,
 	onChange,
 	t,
 }: {
-	row: TimetableRow;
-	onChange: (id: string | undefined) => void;
-	t: Strings;
-}) {
+	readonly row: TimetableRow;
+	readonly onChange: (id: string | undefined) => void;
+	readonly t: Strings;
+}) => {
 	const [open, setOpen] = useState(false);
 	const stationId = row.stationId ?? "";
-	const { data: tracks } = useStationTracks(stationId, open && stationId !== "");
+	const { data: tracks } = useStationTracks(
+		stationId,
+		open && stationId !== ""
+	);
 	const deleted = !!row.trackDeleted;
 
 	if (!open) {
@@ -871,11 +925,11 @@ function TrackCell({
 				type="button"
 				className="track-pick"
 				disabled={stationId === ""}
-				onClick={() => setOpen(true)}
+				onClick={() => {
+					setOpen(true);
+				}}
 				title={
-					deleted
-						? `${row.trackName}（${t.deleted}）`
-						: row.trackName || t.none
+					deleted ? `${row.trackName}（${t.deleted}）` : row.trackName || t.none
 				}
 				style={
 					deleted
@@ -890,9 +944,9 @@ function TrackCell({
 				) : (
 					<span style={{ opacity: 0.4 }}>—</span>
 				)}
-				{deleted && (
+				{deleted ? (
 					<span style={{ marginLeft: 3, textDecoration: "none" }}>⚠</span>
-				)}
+				) : null}
 			</button>
 		);
 	}
@@ -906,37 +960,41 @@ function TrackCell({
 				onChange(e.target.value === "" ? undefined : e.target.value);
 				setOpen(false);
 			}}
-			onBlur={() => setOpen(false)}>
+			onBlur={() => {
+				setOpen(false);
+			}}>
 			<option value="">— {t.none} —</option>
-			{deleted && row.stationTrackId !== undefined && (
+			{deleted && row.stationTrackId !== undefined ? (
 				<option value={row.stationTrackId}>
 					⚠ {row.trackName}（{t.deleted}）
 				</option>
-			)}
+			) : null}
 			{(tracks ?? []).map((tr) => (
-				<option key={tr.id} value={tr.id}>
+				<option
+					key={tr.id}
+					value={tr.id}>
 					{tr.name}
 				</option>
 			))}
 		</select>
 	);
-}
+};
 
 // Marker-color picker + swatch for one row. Resolves the swatch from the
 // project color list; when the referenced color is soft-deleted it keeps the
 // id selected and surfaces it as a "(削除済み)" tombstone option (the name
 // comes from the backend-embedded row.colorName).
-function ColorCell({
+const ColorCell = ({
 	row,
 	colors,
 	onChange,
 	t,
 }: {
-	row: TimetableRow;
-	colors: EntityColor[];
-	onChange: (id: string | undefined) => void;
-	t: Strings;
-}) {
+	readonly row: TimetableRow;
+	readonly colors: EntityColor[];
+	readonly onChange: (id: string | undefined) => void;
+	readonly t: Strings;
+}) => {
 	const selected = row.colorIdMarker
 		? colors.find((c) => c.id === row.colorIdMarker)
 		: undefined;
@@ -967,39 +1025,59 @@ function ColorCell({
 				className="color-select"
 				value={row.colorIdMarker ?? ""}
 				style={deleted ? { color: "var(--color-danger)" } : undefined}
-				onChange={(e) =>
-					onChange(e.target.value === "" ? undefined : e.target.value)
-				}>
+				onChange={(e) => {
+					onChange(e.target.value === "" ? undefined : e.target.value);
+				}}>
 				<option value="">— {t.none} —</option>
-				{deleted && row.colorIdMarker !== undefined && (
+				{deleted && row.colorIdMarker !== undefined ? (
 					<option value={row.colorIdMarker}>
 						⚠ {row.colorName ?? ""}（{t.deleted}）
 					</option>
-				)}
+				) : null}
 				{colors.map((c) => (
-					<option key={c.id} value={c.id}>
+					<option
+						key={c.id}
+						value={c.id}>
 						{c.name}
 					</option>
 				))}
 			</select>
 		</div>
 	);
-}
+};
 
-interface StationRowProps {
-	row: TimetableRow;
-	idx: number;
-	isLast: boolean;
-	fmt: Partial<RowFormat>;
-	colors: EntityColor[];
-	onUpdateRow: <K extends keyof TimetableRow>(idx: number, key: K, val: TimetableRow[K]) => void;
-	onUpdateRowFields: (idx: number, partial: Partial<TimetableRow>) => void;
-	onDeleteRow: (idx: number) => void;
-	onOpenDetail: () => void;
-	t: Strings;
-}
+type StationRowProps = {
+	readonly row: TimetableRow;
+	readonly idx: number;
+	readonly isLast: boolean;
+	readonly fmt: Partial<RowFormat>;
+	readonly colors: EntityColor[];
+	readonly onUpdateRow: <K extends keyof TimetableRow>(
+		idx: number,
+		key: K,
+		val: TimetableRow[K]
+	) => void;
+	readonly onUpdateRowFields: (
+		idx: number,
+		partial: Partial<TimetableRow>
+	) => void;
+	readonly onDeleteRow: (idx: number) => void;
+	readonly onOpenDetail: () => void;
+	readonly t: Strings;
+};
 
-function StationRow({ row, idx, isLast, fmt, colors, onUpdateRow, onUpdateRowFields, onDeleteRow, onOpenDetail, t }: StationRowProps) {
+const StationRow = ({
+	row,
+	idx,
+	isLast,
+	fmt,
+	colors,
+	onUpdateRow,
+	onUpdateRowFields,
+	onDeleteRow,
+	onOpenDetail,
+	t,
+}: StationRowProps) => {
 	const [remarksDraft, setRemarksDraft] = useState(row.remarks);
 
 	// Reseed when the row data changes (e.g. after a mutation refetch).
@@ -1018,10 +1096,12 @@ function StationRow({ row, idx, isLast, fmt, colors, onUpdateRow, onUpdateRowFie
 				: {};
 
 	return (
-		<tr key={row.id} style={rowStyle}>
+		<tr
+			key={row.id}
+			style={rowStyle}>
 			<td className="row-num">
 				{idx + 1}
-				{isLast && (
+				{isLast ? (
 					<div
 						style={{
 							fontSize: 9,
@@ -1031,7 +1111,7 @@ function StationRow({ row, idx, isLast, fmt, colors, onUpdateRow, onUpdateRowFie
 						}}>
 						終
 					</div>
-				)}
+				) : null}
 			</td>
 			<td>
 				<div
@@ -1046,20 +1126,28 @@ function StationRow({ row, idx, isLast, fmt, colors, onUpdateRow, onUpdateRowFie
 						className={`station-name ${!row.stationName ? "empty" : ""} ${row.stationDeleted ? "tombstone" : ""}`}>
 						{row.stationName || "(駅名未設定)"}
 					</span>
-					{row.stationDeleted && (
-						<span className="tombstone-tag" title="この駅は削除されています">
+					{row.stationDeleted ? (
+						<span
+							className="tombstone-tag"
+							title="この駅は削除されています">
 							削除済み
 						</span>
-					)}
+					) : null}
 				</div>
 			</td>
 			<td style={row.isPass ? { color: "oklch(0.55 0.12 15)" } : {}}>
 				<TimeCell
 					value={row.arrive}
 					displayText={row.arriveDisplayText || undefined}
-					formattedValue={row.arriveDisplayText ? undefined : fmt.arriveFormatted}
-					onChange={(v) => onUpdateRowFields(idx, { arrive: v, arriveDisplayText: "" })}
-					onChangeText={(v) => onUpdateRowFields(idx, { arrive: "", arriveDisplayText: v })}
+					formattedValue={
+						row.arriveDisplayText ? undefined : fmt.arriveFormatted
+					}
+					onChange={(v) => {
+						onUpdateRowFields(idx, { arrive: v, arriveDisplayText: "" });
+					}}
+					onChangeText={(v) => {
+						onUpdateRowFields(idx, { arrive: "", arriveDisplayText: v });
+					}}
 					muted={!!row.arriveHidden}
 				/>
 			</td>
@@ -1075,15 +1163,27 @@ function StationRow({ row, idx, isLast, fmt, colors, onUpdateRow, onUpdateRowFie
 							fontSize: 12,
 							cursor: "default",
 						}}>
-						{"=="}
+						==
 					</span>
 				) : (
 					<TimeCell
 						value={row.departure}
 						displayText={row.departureDisplayText || undefined}
-						formattedValue={row.departureDisplayText ? undefined : fmt.departureFormatted}
-						onChange={(v) => onUpdateRowFields(idx, { departure: v, departureDisplayText: "" })}
-						onChangeText={(v) => onUpdateRowFields(idx, { departure: "", departureDisplayText: v })}
+						formattedValue={
+							row.departureDisplayText ? undefined : fmt.departureFormatted
+						}
+						onChange={(v) => {
+							onUpdateRowFields(idx, {
+								departure: v,
+								departureDisplayText: "",
+							});
+						}}
+						onChangeText={(v) => {
+							onUpdateRowFields(idx, {
+								departure: "",
+								departureDisplayText: v,
+							});
+						}}
 						muted={!!row.departureHidden}
 					/>
 				)}
@@ -1093,13 +1193,17 @@ function StationRow({ row, idx, isLast, fmt, colors, onUpdateRow, onUpdateRowFie
 					type="checkbox"
 					className="toggle-check"
 					checked={!!row.isPass}
-					onChange={(e) => onUpdateRow(idx, "isPass", e.target.checked)}
+					onChange={(e) => {
+						onUpdateRow(idx, "isPass", e.target.checked);
+					}}
 				/>
 			</td>
 			<td>
 				<TrackCell
 					row={row}
-					onChange={(id) => onUpdateRow(idx, "stationTrackId", id)}
+					onChange={(id) => {
+						onUpdateRow(idx, "stationTrackId", id);
+					}}
 					t={t}
 				/>
 			</td>
@@ -1107,7 +1211,9 @@ function StationRow({ row, idx, isLast, fmt, colors, onUpdateRow, onUpdateRowFie
 				<ColorCell
 					row={row}
 					colors={colors}
-					onChange={(id) => onUpdateRow(idx, "colorIdMarker", id)}
+					onChange={(id) => {
+						onUpdateRow(idx, "colorIdMarker", id);
+					}}
 					t={t}
 				/>
 			</td>
@@ -1116,7 +1222,9 @@ function StationRow({ row, idx, isLast, fmt, colors, onUpdateRow, onUpdateRowFie
 					<input
 						className="remarks-input"
 						value={remarksDraft || ""}
-						onChange={(e) => setRemarksDraft(e.target.value)}
+						onChange={(e) => {
+							setRemarksDraft(e.target.value);
+						}}
 						onBlur={(e) => {
 							const v = e.target.value;
 							if (v !== row.remarks) {
@@ -1146,7 +1254,9 @@ function StationRow({ row, idx, isLast, fmt, colors, onUpdateRow, onUpdateRowFie
 					</button>
 					<button
 						className="row-action-btn del"
-						onClick={() => onDeleteRow(idx)}
+						onClick={() => {
+							onDeleteRow(idx);
+						}}
 						title={t.delete}>
 						✕
 					</button>
@@ -1154,16 +1264,21 @@ function StationRow({ row, idx, isLast, fmt, colors, onUpdateRow, onUpdateRowFie
 			</td>
 		</tr>
 	);
-}
+};
 
-interface StationPickerModalProps {
-	stations: Station[];
-	usedStationIds: Set<string>;
-	onPick: (station: Station) => void;
-	onClose: () => void;
-}
+type StationPickerModalProps = {
+	readonly stations: Station[];
+	readonly usedStationIds: Set<string>;
+	readonly onPick: (station: Station) => void;
+	readonly onClose: () => void;
+};
 
-function StationPickerModal({ stations, usedStationIds, onPick, onClose }: StationPickerModalProps) {
+const StationPickerModal = ({
+	stations,
+	usedStationIds,
+	onPick,
+	onClose,
+}: StationPickerModalProps) => {
 	const [filter, setFilter] = useState("");
 	const filtered = stations.filter((s) => {
 		if (usedStationIds.has(s.id)) return false;
@@ -1179,16 +1294,26 @@ function StationPickerModal({ stations, usedStationIds, onPick, onClose }: Stati
 		<div
 			className="modal-backdrop"
 			onClick={(e) => e.target === e.currentTarget && onClose()}>
-			<div className="modal" style={{ maxWidth: 400, width: "100%" }}>
+			<div
+				className="modal"
+				style={{ maxWidth: 400, width: "100%" }}>
 				<div className="modal-header">
 					<span className="modal-title">駅を選択</span>
-					<button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button>
+					<button
+						className="btn btn-ghost btn-sm"
+						onClick={onClose}>
+						✕
+					</button>
 				</div>
-				<div className="modal-body" style={{ padding: "8px 12px" }}>
+				<div
+					className="modal-body"
+					style={{ padding: "8px 12px" }}>
 					<input
 						autoFocus
 						value={filter}
-						onChange={(e) => setFilter(e.target.value)}
+						onChange={(e) => {
+							setFilter(e.target.value);
+						}}
 						placeholder="駅名で絞り込み…"
 						style={{
 							width: "100%",
@@ -1204,7 +1329,13 @@ function StationPickerModal({ stations, usedStationIds, onPick, onClose }: Stati
 					/>
 					<div style={{ maxHeight: 320, overflowY: "auto" }}>
 						{filtered.length === 0 ? (
-							<div style={{ padding: "20px 0", textAlign: "center", color: "var(--color-text-muted)", fontSize: 12 }}>
+							<div
+								style={{
+									padding: "20px 0",
+									textAlign: "center",
+									color: "var(--color-text-muted)",
+									fontSize: 12,
+								}}>
 								{stations.length === 0
 									? "このプロジェクトには駅が登録されていません"
 									: "該当する駅がありません"}
@@ -1213,7 +1344,9 @@ function StationPickerModal({ stations, usedStationIds, onPick, onClose }: Stati
 							filtered.map((s) => (
 								<button
 									key={s.id}
-									onClick={() => onPick(s)}
+									onClick={() => {
+										onPick(s);
+									}}
 									style={{
 										display: "block",
 										width: "100%",
@@ -1226,11 +1359,16 @@ function StationPickerModal({ stations, usedStationIds, onPick, onClose }: Stati
 										color: "var(--color-text)",
 									}}>
 									<span style={{ fontWeight: 500 }}>{s.stationName}</span>
-									{s.fullName && s.fullName !== s.stationName && (
-										<span style={{ fontSize: 11, color: "var(--color-text-muted)", marginLeft: 6 }}>
+									{s.fullName && s.fullName !== s.stationName ? (
+										<span
+											style={{
+												fontSize: 11,
+												color: "var(--color-text-muted)",
+												marginLeft: 6,
+											}}>
 											{s.fullName}
 										</span>
-									)}
+									) : null}
 								</button>
 							))
 						)}
@@ -1239,27 +1377,32 @@ function StationPickerModal({ stations, usedStationIds, onPick, onClose }: Stati
 			</div>
 		</div>
 	);
-}
+};
 
-interface TimetableGridProps {
-	train: Train;
-	stations: Station[];
-	colors: EntityColor[];
-	onCreateRow: (row: TimetableRow) => void;
-	onUpdateRow: (rowId: string, row: TimetableRow) => void;
-	onDeleteRow: (rowId: string) => void;
-	t: Strings;
-}
+type TimetableGridProps = {
+	readonly train: Train;
+	readonly stations: Station[];
+	readonly colors: EntityColor[];
+	readonly onCreateRow: (row: TimetableRow) => void;
+	readonly onUpdateRow: (rowId: string, row: TimetableRow) => void;
+	readonly onDeleteRow: (rowId: string) => void;
+	readonly t: Strings;
+};
 
-export function TimetableGrid({ train, stations, colors, onCreateRow, onUpdateRow, onDeleteRow, t }: TimetableGridProps) {
+export const TimetableGrid = ({
+	train,
+	stations,
+	colors,
+	onCreateRow,
+	onUpdateRow,
+	onDeleteRow,
+	t,
+}: TimetableGridProps) => {
 	const rows = train.timetableRows ?? [];
 	const [detailRow, setDetailRow] = useState<TimetableRow | null>(null);
 	const [showPicker, setShowPicker] = useState(false);
 
-	const rowFormats = useMemo(
-		() => TRViSTime.computeRowFormats(rows),
-		[rows]
-	);
+	const rowFormats = useMemo(() => TRViSTime.computeRowFormats(rows), [rows]);
 
 	const lastStationIdx = rows.length - 1;
 
@@ -1279,7 +1422,7 @@ export function TimetableGrid({ train, stations, colors, onCreateRow, onUpdateRo
 			const updated = { ...row, [key]: val };
 			onUpdateRow(updated.id, updated);
 		},
-		// eslint-disable-next-line react-hooks/exhaustive-deps
+
 		[rows, onUpdateRow]
 	);
 
@@ -1293,7 +1436,7 @@ export function TimetableGrid({ train, stations, colors, onCreateRow, onUpdateRo
 			if (!row) return;
 			onUpdateRow(row.id, { ...row, ...partial });
 		},
-		// eslint-disable-next-line react-hooks/exhaustive-deps
+
 		[rows, onUpdateRow]
 	);
 
@@ -1385,7 +1528,7 @@ export function TimetableGrid({ train, stations, colors, onCreateRow, onUpdateRo
 							<th className="lh">{t.track}</th>
 							<th className="lh">{t.color}</th>
 							<th className="lh">{t.remarks}</th>
-							<th></th>
+							<th />
 						</tr>
 					</thead>
 					<tbody>
@@ -1404,7 +1547,9 @@ export function TimetableGrid({ train, stations, colors, onCreateRow, onUpdateRo
 									onUpdateRow={updateRow}
 									onUpdateRowFields={updateRowFields}
 									onDeleteRow={deleteRow}
-									onOpenDetail={() => setDetailRow(row)}
+									onOpenDetail={() => {
+										setDetailRow(row);
+									}}
 									t={t}
 								/>
 							);
@@ -1416,14 +1561,14 @@ export function TimetableGrid({ train, stations, colors, onCreateRow, onUpdateRo
 			<div className="add-row-bar">
 				<button
 					className="btn btn-secondary btn-sm"
-					onClick={() => setShowPicker(true)}>
+					onClick={() => {
+						setShowPicker(true);
+					}}>
 					＋ {t.addRow}
 				</button>
 				{rows.length > 0 && (
-					<span
-						style={{ fontSize: 11, color: "var(--color-text-muted)" }}>
-						{rows.length} 駅 · 通過{" "}
-						{rows.filter((r) => r.isPass).length} · 運停{" "}
+					<span style={{ fontSize: 11, color: "var(--color-text-muted)" }}>
+						{rows.length} 駅 · 通過 {rows.filter((r) => r.isPass).length} · 運停{" "}
 						{rows.filter((r) => r.isOperationOnlyStop).length}
 					</span>
 				)}
@@ -1433,7 +1578,7 @@ export function TimetableGrid({ train, stations, colors, onCreateRow, onUpdateRo
 				</span>
 			</div>
 
-			{detailRow && (
+			{detailRow ? (
 				<RowDetailModal
 					row={detailRow}
 					isFirstRow={rows[0]?.id === detailRow.id}
@@ -1441,14 +1586,18 @@ export function TimetableGrid({ train, stations, colors, onCreateRow, onUpdateRo
 					allRows={rows}
 					t={t}
 					onSave={saveDetail}
-					onClose={() => setDetailRow(null)}
+					onClose={() => {
+						setDetailRow(null);
+					}}
 				/>
-			)}
+			) : null}
 
-			{showPicker && (
+			{showPicker ? (
 				<StationPickerModal
 					stations={stations}
-					usedStationIds={new Set(rows.map((r) => r.stationId ?? "").filter(Boolean))}
+					usedStationIds={
+						new Set(rows.map((r) => r.stationId ?? "").filter(Boolean))
+					}
 					onPick={(picked) => {
 						const newRow: TimetableRow = {
 							id: "",
@@ -1473,9 +1622,11 @@ export function TimetableGrid({ train, stations, colors, onCreateRow, onUpdateRo
 						onCreateRow(newRow);
 						setShowPicker(false);
 					}}
-					onClose={() => setShowPicker(false)}
+					onClose={() => {
+						setShowPicker(false);
+					}}
 				/>
-			)}
+			) : null}
 		</div>
 	);
-}
+};

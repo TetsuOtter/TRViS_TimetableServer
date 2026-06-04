@@ -4,16 +4,15 @@
 
 import { useState } from "react";
 
-import type { Color } from "../types/entities";
 import type { Strings } from "../i18n/strings";
+import type { Color } from "../types/entities";
 
-const clamp255 = (n: number): number => Math.max(0, Math.min(255, Math.round(n)));
+const clamp255 = (n: number): number =>
+	Math.max(0, Math.min(255, Math.round(n)));
 
 const toHex = (r: number, g: number, b: number): string =>
 	"#" +
-	[r, g, b]
-		.map((n) => clamp255(n).toString(16).padStart(2, "0"))
-		.join("");
+	[r, g, b].map((n) => clamp255(n).toString(16).padStart(2, "0")).join("");
 
 const fromHex = (hex: string): { red: number; green: number; blue: number } => {
 	const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex.trim());
@@ -27,13 +26,13 @@ const fromHex = (hex: string): { red: number; green: number; blue: number } => {
 
 export type ColorDraft = Omit<Color, "id" | "projectId" | "createdAt">;
 
-interface ColorManagerProps {
-	colors: Color[];
-	onCreate: (draft: ColorDraft) => void;
-	onUpdate: (vars: { id: string } & ColorDraft) => void;
-	onDelete: (id: string) => void;
-	t: Strings;
-}
+type ColorManagerProps = {
+	readonly colors: Color[];
+	readonly onCreate: (draft: ColorDraft) => void;
+	readonly onUpdate: (vars: { id: string } & ColorDraft) => void;
+	readonly onDelete: (id: string) => void;
+	readonly t: Strings;
+};
 
 const EMPTY: ColorDraft = {
 	name: "",
@@ -43,13 +42,13 @@ const EMPTY: ColorDraft = {
 	blue: 0,
 };
 
-export function ColorManager({
+export const ColorManager = ({
 	colors,
 	onCreate,
 	onUpdate,
 	onDelete,
 	t,
-}: ColorManagerProps) {
+}: ColorManagerProps) => {
 	// editingId === "new" → the add form; a real id → editing that color.
 	const [editingId, setEditingId] = useState<string | null>(null);
 	const [draft, setDraft] = useState<ColorDraft>(EMPTY);
@@ -84,8 +83,9 @@ export function ColorManager({
 		cancel();
 	};
 
-	const set = <K extends keyof ColorDraft>(k: K, v: ColorDraft[K]) =>
+	const set = <K extends keyof ColorDraft>(k: K, v: ColorDraft[K]) => {
 		setDraft((p) => ({ ...p, [k]: v }));
+	};
 
 	return (
 		<div style={{ padding: 20, maxWidth: 720 }}>
@@ -96,11 +96,11 @@ export function ColorManager({
 					justifyContent: "space-between",
 					marginBottom: 16,
 				}}>
-				<h2 style={{ fontSize: 18, fontWeight: 600 }}>
-					🎨 {t.colorManager}
-				</h2>
+				<h2 style={{ fontSize: 18, fontWeight: 600 }}>🎨 {t.colorManager}</h2>
 				{editingId === null && (
-					<button className="btn btn-primary btn-sm" onClick={startNew}>
+					<button
+						className="btn btn-primary btn-sm"
+						onClick={startNew}>
 						＋ {t.newColor}
 					</button>
 				)}
@@ -147,7 +147,7 @@ export function ColorManager({
 							/>
 							<div style={{ flex: 1, minWidth: 0 }}>
 								<div style={{ fontWeight: 500 }}>{c.name}</div>
-								{c.description && (
+								{c.description ? (
 									<div
 										style={{
 											fontSize: 12,
@@ -158,7 +158,7 @@ export function ColorManager({
 										}}>
 										{c.description}
 									</div>
-								)}
+								) : null}
 							</div>
 							<span
 								style={{
@@ -170,13 +170,17 @@ export function ColorManager({
 							</span>
 							<button
 								className="btn btn-ghost btn-sm"
-								onClick={() => startEdit(c)}>
+								onClick={() => {
+									startEdit(c);
+								}}>
 								{t.edit}
 							</button>
 							<button
 								className="btn btn-ghost btn-sm"
 								style={{ color: "var(--color-danger)" }}
-								onClick={() => onDelete(c.id)}>
+								onClick={() => {
+									onDelete(c.id);
+								}}>
 								🗑
 							</button>
 						</div>
@@ -185,17 +189,17 @@ export function ColorManager({
 			)}
 		</div>
 	);
-}
+};
 
-interface ColorFormProps {
-	draft: ColorDraft;
-	set: <K extends keyof ColorDraft>(k: K, v: ColorDraft[K]) => void;
-	onSave: () => void;
-	onCancel: () => void;
-	t: Strings;
-}
+type ColorFormProps = {
+	readonly draft: ColorDraft;
+	readonly set: <K extends keyof ColorDraft>(k: K, v: ColorDraft[K]) => void;
+	readonly onSave: () => void;
+	readonly onCancel: () => void;
+	readonly t: Strings;
+};
 
-function ColorForm({ draft, set, onSave, onCancel, t }: ColorFormProps) {
+const ColorForm = ({ draft, set, onSave, onCancel, t }: ColorFormProps) => {
 	const hex = toHex(draft.red, draft.green, draft.blue);
 	return (
 		<div
@@ -218,7 +222,9 @@ function ColorForm({ draft, set, onSave, onCancel, t }: ColorFormProps) {
 						type="text"
 						value={draft.name}
 						placeholder="赤 / Red ..."
-						onChange={(e) => set("name", e.target.value)}
+						onChange={(e) => {
+							set("name", e.target.value);
+						}}
 						style={inputStyle}
 					/>
 				</div>
@@ -264,12 +270,16 @@ function ColorForm({ draft, set, onSave, onCancel, t }: ColorFormProps) {
 				<input
 					type="text"
 					value={draft.description}
-					onChange={(e) => set("description", e.target.value)}
+					onChange={(e) => {
+						set("description", e.target.value);
+					}}
 					style={inputStyle}
 				/>
 			</div>
 			<div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-				<button className="btn btn-ghost btn-sm" onClick={onCancel}>
+				<button
+					className="btn btn-ghost btn-sm"
+					onClick={onCancel}>
 					{t.cancel}
 				</button>
 				<button
@@ -281,7 +291,7 @@ function ColorForm({ draft, set, onSave, onCancel, t }: ColorFormProps) {
 			</div>
 		</div>
 	);
-}
+};
 
 const inputStyle: React.CSSProperties = {
 	width: "100%",
