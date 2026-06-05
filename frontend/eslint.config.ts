@@ -72,6 +72,13 @@ export default [
 			"react/jsx-no-bind": ["error", { allowArrowFunctions: true }],
 			"react/jsx-props-no-spreading": "off",
 			"react/jsx-no-useless-fragment": ["error", { allowExpressions: true }],
+			// jsx-no-literals requires wrapping text in {expr}; the react/all preset sets
+			// jsx-curly-brace-presence to "never" which conflicts. Override to "ignore"
+			// for children so jsx-no-literals handles the children case.
+			"react/jsx-curly-brace-presence": [
+				"error",
+				{ props: "never", children: "ignore" },
+			],
 			"import/order": [
 				"error",
 				{

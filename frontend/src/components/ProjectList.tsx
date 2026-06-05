@@ -26,6 +26,7 @@ type ProjectListScreenProps = {
 	readonly onExport: (id?: string) => void;
 	readonly onShare: (id: string) => void;
 	readonly onUseInviteKey: () => void;
+	readonly isAuthenticated: boolean;
 	readonly t: Strings;
 };
 
@@ -42,23 +43,25 @@ export const ProjectListScreen = ({
 	onExport,
 	onShare,
 	onUseInviteKey,
+	isAuthenticated,
 	t,
 }: ProjectListScreenProps) => {
 	const [menu, setMenu] = useState<MenuState | null>(null);
 	const [searchQuery, setSearchQuery] = useState("");
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
-	const filteredProjects = searchQuery
-		? projects.filter(
-				(p) =>
-					p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-					p.description.toLowerCase().includes(searchQuery.toLowerCase())
-			)
-		: projects;
+	const filteredProjects =
+		searchQuery !== ""
+			? projects.filter(
+					(p) =>
+						p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+						p.description.toLowerCase().includes(searchQuery.toLowerCase())
+				)
+			: projects;
 
 	const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
-		if (!file) return;
+		if (file == null) return;
 		const reader = new FileReader();
 		reader.onload = (ev) => {
 			try {
@@ -88,7 +91,7 @@ export const ProjectListScreen = ({
 					{t.projects}
 				</h1>
 				<span style={{ fontSize: 13, color: "var(--color-text-muted)" }}>
-					{searchQuery
+					{searchQuery !== ""
 						? `${filteredProjects.length} / ${projects.length} 件`
 						: `${projects.length} 件`}
 				</span>
@@ -100,28 +103,46 @@ export const ProjectListScreen = ({
 					onChange={handleImport}
 					style={{ display: "none" }}
 				/>
+				{isAuthenticated ? (
+					<button
+						type="button"
+						className="btn btn-secondary btn-sm"
+						onClick={onUseInviteKey}>
+						{`
+						🔑 `}
+						{t.useInviteKey}
+					</button>
+				) : null}
+				{isAuthenticated ? (
+					<button
+						type="button"
+						className="btn btn-secondary btn-sm"
+						onClick={() => fileInputRef.current?.click()}>
+						{`
+						📥 `}
+						{t.import}
+					</button>
+				) : null}
 				<button
-					className="btn btn-secondary btn-sm"
-					onClick={onUseInviteKey}>
-					🔑 {t.useInviteKey}
-				</button>
-				<button
-					className="btn btn-secondary btn-sm"
-					onClick={() => fileInputRef.current?.click()}>
-					📥 {t.import}
-				</button>
-				<button
+					type="button"
 					className="btn btn-secondary btn-sm"
 					onClick={() => {
 						onExport();
 					}}>
-					📤 {t.export}
+					{`
+					📤 `}
+					{t.export}
 				</button>
-				<button
-					className="btn btn-primary btn-sm"
-					onClick={onNew}>
-					＋ {t.newProject}
-				</button>
+				{isAuthenticated ? (
+					<button
+						type="button"
+						className="btn btn-primary btn-sm"
+						onClick={onNew}>
+						{`
+						＋ `}
+						{t.newProject}
+					</button>
+				) : null}
 			</div>
 			<div style={{ marginBottom: 16 }}>
 				<input
@@ -146,7 +167,9 @@ export const ProjectListScreen = ({
 			{isLoading && projects.length === 0 ? (
 				<div className="loading-center">
 					<span className="spinner" />
+					{`
 					読み込み中...
+				`}
 				</div>
 			) : null}
 			{error !== null && (
@@ -166,9 +189,9 @@ export const ProjectListScreen = ({
 					<button
 						type="button"
 						className="btn btn-secondary btn-sm"
-						onClick={onRetry}>
+						onClick={onRetry}>{`
 						再試行
-					</button>
+					`}</button>
 				</div>
 			)}
 			{(!isLoading || projects.length > 0) && error === null && (
@@ -224,6 +247,7 @@ export const ProjectListScreen = ({
 								</div>
 								<h3 style={{ flex: 1 }}>{p.name}</h3>
 								<button
+									type="button"
 									className="btn btn-ghost btn-xs"
 									onClick={(e) => {
 										e.stopPropagation();
@@ -240,21 +264,23 @@ export const ProjectListScreen = ({
 										fontSize: 14,
 										lineHeight: 1,
 										color: "var(--color-text-muted)",
-									}}>
+									}}>{`
 									⋯
-								</button>
+								`}</button>
 							</div>
 							<p style={{ marginBottom: 12, minHeight: 32 }}>
 								{p.description !== "" ? p.description : "—"}
 							</p>
 						</div>
 					))}
-					<div
-						className="card-add"
-						onClick={onNew}>
-						<div className="card-add-icon">＋</div>
-						<div>{t.newProject}</div>
-					</div>
+					{isAuthenticated ? (
+						<div
+							className="card-add"
+							onClick={onNew}>
+							<div className="card-add-icon">{`＋`}</div>
+							<div>{t.newProject}</div>
+						</div>
+					) : null}
 				</div>
 			)}
 
@@ -273,13 +299,18 @@ export const ProjectListScreen = ({
 								onOpen(menu.project.id);
 							},
 						},
-						{
-							icon: "✏️",
-							label: t.edit,
-							onClick: () => {
-								onEdit(menu.project);
-							},
-						},
+						...(menu.project.privilegeType === "write" ||
+						menu.project.privilegeType === "admin"
+							? [
+									{
+										icon: "✏️",
+										label: t.edit,
+										onClick: () => {
+											onEdit(menu.project);
+										},
+									},
+								]
+							: []),
 						{
 							icon: "📤",
 							label: "JSONとしてエクスポート",
@@ -294,14 +325,19 @@ export const ProjectListScreen = ({
 								onShare(menu.project.id);
 							},
 						},
-						{
-							icon: "🗑",
-							label: t.delete,
-							danger: true,
-							onClick: () => {
-								onDelete(menu.project);
-							},
-						},
+						...(menu.project.privilegeType === "write" ||
+						menu.project.privilegeType === "admin"
+							? [
+									{
+										icon: "🗑",
+										label: t.delete,
+										danger: true,
+										onClick: () => {
+											onDelete(menu.project);
+										},
+									},
+								]
+							: []),
 					]}
 				/>
 			)}

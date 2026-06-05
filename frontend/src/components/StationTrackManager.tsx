@@ -89,13 +89,18 @@ export const StationTrackManager = ({
 				style={{ maxWidth: 520 }}>
 				<div className="modal-header">
 					<span className="modal-title">
-						🛤 {t.trackManager} — {stationName}
+						{`
+						🛤 `}
+						{t.trackManager}
+						{` — `}
+						{stationName}
 					</span>
 					<button
+						type="button"
 						className="btn btn-ghost btn-sm"
-						onClick={onClose}>
+						onClick={onClose}>{`
 						✕
-					</button>
+					`}</button>
 				</div>
 				<div className="modal-body">
 					{editingId !== null && (
@@ -124,7 +129,7 @@ export const StationTrackManager = ({
 									/>
 								</label>
 								<label style={{ flex: 1 }}>
-									<div style={labelStyle}>進入 (km/h)</div>
+									<div style={labelStyle}>{`進入 (km/h)`}</div>
 									<input
 										type="number"
 										min={0}
@@ -141,7 +146,7 @@ export const StationTrackManager = ({
 									/>
 								</label>
 								<label style={{ flex: 1 }}>
-									<div style={labelStyle}>進出 (km/h)</div>
+									<div style={labelStyle}>{`進出 (km/h)`}</div>
 									<input
 										type="number"
 										min={0}
@@ -175,11 +180,13 @@ export const StationTrackManager = ({
 									justifyContent: "flex-end",
 								}}>
 								<button
+									type="button"
 									className="btn btn-ghost btn-sm"
 									onClick={cancel}>
 									{t.cancel}
 								</button>
 								<button
+									type="button"
 									className="btn btn-primary btn-sm"
 									onClick={save}
 									disabled={draft.name.trim() === ""}>
@@ -190,7 +197,9 @@ export const StationTrackManager = ({
 					)}
 
 					{isLoading ? (
-						<div className="loading-center" style={{ padding: "16px 0" }}>
+						<div
+							className="loading-center"
+							style={{ padding: "16px 0" }}>
 							<span className="spinner" />
 						</div>
 					) : (tracks ?? []).length === 0 && editingId === null ? (
@@ -221,7 +230,7 @@ export const StationTrackManager = ({
 									}}>
 									<div style={{ flex: 1, minWidth: 0 }}>
 										<span style={{ fontWeight: 500 }}>{tr.name}</span>
-										{tr.description ? (
+										{tr.description !== "" ? (
 											<span
 												style={{
 													marginLeft: 8,
@@ -239,10 +248,13 @@ export const StationTrackManager = ({
 												fontSize: 11,
 												color: "var(--color-text-muted)",
 											}}>
-											{tr.runInLimit ?? "—"}/{tr.runOutLimit ?? "—"}
+											{tr.runInLimit ?? "—"}
+											{`/`}
+											{tr.runOutLimit ?? "—"}
 										</span>
 									)}
 									<button
+										type="button"
 										className="btn btn-ghost btn-sm"
 										onClick={() => {
 											startEdit(tr);
@@ -250,6 +262,7 @@ export const StationTrackManager = ({
 										{t.edit}
 									</button>
 									<button
+										type="button"
 										className="btn btn-ghost btn-sm"
 										style={{ color: "var(--color-danger)" }}
 										onClick={() => {
@@ -258,9 +271,9 @@ export const StationTrackManager = ({
 													alert(e.message);
 												},
 											});
-										}}>
+										}}>{`
 										🗑
-									</button>
+									`}</button>
 								</div>
 							))}
 						</div>
@@ -268,10 +281,13 @@ export const StationTrackManager = ({
 
 					{editingId === null && (
 						<button
+							type="button"
 							className="btn btn-secondary btn-sm"
 							style={{ marginTop: 12 }}
 							onClick={startNew}>
-							＋ {t.newTrack}
+							{`
+							＋ `}
+							{t.newTrack}
 						</button>
 					)}
 				</div>

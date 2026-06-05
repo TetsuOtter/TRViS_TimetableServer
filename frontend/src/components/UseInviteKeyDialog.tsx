@@ -34,21 +34,26 @@ export const UseInviteKeyDialog = ({ onClose, t }: Props) => {
 				<div className="modal-header">
 					<span className="modal-title">{t.useInviteKey}</span>
 					<button
+						type="button"
 						className="btn btn-ghost btn-sm"
-						onClick={onClose}>
+						onClick={onClose}>{`
 						✕
-					</button>
+					`}</button>
 				</div>
 				<div className="modal-body">
 					{joined ? (
-						<div style={{ color: "var(--color-success, #22c55e)", fontSize: 14 }}>
+						<div
+							style={{
+								color: "var(--color-success, #22c55e)",
+								fontSize: 14,
+							}}>{`
 							プロジェクトに参加しました。プロジェクト一覧を更新してご確認ください。
-						</div>
+						`}</div>
 					) : (
 						<div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-							<div style={{ fontSize: 13, color: "var(--color-text-muted)" }}>
+							<div style={{ fontSize: 13, color: "var(--color-text-muted)" }}>{`
 								招待キーのID (UUID) を入力してください。
-							</div>
+							`}</div>
 							<input
 								className="form-input"
 								value={keyId}
@@ -62,7 +67,11 @@ export const UseInviteKeyDialog = ({ onClose, t }: Props) => {
 								}}
 							/>
 							{error !== null && (
-								<div style={{ color: "var(--color-danger, #ef4444)", fontSize: 13 }}>
+								<div
+									style={{
+										color: "var(--color-danger, #ef4444)",
+										fontSize: 13,
+									}}>
 									{(error as Error).message}
 								</div>
 							)}
@@ -72,18 +81,21 @@ export const UseInviteKeyDialog = ({ onClose, t }: Props) => {
 				<div className="modal-footer">
 					{joined ? (
 						<button
+							type="button"
 							className="btn btn-primary"
-							onClick={onClose}>
+							onClick={onClose}>{`
 							閉じる
-						</button>
+						`}</button>
 					) : (
 						<>
 							<button
+								type="button"
 								className="btn btn-secondary"
 								onClick={onClose}>
 								{t.cancel}
 							</button>
 							<button
+								type="button"
 								className="btn btn-primary"
 								disabled={isPending || keyId.trim() === ""}
 								onClick={handleSubmit}>

@@ -55,18 +55,22 @@ const AccountSettingDialog = () => {
 				className="modal"
 				style={{ maxWidth: 480 }}>
 				<div className="modal-header">
-					<span className="modal-title">👤 {t.account}</span>
+					<span className="modal-title">
+						{`👤 `}
+						{t.account}
+					</span>
 					<button
+						type="button"
 						className="btn btn-ghost btn-sm"
-						onClick={closeAccount}>
+						onClick={closeAccount}>{`
 						✕
-					</button>
+					`}</button>
 				</div>
 				<div className="modal-body">
 					<div
 						className="field"
 						style={{ marginBottom: 16 }}>
-						<label>ユーザーID</label>
+						<label>{`ユーザーID`}</label>
 						<div style={{ display: "flex", gap: 6 }}>
 							<input
 								readOnly
@@ -78,6 +82,7 @@ const AccountSettingDialog = () => {
 								}}
 							/>
 							<button
+								type="button"
 								className="btn btn-secondary btn-sm"
 								onClick={handleCopyUserId}
 								title="ユーザーIDをコピー">
@@ -102,17 +107,18 @@ const AccountSettingDialog = () => {
 							}}>
 							<span style={{ flex: 1, fontSize: 13 }}>{email}</span>
 							{isEmailVerified ? (
-								<span className="chip green">確認済み</span>
+								<span className="chip green">{`確認済み`}</span>
 							) : (
 								<>
-									<span className="chip amber">未確認</span>
+									<span className="chip amber">{`未確認`}</span>
 									<button
+										type="button"
 										className="btn btn-ghost btn-sm"
 										disabled={isProcessing}
 										onClick={handleReloadVerified}
-										title="状態を再読み込み">
+										title="状態を再読み込み">{`
 										🔄
-									</button>
+									`}</button>
 								</>
 							)}
 						</div>
@@ -120,16 +126,18 @@ const AccountSettingDialog = () => {
 				</div>
 				<div className="modal-footer">
 					<button
+						type="button"
 						className="btn btn-danger"
 						disabled={isProcessing}
 						onClick={handleSignOut}>
 						{t.signOut}
 					</button>
 					<button
+						type="button"
 						className="btn btn-secondary"
-						onClick={closeAccount}>
+						onClick={closeAccount}>{`
 						閉じる
-					</button>
+					`}</button>
 				</div>
 			</div>
 		</div>

@@ -3,7 +3,7 @@ import type { AppData, Station, TimetableRow, Train } from "../types/model";
 
 // Times stored as "HH:MM:SS". Helper pads "HH:MM" → "HH:MM:00".
 const t_ = (s: string): string =>
-	s ? (/^\d{1,3}:\d{2}$/.exec(s) ? s + ":00" : s) : "";
+	s !== "" ? (/^\d{1,3}:\d{2}$/.exec(s) != null ? s + ":00" : s) : "";
 
 type RowOpts = {
 	track?: string;
@@ -28,17 +28,17 @@ const mkRow = (
 	stationName: stName,
 	arrive: t_(arr),
 	departure: t_(dep),
-	trackName: opts.track || "1",
-	isPass: opts.pass || false,
-	isOperationOnlyStop: opts.opOnly || false,
-	isLastStop: opts.last || false,
-	hasBracket: opts.bracket || false,
+	trackName: opts.track ?? "1",
+	isPass: (opts.pass ?? false) || false,
+	isOperationOnlyStop: (opts.opOnly ?? false) || false,
+	isLastStop: (opts.last ?? false) || false,
+	hasBracket: (opts.bracket ?? false) || false,
 	recordType: "station",
-	driveTime_MM: opts.mm || 0,
-	driveTime_SS: opts.ss || 0,
+	driveTime_MM: opts.mm ?? 0,
+	driveTime_SS: opts.ss ?? 0,
 	runInLimit: "",
 	runOutLimit: "",
-	remarks: opts.remarks || "",
+	remarks: opts.remarks ?? "",
 	workType: "",
 	showHH: opts.showHH,
 });

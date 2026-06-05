@@ -49,10 +49,11 @@ const EMailVerifyDialog = () => {
 							: "メールアドレスの確認"}
 					</span>
 					<button
+						type="button"
 						className="btn btn-ghost btn-sm"
-						onClick={closeVerify}>
+						onClick={closeVerify}>{`
 						✕
-					</button>
+					`}</button>
 				</div>
 				<div
 					className="modal-body"
@@ -62,25 +63,28 @@ const EMailVerifyDialog = () => {
 							? "TRViS Data Editor を利用するには、メールアドレスの確認が必要です。"
 							: "確認用リンクをメールアドレス宛に送信しました。"}
 					</p>
-					<p>受信箱を確認し、案内に従ってメールアドレスを確認してください。</p>
+					<p>{`受信箱を確認し、案内に従ってメールアドレスを確認してください。`}</p>
 				</div>
 				<div className="modal-footer">
 					<button
+						type="button"
 						className="btn btn-secondary"
 						disabled={isResending}
-						onClick={handleResend}>
+						onClick={handleResend}>{`
 						確認メールを再送
-					</button>
+					`}</button>
 					<button
+						type="button"
 						className="btn btn-primary"
-						onClick={handleReload}>
+						onClick={handleReload}>{`
 						確認しました（再読み込み）
-					</button>
+					`}</button>
 					<button
+						type="button"
 						className="btn btn-ghost"
-						onClick={closeVerify}>
+						onClick={closeVerify}>{`
 						閉じる
-					</button>
+					`}</button>
 				</div>
 			</div>
 		</div>

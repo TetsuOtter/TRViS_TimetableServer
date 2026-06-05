@@ -21,10 +21,11 @@ const SignInUpDialog = () => {
 				<div className="modal-header">
 					<span className="modal-title">{t.signInUp}</span>
 					<button
+						type="button"
 						className="btn btn-ghost btn-sm"
-						onClick={closeSignIn}>
+						onClick={closeSignIn}>{`
 						✕
-					</button>
+					`}</button>
 				</div>
 				<div className="modal-body">
 					<SignInUpForm />
