@@ -24,6 +24,7 @@ type ProjectListScreenProps = {
 	readonly onDelete: (p: Project) => void;
 	readonly onImport: (json: unknown) => void;
 	readonly onExport: (id?: string) => void;
+	readonly onShare: (id: string) => void;
 	readonly t: Strings;
 };
 
@@ -38,6 +39,7 @@ export const ProjectListScreen = ({
 	onDelete,
 	onImport,
 	onExport,
+	onShare,
 	t,
 }: ProjectListScreenProps) => {
 	const [menu, setMenu] = useState<MenuState | null>(null);
@@ -276,6 +278,13 @@ export const ProjectListScreen = ({
 							label: "JSONとしてエクスポート",
 							onClick: () => {
 								onExport(menu.project.id);
+							},
+						},
+						{
+							icon: "📱",
+							label: t.qrCode,
+							onClick: () => {
+								onShare(menu.project.id);
 							},
 						},
 						{

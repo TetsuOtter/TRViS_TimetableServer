@@ -86,6 +86,12 @@ export const TRVIS_I18N = {
 		noTracks: "番線がありません。",
 		deleted: "削除済み",
 		none: "なし",
+		openInTRViS: "TRViSで開く",
+		qrCode: "QRコード表示",
+		qrCodeTitle: "TRViS QRコード",
+		copyUrl: "URLをコピー",
+		copied: "コピーしました",
+		trvisNoteAnon: "このプロジェクトへの読み取りアクセスがあるユーザーのみ、TRViSから開けます。",
 	},
 	en: {
 		appName: "TRViS Editor",
@@ -172,6 +178,12 @@ export const TRVIS_I18N = {
 		noTracks: "No tracks yet.",
 		deleted: "deleted",
 		none: "none",
+		openInTRViS: "Open in TRViS",
+		qrCode: "Show QR Code",
+		qrCodeTitle: "TRViS QR Code",
+		copyUrl: "Copy URL",
+		copied: "Copied!",
+		trvisNoteAnon: "Only users with read access to this project can open it in TRViS.",
 	},
 } as const;
 

@@ -220,6 +220,169 @@ final class ProjectTransferService
 		return $list;
 	}
 
+	// ───────────────────────── TRViS DOWNLOAD ────────────────────────
+
+	/**
+	 * Build the TRViS-native WorkGroup[] JSON from the project graph.
+	 *
+	 * The TRViS app (`trvis://app/open/json?path=…`) fetches this endpoint and
+	 * loads the result directly into its timetable viewer. The format is a flat
+	 * JSON array of WorkGroup objects (nested: WorkGroup → Works → Trains →
+	 * TimetableRows) with field names matching TRViS's JsonModels namespace.
+	 *
+	 * Station names and marker colours are resolved from the graph so the app
+	 * never needs to follow FK references.
+	 *
+	 * @return RetValueOrError<array<int,array<string,mixed>>>
+	 */
+	public function downloadForTRViS(
+		UuidInterface $projectsId,
+		string $userId,
+	): RetValueOrError {
+		$this->logger->debug(
+			"downloadForTRViS(projectsId:{projectsId}, userId:{userId})",
+			['projectsId' => $projectsId, 'userId' => $userId],
+		);
+
+		$exportResult = $this->export($projectsId, $userId);
+		if ($exportResult->isError) {
+			return $exportResult;
+		}
+		$graph = $exportResult->value;
+
+		// Build O(1) lookup maps keyed by UUID string.
+		$stationMap = [];
+		foreach ($graph['stations'] as $s) {
+			$stationMap[(string)$s->stations_id] = $s;
+		}
+		$colorMap = [];
+		foreach ($graph['colors'] as $c) {
+			$colorMap[(string)$c->colors_id] = $c;
+		}
+
+		// Inverted indexes for hierarchical grouping.
+		$worksByWgId = [];
+		foreach ($graph['works'] as $w) {
+			$worksByWgId[(string)$w->work_groups_id][] = $w;
+		}
+		$trainsByWorkId = [];
+		foreach ($graph['trains'] as $t) {
+			$trainsByWorkId[(string)$t->works_id][] = $t;
+		}
+		$rowsByTrainId = [];
+		foreach ($graph['timetable_rows'] as $r) {
+			$rowsByTrainId[(string)$r->trains_id][] = $r;
+		}
+
+		$trvisData = [];
+		foreach ($graph['work_groups'] as $wg) {
+			$wgId = (string)$wg->work_groups_id;
+			$trvisWg = ['Name' => $wg->name, 'DBVersion' => 0, 'Works' => []];
+
+			foreach ($worksByWgId[$wgId] ?? [] as $w) {
+				$workId = (string)$w->works_id;
+				$affectDate = $w->affect_date?->format('Ymd');
+				$trvisWork = [
+					'Name' => $w->name,
+					'AffectDate' => $affectDate,
+					'Remarks' => $w->remarks,
+					'Trains' => [],
+				];
+
+				foreach ($trainsByWorkId[$workId] ?? [] as $t) {
+					$trainId = (string)$t->trains_id;
+					$trvisTrain = [
+						'TrainNumber' => $t->train_number,
+						'Direction' => $t->direction,
+						'MaxSpeed' => $t->max_speed,
+						'SpeedType' => $t->speed_type,
+						'CarCount' => $t->car_count,
+						'Destination' => $t->destination,
+						'BeginRemarks' => $t->begin_remarks,
+						'AfterRemarks' => $t->after_remarks,
+						'BeforeDeparture' => $t->before_departure,
+						'AfterArrive' => $t->after_arrive,
+						'Remarks' => $t->remarks,
+						'NominalTractiveCapacity' => $t->nominal_tractive_capacity,
+						'DayCount' => $t->day_count,
+						'TrainInfo' => $t->train_info,
+						'TimetableRows' => [],
+					];
+
+					foreach ($rowsByTrainId[$trainId] ?? [] as $r) {
+						$stId = $r->stations_id !== null ? (string)$r->stations_id : '';
+						$station = $stationMap[$stId] ?? null;
+						$locationM = $station !== null
+							? (float)$station->location_km * 1000.0
+							: null;
+						$lon = $station?->location_lonlat?->longitude;
+						$lat = $station?->location_lonlat?->latitude;
+
+						$markerColor = null;
+						if ($r->colors_id_marker !== null) {
+							$c = $colorMap[(string)$r->colors_id_marker] ?? null;
+							$c8 = $c?->color_8bit;
+							if ($c8 !== null) {
+								$markerColor = sprintf(
+									'%02X%02X%02X',
+									(int)$c8->red,
+									(int)$c8->green,
+									(int)$c8->blue,
+								);
+							}
+						}
+
+						$trvisTrain['TimetableRows'][] = [
+							'StationName' => $r->stations_name ?? '',
+							'Location_m' => $locationM,
+							'Longitude_deg' => $lon,
+							'Latitude_deg' => $lat,
+							'Arrive' => $this->formatTime(
+								$r->arrive_time_hh,
+								$r->arrive_time_mm,
+								$r->arrive_time_ss,
+							),
+							'Departure' => $this->formatTime(
+								$r->departure_time_hh,
+								$r->departure_time_mm,
+								$r->departure_time_ss,
+							),
+							'DriveTime_MM' => $r->drive_time_mm,
+							'DriveTime_SS' => $r->drive_time_ss,
+							'IsOperationOnlyStop' => $r->is_operation_only_stop,
+							'IsPass' => $r->is_pass,
+							'HasBracket' => $r->has_bracket,
+							'IsLastStop' => $r->is_last_stop,
+							'RunInLimit' => $r->run_in_limit,
+							'RunOutLimit' => $r->run_out_limit,
+							'Remarks' => $r->remarks,
+							'MarkerColor' => $markerColor,
+							'MarkerText' => $r->marker_text,
+							'TrackName' => $r->station_tracks_name,
+						];
+					}
+
+					$trvisWork['Trains'][] = $trvisTrain;
+				}
+
+				$trvisWg['Works'][] = $trvisWork;
+			}
+
+			$trvisData[] = $trvisWg;
+		}
+
+		return RetValueOrError::withValue($trvisData);
+	}
+
+	/** Format H/M/S components as "HH:MM:SS"; returns null when all are null. */
+	private function formatTime(?int $hh, ?int $mm, ?int $ss): ?string
+	{
+		if ($hh === null && $mm === null && $ss === null) {
+			return null;
+		}
+		return sprintf('%02d:%02d:%02d', $hh ?? 0, $mm ?? 0, $ss ?? 0);
+	}
+
 	// ───────────────────────────── IMPORT ─────────────────────────────
 
 	/**
