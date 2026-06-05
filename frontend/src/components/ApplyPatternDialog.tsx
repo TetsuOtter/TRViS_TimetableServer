@@ -44,6 +44,8 @@ type ChainRow = {
 type PreviewRow = {
 	arrive: string;
 	departure: string;
+	/** Sequential index set during construction — used as React key to avoid no-array-index-key. */
+	rowIdx: number;
 } & ChainRow;
 
 type ApplyMode = "new" | "replace" | "append" | "prepend";
@@ -164,6 +166,7 @@ function computeTimes(
 		if (isFirst) {
 			result.push({
 				...row,
+				rowIdx: result.length,
 				arrive: "",
 				departure: fmtSec(startSec),
 			});
@@ -173,6 +176,7 @@ function computeTimes(
 			if (row.isPass) {
 				result.push({
 					...row,
+					rowIdx: result.length,
 					arrive: fmtSec(arrSec),
 					departure: fmtSec(arrSec),
 				});
@@ -182,6 +186,7 @@ function computeTimes(
 				const depSec = arrSec + effectiveDwell;
 				result.push({
 					...row,
+					rowIdx: result.length,
 					arrive: fmtSec(arrSec),
 					departure: isLast ? "" : fmtSec(depSec),
 				});
@@ -998,7 +1003,7 @@ export const ApplyPatternDialog = ({
 												i < previewRows.length - 1;
 											return (
 												<tr
-													key={row.stationId}
+													key={row.rowIdx}
 													style={{
 														borderBottom: "1px solid var(--color-border)",
 														background: bg,

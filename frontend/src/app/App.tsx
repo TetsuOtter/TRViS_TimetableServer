@@ -1,7 +1,7 @@
 // App — top-level app, routing & sidebar tree. Ported from App.jsx.
 // The prototype's tweaks-panel is dropped; theme/lang live in the top bar
 // via SettingsContext. Layout is fixed to the design's default ("sidebar").
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -379,15 +379,35 @@ export const App = () => {
 	const createWGMutation = useCreateWorkGroup(projectId ?? "");
 	const updateWGMutation = useUpdateWorkGroup(projectId ?? "");
 	const deleteWGMutation = useDeleteWorkGroup(projectId ?? "");
-	const [currentWG, setCurrentWG] = useState<string | null>(null);
-	const [currentWork, setCurrentWork] = useState<string | null>(null);
+	const [preferredWG, setPreferredWG] = useState<string | null>(null);
+	const [preferredWork, setPreferredWork] = useState<string | null>(null);
 	const [currentTrain, setCurrentTrain] = useState<string | null>(null);
 	const [screen, setScreen] = useState<Screen>("projects");
+
+	// Derived effective WG: user's preferred if still valid, else auto-select first WG on
+	// work screen. Avoids setState-in-effect; updates reactively when apiWorkGroups loads.
+	const currentWG =
+		preferredWG !== null &&
+		(apiWorkGroups?.some((g) => g.id === preferredWG) ?? false)
+			? preferredWG
+			: screen === "work" && projectId != null
+				? (apiWorkGroups?.[0]?.id ?? null)
+				: preferredWG;
 
 	const { data: apiWorks } = useWorks(currentWG ?? "");
 	const createWorkMutation = useCreateWork(currentWG ?? "");
 	const updateWorkMutation = useUpdateWork(currentWG ?? "");
 	const deleteWorkMutation = useDeleteWork(currentWG ?? "");
+
+	// Derived effective work: user's preferred if still valid, else auto-select first work.
+	const currentWork =
+		preferredWork !== null &&
+		(apiWorks?.some((w) => w.id === preferredWork) ?? false)
+			? preferredWork
+			: currentWG != null
+				? ((apiWorks ?? []).find((w) => w.workGroupId === currentWG)?.id ??
+					null)
+				: null;
 
 	const { data: apiTrains, isLoading: trainsLoading } = useTrains(
 		currentWork ?? ""
@@ -401,11 +421,20 @@ export const App = () => {
 	const updateTimetableRowMutation = useUpdateTimetableRow();
 	const deleteTimetableRowMutation = useDeleteTimetableRow();
 
-	const [currentLine, setCurrentLine] = useState<string | null>(null);
+	const [preferredLine, setPreferredLine] = useState<string | null>(null);
 	const { data: apiLines, isLoading: linesLoading } = useLines(projectId ?? "");
 	const createLineMutation = useCreateLine(projectId ?? "");
 	const updateLineMutation = useUpdateLine(projectId ?? "");
 	const deleteLineMutation = useDeleteLine(projectId ?? "");
+
+	// Derived effective line: user's preferred if still valid, else auto-select first on lines screen.
+	const currentLine =
+		preferredLine !== null &&
+		(apiLines?.some((l) => l.id === preferredLine) ?? false)
+			? preferredLine
+			: screen === "lines"
+				? (apiLines?.[0]?.id ?? null)
+				: null;
 
 	const { data: apiProjectStations } = useProjectStations(projectId ?? "");
 	const createProjectStationMutation = useCreateProjectStation(projectId ?? "");
@@ -482,35 +511,54 @@ export const App = () => {
 		entityTimetableRowToModel(r, stationsById)
 	);
 
-	const project: Project | undefined =
-		baseProject !== undefined
-			? {
-					id: baseProject.id,
-					name: baseProject.name,
-					description: baseProject.description,
-					workGroups: (apiWorkGroups ?? []).map((wg) => ({
-						id: wg.id,
-						name: wg.name,
-						description: wg.description,
-						works: (apiWorks ?? [])
-							.filter((w) => w.workGroupId === wg.id)
-							.map((w) => {
-								if (w.id !== currentWork) {
-									return entityWorkToModel(w, []);
-								}
-								const trains = (apiTrains ?? []).map((tr) => {
-									if (tr.id !== currentTrain) {
-										return entityTrainToModel(tr, []);
+	// Memoised so the React Compiler can verify stability of the derived objects
+	// used as inputs to the breadcrumbs useMemo below.
+	const project = useMemo<Project | undefined>(
+		() =>
+			baseProject !== undefined
+				? {
+						id: baseProject.id,
+						name: baseProject.name,
+						description: baseProject.description,
+						workGroups: (apiWorkGroups ?? []).map((wg) => ({
+							id: wg.id,
+							name: wg.name,
+							description: wg.description,
+							works: (apiWorks ?? [])
+								.filter((w) => w.workGroupId === wg.id)
+								.map((w) => {
+									if (w.id !== currentWork) {
+										return entityWorkToModel(w, []);
 									}
-									return entityTrainToModel(tr, modelTimetableRows);
-								});
-								return entityWorkToModel(w, trains);
-							}),
-					})),
-				}
-			: undefined;
-	const wg = project?.workGroups.find((g) => g.id === currentWG);
-	const work = wg?.works.find((w) => w.id === currentWork);
+									const trains = (apiTrains ?? []).map((tr) => {
+										if (tr.id !== currentTrain) {
+											return entityTrainToModel(tr, []);
+										}
+										return entityTrainToModel(tr, modelTimetableRows);
+									});
+									return entityWorkToModel(w, trains);
+								}),
+						})),
+					}
+				: undefined,
+		[
+			baseProject,
+			apiWorkGroups,
+			apiWorks,
+			apiTrains,
+			currentWork,
+			currentTrain,
+			modelTimetableRows,
+		]
+	);
+	const wg = useMemo(
+		() => project?.workGroups.find((g) => g.id === currentWG),
+		[project, currentWG]
+	);
+	const work = useMemo(
+		() => wg?.works.find((w) => w.id === currentWork),
+		[wg, currentWork]
+	);
 
 	const modelLines = (apiLines ?? []).map(entityLineToModel);
 	const modelStationsOnLine = (apiStationsOnLine ?? []).map(
@@ -528,58 +576,6 @@ export const App = () => {
 		)
 	);
 
-	// Auto-select a WG (then its first work) when on the work screen. The work
-	// list (apiWorks) only loads for the *current* WG, so a WG must be selected
-	// before any works appear. WGs and works load asynchronously, so this must
-	// re-run as that data arrives — keying only on [screen, projectId] fires
-	// before apiWorkGroups is ready (e.g. a cold reload), leaves currentWG null,
-	// and the sidebar then shows every WG with 0 works. Drive it off scalar
-	// validity/first-id signals instead so each stage settles once its data is in.
-	const firstWGId = apiWorkGroups?.[0]?.id;
-	const currentWGValid =
-		currentWG != null &&
-		!!(apiWorkGroups?.some((g) => g.id === currentWG) ?? false);
-	const firstWorkId = wg?.works[0]?.id;
-	const currentWorkValid =
-		currentWork != null &&
-		!!(wg?.works.some((w) => w.id === currentWork) ?? false);
-	useEffect(() => {
-		if (screen !== "work" || project == null) return;
-		if (!currentWGValid && Boolean(firstWGId)) {
-			// No (valid) WG selected yet — pick the first once WGs have loaded.
-			// eslint-disable-next-line react-hooks/set-state-in-effect
-			setCurrentWG(firstWGId ?? null);
-		} else if (currentWGValid && !currentWorkValid && Boolean(firstWorkId)) {
-			// WG selected and its works have loaded — pick the first work.
-
-			setCurrentWork(firstWorkId ?? null);
-		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [
-		screen,
-		projectId,
-		currentWGValid,
-		firstWGId,
-		currentWorkValid,
-		firstWorkId,
-	]);
-
-	// Auto-select first line when navigating to the lines screen with no line selected.
-	useEffect(() => {
-		if (
-			screen === "lines" &&
-			currentLine === null &&
-			(apiLines ?? []).length > 0
-		) {
-			// eslint-disable-next-line react-hooks/set-state-in-effect
-			setCurrentLine((apiLines ?? [])[0]?.id ?? null);
-		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [screen, apiLines]);
-
-	// React Compiler cannot verify that project/wg/work are stable across renders
-	// because they are derived from async data. The memoization is intentional.
-	/* eslint-disable react-hooks/preserve-manual-memoization */
 	const breadcrumbs = useMemo(
 		() => [
 			{
@@ -614,7 +610,6 @@ export const App = () => {
 		],
 		[project, wg, work, screen, t]
 	);
-	/* eslint-enable react-hooks/preserve-manual-memoization */
 
 	const handleOpenProject = (pid: string) => {
 		setProjectId(pid);
@@ -685,8 +680,8 @@ export const App = () => {
 			},
 		});
 		if (currentWG === wgId) {
-			setCurrentWG(null);
-			setCurrentWork(null);
+			setPreferredWG(null);
+			setPreferredWork(null);
 			setCurrentTrain(null);
 		}
 	};
@@ -737,9 +732,9 @@ export const App = () => {
 					onSuccess: (created) => {
 						const newId: string =
 							(created as { worksId?: string }).worksId ?? "";
-						setCurrentWG(wgId);
+						setPreferredWG(wgId);
 						if (newId !== "") {
-							setCurrentWork(newId);
+							setPreferredWork(newId);
 						}
 						setScreen("work");
 					},
@@ -754,7 +749,7 @@ export const App = () => {
 			},
 		});
 		if (currentWork === workId) {
-			setCurrentWork(null);
+			setPreferredWork(null);
 			setCurrentTrain(null);
 		}
 	};
@@ -980,7 +975,7 @@ export const App = () => {
 			},
 		});
 		if (currentLine === lineId) {
-			setCurrentLine(null);
+			setPreferredLine(null);
 		}
 	};
 
@@ -1295,8 +1290,8 @@ export const App = () => {
 				projectPrivilegeType={baseProject?.privilegeType}
 				onSelect={(wgId, wId) => {
 					setScreen("work");
-					setCurrentWG(wgId);
-					setCurrentWork(wId);
+					setPreferredWG(wgId);
+					setPreferredWork(wId);
 				}}
 				onSelectLines={() => {
 					setScreen("lines");
@@ -1311,7 +1306,7 @@ export const App = () => {
 					setEditingWG({ new: true });
 				}}
 				onAddWork={(w) => {
-					setCurrentWG(w.id);
+					setPreferredWG(w.id);
 					setEditingWork({ wgId: w.id, new: true });
 				}}
 				canWrite={canWrite}
@@ -1331,7 +1326,7 @@ export const App = () => {
 								icon: "＋",
 								label: t.newWork,
 								onClick: () => {
-									setCurrentWG(wgRef.id);
+									setPreferredWG(wgRef.id);
 									setEditingWork({
 										wgId: wgRef.id,
 										new: true,
@@ -1515,7 +1510,7 @@ export const App = () => {
 						stationsOnLine={modelStationsOnLine}
 						stopPatterns={modelStopPatterns}
 						activeLineId={currentLine ?? ""}
-						onSelectLine={setCurrentLine}
+						onSelectLine={setPreferredLine}
 						onCreateLine={handleCreateLine}
 						onUpdateLine={handleUpdateLine}
 						onDeleteLine={handleDeleteLine}

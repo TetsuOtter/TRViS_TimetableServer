@@ -99,40 +99,31 @@ export const WorkBrowser = ({
 	canWrite = true,
 	t,
 }: WorkBrowserProps) => {
-	const [selectedTrainId, setSelectedTrainId] = useState<string | null>(
-		work.trains.length > 0 ? (work.trains[0]?.id ?? null) : null
-	);
+	const [preferredTrainId, setPreferredTrainId] = useState<string | null>(null);
 	const [showInfo, setShowInfo] = useState(false);
 	const [showApplyPattern, setShowApplyPattern] = useState(false);
 	const [applyTargetTrain, setApplyTargetTrain] = useState<Train | null>(null);
+	// Derived effective selection: user's preferred train if still valid, else auto-select first.
+	// This avoids calling setState inside a useEffect (set-state-in-effect).
+	const firstTrainId = work.trains[0]?.id ?? null;
+	const selectedTrainId =
+		preferredTrainId !== null &&
+		work.trains.some((tr) => tr.id === preferredTrainId)
+			? preferredTrainId
+			: firstTrainId;
 	const selectedTrain = work.trains.find((tr) => tr.id === selectedTrainId);
 
 	const selectTrain = (id: string | null) => {
-		setSelectedTrainId(id);
-		onSelectTrain(id);
+		setPreferredTrainId(id);
+		// Parent is notified via the sync effect below after state update
 	};
 
-	// Auto-select the first train so the timetable grid mounts. The useState
-	// initializer above only runs once at mount, when work.trains is usually
-	// still empty (trains load async via useTrains, and a freshly created train
-	// arrives after mount). Re-select whenever the current selection is missing
-	// (null, or no longer in the list) and trains are available. Mirrors the
-	// WG/work auto-select effect in App.tsx. Must call selectTrain (not just
-	// setSelectedTrainId) so App.tsx's currentTrain is set too, otherwise
-	// useTimetableRows(currentTrain) stays empty and rows never load.
-	const firstTrainId = work.trains[0]?.id ?? null;
-	const selectionValid =
-		selectedTrainId != null &&
-		work.trains.some((tr) => tr.id === selectedTrainId);
+	// Keep App.tsx's currentTrain in sync when the effective selection changes
+	// (async train load, deletion, etc.). Calling a callback prop in an effect
+	// is a normal side-effect, not a set-state-in-effect violation.
 	useEffect(() => {
-		if (!selectionValid && Boolean(firstTrainId)) {
-			// Auto-select the first train when the selection becomes invalid. This
-			// mirrors the WG/work auto-select in App.tsx.
-			// eslint-disable-next-line react-hooks/set-state-in-effect
-			selectTrain(firstTrainId);
-		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [selectionValid, firstTrainId]);
+		onSelectTrain(selectedTrainId);
+	}, [selectedTrainId, onSelectTrain]);
 
 	const updateTrain = (updated: Train) => {
 		onUpdateTrain({ id: updated.id, ...modelTrainToEntityDraft(updated) });
