@@ -23,16 +23,19 @@
 > 兼ねる。詳細は [`UNIMPLEMENTED.md` §0](../../UNIMPLEMENTED.md)。
 
 ```sh
-# 1) E2E バックエンドを起動（毎回まっさら。開発 DB ボリュームには触れない）
+# 1) E2E 設定を config.inc.php として実体化（./backend は ro bind のため起動前に必要）
+cp backend/config/prod/config.e2e.inc.php backend/config/prod/config.inc.php
+
+# 2) E2E バックエンドを起動（毎回まっさら。開発 DB ボリュームには触れない）
 docker compose -f docker-compose.e2e.yaml up -d --build --wait
 
-# 2) E2E 実行（vite dev は playwright が自動起動/再利用）
+# 3) E2E 実行（vite dev は playwright が自動起動/再利用）
 cd frontend
 yarn install --immutable
 yarn playwright test e2e/smoke.spec.ts e2e/invite-keys.spec.ts   # CI と同じ緑セット
 yarn playwright test                                              # 全件（既知の赤あり, 下記）
 
-# 3) 後始末
+# 4) 後始末
 docker compose -f docker-compose.e2e.yaml down -v
 ```
 

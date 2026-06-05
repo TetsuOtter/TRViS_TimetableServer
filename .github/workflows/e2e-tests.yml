@@ -42,6 +42,14 @@ jobs:
         working-directory: frontend
         run: cp .env.sample .env
 
+      - name: Materialize E2E backend config
+        # ./backend は ro bind で、config.inc.php はコンテナ内では生成できない
+        # （ネスト bind での mountpoint 作成が ro fs で失敗する）。dev の
+        # `cp config.docker.inc.php config.inc.php` と同じく、起動前にホスト側で
+        # E2E 設定を config.inc.php として実体化しておく（gitignore 対象なのでコミット
+        # されない）。index.php は APP_ENV=production → config/prod/config.inc.php を読む。
+        run: cp backend/config/prod/config.e2e.inc.php backend/config/prod/config.inc.php
+
       - name: Bring up E2E backend stack (php + MySQL + Firebase emulator)
         # --wait で db/firebase の healthcheck 完了まで待つ。config.e2e.inc.php を
         # config.inc.php として bind-mount。PDO は本番忠実(EMULATE_PREPARES=false)、

@@ -6,7 +6,11 @@
 # ボリュームには一切触れない。CI (.github/workflows/e2e-tests.yml) もこれを使う。
 #
 # 起動 (フロントの vite dev / Playwright はホスト側で動かす):
-#   docker compose -f docker-compose.e2e.yaml up -d --build
+#   # E2E 設定を config.inc.php として実体化（dev の cp config.docker→config と同じ流儀）。
+#   # ./backend は ro bind なので config.inc.php はコンテナ内で生成できない＝起動前に
+#   # ホスト側で用意する（index.php は APP_ENV=production → config/prod/config.inc.php を読む）。
+#   cp backend/config/prod/config.e2e.inc.php backend/config/prod/config.inc.php
+#   docker compose -f docker-compose.e2e.yaml up -d --build --wait
 #   cd frontend && yarn install --immutable && yarn playwright test
 #
 # 後始末 (毎回まっさらにする):
@@ -102,13 +106,6 @@ services:
       - type: volume
         source: e2e-vendor
         target: /var/www/html/vendor
-      # ★E2E の肝: 追跡された E2E config をコンテナ内の config.inc.php として被せる。
-      # index.php は APP_ENV=production（.htaccess 固定）→ config/prod/config.inc.php
-      # を読むので、ホストを汚さず（コピー不要で）E2E 設定を注入できる。
-      - type: bind
-        read_only: true
-        source: ./backend/config/prod/config.e2e.inc.php
-        target: /var/www/html/config/prod/config.inc.php
       - type: bind
         read_only: true
         source: ./my_apache2.conf
