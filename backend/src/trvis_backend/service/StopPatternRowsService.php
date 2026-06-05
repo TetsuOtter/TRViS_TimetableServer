@@ -75,6 +75,13 @@ final class StopPatternRowsService
 		return RetValueOrError::withValue(Uuid::fromBytes($row['projects_id']));
 	}
 
+	/** Coerce a request value (string UUID, or UuidInterface from a direct
+	 *  test caller) into a UuidInterface. */
+	private static function asUuid(mixed $v): UuidInterface
+	{
+		return $v instanceof UuidInterface ? $v : Uuid::fromString((string)$v);
+	}
+
 	/**
 	 * @return RetValueOrError<array<\dev_t0r\trvis_backend\model\StopPatternRow>>
 	 */
@@ -129,7 +136,8 @@ final class StopPatternRowsService
 					stopPatternRowId: $rowId,
 					stopPatternsId: $stopPatternsId,
 					owner: $userId,
-					projectStationsId: $d->project_stations_id,
+					// HTTP body delivers project_stations_id as a string; repo expects UuidInterface.
+					projectStationsId: self::asUuid($d->project_stations_id),
 					sortKey: $d->sort_key ?? 0,
 					trackName: $d->track_name,
 					trackHidden: $d->track_hidden ?? false,
