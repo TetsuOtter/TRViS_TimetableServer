@@ -9,13 +9,18 @@
 ### 推奨: クリーンな E2E スタック（CI と同一・再現可能）
 
 `docker-compose.e2e.yaml` が API + MySQL + Firebase Auth Emulator を**クリーンな
-状態から**立ち上げる。下記 §「前提」の回避策（`ONLY_FULL_GROUP_BY` 除外 /
-`EMULATE_PREPARES` / レート制限緩和）は **E2E スコープの追跡ファイルに内包済み**
-なので、手作業のコンテナ設定や gitignore な `config.inc.php` 編集は不要:
+状態から・本番忠実な設定で**立ち上げる。手作業のコンテナ設定や gitignore な
+`config.inc.php` 編集は不要:
 
-- `backend/config/prod/config.e2e.inc.php`（追跡）… `EMULATE_PREPARES=true` ＋ レート制限緩和。
-  compose が `config.inc.php` として bind-mount する。
-- `docker-compose.e2e.yaml` の mysql `command` … `sql_mode` から `ONLY_FULL_GROUP_BY` を除外。
+- `backend/config/prod/config.e2e.inc.php`（追跡）を compose が `config.inc.php`
+  として bind-mount。**PDO は本番忠実**（`config.docker.inc.php` を継承＝
+  `EMULATE_PREPARES=false`）。E2E 専用の上書きは**レート制限緩和とログ出力先のみ**。
+- mysql の `sql_mode` は MySQL 8 既定（`ONLY_FULL_GROUP_BY` を含む）のまま＝本番忠実。
+
+> かつて clean DB では createProject が 500 で全滅する旨を記していたが、`§0-2`
+> (`ONLY_FULL_GROUP_BY`)/`§0-3`(`EMULATE_PREPARES`) は code-first 化で修正済み
+> （結合テスト 216 件＋クリーン E2E で確認）。本スタックは本番忠実なので回帰ガードを
+> 兼ねる。詳細は [`UNIMPLEMENTED.md` §0](../../UNIMPLEMENTED.md)。
 
 ```sh
 # 1) E2E バックエンドを起動（毎回まっさら。開発 DB ボリュームには触れない）
@@ -67,21 +72,22 @@ yarn playwright test --ui            # UI モード
 - `AGENT_BRIEF.md` … スペック作成方針（効果アサート徹底、サンプル `data` 罠 等）。
 - `*.spec.ts` … 画面別スペック。
 
-## 前提（回避策の所在）と未決のオーナー判断
+## E2E 専用の上書き（本番忠実・回避策ではない）
 
-作成系 API をクリーン DB で通すには 3 つの回避策が要る（無いと createProject が 500
-で全滅）。これらは **E2E スコープに限り追跡ファイルへ内包済み**（＝「隠蔽」でなく
-「開示」。本番・共有開発スタックは未変更）:
+`config.e2e.inc.php` が本番設定（`config.docker.inc.php`）から変えるのは**テスト都合の
+2 点だけ**で、クエリ挙動は本番忠実:
 
-- MySQL `sql_mode` から `ONLY_FULL_GROUP_BY` 除外（§0-2）… `docker-compose.e2e.yaml` の mysql `command`。
-- `ATTR_EMULATE_PREPARES => true`（§0-3, 同名プレースホルダ再利用対策）… `config.e2e.inc.php`。
-- レート制限の緩和 … `config.e2e.inc.php`。
+- **レート制限の緩和** … スイートは 1 IP（localhost）から多数リクエストを撃つため、
+  60/min 既定や `useInviteKey` 10/min に当たって 429 が出る（SUT 無関係のフレーク）。
+- **ログ出力先を `/tmp` に** … CI は `/var/log/apache2` を host bind しないため、
+  www-data がログを書ける world-writable な場所へ。
 
-> ⚠️ **未解決の本番懸念（オーナー判断）**: 上記は E2E を回すための回避であって
-> 製品修正ではない。本番 `config` は `EMULATE_PREPARES=false`／`ONLY_FULL_GROUP_BY`
-> 既定 ON のため、**本番でも createProject 等が壊れている可能性**が `UNIMPLEMENTED.md`
-> §0-2/§0-3 のまま残る。恒久対応（該当クエリへ `GROUP BY` 付与 / 同名プレースホルダ
-> 別名化）は別途オーナー判断。詳細は [`UNIMPLEMENTED.md` §0](../../UNIMPLEMENTED.md)。
+> ✅ **旧 §0-2/§0-3 は解決済み**: 以前ここには「`ONLY_FULL_GROUP_BY` 除外＋
+> `EMULATE_PREPARES=true` が無いと createProject が 500」と書いていたが、これらは
+> code-first 化で**修正済み**（該当サブクエリは GROUP BY 済み・同名プレースホルダ
+> 解消済み）。本スタックは `EMULATE_PREPARES=false` ＋ `ONLY_FULL_GROUP_BY` ON の
+> **本番忠実**で回り、結合テスト 216 件＋クリーン E2E 7/7 で確認済み。回帰ガードを
+> 兼ねる。詳細は [`UNIMPLEMENTED.md` §0](../../UNIMPLEMENTED.md)。
 
 ## 注意
 

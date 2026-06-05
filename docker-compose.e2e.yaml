@@ -31,15 +31,15 @@ services:
       MYSQL_DATABASE: test
       MYSQL_USER: test
       MYSQL_PASSWORD: test
-    # UNIMPLEMENTED.md §0-2: 多数の repo の SELECT が MAX(privilege_type) を非集約列と
-    # 併用しつつ GROUP BY を省くため、MySQL 8 既定の ONLY_FULL_GROUP_BY だと 1140 →
-    # createProject 等が 500 になる。E2E DB に限り sql_mode から ONLY_FULL_GROUP_BY
-    # だけ外す（8.0 既定の残りはそのまま）。本番/開発の mysql/conf.d は未変更＝開示。
-    # 文字コードは開発(mysql/conf.d: utf8mb4)とパリティを取る。
+    # 文字コードのみ開発(mysql/conf.d: utf8mb4)とパリティを取る。sql_mode は MySQL 8
+    # 既定（ONLY_FULL_GROUP_BY を含む）のまま＝本番忠実。かつて UNIMPLEMENTED.md §0-2
+    # が「ONLY_FULL_GROUP_BY で createProject が 1140→500」と記していたが、code-first
+    # 化で該当サブクエリは GROUP BY 済みに修正され、結合テスト 216 件が
+    # EMULATE_PREPARES=false + ONLY_FULL_GROUP_BY 下で緑（=本番忠実）であることを確認。
+    # よって E2E DB も既定 sql_mode のまま回し、§0-2 の回帰ガードを兼ねる。
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
-      - --sql-mode=STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION
     volumes:
       - type: bind
         read_only: true

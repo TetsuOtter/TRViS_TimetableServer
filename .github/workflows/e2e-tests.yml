@@ -43,9 +43,10 @@ jobs:
         run: cp .env.sample .env
 
       - name: Bring up E2E backend stack (php + MySQL + Firebase emulator)
-        # --wait で db/firebase の healthcheck 完了まで待つ。config.e2e.inc.php が
-        # bind-mount され、§0-2(ONLY_FULL_GROUP_BY off)/§0-3(EMULATE_PREPARES) と
-        # レート制限緩和がクリーン DB でも create 系を通す。
+        # --wait で db/firebase の healthcheck 完了まで待つ。config.e2e.inc.php を
+        # config.inc.php として bind-mount。PDO は本番忠実(EMULATE_PREPARES=false)、
+        # sql_mode も MySQL8 既定(ONLY_FULL_GROUP_BY ON)＝本番忠実で回す（§0-2/§0-3 は
+        # code-first 化で修正済み。E2E 専用の上書きはレート制限緩和とログ出力先のみ）。
         run: docker compose -f docker-compose.e2e.yaml up -d --build --wait --wait-timeout 300
 
       - name: Wait for API + emulator to answer over published ports
