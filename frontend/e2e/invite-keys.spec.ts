@@ -208,32 +208,21 @@ test.describe("Invite keys (cross-user)", () => {
 			member.getByRole("button", { name: /招待管理/ })
 		).toHaveCount(0);
 
-		// A read member cannot create a WorkGroup: the control exists (not
-		// frontend-gated) but the backend rejects with 403, surfaced via alert,
-		// and nothing persists. (This is the read-vs-write discriminator.)
-		const blockedWg = uniqueName("blocked-wg");
-		await member.getByRole("button", { name: /新規WG/ }).first().click();
-		const m = member.locator(".modal").last();
-		await m.locator("input").first().fill(blockedWg);
-		await m.getByRole("button", { name: "保存", exact: true }).click();
-
-		// The create attempt must fail with a 403/permission alert...
-		await expect
-			.poll(() => alerts.join("\n"), { timeout: 10_000 })
-			.toMatch(/403|permission|権限/i);
-		// ...and the WorkGroup must not exist (API-backed truth). reload() resets
-		// the in-memory project context to the list, so RE-OPEN the project, then
-		// assert against the freshly-fetched sidebar. The sentinel (A's WG) must
-		// be present — proving the sidebar actually loaded — while the blocked WG
-		// is absent (so the count-0 can't be a false pass on an empty screen).
+		// A read member cannot create a WorkGroup: PR #33 added canWrite-gating,
+		// so the "新規WG" and "新規ワーク" controls are now HIDDEN for read members
+		// (not just backend-rejected). This is the read-vs-write discriminator.
+		await expect(
+			member.getByRole("button", { name: /新規WG/ })
+		).toHaveCount(0);
+		await expect(
+			member.getByRole("button", { name: /新規ワーク/ })
+		).toHaveCount(0);
+		// The sentinel WG (created by admin A) should still be visible on reload.
 		await member.reload();
 		await openProject(member, projectName);
 		await expect(
 			member.locator(".sidebar-item").filter({ hasText: wgName })
 		).toBeVisible({ timeout: 10_000 });
-		await expect(
-			member.locator(".sidebar-item").filter({ hasText: blockedWg })
-		).toHaveCount(0);
 	});
 
 	test("write key: visible after redeem, can create a WorkGroup, but no admin tools", async ({

@@ -2,8 +2,11 @@
 //
 // `login(page)` drives the real sign-in form against the Firebase Auth
 // emulator (the user is provisioned in global-setup). It waits until the
-// AuthGate releases (the sign-in form detaches), which is the single
-// observable signal that `user !== null`.
+// auth modal closes, which is the observable signal that `user !== null`.
+//
+// NOTE: AuthGate no longer hard-blocks unauthenticated users (PR #33).
+// The sign-in form is now inside a modal opened via the topbar "👤" button.
+// login() clicks that button first, then fills the form.
 //
 // The `test` export is the standard Playwright test extended with an
 // `appPage` fixture: a page that is already signed in and sitting on the
@@ -20,13 +23,18 @@ export async function login(
 	password: string = E2E_PASSWORD
 ): Promise<void> {
 	await page.goto("/");
-	// AuthGate shows a loading splash, then the sign-in form.
+	// AuthGate shows a loading splash, then the app (anonymous access allowed).
+	// Once auth state resolves and user is null, the topbar "sign in" button appears.
+	const signInButton = page.locator('.topbar-btn[title*="サインイン"]');
+	await signInButton.waitFor({ state: "visible", timeout: 15_000 });
+	await signInButton.click();
+	// Sign-in dialog opens.
 	const emailInput = page.locator("#auth-email");
-	await emailInput.waitFor({ state: "visible", timeout: 15_000 });
+	await emailInput.waitFor({ state: "visible", timeout: 5_000 });
 	await emailInput.fill(email);
 	await page.locator("#auth-password").fill(password);
 	await page.locator('form button[type="submit"]').click();
-	// AuthGate releases → the sign-in form detaches.
+	// Dialog closes when auth completes — sign-in form detaches.
 	await emailInput.waitFor({ state: "detached", timeout: 15_000 });
 }
 
