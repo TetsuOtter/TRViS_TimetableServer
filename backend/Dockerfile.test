@@ -1,8 +1,9 @@
-# テストランナー専用イメージ。本番の Dockerfile (php:8.2-apache, --no-dev) は
+# テストランナー専用イメージ。本番の Dockerfile (php:8.4-apache, --no-dev) は
 # PHPUnit を含まないため、結合テストを docker compose で回すための別イメージ。
-# 正準ランタイム/CI と同じ PHP 8.2 + 同じ拡張 (pdo_mysql, intl, bcmath, mbstring)
-# を載せ、dev 依存はランタイムに composer install する。本番には一切使わない。
-FROM php:8.2-cli
+# composer.json は php>=8.4.1 / phpunit 13 を要求する (PHPUnit 13 は PHP>=8.4.1
+# 必須)。本番 (8.4-apache) / CI (setup-php 8.4) と同じ 8.4 系に揃える。
+# 拡張 (pdo_mysql, intl, bcmath, mbstring) はバージョン非依存でそのまま載る。
+FROM php:8.4-cli
 
 RUN apt-get update \
 	&& apt-get install -y --no-install-recommends \

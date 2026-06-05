@@ -1,0 +1,124 @@
+# E2E バックエンドスタックを docker compose で立ち上げる独立 compose。
+#
+# Playwright の E2E スイートが叩く API + MySQL + Firebase Auth Emulator を、
+# クリーンな状態から再現可能に起動する。本番/開発の docker-compose.yaml とは完全
+# 分離（専用プロジェクト名・専用コンテナ名・tmpfs DB）で、開発データの webmon-db
+# ボリュームには一切触れない。CI (.github/workflows/e2e-tests.yml) もこれを使う。
+#
+# 起動 (フロントの vite dev / Playwright はホスト側で動かす):
+#   docker compose -f docker-compose.e2e.yaml up -d --build
+#   cd frontend && yarn install --immutable && yarn playwright test
+#
+# 後始末 (毎回まっさらにする):
+#   docker compose -f docker-compose.e2e.yaml down -v
+#
+# サービス名は config.docker.inc.php がハードコードするホスト名（webmon-db /
+# webmon-firebase）に一致させてあるので、E2E 用 config (config.e2e.inc.php) は
+# それを require するだけで DNS が解決する。
+name: trvis-backend-e2e
+
+services:
+  webmon-db:
+    image: mysql:8.0-oracle
+    platform: linux/amd64
+    container_name: trvis-e2e-db
+    hostname: webmon-db
+    networks:
+      - e2e-net
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      # MYSQL_DATABASE=test 設定下では entrypoint が init_sql を test に対して流す。
+      MYSQL_DATABASE: test
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test
+    # UNIMPLEMENTED.md §0-2: 多数の repo の SELECT が MAX(privilege_type) を非集約列と
+    # 併用しつつ GROUP BY を省くため、MySQL 8 既定の ONLY_FULL_GROUP_BY だと 1140 →
+    # createProject 等が 500 になる。E2E DB に限り sql_mode から ONLY_FULL_GROUP_BY
+    # だけ外す（8.0 既定の残りはそのまま）。本番/開発の mysql/conf.d は未変更＝開示。
+    # 文字コードは開発(mysql/conf.d: utf8mb4)とパリティを取る。
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --sql-mode=STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION
+    volumes:
+      - type: bind
+        read_only: true
+        source: ./mysql/init_sql
+        target: /docker-entrypoint-initdb.d
+    tmpfs:
+      # 使い捨て。永続ボリュームを作らないので開発 DB と混ざらず後始末も不要。
+      - /var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  webmon-firebase:
+    build:
+      context: ./firebase
+      dockerfile: Dockerfile
+    container_name: trvis-e2e-firebase
+    hostname: webmon-firebase
+    networks:
+      - e2e-net
+    ports:
+      # ホスト側の Playwright (global-setup のユーザ作成 / global-teardown /
+      # ブラウザの connectAuthEmulator) はすべて localhost:9099 を叩くため公開必須。
+      - "9099:9099"
+      # Emulator UI（デバッグ用、任意）。
+      - "4000:4000"
+    volumes:
+      - type: bind
+        source: ./firebase/data
+        target: /emulator/data
+    healthcheck:
+      # Auth Emulator の config エンドポイントは起動後 200 を返す（busybox wget）。
+      test:
+        - "CMD-SHELL"
+        - "wget -q -O - http://127.0.0.1:9099/emulator/v1/projects/trvis-app/config >/dev/null 2>&1 || exit 1"
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  webmon-php:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: trvis-e2e-php
+    hostname: webmon-php
+    networks:
+      - e2e-net
+    ports:
+      # vite dev (:5173) が /api をこの :8080 へプロキシする。ホスト公開必須。
+      - "8080:80"
+    volumes:
+      - type: bind
+        read_only: true
+        source: ./backend
+        target: /var/www/html
+      # イメージに焼き込んだ vendor/ で空ボリュームを初期化（dev と同じ手法、ただし
+      # E2E 専用ボリューム名で隔離）。composer.* 変更後は down -v で作り直すこと。
+      - type: volume
+        source: e2e-vendor
+        target: /var/www/html/vendor
+      # ★E2E の肝: 追跡された E2E config をコンテナ内の config.inc.php として被せる。
+      # index.php は APP_ENV=production（.htaccess 固定）→ config/prod/config.inc.php
+      # を読むので、ホストを汚さず（コピー不要で）E2E 設定を注入できる。
+      - type: bind
+        read_only: true
+        source: ./backend/config/prod/config.e2e.inc.php
+        target: /var/www/html/config/prod/config.inc.php
+      - type: bind
+        read_only: true
+        source: ./my_apache2.conf
+        target: /etc/apache2/mods-enabled/my_apache2.conf
+    depends_on:
+      webmon-db:
+        condition: service_healthy
+
+volumes:
+  e2e-vendor:
+
+networks:
+  e2e-net:
