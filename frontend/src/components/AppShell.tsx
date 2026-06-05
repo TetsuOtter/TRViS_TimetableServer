@@ -4,7 +4,7 @@ import { Fragment } from "react";
 import type { ReactNode } from "react";
 
 import type { Theme } from "../app/SettingsContext";
-import type { Strings, Lang } from "../i18n/strings";
+import type { Lang } from "../i18n/strings";
 
 export type Breadcrumb = {
 	label: string;
@@ -20,7 +20,6 @@ type AppShellProps = {
 	readonly children?: ReactNode;
 	readonly sidebarContent?: ReactNode;
 	readonly topRight?: ReactNode;
-	readonly t: Strings;
 };
 
 export const AppShell = ({
@@ -86,24 +85,29 @@ export const AppShell = ({
 							fill="currentColor"
 						/>
 					</svg>
+					{`
 					TRViS
+				`}
 				</div>
 				<div className="topbar-sep" />
 				{topRight}
 				<div className="lang-toggle">
 					<button
+						type="button"
 						className={lang === "ja" ? "active" : ""}
-						onClick={() => lang !== "ja" && toggleLang()}>
+						onClick={() => lang !== "ja" && toggleLang()}>{`
 						JP
-					</button>
+					`}</button>
 					<button
+						type="button"
 						className={lang === "en" ? "active" : ""}
-						onClick={() => lang !== "en" && toggleLang()}>
+						onClick={() => lang !== "en" && toggleLang()}>{`
 						EN
-					</button>
+					`}</button>
 				</div>
 				<div className="topbar-divider" />
 				<button
+					type="button"
 					className="topbar-btn"
 					onClick={toggleTheme}
 					title={theme === "light" ? "ダークモード" : "ライトモード"}>
@@ -113,20 +117,22 @@ export const AppShell = ({
 
 			<div className="body">
 				{/* Sidebar */}
-				{sidebarContent ? (
+				{sidebarContent != null ? (
 					<div className="sidebar">{sidebarContent}</div>
 				) : null}
 
 				{/* Main Content */}
 				<div className="content">
-					{breadcrumbs && breadcrumbs.length > 0 ? (
+					{breadcrumbs != null && breadcrumbs.length > 0 ? (
 						<div className="breadcrumb">
 							{breadcrumbs.map((bc, i) => (
-								<Fragment key={i}>
-									{i > 0 && <span className="breadcrumb-sep">›</span>}
+								<Fragment key={bc.label}>
+									{i > 0 && <span className="breadcrumb-sep">{`›`}</span>}
 									<span
 										className={`breadcrumb-item ${i === breadcrumbs.length - 1 ? "current" : ""}`}
-										onClick={bc.onClick}>
+										onClick={() => {
+											bc.onClick?.();
+										}}>
 										{bc.label}
 									</span>
 								</Fragment>

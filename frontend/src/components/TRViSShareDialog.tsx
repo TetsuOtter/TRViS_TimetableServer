@@ -81,9 +81,9 @@ export const TRViSShareDialog = ({
 						className="btn btn-ghost btn-xs"
 						onClick={onClose}
 						aria-label="閉じる"
-						style={{ fontSize: 18 }}>
+						style={{ fontSize: 18 }}>{`
 						✕
-					</button>
+					`}</button>
 				</div>
 
 				<p

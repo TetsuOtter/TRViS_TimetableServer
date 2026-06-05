@@ -67,12 +67,13 @@ jobs:
         # (typecheck/build 用。本物の資格情報は使わない)。
         run: cp .env.sample .env
 
-      - name: Typecheck (tsc — correctness bar)
-        # このプロジェクトにはテストランナーが無い。デザインバンドルの
-        # 逐語移植のため eslint は意図的に noisy で、正しさのバーは tsc。
-        # lint は意図的にゲートしない (将来 lint を必須化して落とさないこと)。
+      - name: Typecheck (tsc)
         # tsc は型エラーで必ず loud に落ちるため silent-skip しようがない。
         run: ./node_modules/.bin/tsc
+
+      - name: Lint (eslint)
+        # ESLint は PR ゲート。error 0 件が必須。warnings (jsx-max-depth 等) は無視。
+        run: yarn eslint src
 
       - name: Build (vite)
         run: ./node_modules/.bin/vite build

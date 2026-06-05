@@ -17,19 +17,21 @@ const AuthControls = () => {
 		<>
 			{user == null ? (
 				<button
+					type="button"
 					className="topbar-btn"
 					onClick={openSignIn}
 					title={t.signInUp}>
-					<span>👤</span>
+					<span>{`👤`}</span>
 					<span>{t.signInUp}</span>
 				</button>
 			) : (
 				<button
+					type="button"
 					className="topbar-btn"
 					onClick={openAccount}
 					title={t.account}
 					style={{ position: "relative" }}>
-					<span>👤</span>
+					<span>{`👤`}</span>
 					{!isEmailVerified && (
 						<span
 							aria-label="メールアドレス未確認"

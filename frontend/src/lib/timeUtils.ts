@@ -16,9 +16,10 @@ export type RowFormat = {
 function toSeconds(str: string | null | undefined): number | null {
 	if (str == null || str === "") return null;
 	const m2 = /^(\d{1,3}):(\d{2})$/.exec(String(str));
-	if (m2) return +m2[1]! * 3600 + +m2[2]! * 60;
+	if (m2 != null) return +(m2[1] ?? "0") * 3600 + +(m2[2] ?? "0") * 60;
 	const m3 = /^(\d{1,3}):(\d{2}):(\d{2})$/.exec(String(str));
-	if (m3) return +m3[1]! * 3600 + +m3[2]! * 60 + +m3[3]!;
+	if (m3 != null)
+		return +(m3[1] ?? "0") * 3600 + +(m3[2] ?? "0") * 60 + +(m3[3] ?? "0");
 	return null;
 }
 
@@ -35,16 +36,16 @@ function fromSeconds(secs: number | null | undefined): string {
 // Normalize any time string → "HH:MM:SS". Empty → ''. Non-time text passes through.
 // Also accepts compact numeric forms (HMM/HHMM/HMMSS/HHMMSS).
 function normalize(str: string | null | undefined): string {
-	if (!str || !String(str).trim()) return "";
+	if (str == null || !(String(str).trim() !== "")) return "";
 	const s = String(str).trim();
 	const compact6 = /^(\d{2})(\d{2})(\d{2})$/.exec(s);
-	if (compact6) return `${compact6[1]}:${compact6[2]}:${compact6[3]}`;
+	if (compact6 != null) return `${compact6[1]}:${compact6[2]}:${compact6[3]}`;
 	const compact5 = /^(\d{1})(\d{2})(\d{2})$/.exec(s);
-	if (compact5) return `0${compact5[1]}:${compact5[2]}:${compact5[3]}`;
+	if (compact5 != null) return `0${compact5[1]}:${compact5[2]}:${compact5[3]}`;
 	const compact4 = /^(\d{2})(\d{2})$/.exec(s);
-	if (compact4) return `${compact4[1]}:${compact4[2]}:00`;
+	if (compact4 != null) return `${compact4[1]}:${compact4[2]}:00`;
 	const compact3 = /^(\d{1})(\d{2})$/.exec(s);
-	if (compact3) return `0${compact3[1]}:${compact3[2]}:00`;
+	if (compact3 != null) return `0${compact3[1]}:${compact3[2]}:00`;
 	const secs = toSeconds(s);
 	if (secs == null) return s; // keep as-is (text label like '↓')
 	return fromSeconds(secs);
@@ -52,7 +53,7 @@ function normalize(str: string | null | undefined): string {
 
 // Display seconds (or HH:MM:SS string) as "HH:MM" or "HH:MM:SS"
 function display(str: string | null | undefined, showSeconds = true): string {
-	if (!str) return "";
+	if (str == null) return "";
 	const secs = toSeconds(str);
 	if (secs == null) return String(str); // text label
 	const hh = Math.floor(secs / 3600);
@@ -83,7 +84,7 @@ function formatOne(
 	forceShowHH: boolean,
 	lastHH: number | null
 ): FormatOneResult {
-	if (!timeStr) return { formatted: null, newHH: lastHH };
+	if (timeStr == null) return { formatted: null, newHH: lastHH };
 	const secs = toSeconds(timeStr);
 	if (secs == null) return { formatted: String(timeStr), newHH: lastHH };
 	const hh = Math.floor(secs / 3600);
@@ -103,7 +104,12 @@ function displayTextPlaceholder(
 	lastHH: number | null
 ): string {
 	const forceShow = row.showHH === true;
-	const timeStr = row.arrive || row.departure || "09:00:00";
+	const timeStr =
+		row.arrive !== ""
+			? row.arrive
+			: row.departure !== ""
+				? row.departure
+				: "09:00:00";
 	const secs = toSeconds(timeStr);
 	if (secs == null) return "HH:MM:SS";
 	const hh = Math.floor(secs / 3600);
@@ -132,18 +138,18 @@ function computeRowFormats(
 		const forceShow = row.showHH === true;
 
 		let arriveFormatted: string | null = null;
-		if (row.arriveDisplayText) {
+		if (row.arriveDisplayText != null) {
 			arriveFormatted = row.arriveDisplayText;
-		} else if (!row.isPass && row.arrive) {
+		} else if (!row.isPass && Boolean(row.arrive)) {
 			const r = formatOne(row.arrive, forceShow, lastHH);
 			arriveFormatted = r.formatted;
 			if (r.formatted !== null) lastHH = r.newHH;
 		}
 
 		let departureFormatted: string | null = null;
-		if (row.departureDisplayText) {
+		if (row.departureDisplayText != null) {
 			departureFormatted = row.departureDisplayText;
-		} else if (row.departure) {
+		} else if (row.departure !== "") {
 			const r = formatOne(row.departure, forceShow, lastHH);
 			departureFormatted = r.formatted;
 			if (r.formatted !== null) lastHH = r.newHH;

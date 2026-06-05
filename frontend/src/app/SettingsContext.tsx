@@ -44,7 +44,7 @@ const DEFAULTS: Settings = {
 function loadSettings(): Settings {
 	try {
 		const raw = localStorage.getItem(STORAGE_KEY);
-		if (!raw) return DEFAULTS;
+		if (raw == null) return DEFAULTS;
 		const parsed = JSON.parse(raw) as Partial<Settings>;
 		return { ...DEFAULTS, ...parsed };
 	} catch {
@@ -110,7 +110,7 @@ export const SettingsProvider = ({
 
 export function useSettings(): SettingsContextValue {
 	const ctx = useContext(SettingsContext);
-	if (!ctx)
+	if (ctx == null)
 		throw new Error("useSettings must be used within a SettingsProvider");
 	return ctx;
 }

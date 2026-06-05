@@ -91,7 +91,8 @@ export const TRVIS_I18N = {
 		qrCodeTitle: "TRViS QRコード",
 		copyUrl: "URLをコピー",
 		copied: "コピーしました",
-		trvisNoteAnon: "このプロジェクトへの読み取りアクセスがあるユーザーのみ、TRViSから開けます。",
+		trvisNoteAnon:
+			"このプロジェクトへの読み取りアクセスがあるユーザーのみ、TRViSから開けます。",
 		inviteManager: "招待管理",
 		newInviteKey: "招待キーを作成",
 		useInviteKey: "招待キーを使用",
@@ -197,7 +198,8 @@ export const TRVIS_I18N = {
 		qrCodeTitle: "TRViS QR Code",
 		copyUrl: "Copy URL",
 		copied: "Copied!",
-		trvisNoteAnon: "Only users with read access to this project can open it in TRViS.",
+		trvisNoteAnon:
+			"Only users with read access to this project can open it in TRViS.",
 		inviteManager: "Invite Management",
 		newInviteKey: "Create Invite Key",
 		useInviteKey: "Use Invite Key",

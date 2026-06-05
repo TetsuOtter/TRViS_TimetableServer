@@ -95,6 +95,7 @@ import {
 import { InviteManager } from "../components/InviteManager";
 import { LineManager } from "../components/LineManager";
 import { ProjectListScreen } from "../components/ProjectList";
+import { SidebarTree } from "../components/SidebarTree";
 import { StopPatternWizard } from "../components/StopPatternWizard";
 import { TRViSShareDialog } from "../components/TRViSShareDialog";
 import { UseInviteKeyDialog } from "../components/UseInviteKeyDialog";
@@ -356,213 +357,6 @@ type ConfirmState = {
 	onConfirm: () => void;
 };
 
-type SidebarTreeProps = {
-	readonly project?: Project;
-	readonly isLoadingWorkGroups: boolean;
-	readonly currentScreen: Screen;
-	readonly currentWG: string | null;
-	readonly currentWork: string | null;
-	readonly projectPrivilegeType?: "read" | "write" | "admin";
-	readonly onSelect: (wgId: string, wId: string) => void;
-	readonly onSelectLines: () => void;
-	readonly onSelectColors: () => void;
-	readonly onSelectInvite: () => void;
-	readonly onAddWG: () => void;
-	readonly onWGContext: (x: number, y: number, wg: WorkGroup) => void;
-	readonly onWorkContext: (
-		x: number,
-		y: number,
-		wg: WorkGroup,
-		w: Work
-	) => void;
-	readonly onAddWork: (wg: WorkGroup) => void;
-	readonly onExport: () => void;
-	readonly canWrite: boolean;
-	readonly t: ReturnType<typeof useSettings>["t"];
-};
-
-const SidebarTree = ({
-	project,
-	isLoadingWorkGroups,
-	currentScreen,
-	currentWG,
-	currentWork,
-	projectPrivilegeType,
-	onSelect,
-	onSelectLines,
-	onSelectColors,
-	onSelectInvite,
-	onAddWG,
-	onWGContext,
-	onWorkContext,
-	onAddWork,
-	onExport,
-	canWrite,
-	t,
-}: SidebarTreeProps) => {
-	const [openWG, setOpenWG] = useState<Set<string>>(
-		() => new Set((project?.workGroups || []).map((wg) => wg.id))
-	);
-	const toggle = (id: string) => {
-		setOpenWG((s) => {
-			const n = new Set(s);
-			n.has(id) ? n.delete(id) : n.add(id);
-			return n;
-		});
-	};
-	if (!project) return null;
-	return (
-		<>
-			<div
-				className="sidebar-section"
-				style={{ flex: 1, overflow: "auto" }}>
-				<div
-					className="sidebar-label"
-					style={{ paddingBottom: 6 }}>
-					{project.name}
-				</div>
-				{isLoadingWorkGroups && project.workGroups.length === 0 ? (
-					<div
-						style={{
-							display: "flex",
-							alignItems: "center",
-							justifyContent: "center",
-							padding: "16px 0",
-						}}>
-						<span className="spinner" />
-					</div>
-				) : null}
-				{project.workGroups.map((wg) => (
-					<div key={wg.id}>
-						<div style={{ display: "flex", alignItems: "center" }}>
-							<button
-								className={`sidebar-item ${currentScreen === "work" && currentWG === wg.id && !currentWork ? "active" : ""}`}
-								onClick={() => {
-									toggle(wg.id);
-								}}
-								onContextMenu={(e) => {
-									if (!canWrite) return;
-									e.preventDefault();
-									onWGContext(e.clientX, e.clientY, wg);
-								}}
-								style={{ flex: 1 }}>
-								<span
-									style={{
-										fontSize: 9,
-										opacity: 0.6,
-										width: 8,
-									}}>
-									{openWG.has(wg.id) ? "▾" : "▸"}
-								</span>
-								<span
-									style={{
-										flex: 1,
-										whiteSpace: "nowrap",
-										overflow: "hidden",
-										textOverflow: "ellipsis",
-									}}>
-									{wg.name}
-								</span>
-								<span style={{ fontSize: 10, opacity: 0.5 }}>
-									{wg.works.length}
-								</span>
-							</button>
-						</div>
-						{openWG.has(wg.id) && (
-							<>
-								{wg.works.map((w) => (
-									<button
-										key={w.id}
-										className={`sidebar-item indent ${currentScreen === "work" && currentWork === w.id ? "active" : ""}`}
-										onClick={() => {
-											onSelect(wg.id, w.id);
-										}}
-										onContextMenu={(e) => {
-											if (!canWrite) return;
-											e.preventDefault();
-											onWorkContext(e.clientX, e.clientY, wg, w);
-										}}>
-										<span
-											style={{
-												opacity: 0.5,
-												fontSize: 11,
-											}}>
-											📋
-										</span>
-										<span
-											style={{
-												flex: 1,
-												whiteSpace: "nowrap",
-												overflow: "hidden",
-												textOverflow: "ellipsis",
-											}}>
-											{w.name}
-										</span>
-										<span
-											style={{
-												fontSize: 10,
-												opacity: 0.5,
-											}}>
-											{w.trains?.length || 0}
-										</span>
-									</button>
-								))}
-								{canWrite && (
-									<button
-										className="sidebar-item indent"
-										style={{ opacity: 0.7, fontSize: 11 }}
-										onClick={() => {
-											onAddWork(wg);
-										}}>
-										<span style={{ fontSize: 11 }}>＋</span> {t.newWork}
-									</button>
-								)}
-							</>
-						)}
-					</div>
-				))}
-				<div style={{ height: 8 }} />
-				{canWrite && (
-					<button
-						className="sidebar-item"
-						style={{
-							color: "var(--color-sidebar-text)",
-							fontSize: 12,
-						}}
-						onClick={onAddWG}>
-						<span style={{ fontSize: 11 }}>＋</span> {t.newWorkGroup}
-					</button>
-				)}
-			</div>
-			<div className="sidebar-footer">
-				<button
-					className={`sidebar-item ${currentScreen === "lines" ? "active" : ""}`}
-					onClick={onSelectLines}>
-					<span style={{ fontSize: 11 }}>🛤</span> {t.lineManager}
-				</button>
-				<button
-					className={`sidebar-item ${currentScreen === "colors" ? "active" : ""}`}
-					onClick={onSelectColors}>
-					<span style={{ fontSize: 11 }}>🎨</span> {t.colorManager}
-				</button>
-				{projectPrivilegeType === "admin" && (
-					<button
-						className={`sidebar-item ${currentScreen === "invite" ? "active" : ""}`}
-						onClick={onSelectInvite}>
-						<span style={{ fontSize: 11 }}>🔑</span> {t.inviteManager}
-					</button>
-				)}
-				<button
-					className="sidebar-item"
-					style={{ fontSize: 12 }}
-					onClick={onExport}>
-					<span style={{ fontSize: 11 }}>📤</span> {t.export} (JSON)
-				</button>
-			</div>
-		</>
-	);
-};
-
 export const App = () => {
 	const { user } = useAuth();
 	const { theme, toggleTheme, lang, toggleLang, density, t } = useSettings();
@@ -579,7 +373,9 @@ export const App = () => {
 
 	const [projectId, setProjectId] = useState<string | null>(null);
 
-	const { data: apiWorkGroups, isLoading: workGroupsLoading } = useWorkGroups(projectId ?? "");
+	const { data: apiWorkGroups, isLoading: workGroupsLoading } = useWorkGroups(
+		projectId ?? ""
+	);
 	const createWGMutation = useCreateWorkGroup(projectId ?? "");
 	const updateWGMutation = useUpdateWorkGroup(projectId ?? "");
 	const deleteWGMutation = useDeleteWorkGroup(projectId ?? "");
@@ -593,7 +389,9 @@ export const App = () => {
 	const updateWorkMutation = useUpdateWork(currentWG ?? "");
 	const deleteWorkMutation = useDeleteWork(currentWG ?? "");
 
-	const { data: apiTrains, isLoading: trainsLoading } = useTrains(currentWork ?? "");
+	const { data: apiTrains, isLoading: trainsLoading } = useTrains(
+		currentWork ?? ""
+	);
 	const createTrainMutation = useCreateTrain(currentWork ?? "");
 	const updateTrainMutation = useUpdateTrain(currentWork ?? "");
 	const deleteTrainMutation = useDeleteTrain(currentWork ?? "");
@@ -614,7 +412,9 @@ export const App = () => {
 	const updateProjectStationMutation = useUpdateProjectStation(projectId ?? "");
 	const deleteProjectStationMutation = useDeleteProjectStation(projectId ?? "");
 
-	const { data: apiColors, isLoading: colorsLoading } = useColors(projectId ?? "");
+	const { data: apiColors, isLoading: colorsLoading } = useColors(
+		projectId ?? ""
+	);
 	const createColorMutation = useCreateColor(projectId ?? "");
 	const updateColorMutation = useUpdateColor(projectId ?? "");
 	const deleteColorMutation = useDeleteColor(projectId ?? "");
@@ -737,18 +537,22 @@ export const App = () => {
 	// validity/first-id signals instead so each stage settles once its data is in.
 	const firstWGId = apiWorkGroups?.[0]?.id;
 	const currentWGValid =
-		currentWG != null && !!apiWorkGroups?.some((g) => g.id === currentWG);
+		currentWG != null &&
+		!!(apiWorkGroups?.some((g) => g.id === currentWG) ?? false);
 	const firstWorkId = wg?.works[0]?.id;
 	const currentWorkValid =
-		currentWork != null && !!wg?.works.some((w) => w.id === currentWork);
+		currentWork != null &&
+		!!(wg?.works.some((w) => w.id === currentWork) ?? false);
 	useEffect(() => {
-		if (screen !== "work" || !project) return;
-		if (!currentWGValid && firstWGId) {
+		if (screen !== "work" || project == null) return;
+		if (!currentWGValid && Boolean(firstWGId)) {
 			// No (valid) WG selected yet — pick the first once WGs have loaded.
-			setCurrentWG(firstWGId);
-		} else if (currentWGValid && !currentWorkValid && firstWorkId) {
+			// eslint-disable-next-line react-hooks/set-state-in-effect
+			setCurrentWG(firstWGId ?? null);
+		} else if (currentWGValid && !currentWorkValid && Boolean(firstWorkId)) {
 			// WG selected and its works have loaded — pick the first work.
-			setCurrentWork(firstWorkId);
+
+			setCurrentWork(firstWorkId ?? null);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [
@@ -767,13 +571,17 @@ export const App = () => {
 			currentLine === null &&
 			(apiLines ?? []).length > 0
 		) {
+			// eslint-disable-next-line react-hooks/set-state-in-effect
 			setCurrentLine((apiLines ?? [])[0]?.id ?? null);
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [screen, apiLines]);
 
-	const breadcrumbs = useMemo(() => {
-		const bc = [
+	// React Compiler cannot verify that project/wg/work are stable across renders
+	// because they are derived from async data. The memoization is intentional.
+	/* eslint-disable react-hooks/preserve-manual-memoization */
+	const breadcrumbs = useMemo(
+		() => [
 			{
 				label: t.projects,
 				onClick: () => {
@@ -781,23 +589,32 @@ export const App = () => {
 					setProjectId(null);
 				},
 			},
-		];
-		if (project)
-			bc.push({
-				label: project.name,
-				onClick: () => {
-					setScreen("work");
-				},
-			});
-		if (screen === "work" && wg) bc.push({ label: wg.name, onClick: () => {} });
-		if (screen === "work" && work)
-			bc.push({ label: work.name, onClick: () => {} });
-		if (screen === "lines")
-			bc.push({ label: t.lineManager, onClick: () => {} });
-		if (screen === "colors")
-			bc.push({ label: t.colorManager, onClick: () => {} });
-		return bc;
-	}, [project, wg, work, screen, t]);
+			...(project != null
+				? [
+						{
+							label: project.name,
+							onClick: () => {
+								setScreen("work");
+							},
+						},
+					]
+				: []),
+			...(screen === "work" && wg != null
+				? [{ label: wg.name, onClick: () => undefined }]
+				: []),
+			...(screen === "work" && work != null
+				? [{ label: work.name, onClick: () => undefined }]
+				: []),
+			...(screen === "lines"
+				? [{ label: t.lineManager, onClick: () => undefined }]
+				: []),
+			...(screen === "colors"
+				? [{ label: t.colorManager, onClick: () => undefined }]
+				: []),
+		],
+		[project, wg, work, screen, t]
+	);
+	/* eslint-enable react-hooks/preserve-manual-memoization */
 
 	const handleOpenProject = (pid: string) => {
 		setProjectId(pid);
@@ -1042,11 +859,11 @@ export const App = () => {
 		departureTimeMm: parseTimePart(r.departure, 1),
 		departureTimeSs: parseTimePart(r.departure, 2),
 		arriveStr:
-			r.arriveDisplayText && r.arriveDisplayText !== ""
+			Boolean(r.arriveDisplayText) && r.arriveDisplayText !== ""
 				? r.arriveDisplayText
 				: undefined,
 		departureStr:
-			r.departureDisplayText && r.departureDisplayText !== ""
+			Boolean(r.departureDisplayText) && r.departureDisplayText !== ""
 				? r.departureDisplayText
 				: undefined,
 		runInLimit: r.runInLimit !== "" ? r.runInLimit : undefined,
@@ -1381,7 +1198,10 @@ export const App = () => {
 		}
 		try {
 			const graph = await exportProjectGraph(pid);
-			const safeName = (p.name || "project").replace(/[^\w.-]+/g, "_");
+			const safeName = (p.name !== "" ? p.name : "project").replace(
+				/[^\w.-]+/g,
+				"_"
+			);
 			downloadJson(`${safeName}.json`, {
 				version: TRANSFER_VERSION,
 				kind: TRANSFER_KIND,
@@ -1464,109 +1284,110 @@ export const App = () => {
 				editingPattern)
 			: null;
 
-	const sidebarContent = projectId ? (
-		<SidebarTree
-			project={project}
-			isLoadingWorkGroups={workGroupsLoading}
-			currentScreen={screen}
-			currentWG={currentWG}
-			currentWork={currentWork}
-			projectPrivilegeType={baseProject?.privilegeType}
-			onSelect={(wgId, wId) => {
-				setScreen("work");
-				setCurrentWG(wgId);
-				setCurrentWork(wId);
-			}}
-			onSelectLines={() => {
-				setScreen("lines");
-			}}
-			onSelectColors={() => {
-				setScreen("colors");
-			}}
-			onSelectInvite={() => {
-				setScreen("invite");
-			}}
-			onAddWG={() => {
-				setEditingWG({ new: true });
-			}}
-			onAddWork={(w) => {
-				setCurrentWG(w.id);
-				setEditingWork({ wgId: w.id, new: true });
-			}}
-			canWrite={canWrite}
-			onWGContext={(x, y, wgRef) => {
-				setContextMenu({
-					x,
-					y,
-					items: [
-						{
-							icon: "✏️",
-							label: t.edit,
-							onClick: () => {
-								setEditingWG({ wg: wgRef });
+	const sidebarContent =
+		projectId != null ? (
+			<SidebarTree
+				project={project}
+				isLoadingWorkGroups={workGroupsLoading}
+				currentScreen={screen}
+				currentWG={currentWG}
+				currentWork={currentWork}
+				projectPrivilegeType={baseProject?.privilegeType}
+				onSelect={(wgId, wId) => {
+					setScreen("work");
+					setCurrentWG(wgId);
+					setCurrentWork(wId);
+				}}
+				onSelectLines={() => {
+					setScreen("lines");
+				}}
+				onSelectColors={() => {
+					setScreen("colors");
+				}}
+				onSelectInvite={() => {
+					setScreen("invite");
+				}}
+				onAddWG={() => {
+					setEditingWG({ new: true });
+				}}
+				onAddWork={(w) => {
+					setCurrentWG(w.id);
+					setEditingWork({ wgId: w.id, new: true });
+				}}
+				canWrite={canWrite}
+				onWGContext={(x, y, wgRef) => {
+					setContextMenu({
+						x,
+						y,
+						items: [
+							{
+								icon: "✏️",
+								label: t.edit,
+								onClick: () => {
+									setEditingWG({ wg: wgRef });
+								},
 							},
-						},
-						{
-							icon: "＋",
-							label: t.newWork,
-							onClick: () => {
-								setCurrentWG(wgRef.id);
-								setEditingWork({
-									wgId: wgRef.id,
-									new: true,
-								});
+							{
+								icon: "＋",
+								label: t.newWork,
+								onClick: () => {
+									setCurrentWG(wgRef.id);
+									setEditingWork({
+										wgId: wgRef.id,
+										new: true,
+									});
+								},
 							},
-						},
-						{
-							icon: "🗑",
-							label: t.delete,
-							danger: true,
-							onClick: () => {
-								setConfirmDialog({
-									title: "ワークグループを削除",
-									message: `「${wgRef.name}」を削除します。配下の ${wgRef.works.length} 件のワークも一緒に削除されます。`,
-									onConfirm: () => {
-										deleteWG(wgRef.id);
-									},
-								});
+							{
+								icon: "🗑",
+								label: t.delete,
+								danger: true,
+								onClick: () => {
+									setConfirmDialog({
+										title: "ワークグループを削除",
+										message: `「${wgRef.name}」を削除します。配下の ${wgRef.works.length} 件のワークも一緒に削除されます。`,
+										onConfirm: () => {
+											deleteWG(wgRef.id);
+										},
+									});
+								},
 							},
-						},
-					],
-				});
-			}}
-			onWorkContext={(x, y, wgRef, w) => {
-				setContextMenu({
-					x,
-					y,
-					items: [
-						{
-							icon: "✏️",
-							label: t.edit,
-							onClick: () => {
-								setEditingWork({ wgId: wgRef.id, work: w });
+						],
+					});
+				}}
+				onWorkContext={(x, y, wgRef, w) => {
+					setContextMenu({
+						x,
+						y,
+						items: [
+							{
+								icon: "✏️",
+								label: t.edit,
+								onClick: () => {
+									setEditingWork({ wgId: wgRef.id, work: w });
+								},
 							},
-						},
-						{
-							icon: "🗑",
-							label: t.delete,
-							danger: true,
-							onClick: () => {
-								setConfirmDialog({
-									title: "ワークを削除",
-									message: `「${w.name}」を削除します。配下の ${w.trains?.length || 0} 列車も削除されます。`,
-									onConfirm: () => {
-										deleteWork(w.id);
-									},
-								});
+							{
+								icon: "🗑",
+								label: t.delete,
+								danger: true,
+								onClick: () => {
+									setConfirmDialog({
+										title: "ワークを削除",
+										message: `「${w.name}」を削除します。配下の ${Boolean(w.trains?.length) || 0} 列車も削除されます。`,
+										onConfirm: () => {
+											deleteWork(w.id);
+										},
+									});
+								},
 							},
-						},
-					],
-				});
-			}}
-			onExport={() => exportProject(projectId)}
-			t={t}
-		/>
-	) : null;
+						],
+					});
+				}}
+				onExport={() => exportProject(projectId)}
+				t={t}
+			/>
+		) : null;
 
 	return (
 		<div
@@ -1578,11 +1399,10 @@ export const App = () => {
 				toggleTheme={toggleTheme}
 				lang={lang}
 				toggleLang={toggleLang}
-				breadcrumbs={projectId ? breadcrumbs : null}
+				breadcrumbs={projectId != null ? breadcrumbs : null}
 				sidebarContent={sidebarContent}
-				topRight={<AuthControls />}
-				t={t}>
-				{!projectId && (
+				topRight={<AuthControls />}>
+				{projectId == null && (
 					<ProjectListScreen
 						projects={apiProjects ?? []}
 						isLoading={projectsLoading}
@@ -1627,7 +1447,7 @@ export const App = () => {
 						t={t}
 					/>
 				)}
-				{projectId && screen === "work" && work ? (
+				{Boolean(projectId) && screen === "work" && work != null ? (
 					<WorkBrowser
 						work={work}
 						isLoadingTrains={trainsLoading}
@@ -1635,9 +1455,6 @@ export const App = () => {
 						onUpdateTrain={handleUpdateTrain}
 						onDeleteTrain={handleDeleteTrain}
 						onSelectTrain={setCurrentTrain}
-						onOpenStopPatternWizard={() => {
-							setShowStopPattern(true);
-						}}
 						onApplyPattern={(args) => {
 							void handleApplyPattern(args);
 						}}
@@ -1656,13 +1473,14 @@ export const App = () => {
 						t={t}
 					/>
 				) : null}
-				{projectId && screen === "work" && !work ? (
+				{Boolean(projectId) && screen === "work" && work == null ? (
 					<div
 						className="empty-state"
 						style={{ padding: 60 }}>
-						<p>このワークグループにはワークがありません。</p>
-						{wg && canWrite ? (
+						<p>{`このワークグループにはワークがありません。`}</p>
+						{wg != null && canWrite ? (
 							<button
+								type="button"
 								className="btn btn-primary btn-sm"
 								onClick={() => {
 									setEditingWork({
@@ -1670,21 +1488,26 @@ export const App = () => {
 										new: true,
 									});
 								}}>
-								＋ {t.newWork}
+								{`
+								＋ `}
+								{t.newWork}
 							</button>
 						) : null}
-						{!wg && project && canWrite ? (
+						{wg == null && project != null && canWrite ? (
 							<button
+								type="button"
 								className="btn btn-primary btn-sm"
 								onClick={() => {
 									setEditingWG({ new: true });
 								}}>
-								＋ {t.newWorkGroup}
+								{`
+								＋ `}
+								{t.newWorkGroup}
 							</button>
 						) : null}
 					</div>
 				) : null}
-				{projectId && screen === "lines" ? (
+				{Boolean(projectId) && screen === "lines" ? (
 					<LineManager
 						lines={modelLines}
 						isLoading={linesLoading}
@@ -1719,7 +1542,7 @@ export const App = () => {
 						t={t}
 					/>
 				) : null}
-				{projectId && screen === "colors" ? (
+				{Boolean(projectId) && screen === "colors" ? (
 					<ColorManager
 						colors={apiColors ?? []}
 						isLoading={colorsLoading}
@@ -1730,7 +1553,7 @@ export const App = () => {
 						t={t}
 					/>
 				) : null}
-				{projectId && screen === "invite" ? (
+				{Boolean(projectId) && screen === "invite" ? (
 					<InviteManager
 						workGroups={apiWorkGroups ?? []}
 						projectPrivilegeType={baseProject?.privilegeType}
@@ -1759,17 +1582,17 @@ export const App = () => {
 				/>
 			) : null}
 
-			{showUseInviteKey && (
+			{showUseInviteKey ? (
 				<UseInviteKeyDialog
 					onClose={() => {
 						setShowUseInviteKey(false);
 					}}
 					t={t}
 				/>
-			)}
+			) : null}
 
 			{/* Entity dialogs */}
-			{editingProject ? (
+			{editingProject != null ? (
 				<ProjectDialog
 					project={editingProject.project}
 					onSave={saveProject}
@@ -1779,7 +1602,7 @@ export const App = () => {
 					t={t}
 				/>
 			) : null}
-			{editingWG ? (
+			{editingWG != null ? (
 				<WorkGroupDialog
 					workGroup={editingWG.wg}
 					onSave={saveWG}
@@ -1789,7 +1612,7 @@ export const App = () => {
 					t={t}
 				/>
 			) : null}
-			{editingWork ? (
+			{editingWork != null ? (
 				<WorkDialog
 					work={editingWork.work}
 					onSave={(draft) => {
@@ -1801,17 +1624,19 @@ export const App = () => {
 					t={t}
 				/>
 			) : null}
-			{confirmDialog ? (
+			{confirmDialog != null ? (
 				<ConfirmDialog
 					title={confirmDialog.title}
 					message={confirmDialog.message}
-					onConfirm={confirmDialog.onConfirm}
+					onConfirm={() => {
+						confirmDialog.onConfirm();
+					}}
 					onClose={() => {
 						setConfirmDialog(null);
 					}}
 				/>
 			) : null}
-			{contextMenu ? (
+			{contextMenu != null ? (
 				<ContextMenu
 					x={contextMenu.x}
 					y={contextMenu.y}
@@ -1825,7 +1650,8 @@ export const App = () => {
 				<TRViSShareDialog
 					projectId={shareProjectId}
 					projectName={
-						apiProjects?.find((p) => p.id === shareProjectId)?.name ?? shareProjectId
+						apiProjects?.find((p) => p.id === shareProjectId)?.name ??
+						shareProjectId
 					}
 					onClose={() => {
 						setShareProjectId(null);

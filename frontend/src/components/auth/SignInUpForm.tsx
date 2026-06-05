@@ -140,10 +140,16 @@ const SignInUpForm = () => {
 					</span>
 				)}
 				<span style={{ fontSize: 11, color: "var(--color-text-muted)" }}>
-					{PASSWORD_MIN_LENGTH} ～ {PASSWORD_MAX_LENGTH}
+					{PASSWORD_MIN_LENGTH}
+					{` ～ `}
+					{PASSWORD_MAX_LENGTH}
+					{`
 					文字。大文字・小文字・数字・記号を各1文字以上含めてください。
+					`}
 					<br />
+					{`
 					（空白を除くASCII印字可能文字のみ使用できます）
+				`}
 				</span>
 			</div>
 
@@ -212,9 +218,9 @@ const SignInUpForm = () => {
 					className="btn btn-ghost"
 					disabled={isProcessing}
 					onClick={handleForgotPassword}
-					style={{ justifyContent: "center" }}>
+					style={{ justifyContent: "center" }}>{`
 					パスワードをお忘れですか？
-				</button>
+				`}</button>
 			</div>
 		</form>
 	);
