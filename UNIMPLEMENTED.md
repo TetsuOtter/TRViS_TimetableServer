@@ -23,26 +23,28 @@ E2E ハーネスと実行手順は [`frontend/e2e/README.md`](frontend/e2e/READM
 | 停車パターン作成 500（§1-1） | BACKEND | **修正済(追跡)** `StopPatternsService` | curl 201 / UI / `StopPatternApiTest` 10件緑 |
 | 施行日付き Work 作成 500（§1-2） | BACKEND | **修正済(追跡)** `WorksService` | curl 201 / `WorkApiTest` 緑 |
 | ApplyPattern の路線がサンプル（§2-4） | WRONG-SRC | **修正済(追跡)** `App.tsx` を API データへ | work.spec の該当テストが緑転 |
-| `ONLY_FULL_GROUP_BY`（§0-2） | ENV | 暫定(コンテナ `SET PERSIST`、追跡未変更) | sql_mode 確認 |
-| `EMULATE_PREPARES=false`（§0-3） | ENV | 暫定(gitignore `config.inc.php`、追跡テンプレ未変更) | curl create 通過 |
+| `ONLY_FULL_GROUP_BY`（§0-2） | ENV | **解決済(code-first で修正済を確認)** | 結合216件緑(MySQL8 既定 sql_mode) + クリーン E2E 緑 |
+| `EMULATE_PREPARES=false`（§0-3） | ENV | **解決済(code-first で修正済を確認)** | 結合216件緑(`EMULATE_PREPARES=false`) + クリーン E2E 緑 |
 | エクスポート/インポート（§2-1〜2-3） | WRONG-SRC | **未対応(要設計/機能規模)** | E2E で死を確認 |
 | 時刻表 行 model-only 永続/ドラッグ（§3） | UNIMPL等 | **要設計判断** | ソース確認 |
 
-> **【最重要・オーナー判断】 §0-2/§0-3 — 本番でも create を壊している可能性**:
-> 「設定緩和（masking）」か「クエリ/設定の正規修正」かは未決。現状その回避策は
-> **追跡対象外**（MySQL は実行中コンテナの `SET PERSIST`＝データボリューム寿命、
-> `EMULATE_PREPARES` は gitignore の `config.inc.php`）に置いている。
-> このため **クリーンチェックアウト＋新規ボリュームでは E2E が setup(createProject)
-> で全滅する**（＝スイートは現状このマシンでしか緑にならない）。
-> 推奨する決着のいずれかをオーナーが選ぶ必要がある:
->   1. **dev/emulator スコープの追跡ファイルに回避策をコミット**して再現可能にする
->      — `mysql/conf.d/my.cnf` に `sql_mode`(ONLY_FULL_GROUP_BY 除外)、
->      `config.docker.inc.php` に `EMULATE_PREPARES=true`。いずれも **本 §0 への
->      コメント付き**で。本番は別の追跡対象外 `config.inc.php` を使うため本番非影響＝
->      「隠蔽」でなく「開示」。ただし本番クエリが壊れている疑いは §0-2/§0-3 のまま残す。
->   2. **クエリ/設定を正規修正**（GROUP BY 付与 9 repo / 同名プレースホルダ別名化）。
-> どちらもコードレビュー済みの決定（L5 strict / MySQL strict 既定）に触れるため、
-> **私の独断ではコミットせずオーナー判断に委ねている。**
+> **【解決済】 §0-2/§0-3 — 本番クエリは壊れていなかった（code-first 化で修正済）**:
+> 本 md 執筆時（`feature/all-button-e2e`）の暫定回避（`SET PERSIST` / gitignore
+> `config.inc.php`）は不要になった。code-first バックエンドでは該当サブクエリは
+> 既に `GROUP BY` 済み（例 `ProjectsRepo::selectProjectOne` / `getSelectPageQuery`）で、
+> 同名プレースホルダ再利用も解消済み。検証:
+>   - 結合テスト **216件 緑**。harness は **本番忠実**＝`EMULATE_PREPARES=false`
+>     (`tests/Integration/IntegrationTestCase.php:57`) かつ MySQL 8 既定
+>     `sql_mode`（`ONLY_FULL_GROUP_BY` を含むことを `@@GLOBAL.sql_mode` で確認）。
+>     privilege サブクエリを持つ全 repo（Project/Line/Station/StationTrack/
+>     StationOnLine/StopPattern/StopPatternRow/Work/WorkGroup）の `*ApiTest` が
+>     `createProject`/`selectProjectOne`/`selectProjectPage` 等を網羅。
+>   - **クリーン E2E 緑**: `docker-compose.e2e.yaml` を本番忠実設定
+>     （`EMULATE_PREPARES=false` ＋ `ONLY_FULL_GROUP_BY` ON）で立て、まっさらな DB で
+>     `smoke`+`invite-keys` 7/7 緑（createProject がフルスタックで通過）。
+> したがって回避策の追跡コミットもクエリ書き換えも不要。E2E 設定は本番忠実のまま
+> 回し、§0-2/§0-3 の回帰ガードを兼ねる（E2E 専用の上書きはレート制限緩和と
+> ログ出力先のみ）。下記 §0 の項目2・3 の「[要対応]」も同様に解決済み。
 
 ## E2E スイート状態（`frontend/e2e/`）
 
@@ -79,31 +81,28 @@ E2E を回す前提として、docker/emulator 構成では **あらゆる作成
      `FIREBASE_AUTH_EMULATOR_HOST` 設定時のみ失効チェックを無効化（本番は不変）。
      これは追跡ファイルへのコミット対象（emulator 限定・本番安全）。
 
-2. **`ONLY_FULL_GROUP_BY` で privilege サブクエリが 1140 エラー**
-   多数の repo の SELECT が `MAX(privilege_type)` を非集約列と併用しつつ GROUP BY を
-   省く（例 `ProjectsRepo::selectProjectOne`）。MySQL 8 既定の `ONLY_FULL_GROUP_BY`
-   で `SQLSTATE[42000] 1140` → 500。
-   - **[要対応]** 暫定: 開発 DB で `sql_mode` から `ONLY_FULL_GROUP_BY` を除外
-     （実行中コンテナに `SET PERSIST` 適用済み。追跡ファイル `mysql/conf.d/my.cnf`
-     は**未変更**＝勝手な設定変更を避けるため）。
-   - **恒久案**: 該当サブクエリ（9 repo に同パターン）へ `GROUP BY` を付与。
-     どちらを採るか要判断（設定緩和=masking / クエリ修正≈9ファイル）。
+2. **`ONLY_FULL_GROUP_BY` で privilege サブクエリが 1140 エラー（旧症状）**
+   `MAX(privilege_type)` を非集約列と併用するサブクエリ。MySQL 8 既定の
+   `ONLY_FULL_GROUP_BY` だと `SQLSTATE[42000] 1140` → 500 になり得た。
+   - **[解決済]** code-first バックエンドでは該当サブクエリは既に `GROUP BY` 済み
+     （例 `ProjectsRepo::selectProjectOne` L74 / `getSelectPageQuery` L163）。
+     privilege サブクエリを持つ全 repo の `*ApiTest` を含む結合テスト 216 件が、
+     MySQL 8 既定 `sql_mode`（`@@GLOBAL.sql_mode` に `ONLY_FULL_GROUP_BY` 在を確認）
+     下で緑。`SET PERSIST` も `mysql/conf.d` 変更も不要。
 
-3. **`ATTR_EMULATE_PREPARES=false` で同名プレースホルダ再利用が HY093**
-   `selectProjectOne` 等が `:projects_id` を 1 クエリ内で 2 回使う。native prepare
-   では同名プレースホルダ再利用不可 → `SQLSTATE[HY093] Invalid parameter number`。
-   統合テストは PDO に `EMULATE_PREPARES` を**設定しない**（既定 true）ため、この
-   ドリフトはテストで検出されない。つまり**コミット済み設定では create 系が本当に
-   壊れている**。
-   - **[要対応]** 暫定: ローカル `backend/config/prod/config.inc.php`（gitignore）で
-     `EMULATE_PREPARES=true`。追跡テンプレ `config.docker.inc.php` は**未変更**。
-   - **恒久案**: テンプレ／本番設定を `true` に揃える（テスト harness と一致）か、
-     同名プレースホルダ再利用クエリを別名化。要判断。本番 config が `false` なら
-     **本番でも create が壊れている可能性**があるので最重要。
+3. **`ATTR_EMULATE_PREPARES=false` で同名プレースホルダ再利用が HY093（旧症状）**
+   native prepare は 1 クエリ内の同名プレースホルダ再利用を許さず
+   `SQLSTATE[HY093]` になり得た。
+   - **[解決済]** 現コードでは再利用を解消済み（例 `selectProjectOne` は
+     `:projects_id` を 1 回のみ使用）。さらに **結合テスト harness が本番忠実に更新済み**:
+     `tests/Integration/IntegrationTestCase.php:57` が `EMULATE_PREPARES=false` を
+     明示設定し（コメントに「§0-3 ドリフトを捕捉するため」と明記）、216 件緑。
+     よって本 md 旧記述「統合テストは設定しない（既定 true）」は**陳腐化**。
+     クリーン E2E（`docker-compose.e2e.yaml` を本番忠実設定）でも createProject 通過。
 
-> 2・3 はコード化された決定（L5 strict / MySQL strict 既定）を覆すため、追跡ファイル
-> への変更は**勝手にコミットせず**ローカル／コンテナ内オーバーライドに留めている。
-> 採用方針（設定緩和か正規修正か）はオーナー判断。
+> （旧注記は解決済みのため撤回）§0-2/§0-3 はコード化された決定（L5 strict / MySQL
+> strict 既定）を**覆さずに**修正されている＝クエリ側が strict に準拠した。回帰は
+> 結合テスト（本番忠実 PDO）＋クリーン E2E（本番忠実 compose）で二重にガードされる。
 
 ---
 

@@ -25,6 +25,7 @@ type ProjectListScreenProps = {
 	readonly onImport: (json: unknown) => void;
 	readonly onExport: (id?: string) => void;
 	readonly onShare: (id: string) => void;
+	readonly onUseInviteKey: () => void;
 	readonly t: Strings;
 };
 
@@ -40,6 +41,7 @@ export const ProjectListScreen = ({
 	onImport,
 	onExport,
 	onShare,
+	onUseInviteKey,
 	t,
 }: ProjectListScreenProps) => {
 	const [menu, setMenu] = useState<MenuState | null>(null);
@@ -98,6 +100,11 @@ export const ProjectListScreen = ({
 					onChange={handleImport}
 					style={{ display: "none" }}
 				/>
+				<button
+					className="btn btn-secondary btn-sm"
+					onClick={onUseInviteKey}>
+					🔑 {t.useInviteKey}
+				</button>
 				<button
 					className="btn btn-secondary btn-sm"
 					onClick={() => fileInputRef.current?.click()}>

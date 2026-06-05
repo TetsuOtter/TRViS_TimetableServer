@@ -92,10 +92,12 @@ import {
 	WorkDialog,
 	WorkGroupDialog,
 } from "../components/EntityDialogs";
+import { InviteManager } from "../components/InviteManager";
 import { LineManager } from "../components/LineManager";
 import { ProjectListScreen } from "../components/ProjectList";
 import { StopPatternWizard } from "../components/StopPatternWizard";
 import { TRViSShareDialog } from "../components/TRViSShareDialog";
+import { UseInviteKeyDialog } from "../components/UseInviteKeyDialog";
 import { WorkBrowser } from "../components/WorkBrowser";
 import AuthControls from "../components/auth/AuthControls";
 
@@ -340,7 +342,7 @@ function downloadJson(filename: string, obj: unknown) {
 	}, 0);
 }
 
-type Screen = "projects" | "work" | "lines" | "colors";
+type Screen = "projects" | "work" | "lines" | "colors" | "invite";
 
 type ContextMenuState = {
 	x: number;
@@ -359,9 +361,11 @@ type SidebarTreeProps = {
 	readonly currentScreen: Screen;
 	readonly currentWG: string | null;
 	readonly currentWork: string | null;
+	readonly projectPrivilegeType?: "read" | "write" | "admin";
 	readonly onSelect: (wgId: string, wId: string) => void;
 	readonly onSelectLines: () => void;
 	readonly onSelectColors: () => void;
+	readonly onSelectInvite: () => void;
 	readonly onAddWG: () => void;
 	readonly onWGContext: (x: number, y: number, wg: WorkGroup) => void;
 	readonly onWorkContext: (
@@ -381,9 +385,11 @@ const SidebarTree = ({
 	currentScreen,
 	currentWG,
 	currentWork,
+	projectPrivilegeType,
 	onSelect,
 	onSelectLines,
 	onSelectColors,
+	onSelectInvite,
 	onAddWG,
 	onWGContext,
 	onWorkContext,
@@ -530,6 +536,13 @@ const SidebarTree = ({
 					onClick={onSelectColors}>
 					<span style={{ fontSize: 11 }}>🎨</span> {t.colorManager}
 				</button>
+				{projectPrivilegeType === "admin" && (
+					<button
+						className={`sidebar-item ${currentScreen === "invite" ? "active" : ""}`}
+						onClick={onSelectInvite}>
+						<span style={{ fontSize: 11 }}>🔑</span> {t.inviteManager}
+					</button>
+				)}
 				<button
 					className="sidebar-item"
 					style={{ fontSize: 12 }}
@@ -621,6 +634,8 @@ export const App = () => {
 	const { data: apiEditingRows } = useStopPatternRows(editingPattern?.id ?? "");
 
 	const queryClient = useQueryClient();
+
+	const [showUseInviteKey, setShowUseInviteKey] = useState(false);
 
 	const [editingProject, setEditingProject] = useState<{
 		project?: Project;
@@ -1442,6 +1457,7 @@ export const App = () => {
 			currentScreen={screen}
 			currentWG={currentWG}
 			currentWork={currentWork}
+			projectPrivilegeType={baseProject?.privilegeType}
 			onSelect={(wgId, wId) => {
 				setScreen("work");
 				setCurrentWG(wgId);
@@ -1452,6 +1468,9 @@ export const App = () => {
 			}}
 			onSelectColors={() => {
 				setScreen("colors");
+			}}
+			onSelectInvite={() => {
+				setScreen("invite");
 			}}
 			onAddWG={() => {
 				setEditingWG({ new: true });
@@ -1586,6 +1605,9 @@ export const App = () => {
 						onShare={(pid) => {
 							setShareProjectId(pid);
 						}}
+						onUseInviteKey={() => {
+							setShowUseInviteKey(true);
+						}}
 						t={t}
 					/>
 				)}
@@ -1689,6 +1711,13 @@ export const App = () => {
 						t={t}
 					/>
 				) : null}
+				{projectId && screen === "invite" ? (
+					<InviteManager
+						workGroups={apiWorkGroups ?? []}
+						projectPrivilegeType={baseProject?.privilegeType}
+						t={t}
+					/>
+				) : null}
 			</AppShell>
 
 			{showStopPattern &&
@@ -1709,6 +1738,15 @@ export const App = () => {
 					}}
 				/>
 			) : null}
+
+			{showUseInviteKey && (
+				<UseInviteKeyDialog
+					onClose={() => {
+						setShowUseInviteKey(false);
+					}}
+					t={t}
+				/>
+			)}
 
 			{/* Entity dialogs */}
 			{editingProject ? (

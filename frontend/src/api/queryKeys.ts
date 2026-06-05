@@ -45,4 +45,6 @@ export const queryKeys = {
 		["stopPatterns", stopPatternId, "stopPatternRows"] as const,
 	stopPatternRow: (stopPatternId: string, id: string) =>
 		["stopPatterns", stopPatternId, "stopPatternRows", id] as const,
+	inviteKeys: (workGroupId: string) =>
+		["workGroups", workGroupId, "inviteKeys"] as const,
 } as const;

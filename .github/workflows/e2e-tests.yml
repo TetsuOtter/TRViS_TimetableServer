@@ -1,0 +1,142 @@
+name: E2E Tests
+
+# Playwright E2E をクリーンな環境で回す。バックエンド (php + MySQL + Firebase Auth
+# Emulator) は docker-compose.e2e.yaml で起動し、フロント (vite dev) と Playwright は
+# ランナー上で動かす。ローカルの再現手順と同一:
+#   docker compose -f docker-compose.e2e.yaml up -d --build --wait
+#   cd frontend && yarn install --immutable && yarn playwright test <specs>
+#
+# backend-tests.yml / frontend-tests.yml と同じくパスフィルタは付けない（required
+# status check として常に実行し、skip-guard で merge gate が素通りするのを防ぐ）。
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: e2e-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  playwright:
+    # 実行対象は「クリーン DB で緑が実測済み」のスペックだけ:
+    #   - smoke.spec.ts        … 認証ゲート + プロジェクト一覧到達
+    #   - invite-keys.spec.ts  … 招待キーの発行/参加/権限(read/write/admin)/失効
+    # 残り (projects/lines/work/timetable/export-import) は UNIMPLEMENTED.md に
+    # 記録済みの既知の赤（意図的赤 or スペック債務）を含むため、ここでは回さない。
+    # それらが緑化したらこの一覧へ追加する。スペックを「黙って除外」せず明示列挙
+    # するのが honest-green（backend/frontend ワークフローと同方針）。
+    name: Playwright E2E (smoke + invite-keys, clean stack)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+
+      - name: Prepare frontend .env
+        # vite は VITE_* のみ参照。ダミー値の .env.sample で十分（emulator 接続は
+        # アプリの hostname===localhost 判定で行うため本物の資格情報は不要）。
+        working-directory: frontend
+        run: cp .env.sample .env
+
+      - name: Materialize E2E backend config
+        # ./backend は ro bind で、config.inc.php はコンテナ内では生成できない
+        # （ネスト bind での mountpoint 作成が ro fs で失敗する）。dev の
+        # `cp config.docker.inc.php config.inc.php` と同じく、起動前にホスト側で
+        # E2E 設定を config.inc.php として実体化しておく（gitignore 対象なのでコミット
+        # されない）。index.php は APP_ENV=production → config/prod/config.inc.php を読む。
+        run: cp backend/config/prod/config.e2e.inc.php backend/config/prod/config.inc.php
+
+      - name: Bring up E2E backend stack (php + MySQL + Firebase emulator)
+        # --wait で db/firebase の healthcheck 完了まで待つ。config.e2e.inc.php を
+        # config.inc.php として bind-mount。PDO は本番忠実(EMULATE_PREPARES=false)、
+        # sql_mode も MySQL8 既定(ONLY_FULL_GROUP_BY ON)＝本番忠実で回す（§0-2/§0-3 は
+        # code-first 化で修正済み。E2E 専用の上書きはレート制限緩和とログ出力先のみ）。
+        run: docker compose -f docker-compose.e2e.yaml up -d --build --wait --wait-timeout 300
+
+      - name: Wait for API + emulator to answer over published ports
+        # php サービスには healthcheck を付けていない（イメージに curl/wget 不在の
+        # ため）。ランナー側から :8080(API) と :9099(emulator) を実際に叩いて、
+        # 「スタックが本当に応答する」ことをハードに検証する（未応答なら必ず落とす）。
+        run: |
+          ok=0
+          for i in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/v1/ || true)
+            if [ "$code" = "200" ]; then echo "API up (HTTP 200)"; ok=1; break; fi
+            echo "waiting for API... ($i/30) code=$code"; sleep 2
+          done
+          if [ "$ok" != "1" ]; then echo "API did not become ready" >&2; exit 1; fi
+          ok=0
+          for i in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:9099/emulator/v1/projects/trvis-app/config || true)
+            if [ "$code" = "200" ]; then echo "Firebase emulator up (HTTP 200)"; ok=1; break; fi
+            echo "waiting for emulator... ($i/30) code=$code"; sleep 2
+          done
+          if [ "$ok" != "1" ]; then echo "Firebase emulator did not become ready" >&2; exit 1; fi
+
+      - name: Setup Node.js 24.15.0
+        # frontend/Dockerfile と同じ node:24.15.0 + corepack yarn（frontend-tests と一致）。
+        uses: actions/setup-node@v6.4.0
+        with:
+          node-version: "24.15.0"
+
+      - name: Enable Corepack (Yarn 4.13.0)
+        run: corepack enable
+
+      - name: Get Yarn cache directory
+        id: yarn-cache
+        working-directory: frontend
+        run: echo "dir=$(yarn config get cacheFolder)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Yarn packages
+        uses: actions/cache@v5.0.5
+        with:
+          path: ${{ steps.yarn-cache.outputs.dir }}
+          key: yarn-${{ runner.os }}-node24-${{ hashFiles('frontend/yarn.lock') }}
+          restore-keys: |
+            yarn-${{ runner.os }}-node24-
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: yarn install --immutable
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v5.0.5
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('frontend/yarn.lock') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      - name: Install Playwright Chromium
+        # playwright.config.ts は chromium プロジェクトのみ。--with-deps で OS 依存も入れる。
+        working-directory: frontend
+        run: yarn playwright install --with-deps chromium
+
+      - name: Run Playwright (smoke + invite-keys)
+        # webServer(yarn dev) は Playwright が起動。spec が 0 件マッチなら Playwright は
+        # 既定でエラー終了するので「空実行で緑」にはならない（honest-green）。
+        working-directory: frontend
+        run: yarn playwright test e2e/smoke.spec.ts e2e/invite-keys.spec.ts
+
+      - name: Dump backend logs on failure
+        if: failure()
+        run: docker compose -f docker-compose.e2e.yaml logs --no-color --tail=400
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            frontend/e2e-report
+            frontend/test-results
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Tear down E2E stack
+        if: always()
+        run: docker compose -f docker-compose.e2e.yaml down -v

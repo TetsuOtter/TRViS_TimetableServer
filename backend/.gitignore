@@ -26,6 +26,10 @@ composer.phar
 !/config/dev/default.inc.php
 !/config/prod/default.inc.php
 !/config/prod/config.docker.inc.php
+# E2E config is intentionally tracked: it holds the dev/emulator-only workarounds
+# (EMULATE_PREPARES + rate-limit relax) so CI/local E2E are reproducible from a
+# clean checkout. Selected only by docker-compose.e2e.yaml; prod is unaffected.
+!/config/prod/config.e2e.inc.php
 
 # Logs folder
 /logs/**/*.*
