@@ -491,15 +491,16 @@ export const fromApiInviteKey = (api: ApiInviteKey): InviteKey => ({
 	workGroupId: api.work_groups_id ?? "",
 	description: api.description,
 	privilegeType: api.privilege_type,
-	validFrom:
-		api.valid_from !== undefined ? new Date(api.valid_from) : undefined,
-	expiresAt:
-		api.expires_at !== undefined ? new Date(api.expires_at) : undefined,
-	useLimit: api.use_limit,
-	disabledAt:
-		api.disabled_at !== undefined ? new Date(api.disabled_at) : undefined,
-	createdAt:
-		api.created_at !== undefined ? new Date(api.created_at) : undefined,
+	// expires_at / disabled_at are NULLABLE — the API sends an explicit `null`
+	// for an unset value, not an absent key. Guard with `!= null` (catches both
+	// null and undefined); a bare `!== undefined` turns `null` into
+	// `new Date(null)` = epoch 1970, which makes keyStatus() flag every active
+	// key as expired/revoked (hidden under 無効・期限切れ, no revoke control).
+	validFrom: api.valid_from != null ? new Date(api.valid_from) : undefined,
+	expiresAt: api.expires_at != null ? new Date(api.expires_at) : undefined,
+	useLimit: api.use_limit ?? undefined,
+	disabledAt: api.disabled_at != null ? new Date(api.disabled_at) : undefined,
+	createdAt: api.created_at != null ? new Date(api.created_at) : undefined,
 });
 
 export const toApiInviteKey = (

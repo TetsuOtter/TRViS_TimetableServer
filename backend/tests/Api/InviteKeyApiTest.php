@@ -236,11 +236,14 @@ class InviteKeyApiTest extends IntegrationTestCase
 		$wgId = $this->newWorkGroup();
 		$key = $this->newInviteKey($wgId);
 
-		// admin -> list contains the key
+		// admin -> list contains the key.
+		// page is 1-based (the API passes PagingQueryValidator::pageFrom1); this
+		// must be 1, not 0 — passing 0 previously masked the repo's off-by-one
+		// OFFSET so the first page silently vanished over HTTP.
 		$list = $this->ikSvc()->selectInviteKeyListWithWorkGroupsId(
 			$wgId,
 			$this->userId,
-			0,
+			1,
 			50,
 			null,
 		);
@@ -254,7 +257,7 @@ class InviteKeyApiTest extends IntegrationTestCase
 		$ro = $this->ikSvc()->selectInviteKeyListWithWorkGroupsId(
 			$wgId,
 			$readUser,
-			0,
+			1,
 			50,
 			null,
 		);
@@ -267,10 +270,11 @@ class InviteKeyApiTest extends IntegrationTestCase
 		$wgId = $this->newWorkGroup();
 		$key = $this->newInviteKey($wgId);
 
-		// owner sees own key (listing is by owner uid, no privilege gate)
+		// owner sees own key (listing is by owner uid, no privilege gate).
+		// page is 1-based — see the off-by-one note in testGetInviteKeyList.
 		$mine = $this->ikSvc()->selectInviteKeyListWithOwnerUid(
 			$this->userId,
-			0,
+			1,
 			50,
 			null,
 		);
@@ -281,7 +285,7 @@ class InviteKeyApiTest extends IntegrationTestCase
 		// a different user's "my list" must not include this key
 		$other = $this->ikSvc()->selectInviteKeyListWithOwnerUid(
 			$this->nonMemberId,
-			0,
+			1,
 			50,
 			null,
 		);

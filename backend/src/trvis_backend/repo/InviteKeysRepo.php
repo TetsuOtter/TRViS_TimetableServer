@@ -270,7 +270,12 @@ final class InviteKeysRepo
 			$query->bindValue(':currentDateTime', Utils::utcDateStrOrNull($currentDateTime), PDO::PARAM_STR);
 		}
 		$query->bindValue(':limit', $perPage, PDO::PARAM_INT);
-		$query->bindValue(':offset', $page * $perPage, PDO::PARAM_INT);
+		// $page is 1-based (callers pass PagingQueryValidator::pageFrom1 /
+		// PAGE_DEFAULT_VALUE=1). OFFSET must therefore be ($page - 1) * $perPage,
+		// matching ProjectsRepo / WorkGroupsRepo. The previous `$page * $perPage`
+		// skipped an entire page, so a freshly-created key (page 1) never appeared
+		// in the admin invite-key list. (The Api test masked this by passing 0.)
+		$query->bindValue(':offset', ($page - 1) * $perPage, PDO::PARAM_INT);
 
 		try {
 			$isSuccess = $query->execute();
