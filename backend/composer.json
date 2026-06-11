@@ -18,7 +18,7 @@
     "google/auth": "1.50.1",
     "google/cloud-core": "1.72.1",
     "guzzlehttp/guzzle": "7.10.4",
-    "guzzlehttp/psr7": "2.10.1",
+    "guzzlehttp/psr7": "2.10.2",
     "kreait/firebase-php": "^8.2",
     "monolog/monolog": "^3.10",
     "neomerx/cors-psr7": "^3.0",
